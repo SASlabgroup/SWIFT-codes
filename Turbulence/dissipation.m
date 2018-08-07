@@ -58,35 +58,22 @@ tke = 0.5 * ( nanstd( v' ).^2)';
 % fit structure function to A r^2/3
 for j=fliplr(1:length(z)),%[1 2 5 10 15 20:20:120],%round(linspace(1,length(z),10)),
     
-    % need to limit r values used to be within internial subrange
+    %% need to limit r values used to be within internial subrange
+    
     % scales can't be too big, but must have a least 6 points
     maxr = 6*median(diff(z));
-    % scales could be set be velocity variance over sampling frequency
-    % this is a self advection scale... Seth's idea via email 6 Jan 2018
-    %fs = 8;
-    %maxr = 6.28*nanstd( v(j,vpts) ) ./ fs;  % generally too small
+
     % smallest r's can be noise contaminated
     minr = 1*median(diff(z));
-    % other ad hoc limit is proportion of depth
-    %maxr = max(z) ./ 2;
-    % alternate limit is distanace to boundary
-    % maxr = min( abs(z(j) - max(z)), z(j) );
-    % or depth
-    %maxr = max(z)-z(j);
-    % or allow everything (for debug and display)
-    %maxr = 100*max(z);
+
     % option for double sided fit using abs(r)
     %r = abs(r);
-    % other side
-    %r = -r;
+
+    %% fit structure to r^2/3
     
     % identify points for fitting,
     goodpts = find( ~isnan( D(j,:) )  &  r(j,:)< maxr  &  r(j,:) >= minr);
-    
-    % restriction to single sided
-    %goodpts(goodpts<j) = [];
-    
-    % fit structure to r^2/3
+     
     if length(goodpts)>2,
         %warning('off','stats:statrobustfit:IterationLimit')
         [fit stats] = robustfit(r(j,goodpts).^(2/3), D(j,goodpts));
