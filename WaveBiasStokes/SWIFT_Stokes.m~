@@ -3,7 +3,7 @@ function SWIFT_withStokes = SWIFT_Stokes(SWIFT)
 % Estimate Stokes profiles and wave-following bias velocities
 % Assumes deep water. Will be adapted to intermediate waves.
 % Option to compute using a1 and b1 will be added.
-% Melissa Moulton, last edited: Aug 2018
+% Melissa Moulton, last edited: May 2018
 
 g = 9.81;
 
