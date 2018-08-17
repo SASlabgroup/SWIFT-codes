@@ -36,6 +36,12 @@ wd = wd((wdi+1):length(wd));
 fs = get(0,'defaultaxesfontsize');      % previous fontsize default
 fw = get(0,'defaultaxesfontweight');    % previous fontweight default
 set(0,'defaultaxesfontsize',16,'defaultaxesfontweight','demi');
+% Create cleanup function that resets fontsize,weight when this function is
+% finished or terminates for any reason
+cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw) );
+
+
+
 
 %% Figure 1: Wind and wave plot
 % Available for all SWIFTs
@@ -59,14 +65,14 @@ if isfield(SWIFT,'sigwaveheight')
 end %if
 
 if isfield(SWIFT,'peakwaveperiod')
-ax(3) = subplot(n,1,3);
-plot( [SWIFT.time],[SWIFT.peakwaveperiod],'g+','linewidth',2)
-datetick;
-ylabel('waveperiod [s]')
-set(gca,'Ylim',[0 20])
+    ax(3) = subplot(n,1,3);
+    plot( [SWIFT.time],[SWIFT.peakwaveperiod],'g+','linewidth',2)
+    datetick;
+    ylabel('waveperiod [s]')
+    set(gca,'Ylim',[0 20])
 end %if 
 
-if isfield(SWIFT,'winddirT')
+if isfield(SWIFT,'winddirT') && isfield(SWIFT,'peakwavedirT')
     ax(4) = subplot(n,1,4);
     plot([SWIFT.time],[SWIFT.winddirT],'bx','linewidth',2), hold on,
     plot([SWIFT.time],[SWIFT.peakwavedirT],'g+','linewidth',2), hold on
@@ -74,11 +80,12 @@ if isfield(SWIFT,'winddirT')
     ylabel('directions [^\circ T]')
     set(gca,'Ylim',[0 360])
     set(gca,'YTick',[0 180 360])
+    legend('Wind','Waves');
 end %if
 
 linkaxes(ax,'x')
 set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)] )
-% print('-dpng',[wd  '_windandwaves.png'])
+print('-dpng',[wd  '_windandwaves.png'])
 
 
 
@@ -90,34 +97,37 @@ set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)] )
 %       expected results.
 
 % Preprocessing work: -----------------------------------------------------
+if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
 
-% Create arrays of water temp and salinity:
-try
-    Tarray = reshape( [SWIFT.watertemp],[],length(SWIFT) )';
-    Sarray = reshape( [SWIFT.salinity],[],length(SWIFT) )';
-catch % if the number of elements doesn't divide evenly, reshape will throw error 
-    warning('Mismatch in sizes for both watertemp and salinity across different timestamps in fig. 2.  Using only final CT sensor data for each timestamp')
-    Tarray = arrayfun(@(x)x.watertemp(end),SWIFT)';
-    Sarray = arrayfun(@(x)x.salinity(end),SWIFT)';
-end
-    
-    
-% number of CT sensors:
-numCT = size(Tarray,2);
+    % Create arrays of water temp and salinity:
+    try
+        Tarray = reshape( [SWIFT.watertemp],[],length(SWIFT) )';
+        Sarray = reshape( [SWIFT.salinity],[],length(SWIFT) )';
+    catch % if the number of elements doesn't divide evenly, reshape will throw error 
+        warning('Mismatch in sizes for both watertemp and salinity across different timestamps in fig. 2.  Using only final CT sensor data for each timestamp')
+        Tarray = arrayfun(@(x)x.watertemp(end),SWIFT)';
+        Sarray = arrayfun(@(x)x.salinity(end),SWIFT)';
+    end
 
-% Create arrays for assigning makers and legend labels:
-legendlabs = {'0.1 m';'0.5 m';'1.2 m'};
-namearray =  {'Marker';'Color';'Linestyle'};
-valuearray = {'x','r','none';
-              '+','g','none';
-              '.','k','none'};
-% adjust array based on the number of CT sensors included:
-if numCT == 1
-    valuearray = valuearray(2,:);
-elseif numCT == 2
-    legendlabs = legendlabs(2:3);
-    valuearray = valuearray(2:3,:);
-end%if
+
+    % number of CT sensors:
+    numCT = size(Tarray,2);
+
+    % Create arrays for assigning makers and legend labels:
+    legendlabs = {'0.1 m';'0.5 m';'1.2 m'};
+    namearray =  {'Marker';'Color';'Linestyle'};
+    valuearray = {'x','r','none';
+                  '+','g','none';
+                  '.','k','none'};
+    % adjust array based on the number of CT sensors included:
+    if numCT == 1
+        valuearray = valuearray(2,:);
+    elseif numCT == 2
+        legendlabs = legendlabs(2:3);
+        valuearray = valuearray(2:3,:);
+    end %if
+
+end %if
 % -------------------------------------------------------------------------
 
 
@@ -125,34 +135,40 @@ end%if
 figure(2); clf;
 
 % Plot air temperature:
-tax(1) = subplot(311);
-plot( [SWIFT.time],[SWIFT.airtemp],'g+','linewidth',2);
-datetick;
-ylabel('airtemp [C]')
-set(gca,'Ylim',[-15 30])
-grid on;
+if isfield(SWIFT,'airtemp')
+    tax(1) = subplot(311);
+    plot( [SWIFT.time],[SWIFT.airtemp],'g+','linewidth',2);
+    datetick;
+    ylabel('airtemp [C]')
+    set(gca,'Ylim',[-15 30])
+    grid on;
+end
 
 % Plot water temperature:
-tax(2) = subplot(312);
-h = plot([SWIFT.time],Tarray,'linewidth',2);
-datetick;
-set(h,namearray,valuearray) 
-if numCT >1; legend(legendlabs); end%if
-ylabel('watertemp [C]')
-set(gca,'Ylim',[-2 30])
+if isfield(SWIFT,'watertemp')
+    tax(2) = subplot(312);
+    h = plot([SWIFT.time],Tarray,'linewidth',2);
+    datetick;
+    set(h,namearray,valuearray) 
+    if numCT >1; legend(legendlabs); end%if
+    ylabel('watertemp [C]')
+    set(gca,'Ylim',[-2 30])
+end
 
 % Plot salinity:
-tax(3) = subplot(313);
-h = plot([SWIFT.time],Sarray,'linewidth',2);
-datetick;
-set(h,namearray,valuearray) 
-if numCT >1; legend(legendlabs); end%if
-ylabel('salinity [PSU]')
-set(gca,'Ylim',[0 36])
+if isfield(SWIFT,'salinity');
+    tax(3) = subplot(313);
+    h = plot([SWIFT.time],Sarray,'linewidth',2);
+    datetick;
+    set(h,namearray,valuearray) 
+    if numCT >1; legend(legendlabs); end%if
+    ylabel('salinity [PSU]')
+    set(gca,'Ylim',[0 36])
+end
 
 linkaxes(tax,'x');
 set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
-% print('-dpng',[wd '_tempandsalinity.png'])
+print('-dpng',[wd '_tempandsalinity.png'])
 % -------------------------------------------------------------------------
 
 
@@ -190,7 +206,7 @@ if isfield(SWIFT,'wavespectra')
     else
         title('Scalar wave spectra');
     end
-%     print('-dpng',[ wd '_wavespectra.png'])
+    print('-dpng',[ wd '_wavespectra.png'])
 else
 end %if
 
@@ -266,7 +282,7 @@ if nansum([turb.epsilon]) ~= 0 % check if there is something to plot
 
 end %if
 
-% print('-dpng',[ wd '_HRprofile_turbulence.png'])
+print('-dpng',[ wd '_HRprofile_turbulence.png'])
 
 %% Figure 5: Downlooking velocity profiles
 % Available for SWIFTS with downlooking ADCP or Aquadopp
@@ -293,7 +309,8 @@ for ai = 1:length(SWIFT)
             prof(ai).spd = SWIFT(ai).downlooking.velocityprofile;
             prof(ai).east_vel = [];
             prof(ai).north_vel = []; 
-    elseif isfield(SWIFT(ai).signature.profile,'east') &&...   % does the field exist?
+    elseif isfield(SWIFT(ai),'signature') &&...
+           isfield(SWIFT(ai).signature.profile,'east') &&...   % does the field exist?
            (nansum([SWIFT(ai).signature.profile.east]) ~= 0  ||...
             nansum([SWIFT(ai).signature.profile.north]) ~= 0 )  % does it contain data (in either vector)?
             prof(ai).time = SWIFT(ai).time;
@@ -374,7 +391,7 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         
     end %try/catch
     
-    
+    print('-dpng', [wd '_Avgvelocityprofiles.png']);      
 elseif nansum([prof.spd]) ~= 0 % no separate profiles, but speeds exist
     figure(5); clf;
     
@@ -410,10 +427,10 @@ elseif nansum([prof.spd]) ~= 0 % no separate profiles, but speeds exist
         xlabel('Magnitude [m/s]');      
     end %try/catch
     
-    
+    print('-dpng', [wd '_Avgvelocityprofiles.png']);  
 end %if
 
-% print('-dpng', [wd '_Avgvelocityprofiles.png'])
+
 
 %% Figure 6: Drift Plot
 % Available for all SWIFTs
@@ -461,7 +478,7 @@ if isfield(SWIFT,'rainaccum') && any(~isnan([SWIFT.rainaccum])) && any(~isempty(
     
     linkaxes(rax,'x');
     set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
-%     print('-dpng',[wd '_rain.png'])
+    print('-dpng',[wd '_rain.png'])
     
 end %if 
 
@@ -488,14 +505,10 @@ if isfield(SWIFT,'windspectra') &&... % check field exists
     xlabel('freq [Hz]')
     ylabel('Energy [m^2/Hz]')
     title('Wind Spectra')
-%     print('-dpng',[wd '_wind.png'])
+    print('-dpng',[wd '_wind.png'])
 else
 end
 
-%% Finalize
-
-% Reset fontsize and weight globally (so it is the same as before the funciton was run)
-set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw);
 
 
 end %function
