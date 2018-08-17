@@ -1,3 +1,4 @@
+function [SWIFT] = reprocess_AQH(parentdir)
 % reprocess SWIFT v3 uplooking AquadoppHR (AQH) results
 % loop thru raw data for a given SWIFT deployment, then
 % replace values in the SWIFT data structure of results
@@ -6,12 +7,15 @@
 %
 % J. Thomson, Sept 2010
 %   cleaned and revised with AQH read function, Thomson, Jun 2016
+%   
+% revised by M. Smith, 08/2018 
+%   added iceflag - option to mask near surface velocities and dissipations when ice
+%       is suspected present
+%   functionalized - input: parentdir should be location of folder with .mat file
+%       (_reprocessed_displacements) and AQH folder. output: SWIFT structure
+%       with reprocessed AQH, also saved in parentdir
 
-
-clear all; close all
-%parentdir = ('/Users/jthomson/Dropbox/SWIFT_v4.x/Test Data/LakeWA_Test_14Dec2016/SWIFT12_14Dec2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
-parentdir = pwd;
-
+%% OPTIONS for quality control and AQH settings
 mincor = 30; % correlation cutoff, 50 recommended (max value recorded in air), 30 if single beam acq
 minamp = 30;  % amplitude cutoff, 30 usually means air
 maxQCratio = .5; % maximum allowable ration of remove points to total points
@@ -22,7 +26,7 @@ blanking = 0.10; % blanking distance (m) from hdr file
 sigma = 0.025;  % nominal velocity noise [m/s]
 rate = 4; % sampling rate
 
-
+iceflag = 0; %if ice is suspected present, set to zero to mask bad near-surface values
 
 %% load existing SWIFT structure created during concatSWIFTv3_processed, replace only the new results
 cd(parentdir);
@@ -74,6 +78,17 @@ for di = 1:length(dirlist),
         exclude = Amp < minamp ;
         Vel(exclude)  = NaN;
         
+        % ice mask velocities
+        if iceflag == 1
+            icemask = find( nanmean(c) > 95 | nanmean(a) > 195 );
+            if ~isempty(icemask)
+                v(:,icemask(1):end) = NaN;
+                icemask_index = icemask(1); 
+            else
+                icemask_index = nan;
+            end
+        end
+        
         
         % phase averaged TKE dissipation rate of the whole burst
         %[tke epsilon residual A Aerror N Nerror ] = dissipation(Vel', r, length(Vel), 0, deltar);
@@ -101,6 +116,9 @@ for di = 1:length(dirlist),
         [tdiff tindex] = min(abs([SWIFT.time]-time));
         SWIFT(tindex).uplooking.tkedissipationrate = epsilon;
         SWIFT(tindex).phaseresovledepsilon = phaseresolvedepsilon;
+        if iceflag == 1
+            SWIFT(tindex).uplooking.icemaskindex = icemask_index;
+        end
         
     end
     
@@ -108,7 +126,6 @@ for di = 1:length(dirlist),
 end
 
 cd(parentdir)
-
-
 save([ wd '_reprocessedAQH.mat'],'SWIFT')
 
+end
