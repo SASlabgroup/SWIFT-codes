@@ -1,12 +1,14 @@
 % script to plot pcolors of mean vertical velocity (wbar) from SWIFT v4 data
 % NB: the raw signature data must be read and processed first
 %   (this will not work from telemetry)
+%   J. Thomson, 4/2018
+%               8/2018 editted to get for motion (wave steepness) correlation with wbar
 
 clear all, close all
 
 files = dir('./SWIFT*.mat');
 
-for fi = 1,%:length(files), 
+for fi = 1:length(files), 
     
     fi
    
@@ -95,5 +97,10 @@ for fi = 1,%:length(files),
     print('-dpng',[ files(fi).name(1:(end-4)) '_profiles.png'])
 
 
+    figure(6), hold on
+    plot([SWIFT.sigwaveheight]./([SWIFT.peakwaveperiod].^2),wbar,'k.')
     
 end
+
+xlabel('H_s / T_p^2'), ylabel('wbar [m/s]')
+print('-dpng','wbar_vs_wavesteepness.png')
