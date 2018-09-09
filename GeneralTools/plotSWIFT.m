@@ -18,6 +18,7 @@ function [] = plotSWIFT(SWIFT)
 %   figure 6: Drift plot
 %   figure 7: Rain and humidity
 %   figure 8: Wind spectra
+%   figure 9: oxygen concentration and FDOM (fluorometer dissolved organic matter?)
 
 
 %% Initialize 
@@ -35,7 +36,7 @@ wd = wd((wdi+1):length(wd));
 % (so changes are applied to all figures called within the function)
 fs = get(0,'defaultaxesfontsize');      % previous fontsize default
 fw = get(0,'defaultaxesfontweight');    % previous fontweight default
-set(0,'defaultaxesfontsize',16,'defaultaxesfontweight','demi');
+set(0,'defaultaxesfontsize',14,'defaultaxesfontweight','demi');
 % Create cleanup function that resets fontsize,weight when this function is
 % finished or terminates for any reason
 cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw) );
@@ -44,7 +45,7 @@ cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight'
 
 
 %% Figure 1: Wind and wave plot
-% Available for all SWIFTs
+% Available for all SWIFT, although v4s do not have winds
 
 figure(1), clf, n = 4;
 
@@ -52,23 +53,23 @@ if isfield(SWIFT,'windspd')
     ax(1) = subplot(n,1,1);
     plot( [SWIFT.time],[SWIFT.windspd],'bx','linewidth',2)
     datetick;
-    ylabel('windppd [m/s]')
-    set(gca,'Ylim',[0 20])
+    ylabel('Wind [m/s]')
+    set(gca,'Ylim',[0 ceil(max([SWIFT.windspd]))] )
 end %if
 
 if isfield(SWIFT,'sigwaveheight')
     ax(2) = subplot(n,1,2);
     plot( [SWIFT.time],[SWIFT.sigwaveheight],'g+','linewidth',2)
     datetick;
-    ylabel('waveheight [m]')
-    set(gca,'Ylim',[0 7])
+    ylabel('Wave H_s [m]')
+    set(gca,'Ylim',[0 ceil(max([SWIFT.sigwaveheight]))] )
 end %if
 
 if isfield(SWIFT,'peakwaveperiod')
     ax(3) = subplot(n,1,3);
     plot( [SWIFT.time],[SWIFT.peakwaveperiod],'g+','linewidth',2)
     datetick;
-    ylabel('waveperiod [s]')
+    ylabel('Wave T_p [s]')
     set(gca,'Ylim',[0 20])
 end %if 
 
@@ -140,7 +141,7 @@ if isfield(SWIFT,'airtemp')
     plot( [SWIFT.time],[SWIFT.airtemp],'g+','linewidth',2);
     datetick;
     ylabel('airtemp [C]')
-    set(gca,'Ylim',[-15 30])
+    %set(gca,'Ylim',[-15 30])
     grid on;
 end
 
@@ -152,7 +153,7 @@ if isfield(SWIFT,'watertemp')
     set(h,namearray,valuearray) 
     if numCT >1; legend(legendlabs); end%if
     ylabel('watertemp [C]')
-    set(gca,'Ylim',[-2 30])
+    %set(gca,'Ylim',[-2 30])
 end
 
 % Plot salinity:
@@ -163,7 +164,7 @@ if isfield(SWIFT,'salinity');
     set(h,namearray,valuearray) 
     if numCT >1; legend(legendlabs); end%if
     ylabel('salinity [PSU]')
-    set(gca,'Ylim',[0 36])
+    %set(gca,'Ylim',[0 36])
 end
 
 linkaxes(tax,'x');
@@ -173,7 +174,7 @@ print('-dpng',[wd '_tempandsalinity.png'])
 
 
 %% Figure 3: Wave Spectra Plot
-% Available for all SWIFTs?
+% Available for all SWIFTs, using either Microstrain or SBG inertial motion units with GPS
 
 if isfield(SWIFT,'wavespectra')
     figure(3), clf;
@@ -212,7 +213,7 @@ end %if
 
 
 %% Figure 4: Turbulence plot
-% available for SWIFTS with Aquadopp (uplooking) or Signature ADCP (downlooking?)
+% available for SWIFTS with Nortek AquadoppHR (uplooking) or Signature ADCP (downlooking)
 
 % Turbulence profiles can be stored in one of two fields:
 % 1. SWIFT.uplooking.tkedissipationrate
@@ -259,7 +260,7 @@ if nansum([turb.epsilon]) ~= 0 % check if there is something to plot
         z_array =   reshape([turb.z],[],length([turb.time]));
         eps_array = reshape([turb.epsilon],[],length([turb.time]));
 
-        axes('position',[0.1 0.1 0.2 0.8])
+        axes('position',[0.1 0.1 0.18 0.8])
         semilogx(eps_array, z_array, 'k','linewidth',2);
         set(gca,'YDir','reverse','Ylim',[0,zmax])
         ylabel('z [m]')
@@ -288,7 +289,7 @@ end %if
 print('-dpng',[ wd '_HRprofile_turbulence.png'])
 
 %% Figure 5: Downlooking velocity profiles
-% Available for SWIFTS with downlooking ADCP or Aquadopp
+% Available for SWIFTS with downlooking Nortek Signature or Aquadopp
 
 % Velocity profiles can be stored in one of two fields:
 % 1. SWIFT.downlooking.velocityprofile
@@ -404,7 +405,7 @@ elseif nansum([prof.spd]) ~= 0 % no separate profiles, but speeds exist
         spd_array = reshape([prof.spd],[],length([prof.time]));
         
         % Plot speed profiles
-        axes('position',[0.1 0.1 0.2 0.35]);
+        axes('position',[0.1 0.1 0.18 0.35]);
         plot(spd_array,z_array,'k','linewidth',2);
         set(gca,'YDir','reverse');
         ylabel('z [m]');
@@ -457,7 +458,7 @@ if isfield( SWIFT, 'driftspd' ) && isfield( SWIFT, 'driftdirT' )
 end %if
 
 %% Figure 7: Rain
-% Available for ...?
+% Available for SWIFT v3s with Vaisala 536 met stations
 
 if isfield(SWIFT,'rainaccum') && any(~isnan([SWIFT.rainaccum])) && any(~isempty([SWIFT.rainaccum]))
     
@@ -487,7 +488,7 @@ if isfield(SWIFT,'rainaccum') && any(~isnan([SWIFT.rainaccum])) && any(~isempty(
 end %if 
 
 %% Figure 8: Wind Spectra
-% Available for ...?
+% Available for v3 SWIFTs with RM Young 3-axis sonic anemometers
 
 if isfield(SWIFT,'windspectra') &&... % check field exists
     any(~isnan([SWIFT.windustar])) && any(~isempty([SWIFT.windustar]))  % if SWIFT.windustar exists then spectra will exist 
@@ -509,10 +510,30 @@ if isfield(SWIFT,'windspectra') &&... % check field exists
     xlabel('freq [Hz]')
     ylabel('Energy [m^2/Hz]')
     title('Wind Spectra')
+    set(gca,'XLim',[1e-2 1e1])
     print('-dpng',[wd '_wind.png'])
 else
 end
 
+%% Figure 9: oxygen and fluoresence 
+
+if isfield(SWIFT,'O2conc') && any(~isnan([SWIFT.O2conc])) && any(~isempty([SWIFT.O2conc])),
+    figure(9), hold off
+    subplot(2,1,1),
+    plot([SWIFT.time],[SWIFT.O2conc],'x')
+    datetick
+    ylabel('O_2 conc [uM/Kg]')
+    print('-dpng',[wd '_oxygen_FDOM.png'])
+end
+    
+if isfield(SWIFT,'FDOM') && any(~isnan([SWIFT.FDOM])) && any(~isempty([SWIFT.FDOM])),
+    figure(9), hold off
+    subplot(2,1,2),
+    plot([SWIFT.time],[SWIFT.FDOM],'x')
+    datetick
+    ylabel('FDOM [ppb]')
+    print('-dpng',[wd '_oxygen_FDOM.png'])
+end
 
 
 end %function

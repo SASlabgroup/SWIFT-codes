@@ -64,22 +64,15 @@ for ai = 1:length(flist),
         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
     end
     
-    if  ai > 1 &  oneSWIFT.time == time(ai-1),
-        
-        oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-        
-    end
     
     %% remove bad Airmar data
     
     if isfield(oneSWIFT,'airtemp'),
-        if oneSWIFT.airtemp == 0,
+        if oneSWIFT.airtemp == 0.0,
             oneSWIFT.airtemp = NaN;
             oneSWIFT.windspd = NaN;
-            oneSWIFT.winddirT = NaN;
         end
     end
-    
     
     
     %% extrapolate missing low frequencies of wave energy spectra
@@ -111,22 +104,29 @@ for ai = 1:length(flist),
     lat(ai) = oneSWIFT.lat;
     lon(ai) = oneSWIFT.lon;
     
-    if ai==1,
+    onenames = string(fieldnames(oneSWIFT));
+    
+    if ai == 1,
         SWIFT(ai) = oneSWIFT;
-    elseif ai>1 &  string(fieldnames(oneSWIFT)) == string(fieldnames(SWIFT));
+        allnames = string(fieldnames(SWIFT));
+    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames);
         SWIFT(ai) = oneSWIFT;
     else
-        disp('payloads changing between sbd files, cannot create sequential SWIFT structure')
+        disp('payloads changing between sbd files, cannot include full telemetry in SWIFT structure')
         disp('use readSWIFT_SBD.m directly to read one file at a time instead')
+        badburst( length(badburst) + 1) = ai;
     end
-    %puck(:,ai) = oneSWIFT.puck;
-    %salinity(ai) = oneSWIFT.salinity;
-    
+
     
     %% screen the bad data (usually out of the water)
     
+    % no data
+    if isempty(oneSWIFT.lon) | isempty(oneSWIFT.lat) | isempty(oneSWIFT.time), 
+        
+            badburst( length(badburst) + 1) = ai;
+
     % no position
-    if oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
+    elseif oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
         
         badburst( length(badburst) + 1) = ai;
         
@@ -162,6 +162,7 @@ end
 
 SWIFT(badburst) = [];
 battery(badburst) = [];
+
 
 %% sort final structure
 [time tinds ] = sort([SWIFT.time]);
