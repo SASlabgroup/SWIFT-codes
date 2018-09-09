@@ -200,7 +200,7 @@ if isfield(SWIFT,'wavespectra')
     
     xlabel('freq [Hz]');
     ylabel('Energy [m^2/Hz]');
-    if ~isnan(max([SWIFT.windspd]))
+    if isfield(SWIFT,'windspd') &&  ~isnan(max([SWIFT.windspd]))
         title('Scalar wave spectra, colored by wind spd')
         colorbar('Ticks',0:0.2:1,'TickLabels',round(linspace(0,max([SWIFT.windspd]),6)));
     else
@@ -228,12 +228,15 @@ end %if
 % into their own structure array
 turb(1:length(SWIFT)) = struct; % pre-allocate structure
 for ai = 1:length(SWIFT)
-    if isfield(SWIFT(ai).uplooking,'tkedissipationrate') &&... % does the field exist?
+    if isfield(SWIFT(ai),'uplooking') &&... 
+            isfield(SWIFT(ai).uplooking,'tkedissipationrate') &&... % does the field exist?
         nansum([SWIFT(ai).uplooking.tkedissipationrate]) ~= 0  % does it contain data?
             turb(ai).time = SWIFT(ai).time;
             turb(ai).z = SWIFT(ai).uplooking.z(:)';
             turb(ai).epsilon = SWIFT(ai).uplooking.tkedissipationrate(:)';
-    elseif isfield(SWIFT(ai).signature.HRprofile,'tkedissipationrate') &&... % does the field exist?
+    elseif isfield(SWIFT(ai),'signature') &&... % does the field exist?
+            isfield(SWIFT(ai).signature,'HRprofile') &&... % does the field exist?
+            isfield(SWIFT(ai).signature.HRprofile,'tkedissipationrate') &&... % does the field exist?
            nansum([SWIFT(ai).signature.HRprofile.tkedissipationrate]) ~= 0   % does it contain data?
             turb(ai).time = SWIFT(ai).time;
             turb(ai).z = SWIFT(ai).signature.HRprofile.z(:)';
@@ -302,7 +305,8 @@ print('-dpng',[ wd '_HRprofile_turbulence.png'])
 % into their own structure arrays
 prof(1:length(SWIFT)) = struct; % pre-allocate structure
 for ai = 1:length(SWIFT)
-    if isfield(SWIFT(ai).downlooking,'velocityprofile') &&... % does the field exist?
+    if isfield(SWIFT(ai),'downlooking') &&... % does the field exist?
+       isfield(SWIFT(ai).downlooking,'velocityprofile') &&... % does the field exist?
        nansum([SWIFT(ai).downlooking.velocityprofile]) ~= 0   % does it contain data?
             prof(ai).time = SWIFT(ai).time;
             prof(ai).z = SWIFT(ai).downlooking.z;
