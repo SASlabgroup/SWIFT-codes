@@ -10,6 +10,9 @@
 %             6/2016    v3.4
 %             1/2017    v4.0 (and backwards compatibile with v3x)
 %             9/2017 fixed factor of 2 in post-calculation of ustar
+%             9/2018 no longer assume any fields are present in the
+%                   structure, other than time (consistent with
+%                   readSWIFT_SBD.m update)
 %
 clear all,
 
@@ -17,9 +20,9 @@ plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots.
 
 minwaveheight = 0.0; % minimum wave height in data screening
 
-minsalinity = 0.0; % for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 0.0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
-maxdriftspd = 5;  % for screening when buoy on deck of boat
+maxdriftspd = 3;  % m/s, for screening when buoy on deck of boat
 
 badburst = []; % initialize indexing for bad bursts
 
@@ -55,10 +58,10 @@ for ai = 1:length(flist),
     minute = flist(ai).name(27:28);
     sec = flist(ai).name(29:30);
     
-    if oneSWIFT.time == 0 | isnan(oneSWIFT.time) | oneSWIFT.time < datenum(2014,1,1) | isnan(oneSWIFT.time),
-        
+    if isempty(oneSWIFT.time),
         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-        
+    elseif oneSWIFT.time == 0 |  isnan(oneSWIFT.time) | oneSWIFT.time < datenum(2014,1,1),
+        oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
     end
     
     if  ai > 1 &  oneSWIFT.time == time(ai-1),
@@ -69,71 +72,85 @@ for ai = 1:length(flist),
     
     %% remove bad Airmar data
     
-    if oneSWIFT.airtemp == 0,
-        
-        oneSWIFT.airtemp = NaN;
-        oneSWIFT.windspd = NaN;
-        oneSWIFT.winddirT = NaN;
-        
+    if isfield(oneSWIFT,'airtemp'),
+        if oneSWIFT.airtemp == 0,
+            oneSWIFT.airtemp = NaN;
+            oneSWIFT.windspd = NaN;
+            oneSWIFT.winddirT = NaN;
+        end
     end
     
-    %% remove CT data if lower hull missing (buoy on its side)
     
-    %if sum(oneSWIFT.uplooking.tkedissipationrate) == 0 | sum(oneSWIFT.downlooking.velocityprofile) == 0,
-    %
-    %    oneSWIFT.watertemp = 9999;
-    %    oneSWIFT.salinity = 9999;
-    %
-    %end
     
     %% extrapolate missing low frequencies of wave energy spectra
     % while requiring energy at lowest frequenc to be zero
     % not neccessary if post-processing for raw displacements
-    notzero = find(oneSWIFT.wavespectra.energy ~= 0 & oneSWIFT.wavespectra.freq > 0.04);
-    tobereplaced =  find(oneSWIFT.wavespectra.energy == 0 & oneSWIFT.wavespectra.freq > 0.04);
-    if length(notzero) > 10,
-        E = interp1([0.04; oneSWIFT.wavespectra.freq(notzero)],[0; oneSWIFT.wavespectra.energy(notzero)],oneSWIFT.wavespectra.freq);
-        oneSWIFT.wavespectra.energy(tobereplaced) = E(tobereplaced);
-        df = median(diff(oneSWIFT.wavespectra.freq));
-        oneSWIFT.sigwaveheight = 4*sqrt(nansum(oneSWIFT.wavespectra.energy)*df);
-    else
+    % less necessary after Oct 2017 rev of onboard processing with improved RC filter
+    if isfield(oneSWIFT,'wavespectra')
+        notzero = find(oneSWIFT.wavespectra.energy ~= 0 & oneSWIFT.wavespectra.freq > 0.04);
+        tobereplaced =  find(oneSWIFT.wavespectra.energy == 0 & oneSWIFT.wavespectra.freq > 0.04);
+        if length(notzero) > 10,
+            E = interp1([0.04; oneSWIFT.wavespectra.freq(notzero)],[0; oneSWIFT.wavespectra.energy(notzero)],oneSWIFT.wavespectra.freq);
+            oneSWIFT.wavespectra.energy(tobereplaced) = E(tobereplaced);
+            df = median(diff(oneSWIFT.wavespectra.freq));
+            oneSWIFT.sigwaveheight = 4*sqrt(nansum(oneSWIFT.wavespectra.energy)*df);
+        else
+        end
     end
     
     %% remove wave histograms, if present
     
-    if isfield(oneSWIFT,'wavehistogram'),
-        oneSWIFT = rmfield(oneSWIFT,'wavehistogram');
-    else
-    end
+    %     if isfield(oneSWIFT,'wavehistogram'),
+    %         oneSWIFT = rmfield(oneSWIFT,'wavehistogram');
+    %     else
+    %     end
+    
     %% increment main structure
     
     time(ai) = oneSWIFT.time;
     lat(ai) = oneSWIFT.lat;
     lon(ai) = oneSWIFT.lon;
-    SWIFT(ai) = oneSWIFT;
+    
+    if ai==1,
+        SWIFT(ai) = oneSWIFT;
+    elseif ai>1 &  string(fieldnames(oneSWIFT)) == string(fieldnames(SWIFT));
+        SWIFT(ai) = oneSWIFT;
+    else
+        disp('payloads changing between sbd files, cannot create sequential SWIFT structure')
+        disp('use readSWIFT_SBD.m directly to read one file at a time instead')
+    end
     %puck(:,ai) = oneSWIFT.puck;
     %salinity(ai) = oneSWIFT.salinity;
     
     
     %% screen the bad data (usually out of the water)
-    % based on error from wave processing on timestamp
-    % or based on minimum salinity
     
+    % no position
     if oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
         
         badburst( length(badburst) + 1) = ai;
         
-    elseif oneSWIFT.sigwaveheight < minwaveheight,
+        % wave limit
+    elseif isfield(oneSWIFT,'sigwaveheight'),
         
-        badburst( length(badburst) + 1) = ai;
+        if oneSWIFT.sigwaveheight < minwaveheight,
+            badburst( length(badburst) + 1) = ai;
+        end
         
-    elseif oneSWIFT.salinity < minsalinity & ~isnan(oneSWIFT.salinity),
+        % salinity limit
+    elseif isfield(oneSWIFT,'salinity'),
         
-        badburst( length(badburst) + 1) = ai;
+        if oneSWIFT.salinity < minsalinity & ~isnan(oneSWIFT.salinity),
+            badburst( length(badburst) + 1) = ai;
+        end
         
-    elseif oneSWIFT.driftspd > maxdriftspd,
+        % speed limit
+    elseif isfield(oneSWIFT,'driftspd')
         
-        badburst( length(badburst) + 1) = ai;
+        if oneSWIFT.driftspd > maxdriftspd,
+            badburst( length(badburst) + 1) = ai;
+        end
+        
     else
     end
     
