@@ -284,9 +284,10 @@ if nansum([turb.epsilon]) ~= 0 % check if there is something to plot
         xlabel('\epsilon [W/kg]')
     end %try/catch
 
+    print('-dpng',[ wd '_HRprofile_turbulence.png'])
 end %if
 
-print('-dpng',[ wd '_HRprofile_turbulence.png'])
+
 
 %% Figure 5: Downlooking velocity profiles
 % Available for SWIFTS with downlooking Nortek Signature or Aquadopp
