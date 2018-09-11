@@ -30,13 +30,18 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %             1/2017  make universal read-in, v3 or v4
 %             3/2017  fix z reference for downlooking Aquadopps (was upside down)
 %             9/2017 fixed factor of 2 in post-calculation of ustar
-%             10/2017   screen, for now, the directional wave results from the SBG
+%             10/2017   screen the directional wave moments from the SBG
+%                       (no longer needed, but harmless, after 11/2017)
 %             12/2107   added type 12 (oxygen optode) and type 13 (SeaOwl)
 %             9/2018    switched to only filling fields where/when data is
 %                       present ** which will require updating plotSWIFT
 %                       using isfield(SWIFT,'xxxxx') to make sure there is
 %                       something to plot ** 
 %                       The only required fields will be time, lat, and lon
+%
+%             9/2018    accomodating a bug in onboard signature processing,
+%                       which reads HR velocities as cm/s instead of m/s 
+%                        and thereby scales dissipation rates by 10^(8/3)
 %
 
 
@@ -52,8 +57,8 @@ BatteryVoltage = NaN; % placeholder
 %%
 payloadtype = fread(fid,1,'uint8=>char');
 
-if payloadtype < '6', % v3.3 and up (com # based)
-    disp('Not Version v3.3 or above.  Use older read-in code.')
+if payloadtype < '6', % v3.3 (2015) and up (com # based)
+    disp('Not Version v3.3 (2015) or above.  Use older read-in code.')
     return
 end
 
@@ -212,10 +217,11 @@ while 1
         SWIFT.rainint = fread(fid,1,'float'); % millimeters_per_hour
 
     elseif type == 9 & size > 0, % Nortek Signature
-        disp('reading Nortek Signature results')
+        disp('reading Nortek Signature results, applying cm/s correction')
+        cmcorrection = 10^(8/3);
         ncells = fread(fid,1,'uint16');
         % HR profile (center beam)
-        SWIFT.signature.HRprofile.tkedissipationrate = fread(fid,ncells,'float'); % turbulent dissipation rate in m^2/s^3
+        SWIFT.signature.HRprofile.tkedissipationrate = fread(fid,ncells,'float') * cmcorrection; % turbulent dissipation rate in m^2/s^3
         res = 0.04; % cell size (m) from config file
         blanking = 0.10; % blanking distance (m) from config file
         depth = 0.15; % depth of transducer
@@ -320,11 +326,11 @@ else
 end
 
 
-%% quality control bug in onboard processing of SBG IMU wave directional momements
+%% quality control onboard processing of SBG IMU wave directional momements
 % which are indicated by momemnts larger than +/- 1 (improper normalization)
 % this has been fixed in Oct 2017 version of onboard processing, but it's
 % harmless to keep this keep screening in place 
-%(in case of rereading pre-2017 sbd files)
+% (in case of rereading pre-2017 sbd files)
 if isfield(SWIFT,'wavespectra'),
     if any(abs(SWIFT.wavespectra.b1)>1) | any(abs(SWIFT.wavespectra.a1)>1),
         SWIFT.wavespectra.a1(:) = NaN; %
