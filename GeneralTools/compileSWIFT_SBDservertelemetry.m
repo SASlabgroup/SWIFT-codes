@@ -68,7 +68,7 @@ for ai = 1:length(flist),
     %% remove bad Airmar data
     
     if isfield(oneSWIFT,'airtemp'),
-        if oneSWIFT.airtemp == 0.0,
+        if oneSWIFT.airtemp == 0.0 | oneSWIFT.airtemp < -50 | oneSWIFT.airtemp > 50,
             oneSWIFT.airtemp = NaN;
             oneSWIFT.windspd = NaN;
         end
@@ -114,6 +114,7 @@ for ai = 1:length(flist),
     else
         disp('payloads changing between sbd files, cannot include full telemetry in SWIFT structure')
         disp('use readSWIFT_SBD.m directly to read one file at a time instead')
+        SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
         badburst( length(badburst) + 1) = ai;
     end
 
