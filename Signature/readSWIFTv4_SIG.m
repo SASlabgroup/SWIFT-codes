@@ -18,6 +18,7 @@ function [ burst  avg  battery ] = readSWIFTv4_SIG(filename)
 %                also fixed velocity scaling and pitch, roll, heading units
 %
 
+battery = NaN;
 
 fid = fopen( filename );
 
