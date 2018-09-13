@@ -13,6 +13,7 @@
 %             9/2018 no longer assume any fields are present in the
 %                   structure, other than time (consistent with
 %                   readSWIFT_SBD.m update)
+%             9/2018 improve screening for bad bursts
 %
 clear all,
 
@@ -20,11 +21,9 @@ plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots.
 
 minwaveheight = 0.0; % minimum wave height in data screening
 
-minsalinity = 0.0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 20.0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 3;  % m/s, for screening when buoy on deck of boat
-
-badburst = []; % initialize indexing for bad bursts
 
 wd = pwd;
 wdi = find(wd == '/',1,'last');
@@ -35,6 +34,8 @@ flist = dir('*.sbd');
 
 
 for ai = 1:length(flist),
+    
+    badburst(ai) = false;  % intialize bad burst flag
     
     [ oneSWIFT voltage ]= readSWIFT_SBD( flist(ai).name , 0);
     
@@ -115,7 +116,7 @@ for ai = 1:length(flist),
         disp('payloads changing between sbd files, cannot include full telemetry in SWIFT structure')
         disp('use readSWIFT_SBD.m directly to read one file at a time instead')
         SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
-        badburst( length(badburst) + 1) = ai;
+        badburst(ai) = true;
     end
 
     
@@ -123,37 +124,32 @@ for ai = 1:length(flist),
     
     % no data
     if isempty(oneSWIFT.lon) | isempty(oneSWIFT.lat) | isempty(oneSWIFT.time), 
-        
-            badburst( length(badburst) + 1) = ai;
-
+            badburst(ai) = true;
+    end
     % no position
-    elseif oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
-        
-        badburst( length(badburst) + 1) = ai;
-        
+    if oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
+        badburst(ai) = true;
+    end
         % wave limit
-    elseif isfield(oneSWIFT,'sigwaveheight'),
-        
+    if isfield(oneSWIFT,'sigwaveheight'),
         if oneSWIFT.sigwaveheight < minwaveheight,
-            badburst( length(badburst) + 1) = ai;
+            badburst(ai) = true;
         end
-        
+    end  
         % salinity limit
-    elseif isfield(oneSWIFT,'salinity'),
-        
-        if oneSWIFT.salinity < minsalinity & ~isnan(oneSWIFT.salinity),
-            badburst( length(badburst) + 1) = ai;
+    if isfield(oneSWIFT,'salinity'),
+        if all(oneSWIFT.salinity < minsalinity), % & all(~isnan(oneSWIFT.salinity)),
+            badburst(ai) = true;
         end
+    end
         
         % speed limit
-    elseif isfield(oneSWIFT,'driftspd')
-        
+    if isfield(oneSWIFT,'driftspd')
         if oneSWIFT.driftspd > maxdriftspd,
-            badburst( length(badburst) + 1) = ai;
+            badburst(ai) = true;
         end
-        
-    else
     end
+
     
     %% close telemetry file loop
 end
