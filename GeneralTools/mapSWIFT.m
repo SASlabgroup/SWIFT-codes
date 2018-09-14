@@ -25,9 +25,9 @@ for fi = 1:length(flist),
     load(flist(fi).name)
     clear color
     
-    if isfield(SWIFT,colorfield),
+    if isfield(SWIFT,colorfield) && ~isempty([SWIFT]),
         
-        for si = 1:length(SWIFT)
+        for si = 1:length(SWIFT), 
             color(si) = max( getfield(SWIFT(si),colorfield) ); % use max incase of multiple values (i.e., 3 CTs)
         end
             
