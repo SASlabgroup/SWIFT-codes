@@ -4,9 +4,12 @@ function [] = plotSWIFT(SWIFT)
 % The resulting figures are named by the working directory
 %   (and the parameters plotted)
 %
-% J. Thomson,    2014
+% J. Thomson,  2014
 % S. Brenner, 08/2018   Overhaul with more robust data field checks and
 %                       adaptability.
+%           9/2018  set the ratio on the drift map to acount for changing
+%               lat - lon ratio as a function of latitude (i.e., make
+%               geographic axis ratio)
 %
 %
 % plotSWIFT creates the following figures if applicable data is available:
@@ -203,7 +206,7 @@ if isfield(SWIFT,'wavespectra')
     ylabel('Energy [m^2/Hz]');
     if isfield(SWIFT,'windspd') &&  ~isnan(max([SWIFT.windspd]))
         title('Scalar wave spectra, colored by wind spd')
-        colorbar('Ticks',0:0.2:1,'TickLabels',round(linspace(0,max([SWIFT.windspd]),6)));
+        colorbar('Ticks',0:0.2:1,'TickLabels',round(linspace(0,max([SWIFT.windspd]),6)*10)/10);
     else
         title('Scalar wave spectra');
     end
@@ -454,7 +457,8 @@ if isfield( SWIFT, 'driftspd' ) && isfield( SWIFT, 'driftdirT' )
 
     xlabel('longitude');
     ylabel('latitude');
-
+    ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,1];  % ratio of lat to lon distances at a given latitude
+    daspect(ratio)
     print('-dpng',[wd '_drift.png'])
 end %if
 

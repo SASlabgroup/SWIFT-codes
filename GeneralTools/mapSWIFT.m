@@ -12,7 +12,7 @@ function h = mapSWIFT(colorfield);
 %
 % J. Thomson, 9/2018
 
-h = figure(1); clf
+h = figure; clf
 
 flist = dir('*SWIFT*.mat');
 
@@ -38,7 +38,7 @@ for fi = 1:length(flist),
             u = [SWIFT.driftspd] .* sind([SWIFT.driftdirT]);
             v = [SWIFT.driftspd] .* cosd([SWIFT.driftdirT]);
             
-            quiver([SWIFT.lon],[SWIFT.lat],u,v,'k-');
+            quiver([SWIFT.lon],[SWIFT.lat],u,v,.5,'k-');
             
         else,
             
@@ -54,4 +54,6 @@ colorbar
 xlabel('lon')
 ylabel('lat')
 grid
+ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,1];  % ratio of lat to lon distances at a given latitude
+daspect(ratio)
 print('-dpng',[wd colorfield '_map.png']) 
