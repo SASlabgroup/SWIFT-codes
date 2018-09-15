@@ -25,6 +25,8 @@ minsalinity = 20.0; % PSU, for use in screen points when buoy is out of the wate
 
 maxdriftspd = 3;  % m/s, for screening when buoy on deck of boat
 
+minairtemp = -20; % min airtemp
+
 wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
@@ -69,7 +71,7 @@ for ai = 1:length(flist),
     %% remove bad Airmar data
     
     if isfield(oneSWIFT,'airtemp'),
-        if oneSWIFT.airtemp == 0.0 | oneSWIFT.airtemp < -50 | oneSWIFT.airtemp > 50,
+        if oneSWIFT.airtemp == 0.0 | oneSWIFT.airtemp < minairtemp | oneSWIFT.airtemp > 50,
             oneSWIFT.airtemp = NaN;
             oneSWIFT.windspd = NaN;
         end
@@ -107,14 +109,27 @@ for ai = 1:length(flist),
     
     onenames = string(fieldnames(oneSWIFT));
     
+        % if first sbd, set the structure fields as the standard
     if ai == 1,
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(SWIFT));
-    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames);
+        
+        % if payloads match, increment
+    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames), 
         SWIFT(ai) = oneSWIFT;
-    else
-        disp('payloads changing between sbd files, cannot include full telemetry in SWIFT structure')
-        disp('use readSWIFT_SBD.m directly to read one file at a time instead')
+        
+        % if additional payloads, favor that new structure (removing other)
+    elseif ai > 1 && length(onenames) > length(allnames), 
+        clear SWIFT
+        SWIFT(ai-1) = oneSWIFT; % place holder, which will be removed when badburst applied
+        badburst(ai-1) = true;
+        SWIFT(ai) = oneSWIFT;
+        allnames = string(fieldnames(oneSWIFT)); % reset the prefer field names
+        disp('payloads changing between sbd files, cannot include all sbd files in SWIFT structure')
+        
+        % if fewer paylaods, skip that burst
+    elseif ai > 1 && length(onenames) < length(allnames), 
+        disp('payloads changing between sbd files, cannot include all sbd files in SWIFT structure')
         SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
         badburst(ai) = true;
     end
