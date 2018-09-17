@@ -160,7 +160,7 @@ if isfield(SWIFT,'watertemp')
 end
 
 % Plot salinity:
-if isfield(SWIFT,'salinity');
+if isfield(SWIFT,'salinity')
     tax(3) = subplot(313);
     h = plot([SWIFT.time],Sarray,'linewidth',2);
     datetick;
@@ -170,9 +170,12 @@ if isfield(SWIFT,'salinity');
     %set(gca,'Ylim',[0 36])
 end
 
-linkaxes(tax,'x');
-set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
-print('-dpng',[wd '_tempandsalinity.png'])
+if isfield(SWIFT,'airtemp') | isfield(SWIFT,'watertemp') | isfield(SWIFT,'salinity'),
+    linkaxes(tax,'x');
+    set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
+    print('-dpng',[wd '_tempandsalinity.png'])
+else
+end
 % -------------------------------------------------------------------------
 
 
