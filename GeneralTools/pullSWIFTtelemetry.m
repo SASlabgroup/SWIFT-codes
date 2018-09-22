@@ -1,12 +1,14 @@
-function [ allbatterylevels ] = pullSWIFTtelemetry( IDs, starttime, endtime );
+function [ allbatterylevels lasttime lastlat lastlon] = pullSWIFTtelemetry( IDs, starttime, endtime );
 % pull and compile sbd files from swiftserver for multiple SWIFTs
 % use for quasi-realtime situtational awareness during a mission / project
 %
-%   [ allbatterylevels ] = pullSWIFTtelemetry( IDs, starttime, endtime );
+%   [ allbatterylevels lasttime lastlat lastlon ] = pullSWIFTtelemetry( IDs, starttime, endtime );
 %
 %   where inputs at strings arrays of two-digit SWIFT IDs (e.g., ['16';'17';'18';]
 %   startime string (e.g., '2018-09-12T22:00:00')
 %   and end time string, which can be empty to pull until present time
+%
+%   outputs are the minimum battery reading and the lasttime, lastlat, lastlon of telemetry
 %
 % note that this puts everything in the current working directory
 %
@@ -20,6 +22,9 @@ options = weboptions('Timeout', 20);
 if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
     
     allbatterylevels = NaN(1,length(IDs)); % initialize battery array
+    lasttime =  NaN(1,length(IDs)); % initialize time array
+    lastlat = NaN(1,length(IDs)); % initialize 
+    lastlon = NaN(1,length(IDs)); % initialize 
     
     
     %% loop thru pulling SBDs for each SWIFT ID
@@ -37,7 +42,7 @@ if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
             
             % run compile SBD, which calls readSWIFT_SBD for each file
             % use a temp file work around the clear all in compile
-            save temp si IDs starttime endtime options allbatterylevels
+            save temp si IDs starttime endtime options allbatterylevels lasttime lastlon lastlat
             compileSWIFT_SBDservertelemetry
             load temp
             wd = pwd;
@@ -45,9 +50,15 @@ if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
             wd = wd((wdi+1):end);
             if ~isempty(SWIFT),
                 allbatterylevels(si) = min(battery);
+                lasttime(si) = max([SWIFT.time]);
+                lastlat(si) = SWIFT(end).lat;
+                lastlon(si) = SWIFT(end).lon;
             else
                 eval(['!rm '  wd '.mat']), % remove file if no results
                 allbatterylevels(si) = NaN;
+                lasttime(si) = 0;
+                lastlat(si) = NaN;
+                lastlon(si) = NaN;
             end
             
             % keep going to next SWIFT
@@ -56,6 +67,9 @@ if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
         else
             disp(['multiple expanded directories for SWIFT ' IDs(si,:)])
             allbatterylevels(si) = NaN;
+            lasttime(si) = 0;
+            lastlat(si) = NaN;
+            lastlon(si) = NaN; 
         end
         
     end
@@ -67,8 +81,10 @@ if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
     
     clc
     spaces(1:length(IDs)) = ' ';
+    commas(1:length(IDs)) = ',';
     Vs(1:length(IDs)) = 'V';
-    [IDs spaces' num2str(allbatterylevels') Vs']
+    [IDs commas' spaces' datestr(lasttime) commas' spaces' num2str(lastlat',6) commas' spaces' ...
+        num2str(lastlon',6) commas' spaces' num2str(allbatterylevels',3) Vs']
     
     
     

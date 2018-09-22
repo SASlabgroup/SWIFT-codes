@@ -237,7 +237,8 @@ while 1
         cells = length(SWIFT.signature.profile.east);
         SWIFT.signature.profile.z = blanking + res./2 + [0:(cells-1)]*res;
         if isempty(SWIFT.signature.HRprofile.tkedissipationrate),
-            SWIFT = rmfield( SWIFT, 'signature' ),
+            SWIFT = rmfield( SWIFT, 'signature' );
+            disp('Signature results are empty!'),
         else 
         end
         

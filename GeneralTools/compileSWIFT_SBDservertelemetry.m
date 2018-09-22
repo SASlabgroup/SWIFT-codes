@@ -108,6 +108,7 @@ for ai = 1:length(flist),
     lon(ai) = oneSWIFT.lon;
     
     onenames = string(fieldnames(oneSWIFT));
+    lengthofnames(ai) = length(onenames);
     
         % if first sbd, set the structure fields as the standard
     if ai == 1,
@@ -125,21 +126,25 @@ for ai = 1:length(flist),
         badburst(ai-1) = true;
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(oneSWIFT)); % reset the prefer field names
-        disp('payloads changing between sbd files, cannot include all sbd files in SWIFT structure')
+        disp('=================================')
+        disp(['found extra payloads in file ' num2str(ai) ', including only sbd files with'])
+        disp(allnames)
         
         % if fewer paylaods, skip that burst
     elseif ai > 1 && length(onenames) < length(allnames), 
-        disp('payloads changing between sbd files, cannot include all sbd files in SWIFT structure')
+        disp('=================================')
+        disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
         SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
         badburst(ai) = true;
     end
 
+    badburst( find(lengthofnames < length(allnames) ) ) = true;
     
     %% screen the bad data (usually out of the water)
     
     % no data
     if isempty(oneSWIFT.lon) | isempty(oneSWIFT.lat) | isempty(oneSWIFT.time), 
-            badburst(ai) = true;
+        badburst(ai) = true;
     end
     % no position
     if oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
@@ -203,40 +208,44 @@ if length(SWIFT) > 3,
     direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
     direction( direction<0) = direction( direction<0 ) + 360; %make quadrant II 270->360 instead of -90->0
     
-    for ai = 1:length(SWIFT),
-        if ai == 1 | ai == length(SWIFT),
-            SWIFT(ai).driftspd = NaN;
-            SWIFT(ai).driftdirT = NaN;
+    for si = 1:length(SWIFT),
+        if si == 1 | si == length(SWIFT),
+            SWIFT(si).driftspd = NaN;
+            SWIFT(si).driftdirT = NaN;
         else
-            SWIFT(ai).driftspd = speed(ai);%speed(tinds(ai));
-            SWIFT(ai).driftdirT = direction(ai);%dir(tinds(ai));
+            SWIFT(si).driftspd = speed(si);%speed(tinds(ai));
+            SWIFT(si).driftdirT = direction(si);%dir(tinds(ai));
         end
     end
     
     % remove last burst, if big change in direction (suggests recovery by ship)
     dirchange = abs( SWIFT( length(SWIFT) - 2).driftdirT  - SWIFT( length(SWIFT) - 1).driftdirT );
     if dirchange > 45,
+        disp('removing last burst, suspect includes ship recovery')
         SWIFT( length(SWIFT) - 1).driftdirT = NaN;
         SWIFT( length(SWIFT) - 1).driftspd = NaN;
-        SWIFT(length(SWIFT) ) = [];
-        battery(length(SWIFT) ) = [];
+        SWIFT( length(SWIFT) ) = [];
+        battery( length(SWIFT) ) = [];
     end
     
 else
-    for ai = 1:length(SWIFT),
-        SWIFT(ai).driftspd = NaN;
-        SWIFT(ai).driftdirT = NaN;
+    for si = 1:length(SWIFT),
+        SWIFT(si).driftspd = NaN;
+        SWIFT(si).driftdirT = NaN;
     end
 end
 
 % quality control by removing drift results associated with large time gaps
-dt = gradient([SWIFT.time]);
-for ai = 1:length(SWIFT),
-    if dt(ai) > 1/12, % 1/12 of day is two hours
-        SWIFT(ai).driftspd = NaN;
-        SWIFT(ai).driftdirT = NaN;
-    else
+if length([SWIFT.time]) > 1,
+    dt = gradient([SWIFT.time]);
+    for si = 1:length(SWIFT),
+        if dt(si) > 1/12, % 1/12 of day is two hours
+            SWIFT(si).driftspd = NaN;
+            SWIFT(si).driftdirT = NaN;
+        else
+        end
     end
+else
 end
 
 %% save
@@ -256,8 +265,8 @@ if plotflag == 1,
     % battery plot
     if any(~isnan(battery)),
         figure(7), clf,
-        plot([SWIFT.time],battery)
-        datetick
+        plot([SWIFT.time],battery,'kx','linewidth',3)
+        datetick, grid
         ylabel('Voltage')
         print('-dpng',[wd '_battery.png'])
     else
