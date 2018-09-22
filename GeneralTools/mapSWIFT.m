@@ -27,8 +27,14 @@ for fi = 1:length(flist),
     
     if isfield(SWIFT,colorfield) && ~isempty([SWIFT]),
         
-        for si = 1:length(SWIFT), 
-            color(si) = max( getfield(SWIFT(si),colorfield) ); % use max incase of multiple values (i.e., 3 CTs)
+        for si = 1:length(SWIFT),
+            if max( getfield(SWIFT(si),colorfield) ) ~= 0,
+                color(si) = max( getfield(SWIFT(si),colorfield) ); % use max incase of multiple values (i.e., 3 CTs)
+            elseif min( getfield(SWIFT(si),colorfield) ) ~= 0,
+                color(si) = min( getfield(SWIFT(si),colorfield) ); % use max incase of multiple values (i.e., 3 CTs)
+            else
+                color(si) = NaN;
+            end
         end
             
             h = scatter([SWIFT.lon],[SWIFT.lat],60,color,'filled'); 
