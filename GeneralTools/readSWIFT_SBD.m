@@ -236,7 +236,10 @@ while 1
         depth = 0.15; % depth of transducer
         cells = length(SWIFT.signature.profile.east);
         SWIFT.signature.profile.z = blanking + res./2 + [0:(cells-1)]*res;
-        
+        if isempty(SWIFT.signature.HRprofile.tkedissipationrate),
+            SWIFT = rmfield( SWIFT, 'signature' ),
+        else 
+        end
         
     elseif type == 10 & size > 0, % SBG Ellipse (same as IMU in v3, but with check factor and no histograms)
         disp('reading SBG IMU results'),
