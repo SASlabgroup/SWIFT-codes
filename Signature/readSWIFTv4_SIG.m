@@ -16,6 +16,7 @@ function [ burst  avg  battery ] = readSWIFTv4_SIG(filename)
 %             9/2017  fixed bugs that were skipping sound speed and reading pressure as 16, not 32 bits
 %                also now read NC and NB directly 
 %                also fixed velocity scaling and pitch, roll, heading units
+%             9/2018 force save before return, regardless of whether whole file read or not. 
 %
 
 battery = NaN;
@@ -400,5 +401,10 @@ while (~feof(fid))
     end
     
 end % done reading the whole file
+
+% close out and save (if not already done when reading past file length
+fclose (fid);
+battery = mean(BatteryVoltage) ./ 10;  % was in 0.1 V, so divide by 10
+save([filename(1:end-4) '.mat'],'burst','avg','battery')
 
 

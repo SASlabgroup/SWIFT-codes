@@ -88,11 +88,11 @@ for di = 1:length(dirlist),
             
             figure(2), clf 
             semilogx(SWIFT(tindex).signature.HRprofile.tkedissipationrate,SWIFT(tindex).signature.HRprofile.z,'k-'), hold on
-            legend('onboard','post-processed','Location','NorthEastOutside')
             %semilogx(SWIFT(tindex).signature.HRprofile.tkedissipationrate*10^(8/3),SWIFT(tindex).signature.HRprofile.z,'b-'), hold on
             %semilogx(SWIFT(tindex).signature.HRprofile.tkedissipationrate*10^(4),SWIFT(tindex).signature.HRprofile.z,'g-'), hold on
             %legend('onboard','onboard, mm/s correction','onboard, cm/s correction','post-processed','Location','NorthEastOutside')
             semilogx(epsilon,z,'rx'), hold on
+            legend('onboard','post-processed','Location','NorthEastOutside')
             xlabel('\epsilon [W/Kg]'),ylabel('z [m]')
             set(gca,'Ydir','reverse')
             drawnow, 
