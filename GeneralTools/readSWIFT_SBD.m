@@ -58,7 +58,7 @@ fid = fopen(fname); % open file for reading
 BatteryVoltage = NaN; % placeholder
 
 %% SWIFT id flag from file name
-SWIFT.id = fname(6:13);
+SWIFT.ID = fname(6:13);
 %%
 payloadtype = fread(fid,1,'uint8=>char');
 
