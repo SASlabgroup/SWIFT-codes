@@ -123,7 +123,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     namearray =  {'Marker';'Color';'Linestyle'}; 
     if isfield(SWIFT,'CTdepth')
         for cti = 1:numCT
-            legendlabs{cti,1} = [num2str(SWIFT(1).CTdepth(cti)) ' m'];
+            legendlabs{cti,1} = [num2str(SWIFT(1).CTdepth(cti),3) ' m'];
         end
     elseif numCT == 3  
         legendlabs = {'0.18 m';'0.66 m';'1.22 m'};
