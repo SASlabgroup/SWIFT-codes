@@ -10,7 +10,7 @@ function [] = plotSWIFT(SWIFT)
 %           9/2018  set the ratio on the drift map to acount for changing
 %               lat - lon ratio as a function of latitude (i.e., make
 %               geographic axis ratio)
-% M. Smith, 09/2018 update CT plotting to utilize CTheight when available
+% M. Smith, 09/2018 update CT plotting to utilize CTdepth when available
 %
 %
 % plotSWIFT creates the following figures if applicable data is available:
