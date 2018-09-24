@@ -4,13 +4,14 @@ function [] = plotSWIFT(SWIFT)
 % The resulting figures are named by the working directory
 %   (and the parameters plotted)
 %
-% J. Thomson,  2014
+% J. Thomson, 2014
 % S. Brenner, 08/2018   Overhaul with more robust data field checks and
 %                       adaptability.
-%           9/2018  set the ratio on the drift map to acount for changing
+% J. Thomson, 9/2018  set the ratio on the drift map to acount for changing
 %               lat - lon ratio as a function of latitude (i.e., make
 %               geographic axis ratio)
 % M. Smith, 09/2018 update CT plotting to utilize CTdepth when available
+% J. Thomson, 09/2018 include spectrogram in wave spectral figure  
 %
 %
 % plotSWIFT creates the following figures if applicable data is available:
@@ -125,7 +126,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
         end
     elseif numCT == 3  
         legendlabs = {'0.18 m';'0.66 m';'1.22 m'};
-        disp('CTdepth field not found: using default depths')
+        disp('CTdepth field not found: using default SWIFT depths')
     end
     
     if numCT == 3
@@ -194,6 +195,8 @@ end
 if isfield(SWIFT,'wavespectra')
     figure(3), clf;
     
+    % line spectra
+    subplot(2,1,1)
     % Loop through timestamps
     for ai = 1:length(SWIFT)
         % If windspd value exist and are physical, use them to assign plot
@@ -208,20 +211,37 @@ if isfield(SWIFT,'wavespectra')
         end %if
         % Plot spectra on log-log scale
         if length(SWIFT(ai).wavespectra.freq) == length(SWIFT(ai).wavespectra.energy)
-            loglog(SWIFT(ai).wavespectra.freq,SWIFT(ai).wavespectra.energy,'linewidth',2,'color',thiscolor);
+            semilogy(SWIFT(ai).wavespectra.freq,SWIFT(ai).wavespectra.energy,'linewidth',2,'color',thiscolor);
             hold on
+            E(ai,:) = SWIFT(ai).wavespectra.energy;
+            f(ai,:) = SWIFT(ai).wavespectra.freq;
+            t(ai) = SWIFT(ai).time;
         else
         end %if
     end %for
     
     xlabel('freq [Hz]');
     ylabel('Energy [m^2/Hz]');
+    axis([5e-2 5e-1 1e-2 inf])
+    title('Scalar wave spectra');
     if isfield(SWIFT,'windspd') &&  ~isnan(max([SWIFT.windspd]))
-        title('Scalar wave spectra, colored by wind spd')
-        colorbar('Ticks',0:0.2:1,'TickLabels',round(linspace(0,max([SWIFT.windspd]),6)*10)/10);
+        WindColorbar = colorbar('Location','East','Ticks',0:0.2:1,'TickLabels',round(linspace(0,max([SWIFT.windspd]),6)*10)/10);
+        WindColorbar.Label.String = 'Wind spd [m/s]';
     else
-        title('Scalar wave spectra');
+
     end
+    
+    % spectrogram
+    subplot(2,1,2)
+    pcolor(nanmean(f,1),t,log10(E)), shading flat
+    axis([5e-2 5e-1 min(t) max(t)])
+    xlabel('freq [Hz]');
+    datetick('y')
+    ylabel('Time -->')
+    Ecolorbar = colorbar('Location','East');
+    Ecolorbar.Label.String = 'Log_{10}(E)';
+    colormap(gca,'spring')    
+    
     print('-dpng',[ wd '_wavespectra.png'])
 else
 end %if
