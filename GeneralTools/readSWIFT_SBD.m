@@ -43,7 +43,10 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %                       which reads HR velocities as cm/s instead of m/s 
 %                        and thereby scales dissipation rates by 10^(8/3)
 %
-
+% 
+%   M. Smith  9/2018    added CTdepth and metheight fields
+%                       added SWIFT.id field using sbd filename 
+%
 
 recip = true; % binary flag to change wave direction to FROM
 
@@ -54,6 +57,8 @@ SWIFT.lon = [];
 fid = fopen(fname); % open file for reading
 BatteryVoltage = NaN; % placeholder
 
+%% SWIFT id flag from file name
+SWIFT.ID = fname(6:13);
 %%
 payloadtype = fread(fid,1,'uint8=>char');
 
@@ -143,6 +148,7 @@ while 1
             SWIFT.winddirR = NaN;
             SWIFT.winddirRstddev = NaN;
         end
+        SWIFT.metheight = 0.84; % height of measurement, meters
         
     elseif type == 3 & size > 0, % IMU
         disp('reading Microstrain IMU results')
@@ -166,6 +172,7 @@ while 1
             SWIFT.wavehistogram.horspdbins = fread(fid,32,'float'); % bin centers of horizontal speeds
         else
         end
+        SWIFTversion = 3;
         
     elseif type == 4 & size > 0, % Aanderra conductivity-temperature cells
         disp('reading CT results')
@@ -173,6 +180,14 @@ while 1
         SWIFT.watertemp(CTcounter + 1) = fread(fid,1,'float'); %
         SWIFT.salinity(CTcounter + 1) = fread(fid,1,'float'); %
         CTcounter = CTcounter + 1;
+        
+        if CTcounter == 1 %add field for CT depths (temp and sal), meters
+            SWIFT.CTdepth(1) = .18;
+        elseif CTcounter == 2
+            SWIFT.CTdepth(2) = .66;
+        elseif CTcounter == 3
+            SWIFT.CTdepth(3) = 1.22;
+        end
         
         
     elseif type == 5 & size > 0,  % Ecopuck fluorometer
@@ -215,6 +230,7 @@ while 1
         SWIFT.airpresstddev = fread(fid,1,'float'); % millibars
         SWIFT.rainaccum = fread(fid,1,'float'); % millimeters
         SWIFT.rainint = fread(fid,1,'float'); % millimeters_per_hour
+        SWIFT.metheight = 0.84; % height of measurement, meters
 
     elseif type == 9 & size > 0, % Nortek Signature
         disp('reading Nortek Signature results, applying cm/s correction')
@@ -265,6 +281,7 @@ while 1
             SWIFT.wavehistogram.horspdbins = fread(fid,32,'float'); % bin centers of horizontal speeds
         else
         end
+        SWIFTversion = 4;
         
     elseif type == 11 & size > 0, % RM Young 8100 Sonic Anemometer
         disp('reading Sonic Anemometer results')
@@ -280,6 +297,7 @@ while 1
         SWIFT.windspectra.freq = fread(fid,116,'float'); % frequency
         SWIFT.windspectra.energy = fread(fid,116,'float'); % spectral energy density of surface winds
         SWIFT.winddirR = rad2deg(atan2(SWIFT.windmeanv, SWIFT.windmeanu) ); % mean wind direction (deg relative)        
+        SWIFT.metheight = 0.71; % height of measurement, meters
         
     elseif type == 12 & size > 0, % Oxygen optode
         disp('reading Oxygen optode results')
@@ -329,6 +347,20 @@ if isfield(SWIFT,'windspectra'),
 else
 end
 
+%% fix CTdepth field if 1 or 2 values
+if isfield(SWIFT,'CTdepth')
+    if length(SWIFT.CTdepth) == 1
+        if SWIFTversion == 3 %v3, uses IMU waves
+            SWIFT.CTdepth = .66;
+        elseif SWIFTversion == 4 %v4, uses SBG waves
+            SWIFT.CTdepth = .18;
+        else 
+            SWIFT.CTdepth = nan;
+        end
+    elseif length(SWIFT.CTdepth) == 2 
+        SWIFT.CTdepth = nan(2,1);
+    end
+end
 
 %% quality control onboard processing of SBG IMU wave directional momements
 % which are indicated by momemnts larger than +/- 1 (improper normalization)

@@ -10,6 +10,7 @@ function [] = plotSWIFT(SWIFT)
 %           9/2018  set the ratio on the drift map to acount for changing
 %               lat - lon ratio as a function of latitude (i.e., make
 %               geographic axis ratio)
+% M. Smith, 09/2018 update CT plotting to utilize CTdepth when available
 %
 %
 % plotSWIFT creates the following figures if applicable data is available:
@@ -113,22 +114,30 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
         Sarray = arrayfun(@(x)x.salinity(end),SWIFT)';
     end
 
-
     % number of CT sensors:
     numCT = size(Tarray,2);
-
-    % Create arrays for assigning makers and legend labels:
-    legendlabs = {'0.1 m';'0.5 m';'1.2 m'};
-    namearray =  {'Marker';'Color';'Linestyle'};
-    valuearray = {'x','r','none';
-                  '+','g','none';
-                  '.','k','none'};
-    % adjust array based on the number of CT sensors included:
-    if numCT == 1
-        valuearray = valuearray(2,:);
+    
+    % Create arrays for assigning makers and legend labels based on numCT:
+    namearray =  {'Marker';'Color';'Linestyle'}; 
+    if isfield(SWIFT,'CTdepth')
+        for cti = 1:numCT
+            legendlabs{cti,1} = [num2str(SWIFT(1).CTdepth(cti)) ' m'];
+        end
+    elseif numCT == 3  
+        legendlabs = {'0.18 m';'0.66 m';'1.22 m'};
+        disp('CTdepth field not found: using default depths')
+    end
+    
+    if numCT == 3
+        valuearray = {'x','r','none';
+          '+','g','none';
+          '.','k','none'};
+    elseif numCT == 1
+        valuearray = {'x','b','none'};
     elseif numCT == 2
         legendlabs = legendlabs(2:3);
-        valuearray = valuearray(2:3,:);
+        valuearray = {'x','b','none';
+            '+','c','none'};
     end %if
 
 end %if
@@ -154,7 +163,7 @@ if isfield(SWIFT,'watertemp')
     h = plot([SWIFT.time],Tarray,'linewidth',2);
     datetick;
     set(h,namearray,valuearray) 
-    if numCT >1; legend(legendlabs); end%if
+    if exist('legendlabs'); legend(legendlabs); end%if
     ylabel('watertemp [C]')
     %set(gca,'Ylim',[-2 30])
 end
@@ -165,7 +174,7 @@ if isfield(SWIFT,'salinity')
     h = plot([SWIFT.time],Sarray,'linewidth',2);
     datetick;
     set(h,namearray,valuearray) 
-    if numCT >1; legend(legendlabs); end%if
+    if exist('legendlabs'); legend(legendlabs); end%if
     ylabel('salinity [PSU]')
     %set(gca,'Ylim',[0 36])
 end
