@@ -11,7 +11,8 @@ function [] = plotSWIFT(SWIFT)
 %               lat - lon ratio as a function of latitude (i.e., make
 %               geographic axis ratio)
 % M. Smith, 09/2018 update CT plotting to utilize CTdepth when available
-% J. Thomson, 09/2018 include spectrogram in wave spectral figure  
+% J. Thomson, 09/2018 include spectrogram in wave spectral figure  and
+%               include met height legend in temp plot
 %
 %
 % plotSWIFT creates the following figures if applicable data is available:
@@ -154,6 +155,11 @@ if isfield(SWIFT,'airtemp')
     plot( [SWIFT.time],[SWIFT.airtemp],'g+','linewidth',2);
     datetick;
     ylabel('airtemp [C]')
+    if isfield(SWIFT,'metheight')
+        legend([num2str(SWIFT(1).metheight,3) ' m'],'Location','NortheastOutside')
+    else
+        legend(['0.84 m'],'Location','NortheastOutside')
+    end
     %set(gca,'Ylim',[-15 30])
     grid on;
 end
@@ -164,7 +170,7 @@ if isfield(SWIFT,'watertemp')
     h = plot([SWIFT.time],Tarray,'linewidth',2);
     datetick;
     set(h,namearray,valuearray) 
-    if exist('legendlabs'); legend(legendlabs); end%if
+    if exist('legendlabs'); legend(legendlabs,'Location','NortheastOutside'); end%if
     ylabel('watertemp [C]')
     %set(gca,'Ylim',[-2 30])
 end
@@ -175,7 +181,7 @@ if isfield(SWIFT,'salinity')
     h = plot([SWIFT.time],Sarray,'linewidth',2);
     datetick;
     set(h,namearray,valuearray) 
-    if exist('legendlabs'); legend(legendlabs); end%if
+    if exist('legendlabs'); legend(legendlabs,'Location','NortheastOutside'); end%if
     ylabel('salinity [PSU]')
     %set(gca,'Ylim',[0 36])
 end
