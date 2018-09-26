@@ -54,7 +54,7 @@ for fi = 1:length(flist),
         
 end
    
-set(gca,'color',[.8 .8 .8])
+set(gca,'color',[.8 .8 .8],'Fontsize',16,'fontweight','demi')
 title([wd ' ' colorfield ],'interp','none')
 colorbar
 xlabel('lon')
