@@ -11,10 +11,15 @@ function h = quiverSWIFT(colorfield, quiverscale);
 % and returns h as the handle to the figures
 %
 % J. Thomson, 9/2018
+%   include surf drift as top vector
+%   add a plan view with drift vector and lower layer
+%   include drift vectors for SWIFTs without signature
+%   include option to spoof wave glider structure (with ADCP) as signature
 
 h(1) = figure(1); clf
 h(2) = figure(2); clf
 ax(1) = subplot(2,1,1); ax(2) = subplot(2,1,2);
+h(3) = figure(3); clf
 
 flist = dir('*SWIFT*.mat');
 
@@ -27,44 +32,79 @@ for fi=1:length(flist),
     load(flist(fi).name)
     clear u v w x y z color
     
-    if isfield(SWIFT,'signature'),
+    % spoof a waveglider to look like a v4 SWIFT
+    if isfield(SWIFT,'ADCP')
+        SWIFT = makeADCPbecomeSIG(SWIFT);
+    else
+    end
+    
+    for si=1:length(SWIFT),
         
-        for si=1:length(SWIFT),
-            
+        
+        if isfield(SWIFT,'driftspd'),
+            u(si,1) = SWIFT(si).driftspd * sind( SWIFT(si).driftdirT );
+            v(si,1) = SWIFT(si).driftspd * cosd( SWIFT(si).driftdirT );
+            w(si,1) = 0;
+        else
+            u(si,1) = NaN;
+            v(si,1) = NaN;
+            w(si,1) = NaN;
+        end
+        
+        if isfield(SWIFT,'signature'),
             nc = length( SWIFT(si).signature.profile.east );  % number of cells
+            lowerlayer = [round(nc/2):nc]; % define lower layer for plan view plots
             
-            u(si,:) = SWIFT(si).signature.profile.east'  + SWIFT(si).driftspd * sind( SWIFT(si).driftdirT ) .* ones( 1, nc );
-            v(si,:) = SWIFT(si).signature.profile.north' + SWIFT(si).driftspd * cosd( SWIFT(si).driftdirT ) .* ones( 1, nc );;
-            w(si,:) = zeros( 1, nc ) ;
+            u(si,2:(nc+1)) = SWIFT(si).signature.profile.east'  + SWIFT(si).driftspd * sind( SWIFT(si).driftdirT ) .* ones( 1, nc );
+            v(si,2:(nc+1)) = SWIFT(si).signature.profile.north' + SWIFT(si).driftspd * cosd( SWIFT(si).driftdirT ) .* ones( 1, nc );;
+            w(si,1:(nc+1)) = zeros( 1, nc+1 ) ;
             
-            x(si,:) = SWIFT(si).lon * ones( 1, nc );
-            y(si,:) = SWIFT(si).lat * ones( 1,  nc );
-            z(si,:) = SWIFT(si).signature.profile.z;
+            x(si,:) = SWIFT(si).lon * ones( 1, nc+1 );
+            y(si,:) = SWIFT(si).lat * ones( 1,  nc+1 );
+            z(si,:) = [0 SWIFT(si).signature.profile.z];
             
-            color(si) = max( getfield(SWIFT(si),colorfield) );
+        else
+            x(si,:) = SWIFT(si).lon;
+            y(si,:) = SWIFT(si).lat;
+            z(si,:) = 0;
             
         end
         
-        figure(1)
-        quiver3(x,y,z,u,v,w,quiverscale,'k'), hold on
-        scatter([SWIFT.lon],[SWIFT.lat],50,color,'filled'), colorbar
+        if max( getfield(SWIFT(si),colorfield) ) ~= 0,
+            color(si) = max( getfield(SWIFT(si),colorfield) ); % use max incase of multiple values (i.e., 3 CTs)
+        elseif min( getfield(SWIFT(si),colorfield) ) ~= 0,
+            color(si) = min( getfield(SWIFT(si),colorfield) ); % use max incase of multiple values (i.e., 3 CTs)
+        else
+            color(si) = NaN;
+        end
         
-        figure(2)
-        axes(ax(1))
-        scatter3(x(:),y(:),z(:),10,u(:),'filled'), hold on
-        title('east velocity [m/s]'), caxis([-.5 .5]), colorbar
-        axes(ax(2))
-        scatter3(x(:),y(:),z(:),10,v(:),'filled'), hold on
-        title('north velocity [m/s]'), caxis([-.5 .5]), colorbar
-        
-    else
-        disp('No signature data.  Someone should expand this to work on AQD profiles too.')
     end
+    
+    figure(1)
+    quiver3(x,y,z,u,v,w,quiverscale,'k'), hold on
+    scatter([SWIFT.lon],[SWIFT.lat],50,color,'filled'), colorbar
+    
+    figure(2)
+    axes(ax(1))
+    scatter3(x(:),y(:),z(:),10,u(:),'filled'), hold on
+    title('east velocity [m/s]'), caxis([-.5 .5]), colorbar
+    axes(ax(2))
+    scatter3(x(:),y(:),z(:),10,v(:),'filled'), hold on
+    title('north velocity [m/s]'), caxis([-.5 .5]), colorbar
+    
+    figure(3)
+    quiver(x(:,1),y(:,1),u(:,1),v(:,1),quiverscale,'k-'), hold on
+    if isfield(SWIFT,'signature'),
+        quiver(x(:,1),y(:,1),nanmean(u(:,lowerlayer),2),nanmean(v(:,lowerlayer),2),quiverscale,'r-'), hold on
+    else
+        quiver(x(1,1),y(1,1),0,0,quiverscale,'r-')
+    end
+    scatter([SWIFT.lon],[SWIFT.lat],50,color,'filled'),
     
 end
 
 
-%% 
+%%
 
 figure(1)
 xlabel('lon')
@@ -76,6 +116,7 @@ grid
 %daspect(ratio)
 set(gca,'ZDir','reverse')
 grid
+cb.Label.String = colorfield;
 print('-dpng',[wd '_quiverSWIFT_' colorfield '.png'])
 
 figure(2)
@@ -94,8 +135,45 @@ ylabel('lat')
 zlabel('z [m]')
 set(gca,'ZDir','reverse')
 grid
-hlink = linkprop(ax,{'CameraPosition','CameraUpVector'})
+hlink = linkprop(ax,{'CameraPosition','CameraUpVector'});
 rotate3d on
 print('-dpng',[wd '_curtainSWIFT.png'])
+
+figure(3),
+set(gca,'fontsize',16,'fontweight','demi')
+xlabel('lon')
+ylabel('lat')
+grid
+ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,100];  % ratio of lat to lon distances at a given latitude
+daspect(ratio)
+legend('surface','lowerlayer','Location','Northwest')
+cb = colorbar;
+cb.Label.String = colorfield;
+print('-dpng',[wd '_twolayervectors_' colorfield '.png'])
+
+
+end
+
+%% makeADCPbecomeSIG
+function SWIFT = makeADCPbecomeSIG(SWIFT);
+
+for si=1:length(SWIFT),
+    
+    if any(~isnan(SWIFT(si).ADCP.currentspd)),
+        si
+        SWIFT(si).signature.profile.east = SWIFT(si).ADCP.currentspd' .* sind( SWIFT(si).ADCP.currentdirM' );
+        SWIFT(si).signature.profile.north = SWIFT(si).ADCP.currentspd' .* cosd( SWIFT(si).ADCP.currentdirM' );
+        SWIFT(si).signature.profile.z = SWIFT(si).ADCP.z;
+        
+        SWIFT(si).driftspd = SWIFT(si).ADCP.currentspd(1);
+        SWIFT(si).driftdirT = SWIFT(si).ADCP.currentdirM(1);
+        bad(si) = false;
+    else
+        bad(si) = true;
+    end
+    
+end
+
+SWIFT(bad) = [];
 
 end
