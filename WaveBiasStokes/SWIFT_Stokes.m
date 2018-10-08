@@ -1,222 +1,200 @@
-function SWIFT_withStokes = SWIFT_Stokes(SWIFT)
+function SWIFT_Stokes = SWIFT_Stokes(SWIFT, varargin)
+%
+% function SWIFT_Stokes = SWIFT_Stokes(SWIFT, varargin)
+%
+% This function estimates Stokes drift profiles and wave-following bias velocities
+%
+%   INPUTS: SWIFT: SWIFT data structure
+%           depth: water depth at SWIFT (length is number of SWIFT bursts)
+%   
+%   OUTPUTS: SWIFT_Stokes: SWIFT structure with added fields:
+%               stokesdrift: Stokes drift profile estimates
+%                   bulk: using bulk wave parameters
+%                       surface: east, north components (m/s) at surface
+%                       profile: east, north components (m/s) at z (m)
+%                   spectral: using Fourier moments
+%                       surface: east, north components (m/s) at surface
+%                       profile: east, north components (m/s) at z (m)
+%               wavebias: Wave-following bias estimates
+%                   bulk: using bulk wave parameters
+%                       bias: east, north components (m/s) of wave-following
+%                               bias estimate at z (m)
+%                       profile: east, north components of absolute
+%                              velocity without removing wave-following bias
+%                              (drift + adcp relative velocity)
+%                       profile_biasremoved: east, north components (m/s) of
+%                               corrected absolute velocity at z (m)
+%                              (profile - bias)
+%                   spectral: using Fourier moments
+%                       bias: east, north components (z) of wave-following
+%                               bias estimate at z (m)
+%                       profile: east, north components of absolute
+%                              velocity without removing wave-following bias
+%                              (drift + adcp relative velocity)
+%                              (note: same as profile stored under bulk)
+%                       profile_biasremoved: east, north components (m/s) of
+%                               corrected absolute velocity at z (m)
+%                              (profile - bias)
+%
+% M. Moulton
 
-% Estimate Stokes profiles and wave-following bias velocities
-% Assumes deep water. Will be adapted to intermediate waves.
-% Option to compute using a1 and b1 will be added.
-% Melissa Moulton, last edited: Aug 2018
+% Get water depth or assume deep water waves
+if ~isempty(varargin)
+	depth = varargin{1};
+    depthflag = 'intermediate'; % Flag for using intermediate wave code
+    if numel(depth)==1 % If single constant depth input, make vector
+        depth = depth*ones(length(SWIFT),1);
+    end
+else
+    depthflag = 'deep'; % Flag for using deep water wave code
+end
 
-g = 9.81;
-
-% Set z bins to standard for Signature
-z = (.35:.5:19.85)'; %z = 0:.05:20;
-
+% Loop through SWIFT bursts
 for ii = 1:length(SWIFT)
+
+% If there is Signature data, get Signature z bins
+% If no Signature data, use hard-coded z bins (same as standard for Signature)
+if isfield(SWIFT(ii).signature.profile,'east')
+    % Get z bins
+	zsave = SWIFT(ii).signature.profile.z; if isrow(zsave), zsave = zsave'; end
+	z = -zsave; % Sign convention: z decreasing downward
+else
+    zsave = (.35:.5:19.85)';
+	z = -zsave; % Sign convention: z decreasing downward    
+end
+
+% Water depth for this burst
+if strcmp(depthflag,'intermediate')==1
+    h = depth(ii);
+end
 
 % Get drift speed and direction
 driftdirT = SWIFT(ii).driftdirT;
 driftspd = SWIFT(ii).driftspd;
 
-% Load wave information
+% Load bulk wave information
 sigwaveheight = SWIFT(ii).sigwaveheight;
 peakwaveperiod = SWIFT(ii).peakwaveperiod;
 
 % Change peak wave dir to direction TO for plotting/analysis
 peakwavedirT = SWIFT(ii).peakwavedirT;
 peakwavedirT(peakwavedirT>9000) = NaN;
-peakwavedirT = peakwavedirT+180; peakwavedirT(peakwavedirT>360) = peakwavedirT(peakwavedirT>360)-360;
+peakwavedirT = peakwavedirT+180;
+peakwavedirT(peakwavedirT>360) = peakwavedirT(peakwavedirT>360)-360;
 
-% Spectral information
+% Load spectral information
 energy = SWIFT(ii).wavespectra.energy;
 frequency = SWIFT(ii).wavespectra.freq;
 a1 = SWIFT(ii).wavespectra.a1;
 b1 = SWIFT(ii).wavespectra.b1;
-a2 = SWIFT(ii).wavespectra.a2;
-b2 = SWIFT(ii).wavespectra.b2;
 
-% Compute directions and spreads
-dir1 = atan2d(b1,a1);
-spread1 = sqrt(2.*(1-sqrt(a1.^2+b1.^2)));
-dir2 = atan2d(b2,a2)/2;
-spread2 = sqrt(abs(0.5-0.5.*(a2.*cos(2.*deg2rad(dir2))+b2.*cos(2.*deg2rad(dir2)))));
-
-dir = -dir1; %  switch from rad to deg, and CCW to CW (negate)
-dir = dir + 90;  % rotate from eastward = 0 to northward  = 0
-dir( dir < 0 ) = dir( dir < 0 ) + 360;  % take NW quadrant from negative to 270-360 range
-westdirs = dir > 180;
-eastdirs = dir < 180;
-dir( westdirs ) = dir ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
-dir( eastdirs ) = dir ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
-dir1=dir;
-
-dir = - dir2;  % switch from rad to deg, and CCW to CW (negate)
-dir = dir + 90;  % rotate from eastward = 0 to northward  = 0
-dir( dir < 0 ) = dir( dir < 0 ) + 360;  % take NW quadrant from negative to 270-360 range
-westdirs = dir > 180;
-eastdirs = dir < 180;
-dir( westdirs ) = dir ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
-dir( eastdirs ) = dir ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
-dir2 = dir;
-
-%s = 2./(spread2(find(energy==max(energy))).^2)-1;
-
-% Compute directional spectrum estimate
-% dtheta = 2;
-% theta = -[-180:dtheta:179]';  % start with cartesion (a1 is positive east velocities, b1 is positive north)
-% Spreading function
-% Dtheta = 2.^(2*s-1)./pi.*(gamma(s+1).^2)./(gamma(2*s+1)).*cos((theta-peakwavedirT)/2).^(2*s);
-
-plotflag=0;
-[Etheta_MEM, theta_MEM, f_MEM, dir_MEM, spread_MEM, spread2_MEM, spread2alt_MEM] = SWIFTdirectionalspectra(SWIFT(ii),plotflag);
-% Convert to direction to for plotting
-theta_MEM = theta_MEM-180; theta_MEM(theta_MEM<0)=theta_MEM(theta_MEM<0)+360;
-
-% Bulk Stokes estimate
-k = 4*pi^2./(g*peakwaveperiod.^2);
+% Compute angular frequency
 om = 2*pi./peakwaveperiod;
-% uStokes0=sigwaveheight.^2/(16)*om*k; % Surface value, consider outputting this for analysis
-uStokes = sigwaveheight.^2/(16)*om*k*exp(-2*k*z);
-uSWIFT = sigwaveheight.^2/(16)*om*k*exp(-k*z);
 
-SWIFT(ii).Stokes.monochrom.profile.east = uStokes.*sind(peakwavedirT);
-SWIFT(ii).Stokes.monochrom.profile.north = uStokes.*cosd(peakwavedirT);
-SWIFT(ii).Stokes.monochrom_bias.profile.east = uSWIFT.*sind(peakwavedirT);
-SWIFT(ii).Stokes.monochrom_bias.profile.north = uSWIFT.*cosd(peakwavedirT);
+% Compute Bulk Stokes drift and Wave-Following Bias at Signature z bins
+if strcmp(depthflag,'intermediate')==1
+    k = wavenumber(1/peakwaveperiod, h); % Compute wavenumber
+    Stokes0=sigwaveheight.^2/(16)*om*k.*cosh(2*k*h)./(sinh(k*h).^2); % Surface value
+    Stokes = sigwaveheight.^2/(16)*om*k.*cosh(2*k*(z+h))./(sinh(k*h).^2);
+    WaveBias = sigwaveheight.^2/(16)*om*k.*cosh(k*z+2*k*h)./(sinh(k*h).^2);
+else
+    k = om.^2/9.81; % Compute wavenumber
+    Stokes0=sigwaveheight.^2/(16)*om*k; % Surface value
+    Stokes = sigwaveheight.^2/(16)*om*k.*exp(2*k*z);
+    WaveBias = sigwaveheight.^2/(16)*om*k.*exp(k*z);
+end
 
-% Stokes estimate using frequency spectrum ("1d")
-% assume direction = peakwavedirT at all frequencies
-% Note: this will be replaced with a1, b1 method
+% Compute east and north components
+SWIFT(ii).stokesdrift.bulk.surface.east = Stokes0.*sind(peakwavedirT);
+SWIFT(ii).stokesdrift.bulk.surface.east = Stokes0.*cosd(peakwavedirT);
+SWIFT(ii).stokesdrift.bulk.profile.east = Stokes.*sind(peakwavedirT);
+SWIFT(ii).stokesdrift.bulk.profile.north = Stokes.*cosd(peakwavedirT);
+SWIFT(ii).stokesdrift.bulk.surface.z = zsave;
+SWIFT(ii).wavebias.bulk.bias.east = WaveBias.*sind(peakwavedirT);
+SWIFT(ii).wavebias.bulk.bias.north = WaveBias.*cosd(peakwavedirT);
+SWIFT(ii).wavebias.bulk.bias.z = zsave;
+
+
+% Compute "Spectral" Stokes and Wave Bias Estimates (using Fourier moments)
 
 % Initialize with zero value prior to summing component-wise over freq
-uStokes_spec1d_east = zeros(size(z));
-uStokes_spec1d_north = zeros(size(z));
-uStokes_spec1d_east_0 = 0; % Surface value
-uStokes_spec1d_north_0 = 0; % Surface value
-uSemiStokes_spec1d_east = zeros(size(z));
-uSemiStokes_spec1d_north = zeros(size(z));
-uSemiStokes_spec1d_east_0 = 0; % Surface value
-uSemiStokes_spec1d_north_0 = 0; % Surface value
+Stokes_spectral_east_0 = 0; % Surface value
+Stokes_spectral_north_0 = 0; % Surface value
+Stokes_spectral_east = zeros(size(z)); % At mean z of Signature bins
+Stokes_spectral_north = zeros(size(z)); % At mean z of Signature bins
+WaveBias_spectral_east_0 = 0; % Surface value
+WaveBias_spectral_north_0 = 0; % Surface value
+WaveBias_spectral_east = zeros(size(z)); % At mean z of Signature bins
+WaveBias_spectral_north = zeros(size(z)); % At mean z of Signature bins
+
+% Frequency resolution (*assumes constant*)
 df = mean(abs(diff(frequency)));
 
+% Loop over frequency
 for jj=1:length(frequency)
-    k = 4*pi^2./(g*(1/frequency(jj)).^2);
+    
     om = 2*pi.*frequency(jj);
     
-    uStokes_jj = om*k*energy(jj)*exp(-2*k*z);
-    uStokes_jj_0 = om*k*energy(jj);
-    addeast = uStokes_jj.*sind(dir1(jj));
-    addnorth = uStokes_jj.*cosd(dir1(jj));
-    addeast_0 = uStokes_jj_0.*sind(dir1(jj));
-    addnorth_0 = uStokes_jj_0.*cosd(dir1(jj));
-    uStokes_spec1d_east = uStokes_spec1d_east+addeast*df;
-    uStokes_spec1d_north = uStokes_spec1d_north+addnorth*df;
-    uStokes_spec1d_east_0 = uStokes_spec1d_east_0+addeast_0*df;
-    uStokes_spec1d_north_0 = uStokes_spec1d_north_0+addnorth_0*df;
-    
-    uSemiStokes_jj = om*k*energy(jj)*exp(-k*z);
-    uSemiStokes_jj_0 = om*k*energy(jj);
-    addeast = uSemiStokes_jj.*sind(dir1(jj));
-    addnorth = uSemiStokes_jj.*cosd(dir1(jj));
-    addeast_0 = uSemiStokes_jj_0.*sind(dir1(jj));
-    addnorth_0 = uSemiStokes_jj_0.*cosd(dir1(jj));
-    uSemiStokes_spec1d_east = uSemiStokes_spec1d_east+addeast*df;
-    uSemiStokes_spec1d_north = uSemiStokes_spec1d_north+addnorth*df;
-    uSemiStokes_spec1d_east_0 = uSemiStokes_spec1d_east_0+addeast_0*df;
-    uSemiStokes_spec1d_north_0 = uSemiStokes_spec1d_north_0+addnorth_0*df;    
-end
-
-SWIFT(ii).Stokes.spec1d.profile.east = uStokes_spec1d_east;
-SWIFT(ii).Stokes.spec1d.profile.north = uStokes_spec1d_north;
-SWIFT(ii).Stokes.spec1d_bias.profile.east = uSemiStokes_spec1d_east;
-SWIFT(ii).Stokes.spec1d_bias.profile.north = uSemiStokes_spec1d_north;
-
-% MEM Stokes estimates
-uStokes_spectral_east = zeros(size(z));
-uStokes_spectral_north = zeros(size(z));
-uStokes_spectral_east_0 = 0; % Surface value
-uStokes_spectral_north_0 = 0; % Surface value
-
-uSemiStokes_spectral_east = zeros(size(z));
-uSemiStokes_spectral_north = zeros(size(z));
-uSemiStokes_spectral_east_0 = 0; % Surface value
-uSemiStokes_spectral_north_0 = 0; % Surface value
-
-df = mean(abs(diff(f_MEM)));
-dtheta = mean(abs(diff(theta_MEM)));
-
-% Integrate MEM over freq and dir 
-for jj = 1:length(f_MEM)
-    k = 4*pi^2./(g*(1/f_MEM(jj)).^2);
-    om = 2*pi.*f_MEM(jj);
-    
-    for kk = 1:length(theta_MEM)
-        
-        uStokes_jj_kk = om*k*Etheta_MEM(jj,kk)*exp(-2*k*z);
-        uStokes_jj_kk_0 = om*k*Etheta_MEM(jj,kk);
-        addeast = uStokes_jj_kk.*sind(theta_MEM(kk));
-        addnorth = uStokes_jj_kk.*cosd(theta_MEM(kk));
-        addeast_0 = uStokes_jj_kk_0.*sind(theta_MEM(kk));
-        addnorth_0 = uStokes_jj_kk_0.*cosd(theta_MEM(kk));
-        uStokes_spectral_east = uStokes_spectral_east+addeast*df*dtheta;
-        uStokes_spectral_north = uStokes_spectral_north+addnorth*df*dtheta;
-        uStokes_spectral_east_0 = uStokes_spectral_east_0+addeast_0*df*dtheta;
-        uStokes_spectral_north_0 = uStokes_spectral_north_0+addnorth_0*df*dtheta;
-        
-        uSemiStokes_jj_kk = om*k*Etheta_MEM(jj,kk)*exp(-k*z);
-        uSemiStokes_jj_kk_0 = om*k*Etheta_MEM(jj,kk);
-        addeastSemi = uSemiStokes_jj_kk.*sind(theta_MEM(kk));
-        addnorthSemi = uSemiStokes_jj_kk.*cosd(theta_MEM(kk));
-        addeastSemi_0 = uSemiStokes_jj_kk_0.*sind(theta_MEM(kk));
-        addnorthSemi_0 = uSemiStokes_jj_kk_0.*cosd(theta_MEM(kk));
-        uSemiStokes_spectral_east = uSemiStokes_spectral_east+addeastSemi*df*dtheta;
-        uSemiStokes_spectral_north = uSemiStokes_spectral_north+addnorthSemi*df*dtheta;
-        uSemiStokes_spectral_east_0 = uSemiStokes_spectral_east_0+addeastSemi_0*df*dtheta;
-        uSemiStokes_spectral_north_0 = uSemiStokes_spectral_north_0+addnorthSemi_0*df*dtheta;
-        
-    end
-end
-
-SWIFT(ii).Stokes.spectral.profile.east = uStokes_spectral_east;
-SWIFT(ii).Stokes.spectral.profile.north = uStokes_spectral_north;
-SWIFT(ii).Stokes.spectral_bias.profile.east = uSemiStokes_spectral_east;
-SWIFT(ii).Stokes.spectral_bias.profile.north = uSemiStokes_spectral_north;
-
-% Save correction:
-if isfield(SWIFT(ii).signature.profile,'east')
-    
-    if ~isempty(SWIFT(ii).signature.profile.east)
-        
-        eastabs = driftspd.*sind(driftdirT+180)+[SWIFT(ii).signature.profile.east];
-        northabs = driftspd.*cosd(driftdirT+180)+[SWIFT(ii).signature.profile.north];
-        eastabscorr = driftspd.*sind(driftdirT+180)+[SWIFT(ii).signature.profile.east]-[SWIFT(ii).Stokes.spec1d_bias.profile.east];
-        northabscorr = driftspd.*cosd(driftdirT+180)+[SWIFT(ii).signature.profile.north]-[SWIFT(ii).Stokes.spec1d_bias.profile.north];
-        
-        SWIFT(ii).Stokes.spec1d_bias.profile.eastabs = eastabs;
-        SWIFT(ii).Stokes.spec1d_bias.profile.northabs = northabs;
-        
-        SWIFT(ii).Stokes.spec1d_bias.profile.eastabscorr = eastabscorr;
-        SWIFT(ii).Stokes.spec1d_bias.profile.northabscorr = northabscorr;
-        
-        SWIFT(ii).Stokes.spec1d_bias.profile.shear = abs(gradient(sqrt(eastabs.^2+northabs.^2),.5));
-        SWIFT(ii).Stokes.spec1d_bias.profile.shearcorr = abs(gradient(sqrt(eastabscorr.^2+northabscorr.^2),.5));
-
-        % Smoothed profile
-%         SWIFT(ii).Stokes.spec1d_bias.profile.shearsmooth = abs(gradient(runavg(sqrt(eastabs.^2+northabs.^2),3),.5));
-%         SWIFT(ii).Stokes.spec1d_bias.profile.shearsmoothcorr = abs(gradient(runavg(sqrt(eastabscorr.^2+northabscorr.^2),3),.5));
-        
+    % Compute Stokes drift and Wave Bias for this frequency
+    if strcmp(depthflag,'intermediate')==1
+        k = wavenumber(frequency(jj), h);
+        Stokes_jj_0 = om*k*cosh(2*k*h)./(sinh(k*h).^2)*energy(jj);
+        Stokes_jj = om*k*cosh(2*k*(z+h))./(sinh(k*h).^2)*energy(jj);
+        WaveBias_jj_0 = om*k*cosh(2*k*h)./(sinh(k*h).^2)*energy(jj);        
+        WaveBias_jj = om*k*cosh(k*z+2*k*h)./(sinh(k*h).^2)*energy(jj);
     else
-        SWIFT(ii).Stokes.spec1d_bias.profile.eastabs = NaN*ones(40,1);
-        SWIFT(ii).Stokes.spec1d_bias.profile.northabs = NaN*ones(40,1);
-        SWIFT(ii).Stokes.spec1d_bias.profile.eastabscorr = NaN*ones(40,1);
-        SWIFT(ii).Stokes.spec1d_bias.profile.northabscorr = NaN*ones(40,1);
-        SWIFT(ii).Stokes.spec1d_bias.profile.shear = NaN*ones(40,1);
-        SWIFT(ii).Stokes.spec1d_bias.profile.shearcorr = NaN*ones(40,1);
-%         SWIFT(ii).Stokes.spec1d_bias.profile.shearsmooth = NaN*ones(40,1);
-%         SWIFT(ii).Stokes.spec1d_bias.profile.shearsmoothcorr = NaN*ones(40,1);
+        Stokes_jj_0 = om*k*energy(jj);
+        Stokes_jj = om*k*energy(jj)*exp(2*k*z);
+        WaveBias_jj_0 = om*k*energy(jj);        
+        WaveBias_jj = om*k*energy(jj)*exp(k*z);
     end
+    
+    % Sum component-wise with contributions from other frequencies
+    Stokes_spectral_east_0 = Stokes_spectral_east_0+Stokes_jj_0.*(-a1(jj))*df;
+    Stokes_spectral_north_0 = Stokes_spectral_north_0+Stokes_jj_0.*(-b1(jj))*df;
+    Stokes_spectral_east = Stokes_spectral_east+Stokes_jj.*(-a1(jj))*df;
+    Stokes_spectral_north = Stokes_spectral_north+Stokes_jj.*(-b1(jj))*df;        
+    WaveBias_spectral_east = WaveBias_spectral_east+WaveBias_jj.*(-a1(jj))*df;
+    WaveBias_spectral_north = WaveBias_spectral_north+WaveBias_jj.*(-b1(jj))*df;
+    WaveBias_spectral_east_0 = WaveBias_spectral_east_0+WaveBias_jj_0.*(-a1(jj))*df;
+    WaveBias_spectral_north_0 = WaveBias_spectral_north_0+WaveBias_jj_0.*(-b1(jj))*df;    
 end
+
+% Save Stokes and Wave Bias profiles
+SWIFT(ii).stokesdrift.spectral.surface.east = Stokes_spectral_east_0;
+SWIFT(ii).stokesdrift.spectral.surface.north = Stokes_spectral_north_0;
+SWIFT(ii).stokesdrift.spectral.profile.east = Stokes_spectral_east;
+SWIFT(ii).stokesdrift.spectral.profile.north = Stokes_spectral_north;
+SWIFT(ii).stokesdrift.spectral.profile.z = zsave;
+
+SWIFT(ii).wavebias.spectral.bias.east = WaveBias_spectral_east;
+SWIFT(ii).wavebias.spectral.bias.north = WaveBias_spectral_north;
+SWIFT(ii).wavebias.spectral.bias.z = zsave;
+
+% Compute uncorrected and corrected absolute velocity profiles:
+
+% Bulk
+% Absolute velocity profile (note: same as saved under spectral)
+SWIFT(ii).wavebias.bulk.profile.east = driftspd.*sind(driftdirT)+[SWIFT(ii).signature.profile.east];
+SWIFT(ii).wavebias.bulk.profile.north = driftspd.*cosd(driftdirT)+[SWIFT(ii).signature.profile.north];
+SWIFT(ii).wavebias.bulk.profile.z = zsave;
+% With bias removed
+SWIFT(ii).wavebias.bulk.profile_biasremoved.east = SWIFT(ii).wavebias.bulk.profile.east-[SWIFT(ii).wavebias.bulk.bias.east];
+SWIFT(ii).wavebias.bulk.profile_biasremoved.north = SWIFT(ii).wavebias.bulk.profile.north-[SWIFT(ii).wavebias.bulk.bias.north];
+SWIFT(ii).wavebias.bulk.profile_biasremoved.z = zsave;
+
+% Spectral
+% Absolute velocity profile (note: same as saved under spectral)
+SWIFT(ii).wavebias.spectral.profile.east = driftspd.*sind(driftdirT)+[SWIFT(ii).signature.profile.east];
+SWIFT(ii).wavebias.spectral.profile.north = driftspd.*cosd(driftdirT)+[SWIFT(ii).signature.profile.north];
+SWIFT(ii).wavebias.spectral.profile.z = zsave;
+% With bias removed
+SWIFT(ii).wavebias.spectral.profile_biasremoved.east = SWIFT(ii).wavebias.spectral.profile.east-[SWIFT(ii).wavebias.spectral.bias.east];
+SWIFT(ii).wavebias.spectral.profile_biasremoved.north = SWIFT(ii).wavebias.spectral.profile.north-[SWIFT(ii).wavebias.spectral.bias.north];
+SWIFT(ii).wavebias.spectral.profile_biasremoved.z = zsave;
 
 end
 
-SWIFT_withStokes = SWIFT;
+SWIFT_Stokes = SWIFT;
 
 end
