@@ -30,21 +30,40 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %             1/2017  make universal read-in, v3 or v4
 %             3/2017  fix z reference for downlooking Aquadopps (was upside down)
 %             9/2017 fixed factor of 2 in post-calculation of ustar
-%             10/2017   screen, for now, the directional wave results from the SBG
+%             10/2017   screen the directional wave moments from the SBG
+%                       (no longer needed, but harmless, after 11/2017)
 %             12/2107   added type 12 (oxygen optode) and type 13 (SeaOwl)
+%             9/2018    switched to only filling fields where/when data is
+%                       present ** which will require updating plotSWIFT
+%                       using isfield(SWIFT,'xxxxx') to make sure there is
+%                       something to plot ** 
+%                       The only required fields will be time, lat, and lon
+%
+%             9/2018    accomodating a bug in onboard signature processing,
+%                       which reads HR velocities as cm/s instead of m/s 
+%                        and thereby scales dissipation rates by 10^(8/3)
+%
+% 
+%   M. Smith  9/2018    added CTdepth and metheight fields
+%                       added SWIFT.id field using sbd filename 
 %
 
-
 recip = true; % binary flag to change wave direction to FROM
+
+SWIFT.time = [];
+SWIFT.lat = [];
+SWIFT.lon = [];
 
 fid = fopen(fname); % open file for reading
 BatteryVoltage = NaN; % placeholder
 
+%% SWIFT id flag from file name
+SWIFT.ID = fname(6:13);
 %%
 payloadtype = fread(fid,1,'uint8=>char');
 
-if payloadtype < '6', % v3.3 and up (com # based)
-    disp('Not Version v3.3 or above.  Use older read-in code.')
+if payloadtype < '6', % v3.3 (2015) and up (com # based)
+    disp('Not Version v3.3 (2015) or above.  Use older read-in code.')
     return
 end
 
@@ -61,7 +80,7 @@ while 1
     port = fread(fid,1,'uint8');
     size = fread(fid,1,'uint16');
     
-    if type == 0 & size > 0, % uploading high-resolution aquadopp (AQH)
+    if type == 0 & size > 0, % uplooking high-resolution aquadopp (AQH)
         disp('reading AQH results')
         SWIFT.uplooking.tkedissipationrate = fread(fid,16,'float'); % turbulent dissipation rate in m^2/s^3
         res = 0.04; % cell size (m) from hdr file
@@ -81,7 +100,7 @@ while 1
         z = blanking + res./2 + [0:(cells-1)]*res;
         SWIFT.downlooking.z = z; %fliplr(z) - blanking;
         
-    elseif type == 2 & size > 0, % PB200 weather station and backup GPS
+    elseif type == 2 & size > 0, % PB200 weather station (Airmar) and backup GPS
         disp('reading Airmar results')
         SWIFT.winddirT = fread(fid,1,'float'); % mean wind direction (deg T)
         SWIFT.winddirTstddev =  fread(fid,1,'float'); % std dev of wind direction (deg)
@@ -129,15 +148,7 @@ while 1
             SWIFT.winddirR = NaN;
             SWIFT.winddirRstddev = NaN;
         end
-        SWIFT.windustar = NaN;
-        SWIFT.windepsilon = NaN;
-        SWIFT.windmeanu = NaN;
-        SWIFT.windmeanv = NaN;
-        SWIFT.windmeanw = NaN;
-        SWIFT.windanisotropy = NaN; % inertial sub-range ratio
-        SWIFT.windustarquality = NaN; % quality of inertial spectral fit
-        SWIFT.windspectra.freq = NaN(116,1); % frequency
-        SWIFT.windspectra.energy = NaN(116,1);
+        SWIFT.metheight = 0.84; % height of measurement, meters
         
     elseif type == 3 & size > 0, % IMU
         disp('reading Microstrain IMU results')
@@ -161,6 +172,7 @@ while 1
             SWIFT.wavehistogram.horspdbins = fread(fid,32,'float'); % bin centers of horizontal speeds
         else
         end
+        SWIFTversion = 3;
         
     elseif type == 4 & size > 0, % Aanderra conductivity-temperature cells
         disp('reading CT results')
@@ -169,9 +181,17 @@ while 1
         SWIFT.salinity(CTcounter + 1) = fread(fid,1,'float'); %
         CTcounter = CTcounter + 1;
         
+        if CTcounter == 1 %add field for CT depths (temp and sal), meters
+            SWIFT.CTdepth(1) = .18;
+        elseif CTcounter == 2
+            SWIFT.CTdepth(2) = .66;
+        elseif CTcounter == 3
+            SWIFT.CTdepth(3) = 1.22;
+        end
+        
         
     elseif type == 5 & size > 0,  % Ecopuck fluorometer
-        disp('reading fluorometer results')
+        disp('reading ECOpuck fluorometer results')
         SWIFT.puck = fread(fid,3,'float'); %
         
         
@@ -198,8 +218,6 @@ while 1
         
     elseif type == 8 & size > 0, % Vaisala 536 met station
         disp('reading Vaisala results')
-        SWIFT.winddirT = NaN;
-        SWIFT.winddirTstddev = NaN;
         SWIFT.winddirR = fread(fid,1,'float'); % mean wind direction (deg T)
         SWIFT.winddirRstddev =  fread(fid,1,'float'); % std dev of wind direction (deg)
         SWIFT.windspd = fread(fid,1,'float'); % mean wind speed (m/s)
@@ -212,21 +230,14 @@ while 1
         SWIFT.airpresstddev = fread(fid,1,'float'); % millibars
         SWIFT.rainaccum = fread(fid,1,'float'); % millimeters
         SWIFT.rainint = fread(fid,1,'float'); % millimeters_per_hour
-        SWIFT.windustar = NaN;
-        SWIFT.windepsilon = NaN;
-        SWIFT.windmeanu = NaN;
-        SWIFT.windmeanv = NaN;
-        SWIFT.windmeanw = NaN;
-        SWIFT.windanisotropy = NaN; % inertial sub-range ratio
-        SWIFT.windustarquality = NaN; % quality of inertial spectral fit
-        SWIFT.windspectra.freq = NaN(116,1); % frequency
-        SWIFT.windspectra.energy = NaN(116,1);
-        
+        SWIFT.metheight = 0.84; % height of measurement, meters
+
     elseif type == 9 & size > 0, % Nortek Signature
-        disp('reading Nortek Signature results')
+        disp('reading Nortek Signature results, applying cm/s correction')
+        cmcorrection = 10^(8/3);
         ncells = fread(fid,1,'uint16');
         % HR profile (center beam)
-        SWIFT.signature.HRprofile.tkedissipationrate = fread(fid,ncells,'float'); % turbulent dissipation rate in m^2/s^3
+        SWIFT.signature.HRprofile.tkedissipationrate = fread(fid,ncells,'float') * cmcorrection; % turbulent dissipation rate in m^2/s^3
         res = 0.04; % cell size (m) from config file
         blanking = 0.10; % blanking distance (m) from config file
         depth = 0.15; % depth of transducer
@@ -241,7 +252,11 @@ while 1
         depth = 0.15; % depth of transducer
         cells = length(SWIFT.signature.profile.east);
         SWIFT.signature.profile.z = blanking + res./2 + [0:(cells-1)]*res;
-        
+        if isempty(SWIFT.signature.HRprofile.tkedissipationrate),
+            SWIFT = rmfield( SWIFT, 'signature' );
+            disp('Signature results are empty!'),
+        else 
+        end
         
     elseif type == 10 & size > 0, % SBG Ellipse (same as IMU in v3, but with check factor and no histograms)
         disp('reading SBG IMU results'),
@@ -266,31 +281,23 @@ while 1
             SWIFT.wavehistogram.horspdbins = fread(fid,32,'float'); % bin centers of horizontal speeds
         else
         end
+        SWIFTversion = 4;
         
     elseif type == 11 & size > 0, % RM Young 8100 Sonic Anemometer
         disp('reading Sonic Anemometer results')
-        SWIFT.airpres = NaN;
-        SWIFT.airpresstddev = NaN;
         SWIFT.windustar = fread(fid,1,'float'); % wind friction velocity
         SWIFT.windepsilon = fread(fid,1,'float'); % air-side tke dissipation rate
         SWIFT.windmeanu = fread(fid,1,'float'); % component mean
         SWIFT.windmeanv = fread(fid,1,'float'); % component mean
         SWIFT.windspd = sqrt( SWIFT.windmeanu.^2 + SWIFT.windmeanv.^2 ); % relative wind speed
-        SWIFT.windspdstddev = NaN;
         SWIFT.windmeanw = fread(fid,1,'float'); % component mean
         SWIFT.airtemp = fread(fid,1,'float'); % airtemp
-        SWIFT.airtempstddev = NaN;
         SWIFT.windanisotropy = fread(fid,1,'float'); % inertial sub-range ratio
         SWIFT.windustarquality = fread(fid,1,'float'); % quality of inertial spectral fit
         SWIFT.windspectra.freq = fread(fid,116,'float'); % frequency
         SWIFT.windspectra.energy = fread(fid,116,'float'); % spectral energy density of surface winds
-        SWIFT.winddirR = NaN;
-        SWIFT.winddirRstddev = NaN;
-        SWIFT.winddirT = NaN;
-        SWIFT.winddirTstddev = NaN;
-        SWIFT.winddirR = rad2deg(atan2(SWIFT.windmeanv, SWIFT.windmeanu) ); % mean wind direction (deg relative)
-        SWIFT.winddirRstddev =  NaN; % std dev of wind direction (deg)
-        
+        SWIFT.winddirR = rad2deg(atan2(SWIFT.windmeanv, SWIFT.windmeanu) ); % mean wind direction (deg relative)        
+        SWIFT.metheight = 0.71; % height of measurement, meters
         
     elseif type == 12 & size > 0, % Oxygen optode
         disp('reading Oxygen optode results')
@@ -299,13 +306,10 @@ while 1
     elseif type == 13 & size > 0, % SeaOwl
         disp('reading SeaOWl results')
         SWIFT.FDOM = fread(fid,1,'float');
-        
-        
+              
     else
         
-    end
-    
-    
+    end  
     
     if isempty(type),% & size == 0,
         %disp('----------')
@@ -316,26 +320,53 @@ while 1
 end
 fclose(fid);
 
-%% recalc ustar from wind spectra
+%% recalc ustar from wind spectra and change indicator for no windstress from 9999 to NaN
+
+if isfield(SWIFT,'windustar'),
+    if SWIFT.windustar == 1,  % fix 2017 bug (no longer applies, but harmless to retain in case of re-reading old sbd files)
+        z = 0.9; kappa = 0.4;
+        SWIFT.windustar = ( kappa * SWIFT.windepsilon * z).^(1/3);
+    elseif SWIFT.windustar == 9999
+        SWIFT.windustar = NaN;
+        SWIFT.windepsilon = NaN;
+    else
+    end
+else
+end
+
 if isfield(SWIFT,'windspectra'),
-    
     fmin = 1.5; % Hz
     fmax = 3; % Hz
     K = 0.55 ; % Kolmogorov const, factor by 4/3 for vertical or cross-flow component
     kv = 0.4 ; % von Karman const
-    z = 0.95; % meters above sea level, 0.77 for Gill on Waveglider, 0.95 for RM Young on SWIFT
-    
+    z = 0.95; % meters above sea level, 0.77 for Gill on Waveglider, 0.95 for RM Young on SWIFT 
     inertialrange = find( SWIFT.windspectra.freq > fmin & SWIFT.windspectra.freq < fmax);
     inertiallevel = nanmean( SWIFT.windspectra.energy(inertialrange) .* (SWIFT.windspectra.freq(inertialrange)).^(5/3) ) ;
     epsilon =  ( inertiallevel ./ ( ( SWIFT.windspd ./ (2*pi) ).^(2/3)  .* K ) ).^(3/2);
-    SWIFT.windustar = (kv * epsilon * z ).^(1/3) ./ 2;  % assumes neutral
-    
+    SWIFT.windustar = (kv * epsilon * z ).^(1/3) ./ 2;  % assumes neutral 
 else
 end
 
+%% fix CTdepth field if 1 or 2 values
+if isfield(SWIFT,'CTdepth')
+    if length(SWIFT.CTdepth) == 1
+        if SWIFTversion == 3 %v3, uses IMU waves
+            SWIFT.CTdepth = .66;
+        elseif SWIFTversion == 4 %v4, uses SBG waves
+            SWIFT.CTdepth = .18;
+        else 
+            SWIFT.CTdepth = nan;
+        end
+    elseif length(SWIFT.CTdepth) == 2 
+        SWIFT.CTdepth = nan(2,1);
+    end
+end
 
-%% quality control bug in onboard processing of v4 spectral momements
+%% quality control onboard processing of SBG IMU wave directional momements
 % which are indicated by momemnts larger than +/- 1 (improper normalization)
+% this has been fixed in Oct 2017 version of onboard processing, but it's
+% harmless to keep this keep screening in place 
+% (in case of rereading pre-2017 sbd files)
 if isfield(SWIFT,'wavespectra'),
     if any(abs(SWIFT.wavespectra.b1)>1) | any(abs(SWIFT.wavespectra.a1)>1),
         SWIFT.wavespectra.a1(:) = NaN; %
@@ -350,7 +381,7 @@ end
 
 %% change indicator for no waves
 
-% use NaN instead of 9999 for no wave data
+% use NaN instead of 9999 for no wave results
 if isfield(SWIFT,'sigwaveheight'),
     if SWIFT.sigwaveheight == 9999,
         SWIFT.sigwaveheight = NaN;
@@ -366,128 +397,14 @@ else
 end
 
 
-%% fix wind stress estimate, or change indicator for no windstress from 9999 to NaN
-if isfield(SWIFT,'windustar'),
-    if SWIFT.windustar == 1,
-        z = 0.9; kappa = 0.4;
-        SWIFT.windustar = ( kappa * SWIFT.windepsilon * z).^(1/3);
-    elseif SWIFT.windustar == 9999
-        SWIFT.windustar = NaN;
-        SWIFT.windepsilon = NaN;
-    else
-    end
-else
-end
 
-%% quality control the met data
-
-% if SWIFT.windspdstddev > 10,
-%     SWIFT.windspd = NaN;
-% elseif SWIFT.winddirTstddev > 90,
-%     SWIFT.winddirT = NaN;
-% else
-% end
-
-%% fill in missing structures
+%% fill in time if none read (time is a required field)
 
 % if no time
 if ~isfield(SWIFT,'time'),
-    SWIFT.time = nan;
-else
-end
-
-% if no AQH
-if ~isfield(SWIFT,'uplooking'),
-    SWIFT.uplooking.tkedissipationrate = nan(16,1);
-    SWIFT.uplooking.z = nan(1,16);
-else
-end
-
-% if no AQD
-if ~isfield(SWIFT,'downlooking'),
-    SWIFT.downlooking.velocityprofile = nan(40,1);
-    SWIFT.downlooking.z = nan(1,40);
-else
-end
-
-% if no met
-if ~isfield(SWIFT,'windspd'),
-    SWIFT.winddirT = NaN;
-    SWIFT.winddirR = NaN;
-    SWIFT.winddirRstddev = NaN;
-    SWIFT.winddirTstddev = NaN;
-    SWIFT.windspd = NaN;
-    SWIFT.windspdstddev = NaN;
     SWIFT.time = NaN;
-    SWIFT.date = NaN;
-    SWIFT.airtemp = NaN;
-    SWIFT.airtempstddev = NaN;
-    SWIFT.airpres = NaN;
-    SWIFT.airpresstddev = NaN;
-    SWIFT.driftdirT = NaN;
-    SWIFT.driftdirTstddev = NaN;
-    SWIFT.driftspd = NaN;
-    SWIFT.driftspdstddev = NaN;
-    SWIFT.windustar = NaN;
-    SWIFT.windepsilon = NaN;
-    SWIFT.windmeanu = NaN;
-    SWIFT.windmeanv = NaN;
-    SWIFT.windmeanw = NaN;
-    SWIFT.windanisotropy = NaN; % inertial sub-range ratio
-    SWIFT.windustarquality = NaN; % quality of inertial spectral fit
-    SWIFT.windspectra.freq = NaN(116,1); % frequency
-    SWIFT.windspectra.energy = NaN(116,1);
 else
 end
-
-% if no PB200
-if ~isfield(SWIFT,'driftspd'),
-    SWIFT.driftdirT = NaN;
-    SWIFT.driftdirTstddev = NaN;
-    SWIFT.driftspd = NaN;
-    SWIFT.driftspdstddev = NaN;
-    SWIFT.date = NaN;
-else
-end
-
-% if no Vaisala
-if ~isfield(SWIFT,'rainaccum'),
-    SWIFT.relhumidity = NaN; % percent
-    SWIFT.relhumiditystddev = NaN; % percent
-    SWIFT.rainaccum = NaN; %mm
-    SWIFT.rainint = NaN; % millimeters_per_hour
-    
-else
-end
-
-% if no CT
-if ~isfield(SWIFT,'salinity'),
-    SWIFT.watertemp = NaN;
-    SWIFT.salinity = NaN;
-    %elseif SWIFT.salinity == 0,
-    %    SWIFT.watertemp = NaN;
-    %    SWIFT.salinity = NaN;
-end
-
-% if no signature
-if ~isfield(SWIFT,'signature'),
-    SWIFT.signature.HRprofile = nan;
-    SWIFT.signature.profile = nan;
-else
-end
-
-% if no oxygen
-if ~isfield(SWIFT,'O2conc'),
-    SWIFT.O2conc = nan;
-else
-end
-
-% if no SeaOwl
-if ~isfield(SWIFT,'FDOM'),
-    SWIFT.FDOM = nan;
-else
-end
-
 
 
 %% take reciprocal of wave directions
@@ -502,14 +419,15 @@ if recip,
     end
 end
 
-%% display results
+
+%% display results if plotflag is true
 
 
-if plotflag == 1,
+if plotflag == true,
     
     figure(1), clf, figure(2), clf
     
-    if isfield(SWIFT.signature.HRprofile,'z'),
+    if isfield(SWIFT, 'signature'),
         
         figure(1),
         plot(SWIFT.signature.HRprofile.tkedissipationrate,SWIFT.signature.HRprofile.z,'linewidth',2)
@@ -526,7 +444,7 @@ if plotflag == 1,
         title(fname,'interpreter','none')
         print('-dpng',[fname '_velocityprofile.png'])
         
-    elseif ~isnan(SWIFT.uplooking.tkedissipationrate),
+    elseif isfield(SWIFT,'uplooking'),
         
         figure(1),
         plot(SWIFT.uplooking.tkedissipationrate,SWIFT.uplooking.z,'linewidth',2)
@@ -535,7 +453,7 @@ if plotflag == 1,
         title([fname ', DE/dt = ' num2str(nansum(SWIFT.uplooking.tkedissipationrate*res*1030),3) ' W/m^2'],'interpreter','none')
         print('-dpng',[fname '_epsilon.png'])
         
-    elseif  ~isnan(SWIFT.downlooking.velocityprofile),
+    elseif  isfield(SWIFT,'downlooking'),
         
         figure(2), clf
         plot(SWIFT.downlooking.velocityprofile,SWIFT.downlooking.z,'linewidth',2),

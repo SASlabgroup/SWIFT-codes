@@ -1,17 +1,31 @@
+function [SWIFT] = reprocess_AQH(parentdir, readraw, iceflag)
 % reprocess SWIFT v3 uplooking AquadoppHR (AQH) results
 % loop thru raw data for a given SWIFT deployment, then
 % replace values in the SWIFT data structure of results
-% (from onboard processing)
+% (from onboard processing)... assuming that IMU reprocessing has already happened first
 %
 %
 % J. Thomson, Sept 2010
 %   cleaned and revised with AQH read function, Thomson, Jun 2016
+%   
+% revised by M. Smith and J. Thomson, 08/2018 
+%   functionalized - input: parentdir should be location of folder with .mat file
+%       (_reprocessed_displacements) and AQH folder. output: SWIFT structure
+%       with reprocessed AQH, also saved in parentdir
+%   added readraw flag (logical input), set to true to force re-read of raw
+%   data (rather than existing matlab)
+%   added iceflag (logical) - option to mask near surface velocities and dissipations when ice
+%       is suspected present, where ice flag is an logical input
+%
+%   usage is now 
+%
+%       [SWIFT] = reprocess_AQH(parentdir, readraw, iceflag)
+%
+%   also, removed phase resolved calcs (maybe should make that another
+%   option flag in next version)
+%
 
-
-clear all; close all
-%parentdir = ('/Users/jthomson/Dropbox/SWIFT_v4.x/Test Data/LakeWA_Test_14Dec2016/SWIFT12_14Dec2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
-parentdir = pwd;
-
+%% OPTIONS for quality control and AQH settings
 mincor = 30; % correlation cutoff, 50 recommended (max value recorded in air), 30 if single beam acq
 minamp = 30;  % amplitude cutoff, 30 usually means air
 maxQCratio = .5; % maximum allowable ration of remove points to total points
@@ -23,8 +37,7 @@ sigma = 0.025;  % nominal velocity noise [m/s]
 rate = 4; % sampling rate
 
 
-
-%% load existing SWIFT structure created during concatSWIFTv3_processed, replace only the new results
+%% load existing SWIFT structure created during concatSWIFTv3_processed or IMUreprocessing, replace only the new results
 cd(parentdir);
 wd = pwd;
 wdi = find(wd == '/',1,'last');
@@ -47,7 +60,7 @@ for di = 1:length(dirlist),
     for fi=1:length(filelist),
         
         % read or load raw data
-        if isempty(dir([filelist(fi).name(1:end-4) '.mat'])),
+        if isempty(dir([filelist(fi).name(1:end-4) '.mat'])) | readraw == true,
             [time Vel Amp Cor Pressure pitch roll reading ] = readSWIFTv3_AQH( filelist(fi).name );
         else
             load([filelist(fi).name(1:end-4) '.mat']),
@@ -74,33 +87,45 @@ for di = 1:length(dirlist),
         exclude = Amp < minamp ;
         Vel(exclude)  = NaN;
         
-        
-        % phase averaged TKE dissipation rate of the whole burst
-        %[tke epsilon residual A Aerror N Nerror ] = dissipation(Vel', r, length(Vel), 0, deltar);
-        [tke epsilon residual A Aerror N Nerror ] = dissipation_debug(Vel', r, length(Vel), 1, deltar);
-
-        
-        
-        % phase resolved processing
-        npts = 8;
-        eptimeshift = npts/4/2;
-        for ei=1:(length(Vel)/npts),
-            i = [((npts*ei)-npts+1):(npts*ei)];
-            if max(i) <= length(Vel(:,1)),
-            [tke PRepsilon residual A Aerror N Nerror] = dissipation(Vel(i,:)', r, length(Vel(i,:)), 0, deltar);
-            phaseresolvedepsilon(ei,:) = PRepsilon;
+        % ice mask velocities
+        if iceflag == true,
+            icemask = find( nanmean(Cor) > 95 | nanmean(Amp) > 195 );
+            if ~isempty(icemask)
+                v(:,icemask(1):end) = NaN;
+                icemask_index = icemask(1); 
             else
-                phaseresolvedepsilon(ei,:) = NaN;
+                icemask_index = nan;
             end
         end
-        phasedresolvedepsilon(phaseresolvedepsilon==0) = NaN;
+        
+        
+        % phase averaged TKE dissipation rate of the whole burst
+        [tke epsilon residual A Aerror N Nerror ] = dissipation(Vel', r, length(Vel), 0, deltar);
+        
+        
+%         % phase resolved processing
+%         npts = 8;
+%         eptimeshift = npts/4/2;
+%         for ei=1:(length(Vel)/npts),
+%             i = [((npts*ei)-npts+1):(npts*ei)];
+%             if max(i) <= length(Vel(:,1)),
+%             [tke PRepsilon residual A Aerror N Nerror] = dissipation(Vel(i,:)', r, length(Vel(i,:)), 0, deltar);
+%             phaseresolvedepsilon(ei,:) = PRepsilon;
+%             else
+%                 phaseresolvedepsilon(ei,:) = NaN;
+%             end
+%         end
+%         phasedresolvedepsilon(phaseresolvedepsilon==0) = NaN;
         
         
         % match time to SWIFT structure and replace values
         time = datenum(filelist(fi).name(13:21)) + str2num(filelist(fi).name(23:24))./24 + str2num(filelist(fi).name(26:27))./(24*6);
         [tdiff tindex] = min(abs([SWIFT.time]-time));
         SWIFT(tindex).uplooking.tkedissipationrate = epsilon;
-        SWIFT(tindex).phaseresovledepsilon = phaseresolvedepsilon;
+%       SWIFT(tindex).phaseresovledepsilon = phaseresolvedepsilon;
+        if iceflag == true,
+            SWIFT(tindex).uplooking.icemaskindex = icemask_index;
+        end
         
     end
     
@@ -108,7 +133,6 @@ for di = 1:length(dirlist),
 end
 
 cd(parentdir)
-
-
 save([ wd '_reprocessedAQH.mat'],'SWIFT')
 
+end

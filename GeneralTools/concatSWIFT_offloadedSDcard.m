@@ -8,6 +8,7 @@
 %               1/2016  v3.3, so up to 3 ACS files can be included
 %               6/2016 v 3.4, includ sdi coms (Vasaila 536)
 %               1/2017  v4.0, include SBG, Nortek Signature and RM Young 8100 sonic, plus index on SBG, not AQ
+%               9/2017  add oxygen optode and sea owl fluorometer
 %
 
 clear all, close all, clc
@@ -25,7 +26,8 @@ eval(['!cp -r ' dirpath sourcedir '/*/Processed/*/*PRC*  . ' ]) % use for single
 
 
 %% use directory listing to find all files,
-% using the IMU files as reference to find each burst and the other sensors
+% using the IMU or SBG files as reference to find each burst and the other sensors
+% (b/c either IMU or SBG is always present)
 
 refnames = dir('*IMU*_PRC*');
 if isempty(refnames), 
@@ -45,7 +47,7 @@ burst = refnames(ai).name(26:27);
 
 %AQtype = AQnames(ai).name(11);
 
-payloadtype = '6'; % v3.3 and up 
+payloadtype = '6'; % v3.3 (2015) and up 
 
 fid = fopen('payload','wb');
 fwrite(fid,payloadtype,'uint8');
@@ -71,13 +73,15 @@ ACSfilemid = [ID '_ACSmid_' date '_' hour '_' burst '_PRC.dat'];
 ACSfilebottom = [ID '_ACSbottom_' date '_' hour '_' burst '_PRC.dat'];
 Y81file = [ID '_Y81_' date '_' hour '_' burst '_PRC.dat'];
 SIGfile = [ID '_SIG_' date '_' hour '_' burst '_PRC.dat'];
+ACOfile = [ID '_ACO_' date '_' hour '_' burst '_PRC.dat'];
+SWLfile = [ID '_SWL_' date '_' hour '_' burst '_PRC.dat'];
 
 
 minute = num2str(str2num(burst(2))*12);
 outputfile = ['buoy-SWIFT_' ID(6:7) '-' date '_' hour  minute '000.sbd']; % name concat file same as if pulled from swiftserver
 
 %eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile '  ' ACSfilemid '  > ' outputfile]) % create the file
-eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile ' ' ACSfiletop '  ' ACSfilemid ' ' ACSfilebottom ' > ' outputfile]) % create the file
+eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile ' ' ACSfiletop '  ' ACSfilemid ' ' ACSfilebottom ' ' ACOfile ' ' SWLfile ' > ' outputfile]) % create the file
 %eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile '  ' ACSfilemid ' ' ACSfilebottom ' > ' outputfile]) % create the file
 
 

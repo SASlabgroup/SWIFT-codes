@@ -10,6 +10,10 @@
 %             6/2016    v3.4
 %             1/2017    v4.0 (and backwards compatibile with v3x)
 %             9/2017 fixed factor of 2 in post-calculation of ustar
+%             9/2018 no longer assume any fields are present in the
+%                   structure, other than time (consistent with
+%                   readSWIFT_SBD.m update)
+%             9/2018 improve screening for bad bursts
 %
 clear all,
 
@@ -17,11 +21,11 @@ plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots.
 
 minwaveheight = 0.0; % minimum wave height in data screening
 
-minsalinity = 0.0; % for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 20.0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
-maxdriftspd = 5;  % for screening when buoy on deck of boat
+maxdriftspd = 3;  % m/s, for screening when buoy on deck of boat
 
-badburst = []; % initialize indexing for bad bursts
+minairtemp = -20; % min airtemp
 
 wd = pwd;
 wdi = find(wd == '/',1,'last');
@@ -32,6 +36,8 @@ flist = dir('*.sbd');
 
 
 for ai = 1:length(flist),
+    
+    badburst(ai) = false;  % intialize bad burst flag
     
     [ oneSWIFT voltage ]= readSWIFT_SBD( flist(ai).name , 0);
     
@@ -55,87 +61,115 @@ for ai = 1:length(flist),
     minute = flist(ai).name(27:28);
     sec = flist(ai).name(29:30);
     
-    if oneSWIFT.time == 0 | isnan(oneSWIFT.time) | oneSWIFT.time < datenum(2014,1,1) | isnan(oneSWIFT.time),
-        
+    if isempty(oneSWIFT.time),
         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-        
+    elseif oneSWIFT.time == 0 |  isnan(oneSWIFT.time) | oneSWIFT.time < datenum(2014,1,1),
+        oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
     end
     
-    if  ai > 1 &  oneSWIFT.time == time(ai-1),
-        
-        oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-        
-    end
     
     %% remove bad Airmar data
     
-    if oneSWIFT.airtemp == 0,
-        
-        oneSWIFT.airtemp = NaN;
-        oneSWIFT.windspd = NaN;
-        oneSWIFT.winddirT = NaN;
-        
+    if isfield(oneSWIFT,'airtemp'),
+        if oneSWIFT.airtemp == 0.0 | oneSWIFT.airtemp < minairtemp | oneSWIFT.airtemp > 50,
+            oneSWIFT.airtemp = NaN;
+            oneSWIFT.windspd = NaN;
+        end
     end
     
-    %% remove CT data if lower hull missing (buoy on its side)
-    
-    %if sum(oneSWIFT.uplooking.tkedissipationrate) == 0 | sum(oneSWIFT.downlooking.velocityprofile) == 0,
-    %
-    %    oneSWIFT.watertemp = 9999;
-    %    oneSWIFT.salinity = 9999;
-    %
-    %end
     
     %% extrapolate missing low frequencies of wave energy spectra
     % while requiring energy at lowest frequenc to be zero
     % not neccessary if post-processing for raw displacements
-    notzero = find(oneSWIFT.wavespectra.energy ~= 0 & oneSWIFT.wavespectra.freq > 0.04);
-    tobereplaced =  find(oneSWIFT.wavespectra.energy == 0 & oneSWIFT.wavespectra.freq > 0.04);
-    if length(notzero) > 10,
-        E = interp1([0.04; oneSWIFT.wavespectra.freq(notzero)],[0; oneSWIFT.wavespectra.energy(notzero)],oneSWIFT.wavespectra.freq);
-        oneSWIFT.wavespectra.energy(tobereplaced) = E(tobereplaced);
-        df = median(diff(oneSWIFT.wavespectra.freq));
-        oneSWIFT.sigwaveheight = 4*sqrt(nansum(oneSWIFT.wavespectra.energy)*df);
-    else
+    % less necessary after Oct 2017 rev of onboard processing with improved RC filter
+    if isfield(oneSWIFT,'wavespectra')
+        notzero = find(oneSWIFT.wavespectra.energy ~= 0 & oneSWIFT.wavespectra.freq > 0.04);
+        tobereplaced =  find(oneSWIFT.wavespectra.energy == 0 & oneSWIFT.wavespectra.freq > 0.04);
+        if length(notzero) > 10,
+            E = interp1([0.04; oneSWIFT.wavespectra.freq(notzero)],[0; oneSWIFT.wavespectra.energy(notzero)],oneSWIFT.wavespectra.freq);
+            oneSWIFT.wavespectra.energy(tobereplaced) = E(tobereplaced);
+            df = median(diff(oneSWIFT.wavespectra.freq));
+            oneSWIFT.sigwaveheight = 4*sqrt(nansum(oneSWIFT.wavespectra.energy)*df);
+        else
+        end
     end
     
     %% remove wave histograms, if present
     
-    if isfield(oneSWIFT,'wavehistogram'),
-        oneSWIFT = rmfield(oneSWIFT,'wavehistogram');
-    else
-    end
+    %     if isfield(oneSWIFT,'wavehistogram'),
+    %         oneSWIFT = rmfield(oneSWIFT,'wavehistogram');
+    %     else
+    %     end
+    
     %% increment main structure
     
     time(ai) = oneSWIFT.time;
     lat(ai) = oneSWIFT.lat;
     lon(ai) = oneSWIFT.lon;
-    SWIFT(ai) = oneSWIFT;
-    %puck(:,ai) = oneSWIFT.puck;
-    %salinity(ai) = oneSWIFT.salinity;
     
+    onenames = string(fieldnames(oneSWIFT));
+    lengthofnames(ai) = length(onenames);
+    
+        % if first sbd, set the structure fields as the standard
+    if ai == 1,
+        SWIFT(ai) = oneSWIFT;
+        allnames = string(fieldnames(SWIFT));
+        
+        % if payloads match, increment
+    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames), 
+        SWIFT(ai) = oneSWIFT;
+        
+        % if additional payloads, favor that new structure (removing other)
+    elseif ai > 1 && length(onenames) > length(allnames), 
+        clear SWIFT
+        SWIFT(ai-1) = oneSWIFT; % place holder, which will be removed when badburst applied
+        badburst(ai-1) = true;
+        SWIFT(ai) = oneSWIFT;
+        allnames = string(fieldnames(oneSWIFT)); % reset the prefer field names
+        disp('=================================')
+        disp(['found extra payloads in file ' num2str(ai) ', including only sbd files with'])
+        disp(allnames)
+        
+        % if fewer paylaods, skip that burst
+    elseif ai > 1 && length(onenames) < length(allnames), 
+        disp('=================================')
+        disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
+        SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
+        badburst(ai) = true;
+    end
+
+    badburst( find(lengthofnames < length(allnames) ) ) = true;
     
     %% screen the bad data (usually out of the water)
-    % based on error from wave processing on timestamp
-    % or based on minimum salinity
     
-    if oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
-        
-        badburst( length(badburst) + 1) = ai;
-        
-    elseif oneSWIFT.sigwaveheight < minwaveheight,
-        
-        badburst( length(badburst) + 1) = ai;
-        
-    elseif oneSWIFT.salinity < minsalinity & ~isnan(oneSWIFT.salinity),
-        
-        badburst( length(badburst) + 1) = ai;
-        
-    elseif oneSWIFT.driftspd > maxdriftspd,
-        
-        badburst( length(badburst) + 1) = ai;
-    else
+    % no data
+    if isempty(oneSWIFT.lon) | isempty(oneSWIFT.lat) | isempty(oneSWIFT.time), 
+        badburst(ai) = true;
     end
+    % no position
+    if oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
+        badburst(ai) = true;
+    end
+        % wave limit
+    if isfield(oneSWIFT,'sigwaveheight'),
+        if oneSWIFT.sigwaveheight < minwaveheight,
+            badburst(ai) = true;
+        end
+    end  
+        % salinity limit
+    if isfield(oneSWIFT,'salinity'),
+        if all(oneSWIFT.salinity < minsalinity), % & all(~isnan(oneSWIFT.salinity)),
+            badburst(ai) = true;
+        end
+    end
+        
+        % speed limit
+    if isfield(oneSWIFT,'driftspd')
+        if oneSWIFT.driftspd > maxdriftspd,
+            badburst(ai) = true;
+        end
+    end
+
     
     %% close telemetry file loop
 end
@@ -145,6 +179,7 @@ end
 
 SWIFT(badburst) = [];
 battery(badburst) = [];
+
 
 %% sort final structure
 [time tinds ] = sort([SWIFT.time]);
@@ -173,40 +208,44 @@ if length(SWIFT) > 3,
     direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
     direction( direction<0) = direction( direction<0 ) + 360; %make quadrant II 270->360 instead of -90->0
     
-    for ai = 1:length(SWIFT),
-        if ai == 1 | ai == length(SWIFT),
-            SWIFT(ai).driftspd = NaN;
-            SWIFT(ai).driftdirT = NaN;
+    for si = 1:length(SWIFT),
+        if si == 1 | si == length(SWIFT),
+            SWIFT(si).driftspd = NaN;
+            SWIFT(si).driftdirT = NaN;
         else
-            SWIFT(ai).driftspd = speed(ai);%speed(tinds(ai));
-            SWIFT(ai).driftdirT = direction(ai);%dir(tinds(ai));
+            SWIFT(si).driftspd = speed(si);%speed(tinds(ai));
+            SWIFT(si).driftdirT = direction(si);%dir(tinds(ai));
         end
     end
     
     % remove last burst, if big change in direction (suggests recovery by ship)
     dirchange = abs( SWIFT( length(SWIFT) - 2).driftdirT  - SWIFT( length(SWIFT) - 1).driftdirT );
     if dirchange > 45,
+        disp('removing last burst, suspect includes ship recovery')
         SWIFT( length(SWIFT) - 1).driftdirT = NaN;
         SWIFT( length(SWIFT) - 1).driftspd = NaN;
-        SWIFT(length(SWIFT) ) = [];
-        battery(length(SWIFT) ) = [];
+        SWIFT( length(SWIFT) ) = [];
+        battery( length(SWIFT) ) = [];
     end
     
 else
-    for ai = 1:length(SWIFT),
-        SWIFT(ai).driftspd = NaN;
-        SWIFT(ai).driftdirT = NaN;
+    for si = 1:length(SWIFT),
+        SWIFT(si).driftspd = NaN;
+        SWIFT(si).driftdirT = NaN;
     end
 end
 
 % quality control by removing drift results associated with large time gaps
-dt = gradient([SWIFT.time]);
-for ai = 1:length(SWIFT),
-    if dt(ai) > 1/12, % 1/12 of day is two hours
-        SWIFT(ai).driftspd = NaN;
-        SWIFT(ai).driftdirT = NaN;
-    else
+if length([SWIFT.time]) > 1,
+    dt = gradient([SWIFT.time]);
+    for si = 1:length(SWIFT),
+        if dt(si) > 1/12, % 1/12 of day is two hours
+            SWIFT(si).driftspd = NaN;
+            SWIFT(si).driftdirT = NaN;
+        else
+        end
     end
+else
 end
 
 %% save
@@ -226,8 +265,8 @@ if plotflag == 1,
     % battery plot
     if any(~isnan(battery)),
         figure(7), clf,
-        plot([SWIFT.time],battery)
-        datetick
+        plot([SWIFT.time],battery,'kx','linewidth',3)
+        datetick, grid
         ylabel('Voltage')
         print('-dpng',[wd '_battery.png'])
     else

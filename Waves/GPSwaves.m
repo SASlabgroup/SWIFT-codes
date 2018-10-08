@@ -91,26 +91,26 @@ if pts >= 2*wsecs & fs>1 & sum(badu)<100 & sum(badv)<100,  % minimum length and 
     
 %% high-pass RC filter, detrend first
 
-%u = detrend(u);
-%v = detrend(v);
-%z = detrend(z);
+u = detrend(u);
+v = detrend(v);
+z = detrend(z);
 
-% initialize
-%ufiltered = u;
-%vfiltered = v;
-%zfiltered = z;
+%initialize
+ufiltered = u;
+vfiltered = v;
+zfiltered = z;
 
-%alpha = RC / (RC + 1./fs); 
+alpha = RC / (RC + 1./fs); 
 
-%for ui = 2:length(z),
-%    ufiltered(ui) = alpha * ufiltered(ui-1) + alpha * ( u(ui) - u(ui-1) );
-%    vfiltered(ui) = alpha * vfiltered(ui-1) + alpha * ( v(ui) - v(ui-1) );
-%    zfiltered(ui) = alpha * zfiltered(ui-1) + alpha * ( z(ui) - z(ui-1) );
-%end
+for ui = 2:length(z),
+   ufiltered(ui) = alpha * ufiltered(ui-1) + alpha * ( u(ui) - u(ui-1) );
+   vfiltered(ui) = alpha * vfiltered(ui-1) + alpha * ( v(ui) - v(ui-1) );
+   zfiltered(ui) = alpha * zfiltered(ui-1) + alpha * ( z(ui) - z(ui-1) );
+end
 
-%u = ufiltered;
-%v = vfiltered;
-%z = zfiltered;
+u = ufiltered;
+v = vfiltered;
+z = zfiltered;
 
 %% break into windows (use 75 percent overlap)
 win = round(fs * wsecs); % windoz length in data points
