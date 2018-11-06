@@ -55,7 +55,7 @@ cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight'
 
 figure(1), clf, n = 4;
 
-if isfield(SWIFT,'windspd')
+if isfield(SWIFT,'windspd') && any(~isnan([SWIFT.windspd])),
     ax(1) = subplot(n,1,1);
     plot( [SWIFT.time],[SWIFT.windspd],'bx','linewidth',2)
     datetick;
