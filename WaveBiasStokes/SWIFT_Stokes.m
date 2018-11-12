@@ -54,13 +54,21 @@ for ii = 1:length(SWIFT)
 
 % If there is Signature data, get Signature z bins
 % If no Signature data, use hard-coded z bins (same as standard for Signature)
-if isfield(SWIFT(ii).signature.profile,'east')
+if isfield(SWIFT(ii).signature.profile,'east') 
     % Get z bins
 	zsave = SWIFT(ii).signature.profile.z; if isrow(zsave), zsave = zsave'; end
 	z = -zsave; % Sign convention: z decreasing downward
+    if isempty(SWIFT(ii).signature.profile.east)
+        zsave = (.35:.5:19.85)';
+        z = -zsave; % Sign convention: z decreasing downward 
+        SWIFT(ii).signature.profile.east = NaN*zsave;
+        SWIFT(ii).signature.profile.north = NaN*zsave;        
+    end
 else
     zsave = (.35:.5:19.85)';
-	z = -zsave; % Sign convention: z decreasing downward    
+	z = -zsave; % Sign convention: z decreasing downward
+    SWIFT(ii).signature.profile.east = NaN*zsave;
+    SWIFT(ii).signature.profile.north = NaN*zsave;      
 end
 
 % Water depth for this burst
@@ -106,7 +114,7 @@ end
 
 % Compute east and north components
 SWIFT(ii).stokesdrift.bulk.surface.east = Stokes0.*sind(peakwavedirT);
-SWIFT(ii).stokesdrift.bulk.surface.east = Stokes0.*cosd(peakwavedirT);
+SWIFT(ii).stokesdrift.bulk.surface.north = Stokes0.*cosd(peakwavedirT);
 SWIFT(ii).stokesdrift.bulk.profile.east = Stokes.*sind(peakwavedirT);
 SWIFT(ii).stokesdrift.bulk.profile.north = Stokes.*cosd(peakwavedirT);
 SWIFT(ii).stokesdrift.bulk.surface.z = zsave;
@@ -115,7 +123,7 @@ SWIFT(ii).wavebias.bulk.bias.north = WaveBias.*cosd(peakwavedirT);
 SWIFT(ii).wavebias.bulk.bias.z = zsave;
 
 
-% Compute "Spectral" Stokes and Wave Bias Estimates (using Fourier moments)
+% Compute Spectral Stokes and Wave Bias Estimates (using Fourier moments)
 
 % Initialize with zero value prior to summing component-wise over freq
 Stokes_spectral_east_0 = 0; % Surface value
