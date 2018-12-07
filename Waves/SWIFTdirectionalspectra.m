@@ -17,7 +17,7 @@ function [Etheta theta f dir spread spread2 spread2alt] = SWIFTdirectionalspectr
 %             5/2016 corrected typo in spread1
 %             8/2016 enable reciprocal flag, for post-procesing vs onboard processing
 %             1/2017 output multiple estimates of spread and add binary plotting flag
-
+%             12/2018   add plots of directional distributions distinct freqs
 
 recip = false;  % set true for onboard processing, set false for *some* versions of reprocessed
 
@@ -182,6 +182,27 @@ xlabel('Frequency [Hz]')
 ylabel('Moments []')
 
 print('-dpng',[ wd '_directionalmoments.png'])
+
+
+%% distributions at freqs
+
+figure(5), clf
+
+r = 3; c = 3;
+n = r * c;
+
+for fi=1:n,
+    subplot(r,c,fi)
+    thisf = fi * ( ceil( length(f) / n ) - 1 );
+    plot( theta , Etheta(thisf, :) )
+    title(['f = ' num2str( f(thisf) ) 'Hz' ] )
+    set(gca,'XLim',[0 360])
+    xlabel('\theta [deg]')
+    ylabel('E')
+end
+
+print('-dpng',[ wd '_directiondistributions.png'])
+
 
 else 
 end
