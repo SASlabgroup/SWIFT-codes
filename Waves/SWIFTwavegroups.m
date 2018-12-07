@@ -1,10 +1,11 @@
-function [nu GF k s SIWEH ] = SWIFTwavegroups(SWIFT,fs);
+function [nu ep GF k s SIWEH ] = SWIFTwavegroups(SWIFT,fs);
 % matlab function to calculate wave group paramters from SWIFT data
 % (requires post-processed raw displacements SWIFT.z at sampling fs)
 %
 % [nu GF k s SIWEH] = SWIFTwavegroups(SWIFT,fs);
 %
 %  nu is the spectral bandwidth, 
+%  ep is the wave steepness (from the raw displacements)
 %  GF is the groupiness factor, 
 %  k is kurtosis, 
 %  s is skewness of the time series, 
@@ -12,6 +13,9 @@ function [nu GF k s SIWEH ] = SWIFTwavegroups(SWIFT,fs);
 %
 % J. Thomson, Feb 2017
 %
+
+nTp = 1.5;  % number of periods in Bartlett filter
+depth = 3000;  % depth for wave number calcs
 
 for si = 1:length(SWIFT),
     
@@ -33,8 +37,8 @@ for si = 1:length(SWIFT),
         
         SIWEH( length( [SWIFT(si).z] ) ) = NaN;  % possibly need to make length int64 first?
         for ii = 1:length(SWIFT(si).z),
-            starti = max([ 1  (ii-round( 2*SWIFT(si).peakwaveperiod./dt))]);
-            stopi = min([ length(SWIFT(si).z)  (ii+round( 2*SWIFT(si).peakwaveperiod./dt))]);
+            starti = max([ 1  (ii-round( nTp * SWIFT(si).peakwaveperiod./dt))]);
+            stopi = min([ length(SWIFT(si).z)  (ii+round( nTp * SWIFT(si).peakwaveperiod./dt))]);
             SIWEH(ii) = 1./SWIFT(si).peakwaveperiod .* nansum( SWIFT(si).z( starti:stopi ).^2 .*  bartlett( length(starti:stopi) ) .* dt );
             if SIWEH(ii) == 0,
                 SIWEH(ii) = NaN;
@@ -55,6 +59,7 @@ for si = 1:length(SWIFT),
     end
     
     % nonlinear metrics
+    ep(si) = sqrt( wavenumber(1./SWIFT(si).peakwaveperiod,depth).^2  *  nanvar(SWIFT(si).z) );
     k(si) = kurtosis(SWIFT(si).z);
     s(si) = skewness(SWIFT(si).z);
     
