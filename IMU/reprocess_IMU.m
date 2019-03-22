@@ -27,8 +27,8 @@ load([wd '.mat'])
 
 prune = false(1,length(SWIFT)); % initialize logical array for later pruning of bad data
 
-cd('IMU/Raw/') % v3.2
-%cd('COM-6/Raw/') % v3.3
+%cd('IMU/Raw/') % v3.2
+cd('COM-6/Raw/') % v3.3
 
 
 %% loop thru raw data
@@ -114,9 +114,13 @@ for di = 1:length(dirlist),
                 if last2048 > 0 & isreal(last2048),
                     SWIFT(tindex).u = GPS.NED_Vel.Velocity_NED(last2048,2);
                     SWIFT(tindex).v = GPS.NED_Vel.Velocity_NED(last2048,1);
+                    SWIFT(tindex).rawlat = GPS.Geodetic_Pos.Lat_Lon(last2048,1);
+                    SWIFT(tindex).rawlon = GPS.Geodetic_Pos.Lat_Lon(last2048,2);
                 else
                     SWIFT(tindex).u = NaN(2048,1);
                     SWIFT(tindex).v = NaN(2048,1);
+                     SWIFT(tindex).rawlat = NaN(2048,1);
+                    SWIFT(tindex).rawlon = NaN(2048,1);
                 end
                 
             else
@@ -159,6 +163,8 @@ SWIFT = rmfield(SWIFT,'y');
 SWIFT = rmfield(SWIFT,'z');
 SWIFT = rmfield(SWIFT,'u');
 SWIFT = rmfield(SWIFT,'v');
+SWIFT = rmfield(SWIFT,'rawlat');
+SWIFT = rmfield(SWIFT,'rawlon');
 
 save([ wd '_reprocessedIMU_RC.mat'],'SWIFT')
 
