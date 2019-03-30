@@ -3,6 +3,8 @@
 
 clear all, close all
 
+sigHRzoffset = 0; % first HR bin should be at 0.3
+
 %pwd
 
 flist = dir('SWIFT*.mat');
@@ -25,28 +27,31 @@ for fi = 1:length(flist),
     
     
     %% dissipation
-    clear epsilon magprofile
+    clear epsilon magprofile z
     bad = [];
     for ai = 1:length(SWIFT)
         if ~isnan(SWIFT(ai).uplooking.tkedissipationrate),
             epsilon(:,ai) = SWIFT(ai).uplooking.tkedissipationrate;
-            epsilon(:,ai) = NaN;
+            z(:,ai) = SWIFT(ai).uplooking.z;
             magprofile(:,ai) = NaN;
         elseif isfield(SWIFT(ai).signature.HRprofile,'z'),
             if ~isempty( SWIFT(ai).signature.profile.z ),
                 epsilon(:,ai) = SWIFT(ai).signature.HRprofile.tkedissipationrate;
+                z(:,ai) = SWIFT(ai).signature.HRprofile.z + sigHRzoffset;
                 magprofile(:,ai) = sqrt( SWIFT(ai).signature.profile.east.^2 + SWIFT(ai).signature.profile.north.^2 ) ; hold on
             else
                 epsilon(:,ai) = NaN;
+                z(:,ai) = NaN;
                 magprofile(:,ai) = NaN;
             end
         else
                 epsilon(:,ai) = NaN;
+                z(:,ai) = NaN;
                 magprofile(:,ai) = NaN;
         end
     end
     
-    
+    % map, colored by various fields
     figure(2),
     if nansum(epsilon)~=0,
         scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(epsilon)),'filled'), hold on
@@ -64,6 +69,17 @@ for fi = 1:length(flist),
     else 
     end
     axis([0 15 0 .8])
+    
+    %% dissipation profiles
+    figure(4), 
+       if nansum(epsilon)~=0,
+           loglog(epsilon,z,'k-'), hold on
+           if length(epsilon) == 128, % v4 results
+            loglog(epsilon,z,'b-'), hold on
+           else
+           end
+    else
+    end
     
 end
 
@@ -91,10 +107,10 @@ figure(2),
 %axis(ax);
 %colorbar
 
-% INNER SHELF
+% INNER SHELF map specifics
 hold on
-load('/Users/jthomson/Dropbox/InnerShelfDRI/MooringPlanning/Colosi/G200.mat'),
-patch(GRID.patch.X,GRID.patch.Y,[.5 .5 .5]);
+%load('/Users/jthomson/Dropbox/Projects/InnerShelfDRI/MooringPlanning/Colosi/G200.mat'),
+%patch(GRID.patch.X,GRID.patch.Y,[.5 .5 .5]);
 %colorbar
 %axis([-120.7182 -120.6318   34.8346   34.9715])
 axis equal
@@ -113,3 +129,8 @@ Cd = a  +  b * windbins.^2; % ad hoc version of Smith, 1980
 ustarcurve = ( Cd .* windbins.^2 ).^.5;
 
 plot(windbins,ustarcurve,'m','linewidth',2)
+
+figure(4),
+set(gca,'YDir','reverse')
+xlabel('\epsilon [m^2/s^3')
+ylabel('z [m]')
