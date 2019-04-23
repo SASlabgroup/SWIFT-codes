@@ -3,7 +3,7 @@ function h = quiverSWIFT(colorfield, quiverscale);
 % ... and maybe for Stokes (to be implemented later)
 %   for a given set of SWIFT files in a directory
 %   (i.e., for a given mission/project/day)
-
+%
 %  h = quiverSWIFT(colorfield, quiverscale);
 %
 % where colorfield is string with the field name to use for the colors
