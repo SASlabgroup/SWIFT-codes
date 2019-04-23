@@ -30,7 +30,7 @@ for fi = 1:length(flist),
     clear epsilon magprofile z
     bad = [];
     for ai = 1:length(SWIFT)
-        if ~isnan(SWIFT(ai).uplooking.tkedissipationrate),
+        if isfield(SWIFT(ai),'uplooking') && ~isnan(SWIFT(ai).uplooking.tkedissipationrate),
             epsilon(:,ai) = SWIFT(ai).uplooking.tkedissipationrate;
             z(:,ai) = SWIFT(ai).uplooking.z;
             magprofile(:,ai) = NaN;
@@ -100,21 +100,20 @@ ylabel('Wind, U_1 [m/s]')
 
 
 figure(2),
+hold on, colorbar, axis equal
+
 % GENERIC COAST:
-%ax = axis;
-%load coast
-%plot(long,lat,'k')
-%axis(ax);
-%colorbar
+ax = axis;
+load coast
+plot(long,lat,'k')
+axis(ax);
+colorbar
 
 % INNER SHELF map specifics
-hold on
 %load('/Users/jthomson/Dropbox/Projects/InnerShelfDRI/MooringPlanning/Colosi/G200.mat'),
 %patch(GRID.patch.X,GRID.patch.Y,[.5 .5 .5]);
-%colorbar
-%axis([-120.7182 -120.6318   34.8346   34.9715])
-axis equal
-axis([-120.9 -120.5   34.7   35.2])
+%axis([-120.9 -120.5   34.7   35.2]) %axis([-120.7182 -120.6318   34.8346   34.9715])
+
 
 figure(3), 
 set(gca,'FontSize',16,'fontweight','demi')
