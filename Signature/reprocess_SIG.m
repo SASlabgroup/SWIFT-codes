@@ -78,8 +78,8 @@ for di = 1:length(dirlist),
             for wi=1:length(z), 
                 wHR(:,wi) = smooth( -burst.VelocityData(:,wi),smoothpts); 
             end
-            wHR = wHR(1:tstep:2048,:);
-            wHR = wHR(:,1:zstep:64);
+            wHR = wHR(1:tstep:end,:);
+            wHR = wHR(:,1:zstep:end);
             wHR(1,:) = NaN;
             
             
@@ -155,6 +155,9 @@ for di = 1:length(dirlist),
             title([filelist(fi).name(1:end-4) '   BB backscatter'],'interpreter','none'),
             
             print('-dpng',[filelist(fi).name(1:end-4) '_backscatter.png'])
+            
+            echoHR = burst.AmplitudeData;
+            save([filelist(fi).name(1:end-4) '_smoothwHR'],'wHR','echoHR','burstsec','tstep','zstep','z')
             
         else
         end
