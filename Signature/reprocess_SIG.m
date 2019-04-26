@@ -7,7 +7,7 @@
 % J. Thomson, Sept 2017 (modified from AQH reprocessing)
 %       7/2018, fix bug in the burst time stamp applied 
 %       4/2019, apply altimeter results to trim profiles
-%               and plot echograms
+%               and plot echograms, with vertical velocities
 
 clear all; close all
 
@@ -47,30 +47,43 @@ for di = 1:length(dirlist),
         
         if filelist(fi).bytes > 1e6%2e6,
             
-            % read or load raw data
+            %% read or load raw data
             if isempty(dir([filelist(fi).name(1:end-4) '.mat'])) | readraw,
                 [burst avg ] = readSWIFTv4_SIG( filelist(fi).name );
             else
                 load([filelist(fi).name(1:end-4) '.mat']),
             end
             
-            % quality control HR velocity data
+            %% quality control HR velocity data
             exclude = burst.CorrelationData < mincor ;
             burst.VelocityData(exclude)  = NaN;
             
-            % recalc dissipation
+            %% recalc dissipation
             z = xcdrdepth + burst.Blanking + burst.CellSize * [1:size(burst.VelocityData,2)];
             deltar = zeros(size(z));
             [tke , epsilon , residual, A, Aerror, N, Nerror] = dissipation(burst.VelocityData', z, size(burst.VelocityData,1), 0, deltar);
             %epsilon = epsilon./1024;
             
-            % calculate mean vertical velocities
-            HRwbar = -nanmean(burst.VelocityData);
+            %% calculate mean vertical velocities
+            HRwbar = -nanmean(burst.VelocityData); % these are beam velocities, so positive is away from xcdr (which is negative in earth frame)
             HRwvar = nanvar(burst.VelocityData);
-            avgwbar = mean(avg.VelocityData(:,:,3));
+            avgwbar = mean(avg.VelocityData(:,:,3));  % these are already ENU
             avgwvar = var(avg.VelocityData(:,:,3));
             
-            % use altimeter dist, if present, to trim profiles
+            %% make a smoothed version of vertical velocities within the burst (for display)
+            smoothpts = 256;  % should be at least 4 x wave period
+            tstep = 32;
+            zstep = 8;
+            clear wHR
+            for wi=1:length(z), 
+                wHR(:,wi) = smooth( -burst.VelocityData(:,wi),smoothpts); 
+            end
+            wHR = wHR(1:tstep:2048,:);
+            wHR = wHR(:,1:zstep:64);
+            wHR(1,:) = NaN;
+            
+            
+            %% use altimeter dist, if present, to trim profiles
             profilez = xcdrdepth + avg.Blanking + avg.CellSize./2 + ( avg.CellSize * [1:size(avg.VelocityData,2)] );
             if isfield(avg,'AltimeterDistance') && altimetertrim, 
                 maxz = median(avg.AltimeterDistance);
@@ -82,7 +95,7 @@ for di = 1:length(dirlist),
                 maxz = inf;
             end
             
-            % match time to SWIFT structure and replace values
+            %% match time to SWIFT structure and replace values
             time=datenum(filelist(fi).name(13:21))+datenum(0,0,0,str2num(filelist(fi).name(23:24)),(str2num(filelist(fi).name(26:27))-1)*12,0);            
             [tdiff tindex] = min(abs([SWIFT.time]-time));
             SWIFT(tindex).signature.HRprofile.wbar = HRwbar;
@@ -117,25 +130,32 @@ for di = 1:length(dirlist),
             print('-dpng',[filelist(fi).name(1:end-4) '_disspation.png'])
             
             figure(3), clf
+            burstsec = (burst.time - min(burst.time))*24*3600;
             subplot(2,1,1)
-            pcolor(burst.time,z,burst.AmplitudeData'),shading flat
+            pcolor(burstsec,z,burst.AmplitudeData'),shading flat
+            hold on, quiver(burstsec([1:tstep:end])'*ones(1,size(wHR,2)), ones(size(wHR,1),1)*z([1:zstep:end]), zeros(size(wHR)), -wHR,0,'k','linewidth',2)
             set(gca,'Ydir','reverse')
+            quiver(530,.5,0,.1,0,'k','linewidth',2)
+            text(540,.55,'10 cm/s')
+            axis([0 600 0 max(z)])
             colorbar
             drawnow, 
-            datetick
-            ylabel('z [m]')
-            title([filelist(fi).name(1:end-4) '   backscatter'],'interpreter','none'),
-            ax = axis;
+            ylabel('z [m]'), xlabel('t [s]')
+            title([filelist(fi).name(1:end-4) '   HR backscatter'],'interpreter','none'),
+            
             subplot(2,1,2)
-            pcolor(avg.time,profilez,mean(avg.AmplitudeData,3)'), shading flat, hold on
-            plot(avg.time,avg.AltimeterDistance,'k.'), 
+            avgsec = ( avg.time - min(avg.time) ) * 24 * 3600;
+            pcolor(avgsec,profilez,mean(avg.AmplitudeData,3)'), shading flat, hold on
+            plot(avgsec,avg.AltimeterDistance,'k.'), 
             set(gca,'Ydir','reverse')
             colorbar
             drawnow, 
-            datetick
-            axis([ax(1) ax(2) min(profilez) max(profilez)])
-            ylabel('z [m]')
+            axis([0 600 0 max(profilez)]);
+            ylabel('z [m]'), xlabel('t [s]')
+            title([filelist(fi).name(1:end-4) '   BB backscatter'],'interpreter','none'),
+            
             print('-dpng',[filelist(fi).name(1:end-4) '_backscatter.png'])
+            
         else
         end
         
