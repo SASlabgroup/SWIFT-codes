@@ -15,11 +15,13 @@ tic
 
 parentdir = pwd;
 readraw = false; % reading the binaries doubles the run time
+makesmoothwHR = false; % make (and save a smoothed, but not averaged w)
+plotflag = false; 
 altimetertrim = true;
 xcdrdepth = 0.2; % depth of transducer [m]
 
 mincor = 50; % correlation cutoff, 50 recommended (max value recorded in air), 30 if single beam acq
-
+minamp = 60; % min amplitude (backscatter) for HR
 
 %% load existing SWIFT structure created during concatSWIFT_offloadedDcard, replace only the new results
 cd(parentdir);
@@ -57,6 +59,14 @@ for di = 1:length(dirlist),
             %% quality control HR velocity data
             exclude = burst.CorrelationData < mincor ;
             burst.VelocityData(exclude)  = NaN;
+            exclude = burst.AmplitudeData < minamp ;
+            burst.VelocityData(exclude)  = NaN;
+            if sum( exclude(:) ) > 100, 
+                outofwater = true;
+            else
+                outofwater = false;
+            end
+
             
             %% recalc dissipation
             z = xcdrdepth + burst.Blanking + burst.CellSize * [1:size(burst.VelocityData,2)];
@@ -71,6 +81,7 @@ for di = 1:length(dirlist),
             avgwvar = var(avg.VelocityData(:,:,3));
             
             %% make a smoothed version of vertical velocities within the burst (for display)
+            if makesmoothwHR
             smoothpts = 256;  % should be at least 4 x wave period
             tstep = 32;
             zstep = 8;
@@ -81,6 +92,8 @@ for di = 1:length(dirlist),
             wHR = wHR(1:tstep:end,:);
             wHR = wHR(:,1:zstep:end);
             wHR(1,:) = NaN;
+            else 
+            end
             
             
             %% use altimeter dist, if present, to trim profiles
@@ -98,6 +111,7 @@ for di = 1:length(dirlist),
             %% match time to SWIFT structure and replace values
             time=datenum(filelist(fi).name(13:21))+datenum(0,0,0,str2num(filelist(fi).name(23:24)),(str2num(filelist(fi).name(26:27))-1)*12,0);            
             [tdiff tindex] = min(abs([SWIFT.time]-time));
+            if ~isempty(tdiff) && tdiff < 1/(24*5) && ~outofwater, 
             SWIFT(tindex).signature.HRprofile.wbar = HRwbar;
             SWIFT(tindex).signature.HRprofile.wvar = HRwvar;
             SWIFT(tindex).signature.HRprofile.tkedissipationrate_pp = epsilon;
@@ -106,7 +120,12 @@ for di = 1:length(dirlist),
             SWIFT(tindex).signature.profile.east(trimbin:end) = NaN;
             SWIFT(tindex).signature.profile.north(trimbin:end) = NaN;
             SWIFT(tindex).signature.profile.altimeter = maxz;
+            elseif ~isempty(tdiff) && tdiff < 1/(24*5) && outofwater, 
+                SWIFT(tindex) = [];
+            else
+            end
    
+            if plotflag,
             figure(1), clf 
             plot(HRwbar,SWIFT(tindex).signature.HRprofile.z,'b-'), hold on
             plot(HRwbar+sqrt(HRwvar),SWIFT(tindex).signature.HRprofile.z,'b:'),
@@ -129,6 +148,7 @@ for di = 1:length(dirlist),
             drawnow, 
             print('-dpng',[filelist(fi).name(1:end-4) '_disspation.png'])
             
+            if makesmoothwHR
             figure(3), clf
             burstsec = (burst.time - min(burst.time))*24*3600;
             subplot(2,1,1)
@@ -158,6 +178,11 @@ for di = 1:length(dirlist),
             
             echoHR = burst.AmplitudeData;
             save([filelist(fi).name(1:end-4) '_smoothwHR'],'wHR','echoHR','burstsec','tstep','zstep','z')
+            else
+            end
+            
+            else
+            end
             
         else
         end
