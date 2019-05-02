@@ -33,7 +33,7 @@ for si = 1:length(SWIFT),
     dt = 1/fs;
     clear SIWEH;
     
-    if true %isreal(si + length( [SWIFT(si).z] )) & (si + length( [SWIFT(si).z] ))> 0 & isinteger(si + length( [SWIFT(si).z] )),
+    if  ~isempty(SWIFT(si).z)%isreal(si + length( [SWIFT(si).z] )) & (si + length( [SWIFT(si).z] ))> 0 & isinteger(si + length( [SWIFT(si).z] )),
         
         SIWEH( length( [SWIFT(si).z] ) ) = NaN;  % possibly need to make length int64 first?
         for ii = 1:length(SWIFT(si).z),
