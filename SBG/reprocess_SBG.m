@@ -10,18 +10,20 @@ clear all, close all
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 %parentdir = ('/Volumes/Data/Newport/SWIFT19_15-18Oct2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 
-readfromconcat = 1; % force starting with original onboard results 
+readfromconcat = 0; % force starting with original onboard results 
 secondsofdata = 8*60;  % seconds of raw data to process (from the end of each burst, not beginning)
 
-%% load existing SWIFT structure created during concatSWIFTv3_processed, replace only the new wave results
+%% load existing SWIFT structure created during concatSWIFT_processed, replace only the new wave results
 cd(parentdir);
 wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
 if ~isempty(dir([wd '_reprocessedSIG.mat'])) & readfromconcat~=1,
+    SIGrep = true;
     load([wd '_reprocessedSIG.mat'])
 else
+    SIGrep = false;
     load([wd '.mat'])
 end
 
@@ -61,7 +63,7 @@ for di = 1:length(dirlist),
         end
         
         %% make sure there is data to work with
-        if length(sbgData.GpsVel.vel_e)>secondsofdata*5 & length(sbgData.GpsVel.vel_n)>secondsofdata*5 & length(sbgData.ShipMotion.heave)>secondsofdata*5,
+        if ~isempty(tindex) & length(sbgData.GpsVel.vel_e)>secondsofdata*5 & length(sbgData.GpsVel.vel_n)>secondsofdata*5 & length(sbgData.ShipMotion.heave)>secondsofdata*5,
             
             f = SWIFT(tindex).wavespectra.freq;  % original frequency bands
             
@@ -76,7 +78,7 @@ for di = 1:length(dirlist),
             
             % interp to the original freq bands
             E = interp1(newf,newE,f);
-            altE = interp1(altf,altE,f);
+            %altE = interp1(altf,altE,f);
             a1 = interp1(newf,newa1,f);
             b1 = interp1(newf,newb1,f);
             a2 = interp1(newf,newa2,f);
@@ -163,14 +165,16 @@ SWIFT(bad) = [];
 
 %% (re)plotting
 
+if ~isempty(SWIFT)
 plotSWIFT(SWIFT)
 
-[Etheta theta f dir1 spread1 spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, 1);
+[Etheta theta f dir1 spread1 spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, 1, 1);
 
 
 %% save a big file with raw displacements and dir spectra
 
 save([ wd '_reprocessedSBG_displacements.mat'],'SWIFT','Etheta','theta','f')
+
 
 %% save a small file with stats only
 
@@ -181,4 +185,10 @@ SWIFT = rmfield(SWIFT,'u');
 SWIFT = rmfield(SWIFT,'v');
 SWIFT = rmfield(SWIFT,'rawtime');
 
-save([ wd '_reprocessedSBG.mat'],'SWIFT')
+if SIGrep,
+    save([ wd '_reprocessedSIGandSBG.mat'],'SWIFT')
+else
+    save([ wd '_reprocessedSBG.mat'],'SWIFT')
+end
+
+end
