@@ -38,6 +38,8 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs)
 %              11/2018, v4, force velocity spectra as source for scalar energy spectra
 %                           remove LFNR usage
 %                           correct sign of a1, b1
+%               8/2019  force use of Tp from velocity spectra, increase max f to 1 Hz
+%               
 %
 %#codegen
 
@@ -61,7 +63,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs)
 %% fixed parameters
 wsecs = 256;   % windoz length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
-maxf = .5;       % frequency cutoff for telemetry Hz
+maxf = 1;       % frequency cutoff for telemetry Hz
 
 %% deal with variable input data, with priority for GPS velocity
 
@@ -296,9 +298,9 @@ E = Exx + Eyy;
 %E = Eyy+Exx; % pure GPS version (for testing)
 %E( check > maxEratio | check < minEratio ) = 0; 
 %figure, loglog(f,check)
-%clf, loglog(f,UU+VV,'g',f,Exx+Eyy,'b',f,ZZ.*9.8^2,'m',f,Ezz,'r'),legend('UU+VV','XX+YY','ZZ','ZZ') % for testing
+%clf, loglog(f,UU+VV,'g',f,Exx+Eyy,'b',f,Ezz,'r'),legend('UU+VV','XX+YY','ZZ') % for testing
 %loglog(f,abs(Cxz),f,abs(Cyz))
-%drawnow
+drawnow
 
 %% wave stats
 fwaves = f>0.05 & f<1; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
@@ -314,8 +316,8 @@ fe = sum( f(fwaves).*E(fwaves) )./sum( E(fwaves) );
 Ta = 1./fe;
 
 % peak period
-%[~ , fpindex] = max(UU+VV); % can use velocity (picks out more distint peak)
-[~ , fpindex] = max(E);
+[~ , fpindex] = max(UU+VV); % can use velocity (picks out more distint peak)
+%[~ , fpindex] = max(E);
 Tp = 1./f(fpindex);
 
 if Tp > 20, % if peak not found, use centroid
