@@ -7,7 +7,7 @@ sigHRzoffset = 0; % first HR bin should be at 0.3
 
 %pwd
 
-flist = dir('SWIFT*.mat');
+flist = dir('*SWIFT*.mat');
 
 counter = 0;
 
@@ -30,7 +30,7 @@ for fi = 1:length(flist),
     clear epsilon magprofile z
     bad = [];
     for ai = 1:length(SWIFT)
-        if isfield(SWIFT(ai),'uplooking') && ~isnan(SWIFT(ai).uplooking.tkedissipationrate),
+        if isfield(SWIFT(ai),'uplooking') && any(~isnan(SWIFT(ai).uplooking.tkedissipationrate)),
             epsilon(:,ai) = SWIFT(ai).uplooking.tkedissipationrate;
             z(:,ai) = SWIFT(ai).uplooking.z;
             magprofile(:,ai) = NaN;
@@ -53,11 +53,11 @@ for fi = 1:length(flist),
     
     % map, colored by various fields
     figure(2),
-    if nansum(epsilon)~=0,
-        scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(epsilon)),'filled'), hold on
+    if ~isempty(SWIFT),%nansum(epsilon)~=0,
+        %scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(epsilon)),'filled'), hold on
         %scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(abs(gradient(magprofile)))),'filled'), hold on
         %scatter([SWIFT.lon],[SWIFT.lat],20,mean(magprofile(1:10,:)) - mean(magprofile(20:30,:)),'filled'), hold on
-        %scatter([SWIFT.lon],[SWIFT.lat],20,[SWIFT.driftspd]), hold on
+        scatter([SWIFT.lon],[SWIFT.lat],20,[SWIFT.driftspd]), hold on
     else
        %plot([SWIFT.lon],[SWIFT.lat],'b.'), hold on
     end
@@ -72,7 +72,7 @@ for fi = 1:length(flist),
     
     %% dissipation profiles
     figure(4), 
-       if nansum(epsilon)~=0,
+       if  ~isempty(SWIFT) && nansum(epsilon(:))~=0,
            loglog(epsilon,z,'k-'), hold on
            if length(epsilon) == 128, % v4 results
             loglog(epsilon,z,'b-'), hold on
