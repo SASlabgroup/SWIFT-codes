@@ -55,19 +55,19 @@ z = detrend(z);
 % initialize
 ufiltered = u;
 vfiltered = v;
-zfiltered = z;
+%zfiltered = z;
 
 alpha = RC / (RC + 1./fs); 
 
 for ui = 2:length(u),
     ufiltered(ui) = alpha * ufiltered(ui-1) + alpha * ( u(ui) - u(ui-1) );
     vfiltered(ui) = alpha * vfiltered(ui-1) + alpha * ( v(ui) - v(ui-1) );
-    zfiltered(ui) = alpha * zfiltered(ui-1) + alpha * ( z(ui) - z(ui-1) );
+    %zfiltered(ui) = alpha * zfiltered(ui-1) + alpha * ( z(ui) - z(ui-1) );
 end
 
 u = ufiltered;
 v = vfiltered;  
-z = zfiltered;
+%z = zfiltered;
 
 %% break into windows (use 75 percent overlap)
 w = round(fs * wsecs);  % window length in data points
