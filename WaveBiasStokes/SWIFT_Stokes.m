@@ -52,23 +52,38 @@ end
 % Loop through SWIFT bursts
 for ii = 1:length(SWIFT)
 
-% If there is Signature data, get Signature z bins
-% If no Signature data, use hard-coded z bins (same as standard for Signature)
-if isfield(SWIFT(ii).signature.profile,'east') 
-    % Get z bins
-	zsave = SWIFT(ii).signature.profile.z; if isrow(zsave), zsave = zsave'; end
-	z = -zsave; % Sign convention: z decreasing downward
-    if isempty(SWIFT(ii).signature.profile.east)
-        zsave = (.35:.5:19.85)';
-        z = -zsave; % Sign convention: z decreasing downward 
-        SWIFT(ii).signature.profile.east = NaN*zsave;
-        SWIFT(ii).signature.profile.north = NaN*zsave;        
+% If there is Signature velocity component data, get Signature z bins.
+% If no Signature data, use hard-coded z bins (same as standard for Signature),
+% and also write NaNs into Signature field east and north components, for
+% ease of applying SWIFT_Stokes code to all SWIFT types.
+if isfield(SWIFT(ii),'signature')
+    if isfield(SWIFT(ii).signature,'profile')
+        if isfield(SWIFT(ii).signature.profile,'east')
+        % Get z bins
+        zsave = SWIFT(ii).signature.profile.z; if isrow(zsave), zsave = zsave'; end
+        z = -zsave; % Sign convention: z decreasing downward
+            if isempty(SWIFT(ii).signature.profile.east)
+                zsave = (.35:.5:19.85)';
+                z = -zsave; % Sign convention: z decreasing downward 
+                SWIFT(ii).signature.profile.east = NaN*zsave;
+                SWIFT(ii).signature.profile.north = NaN*zsave;      
+            end
+        else
+        	zsave = (.35:.5:19.85)';
+            z = -zsave; % Sign convention: z decreasing downward  
+            SWIFT(ii).signature.profile = []; % set empty field
+            SWIFT(ii).signature.profile.east = NaN*zsave;
+            SWIFT(ii).signature.profile.north = NaN*zsave;
+        end
+    else
+    	SWIFT(ii).signature.profile.east = NaN*zsave;
+        SWIFT(ii).signature.profile.north = NaN*zsave;            
     end
 else
     zsave = (.35:.5:19.85)';
-	z = -zsave; % Sign convention: z decreasing downward
-    SWIFT(ii).signature.profile.east = NaN*zsave;
-    SWIFT(ii).signature.profile.north = NaN*zsave;      
+	z = -zsave; % Sign convention: z decreasing downward  
+	SWIFT(ii).signature.profile.east = NaN*zsave;
+	SWIFT(ii).signature.profile.north = NaN*zsave;
 end
 
 % Water depth for this burst
