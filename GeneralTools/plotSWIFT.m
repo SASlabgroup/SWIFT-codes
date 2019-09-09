@@ -55,7 +55,7 @@ cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight'
 
 figure(1), clf, n = 4;
 
-if isfield(SWIFT,'windspd')
+if isfield(SWIFT,'windspd') && any(~isnan([SWIFT.windspd])),
     ax(1) = subplot(n,1,1);
     plot( [SWIFT.time],[SWIFT.windspd],'bx','linewidth',2)
     datetick;
@@ -239,6 +239,7 @@ if isfield(SWIFT,'wavespectra')
     
     % spectrogram
     subplot(2,1,2)
+    if size(t)>1,
     pcolor(nanmean(f,1),t,log10(E)), shading flat
     axis([5e-2 5e-1 min(t) max(t)])
     xlabel('freq [Hz]');
@@ -247,6 +248,8 @@ if isfield(SWIFT,'wavespectra')
     Ecolorbar = colorbar('Location','East');
     Ecolorbar.Label.String = 'Log_{10}(E)';
     colormap(gca,'spring')    
+    else 
+    end
     
     print('-dpng',[ wd '_wavespectra.png'])
 else

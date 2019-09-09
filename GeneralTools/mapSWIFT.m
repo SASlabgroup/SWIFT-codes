@@ -60,6 +60,8 @@ colorbar
 xlabel('lon')
 ylabel('lat')
 grid
+if abs(nanmean([SWIFT.lat]))<90 && abs(nanmean([SWIFT.lat]))>0,
 ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,1];  % ratio of lat to lon distances at a given latitude
 daspect(ratio)
+end
 print('-dpng',[wd colorfield '_map.png']) 

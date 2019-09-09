@@ -43,7 +43,7 @@ wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
-load([wd '_reprocessed_displacements.mat'])
+load([wd '_reprocessedIMU_RC_displacements.mat'])
 
 cd('AQH/Raw/') % v3.2 or V3.3
 
@@ -132,7 +132,8 @@ for di = 1:length(dirlist),
     cd('../')
 end
 
-cd(parentdir)
+cd('../')
+cd('../')
 save([ wd '_reprocessedAQH.mat'],'SWIFT')
 
 end

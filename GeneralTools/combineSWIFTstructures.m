@@ -26,7 +26,7 @@ SWIFT = allSWIFT;
 
 SWIFT = SWIFT(sti);
 
-trimSWIFT_SIGprofiles
+%trimSWIFT_SIGprofiles
 
 plotSWIFT(SWIFT)
 

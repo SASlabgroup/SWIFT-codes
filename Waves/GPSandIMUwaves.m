@@ -1,4 +1,4 @@
-function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2 ] = GPSandIMUwaves(u,v,az,pitch,roll,fs) 
+function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = GPSandIMUwaves(u,v,az,pitch,roll,fs) 
 
 % matlab function to read and process GPS and IMU data
 %   to estimate wave height, period, direction, and spectral moments
@@ -107,13 +107,13 @@ end
 
 badu = abs(detrend(u)) >= Nstd * std(u); % logical array of indices for bad points
 badv = abs(detrend(v)) >= Nstd * std(v); % logical array of indices for bad points
-u(badu) = mean( u(~badu) );
-v(badv) = mean( v(~badv) );
+u(badu) = mean( u(~badu) ); %sum(badu)
+v(badv) = mean( v(~badv) ); %sum(badv)
 
 %% begin processing, if data sufficient
 pts = length(u);       % record length in data points
 
-if pts >= 2*wsecs & fs>1 & sum(badu)<100 & sum(badv)<100,  % minimum length and quality for processing
+if pts >= 2*wsecs & fs>=1 & sum(badu)<100 & sum(badv)<100,  % minimum length and quality for processing
 
     
 %% high-pass RC filter, detrend first

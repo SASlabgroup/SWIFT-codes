@@ -19,7 +19,7 @@ Esmooth( length( z ) ) = NaN;
 
 for ii = 1:length(z),
     
-    starti = max([ 1  (ii-round( 2*Tp./dt))]);
+    starti = max([ 1  (ii-round( nT*Tp./dt))]);
     stopi = min([ length(z)  (ii+round( nT*Tp./dt))]);
     
     Esmooth(ii) = 1./Tp.* nansum( z( starti:stopi ).^2 .*  bartlett( length(starti:stopi) ) .* dt );

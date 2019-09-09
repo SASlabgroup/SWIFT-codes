@@ -14,14 +14,15 @@
 %                   structure, other than time (consistent with
 %                   readSWIFT_SBD.m update)
 %             9/2018 improve screening for bad bursts
-%
+%             4/2019 disable screening for dir changes (proxy for ship recovery)
+%                   and give messages for burst screening
 clear all,
 
 plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 
 minwaveheight = 0.0; % minimum wave height in data screening
 
-minsalinity = 20.0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 2; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 3;  % m/s, for screening when buoy on deck of boat
 
@@ -110,17 +111,17 @@ for ai = 1:length(flist),
     onenames = string(fieldnames(oneSWIFT));
     lengthofnames(ai) = length(onenames);
     
-        % if first sbd, set the structure fields as the standard
+    % if first sbd, set the structure fields as the standard
     if ai == 1,
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(SWIFT));
         
         % if payloads match, increment
-    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames), 
+    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames),
         SWIFT(ai) = oneSWIFT;
         
         % if additional payloads, favor that new structure (removing other)
-    elseif ai > 1 && length(onenames) > length(allnames), 
+    elseif ai > 1 && length(onenames) > length(allnames),
         clear SWIFT
         SWIFT(ai-1) = oneSWIFT; % place holder, which will be removed when badburst applied
         badburst(ai-1) = true;
@@ -131,45 +132,53 @@ for ai = 1:length(flist),
         disp(allnames)
         
         % if fewer paylaods, skip that burst
-    elseif ai > 1 && length(onenames) < length(allnames), 
+    elseif ai > 1 && length(onenames) < length(allnames),
         disp('=================================')
         disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
         SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
         badburst(ai) = true;
     end
-
+    
     badburst( find(lengthofnames < length(allnames) ) ) = true;
     
     %% screen the bad data (usually out of the water)
     
     % no data
-    if isempty(oneSWIFT.lon) | isempty(oneSWIFT.lat) | isempty(oneSWIFT.time), 
+    if isempty(oneSWIFT.lon) | isempty(oneSWIFT.lat) | isempty(oneSWIFT.time),
         badburst(ai) = true;
+        disp('=================================')
+        disp('no position or timestamp!')
     end
     % no position
     if oneSWIFT.lon == 0 | ~isnumeric(oneSWIFT.lon),
         badburst(ai) = true;
+        disp('=================================')
+        disp('no position!')
     end
-        % wave limit
+    % wave limit
     if isfield(oneSWIFT,'sigwaveheight'),
         if oneSWIFT.sigwaveheight < minwaveheight,
             badburst(ai) = true;
+            disp('=================================')
+            disp('waves too small, removing burst')
         end
-    end  
-        % salinity limit
+    end
+    % salinity limit
     if isfield(oneSWIFT,'salinity'),
         if all(oneSWIFT.salinity < minsalinity), % & all(~isnan(oneSWIFT.salinity)),
             badburst(ai) = true;
+            disp('=================================')
+            disp('salinity too low, removing burst')
         end
     end
-        
-        % speed limit
+    
+    % speed limit
     if isfield(oneSWIFT,'driftspd')
         if oneSWIFT.driftspd > maxdriftspd,
             badburst(ai) = true;
         end
     end
-
+    
     
     %% close telemetry file loop
 end
@@ -218,15 +227,15 @@ if length(SWIFT) > 3,
         end
     end
     
-    % remove last burst, if big change in direction (suggests recovery by ship)
-    dirchange = abs( SWIFT( length(SWIFT) - 2).driftdirT  - SWIFT( length(SWIFT) - 1).driftdirT );
-    if dirchange > 45,
-        disp('removing last burst, suspect includes ship recovery')
-        SWIFT( length(SWIFT) - 1).driftdirT = NaN;
-        SWIFT( length(SWIFT) - 1).driftspd = NaN;
-        SWIFT( length(SWIFT) ) = [];
-        battery( length(SWIFT) ) = [];
-    end
+    %     % remove last burst, if big change in direction (suggests recovery by ship)
+    %     dirchange = abs( SWIFT( length(SWIFT) - 2).driftdirT  - SWIFT( length(SWIFT) - 1).driftdirT );
+    %     if dirchange > 90,
+    %         disp('removing last burst, suspect includes ship recovery')
+    %         SWIFT( length(SWIFT) - 1).driftdirT = NaN;
+    %         SWIFT( length(SWIFT) - 1).driftspd = NaN;
+    %         SWIFT( length(SWIFT) ) = [];
+    %         battery( length(SWIFT) ) = [];
+    %     end
     
 else
     for si = 1:length(SWIFT),

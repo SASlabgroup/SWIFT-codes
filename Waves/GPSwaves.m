@@ -24,7 +24,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs)
 %
 % Outputs can be supressed, in order, thus full usage is as follows:
 %
-%   [ Hs, Tp, Dp, E, f, a1, b1, a2, b2 ] = GPSwaves_v2(u,v,z,fs); 
+%   [ Hs, Tp, Dp, E, f, a1, b1, a2, b2 ] = GPSwaves(u,v,z,fs); 
 %
 % and minimal usage is:
 %
@@ -35,12 +35,17 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs)
 %              10/2015, v2, include vertical GPS estimate to get all four directional moments
 %              10/2017, v3, change the RC filter parameter to 3.5, after
 %                           realizing that the cuttoff period is 2 pi * RC, not RC
+%              11/2018, v4, force velocity spectra as source for scalar energy spectra
+%                           remove LFNR usage
+%                           correct sign of a1, b1
+%               8/2019  force use of Tp from velocity spectra, increase max f to 1 Hz
+%               
 %
 %#codegen
 
 %% tunable parameters
 
-% loz frequency noise ratio tolerance
+% low frequency noise ratio tolerance (not applied as of Nov 2018)
 
     LFNR = 4 ; 
     
@@ -50,7 +55,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs)
 % time constant [s] for high-pass filter 
     RC = 3.5; 
 
-% energy ratios (unused as of version 3)
+% energy ratios (unused as of Oct 2017)
 %maxEratio = 5; % max allowed ratio of Ezz to Exx + Eyy, default is 5
 %minEratio = .1; % min allowed ratio of Ezz to Exx + Eyy, default is 0.1
     
@@ -58,7 +63,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs)
 %% fixed parameters
 wsecs = 256;   % windoz length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
-maxf = .5;       % frequency cutoff for telemetry Hz
+maxf = 1;       % frequency cutoff for telemetry Hz
 
 %% deal with variable input data, with priority for GPS velocity
 
@@ -202,7 +207,8 @@ f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ;
 %% ensemble average windows together
 % take the average of all windows at each freq-band
 % and divide by N*samplerate to get power spectral density
-% the two is b/c Matlab's fft output is the symmetric FFT, and we did not use the redundant half (so need to multiply the psd by 2)
+% the two is b/c Matlab's fft output is the symmetric FFT, 
+% and we did not use the redundant half (so need to multiply the psd by 2)
 UU = mean( UUwindowmerged.' ) / (win/2 * fs  );
 VV = mean( VVwindowmerged.' ) / (win/2 * fs  );
 ZZ = mean( ZZwindowmerged.' ) / (win/2 * fs  );
@@ -235,8 +241,8 @@ Cxy = real(UV) ./ ( (2*pi*f).^2 );  %[m^2/Hz]
 % NOTE THAT THIS USES COSPECTRA OF Z AND U OR V, WHICH DIFFS FROM QUADSPECTRA OF Z AND X OR Y
 % note also that normalization is skewed by the bias of Exx + Eyy over Ezz
 % (non-unity check factor)
-a1 = - Cxz ./ sqrt( (Exx+Eyy).* Ezz );  %[], would use Qxz for actual displacements
-b1 = - Cyz ./ sqrt( (Exx+Eyy).* Ezz );  %[], would use Qyz for actual displacements
+a1 = Cxz ./ sqrt( (Exx+Eyy).* Ezz );  %[], would use Qxz for actual displacements
+b1 = Cyz ./ sqrt( (Exx+Eyy).* Ezz );  %[], would use Qyz for actual displacements
 a2 = (Exx - Eyy) ./ (Exx + Eyy);
 b2 = 2 .* Cxy ./ ( Exx + Eyy );
 
@@ -265,18 +271,18 @@ end
 
 
 %% apply LFNR tolerance 
-Exx(LFNR*(UU) < Exx ) = 0;  % quality control based on LFNR of swell
-Eyy(LFNR*(VV) < Eyy ) = 0;  % quality control based on LFNR of swell
+%Exx(LFNR*(UU) < Exx ) = 0;  % quality control based on LFNR of swell
+%Eyy(LFNR*(VV) < Eyy ) = 0;  % quality control based on LFNR of swell
 %Ezz(LFNR*(ZZ) < Ezz ) = 0;  % quality control based on LFNR of swell
 
 
 %% Scalar energy spectra (a0)
 
-if zdummy == 1,
-    E = Exx + Eyy;
-else
-    E = Ezz;
-end
+%if zdummy == 1,
+E = Exx + Eyy;
+%else
+%    E = Ezz;
+%end
 
 %E = zeros(1,length(f));
 %if wdummy ==1,
@@ -292,9 +298,9 @@ end
 %E = Eyy+Exx; % pure GPS version (for testing)
 %E( check > maxEratio | check < minEratio ) = 0; 
 %figure, loglog(f,check)
-%clf, loglog(f,UU+VV,'g',f,Exx+Eyy,'b',f,ZZ.*9.8^2,'m',f,Ezz,'r'),legend('UU+VV','XX+YY','ZZ','ZZ') % for testing
+%clf, loglog(f,UU+VV,'g',f,Exx+Eyy,'b',f,Ezz,'r'),legend('UU+VV','XX+YY','ZZ') % for testing
 %loglog(f,abs(Cxz),f,abs(Cyz))
-%drawnow
+drawnow
 
 %% wave stats
 fwaves = f>0.05 & f<1; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
@@ -314,6 +320,10 @@ Ta = 1./fe;
 %[~ , fpindex] = max(E);
 Tp = 1./f(fpindex);
 
+if Tp > 20, % if peak not found, use centroid
+    Tp = Ta;
+    fpindex = feindex;
+end
 
 %% spectral directions
 dir = - 180 ./ 3.14 * dir1;  % switch from rad to deg, and CCz to Cz (negate)
@@ -343,20 +353,20 @@ end
 
 %% screen for bad direction estimate, or no heave data    
 
-inds = fpindex + [-1:1]; % pick neighboring bands
-if all(inds>0) & all(inds<42), 
-    
-  dirnoise = std( dir(inds) );
-
-  if dirnoise > 45  |  zdummy == 1,
-      Dp = 9999;
-  else
-      Dp = Dp;
-  end
-  
-else
-    Dp =9999;
-end
+% inds = fpindex + [-1:1]; % pick neighboring bands
+% if all(inds>0) & all(inds<42), 
+%     
+%   dirnoise = std( dir(inds) );
+% 
+%   if dirnoise > 45  |  zdummy == 1,
+%       Dp = 9999;
+%   else
+%       Dp = Dp;
+%   end
+%   
+% else
+%     Dp =9999;
+% end
 
 
 %% prune high frequency results

@@ -10,16 +10,28 @@ function [Etheta theta f dir spread spread2 spread2alt] = SWIFTdirectionalspectr
 % this is intended to be used after post-processing wave data with
 % "reprocess_IMU.m" which uses "XYZwaves.m" to get coefficients
 %
-%    [Etheta theta f dir spread spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, plotflag);
+%    [Etheta theta f dir spread spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, plotflag, recip);
 %
 % J. Thomson, 10/2015, based on NCEX codes (J. Thomson, 2002)
 %             4/2016 editted by Fabrice Ardhuin to energy weight coefs in determining average
 %             5/2016 corrected typo in spread1
 %             8/2016 enable reciprocal flag, for post-procesing vs onboard processing
 %             1/2017 output multiple estimates of spread and add binary plotting flag
+%             12/2018   add plots of directional distributions distinct freqs
+%             3/2019 add second binary varargin to control reciprocal direction
+%            
 
-
-recip = false;  % set true for onboard processing, set false for *some* versions of reprocessed
+if isempty(varargin),
+    plotflag = true;
+    recip = false;
+elseif length(varargin) == 1,
+    plotflag = varargin{1};
+    recip = false;
+elseif length(varargin) == 2,
+    plotflag = varargin{1};
+    recip = varargin{2};
+    %disp(['recip set to ' num2str(recip)] )
+end
 
 wd = pwd;
 wdi = find(wd == '/',1,'last');
@@ -81,7 +93,8 @@ if recip == true,
     eastdirs = theta < 180;
     theta( westdirs ) = theta ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
     theta( eastdirs ) = theta ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
-else end
+else
+end
 
 [theta dsort] = sort(theta);
 Etheta = Etheta(:,dsort);
@@ -100,10 +113,13 @@ spread2alt = sqrt( abs( 0.5 - 0.5 .* ( a2.^2 + b2.^2 )  )); % radians?
 dir = - 180 ./ pi * dir1;  % switch from rad to deg, and CCW to CW (negate)
 dir = dir + 90;  % rotate from eastward = 0 to northward  = 0
 dir( dir < 0 ) = dir( dir < 0 ) + 360;  % take NW quadrant from negative to 270-360 range
-%westdirs = dir > 180;
-%eastdirs = dir < 180;
-%dir( westdirs ) = dir ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
-%dir( eastdirs ) = dir ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
+if recip == false, 
+westdirs = dir > 180;
+eastdirs = dir < 180;
+dir( westdirs ) = dir ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
+dir( eastdirs ) = dir ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
+else
+end
 
 if isreal(spread1),
     spread = 180 ./ 3.14 .* spread1;
@@ -114,12 +130,6 @@ end
 spread2 = 180 ./ 3.14 .* spread2;
 spread2alt = 180 ./ 3.14 .* spread2alt;
 
-if isempty(varargin),
-    plotflag = true;
-elseif size(varargin) ==1,
-    plotflag = varargin{1};
-else 
-end
 
 if plotflag == true, 
 
@@ -182,6 +192,29 @@ xlabel('Frequency [Hz]')
 ylabel('Moments []')
 
 print('-dpng',[ wd '_directionalmoments.png'])
+
+
+%% distributions at freqs
+
+figure(5), clf
+
+r = 3; c = 3;
+n = r * c;
+
+for fi=1:n,
+    subplot(r,c,fi)
+    thisf = fi * ( ceil( length(f) / n ) - 1 );
+    plot( theta , Etheta(thisf, :) ), hold on
+    plot( [dir(thisf) dir(thisf)],[0 max(Etheta(thisf, :))], 'r-' )
+    plot( [dir(thisf) + spread(thisf); dir(thisf) - spread(thisf); ],[max(Etheta(thisf, :))/2 max(Etheta(thisf, :))/2], 'r:' )
+    title(['f = ' num2str( f(thisf) ) 'Hz' ] )
+    set(gca,'XLim',[0 360])
+    xlabel('\theta [deg]')
+    ylabel('E')
+end
+
+print('-dpng',[ wd '_directiondistributions.png'])
+
 
 else 
 end

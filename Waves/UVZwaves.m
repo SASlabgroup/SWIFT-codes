@@ -28,7 +28,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = UVZwaves(u,v,z,fs)
 %             6/2016, adapted from GPSandIMUwaves.m
 %             4/2017 adapted again for application to AWAC data
 %             5/2018 fixed normalization of directional moments
-%
+%             8/2019    add RC filter for z (not just u,v)
 %#codegen
   
 
@@ -41,7 +41,7 @@ maxf = .5;       % frequency cutoff for telemetry Hz
 %% begin processing, if data sufficient
 pts = length(z);       % record length in data points
 
-if pts >= 2*wsecs & fs>=1,  % minimum length and quality for processing
+if pts >= 2*wsecs & fs>=.5,  % minimum length and quality for processing
 
     
 %% high-pass RC filter, detrend first
@@ -55,16 +55,19 @@ z = detrend(z);
 % initialize
 ufiltered = u;
 vfiltered = v;
+%zfiltered = z;
 
 alpha = RC / (RC + 1./fs); 
 
 for ui = 2:length(u),
     ufiltered(ui) = alpha * ufiltered(ui-1) + alpha * ( u(ui) - u(ui-1) );
     vfiltered(ui) = alpha * vfiltered(ui-1) + alpha * ( v(ui) - v(ui-1) );
+    %zfiltered(ui) = alpha * zfiltered(ui-1) + alpha * ( z(ui) - z(ui-1) );
 end
 
 u = ufiltered;
-v = vfiltered;    
+v = vfiltered;  
+%z = zfiltered;
 
 %% break into windows (use 75 percent overlap)
 w = round(fs * wsecs);  % window length in data points

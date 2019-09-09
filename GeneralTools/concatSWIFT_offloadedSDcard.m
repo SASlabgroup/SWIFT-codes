@@ -21,7 +21,7 @@ sourcedir = ''%'SWIFT11_02Oct2014_SDcard';%'SWIFT15_Test_19Jun2014'%'SWIFTdata_2
 %%  glob all processed files (per instrument) 
 % and put these all in one directory (skip if already in one directory)
 
-eval(['!cp -r ' dirpath sourcedir '/*/Processed/*/*PRC*  . ' ]) % use for single
+eval(['!cp -r ' dirpath sourcedir '/*/Processed/*/*PRC*.dat  . ' ]) % use for single
 %eval(['!cp -r ' dirpath sourcedir '/*/*/Processed/*/*PRC*  . ' ]) % use for multiple SWIFTs
 
 
@@ -29,9 +29,9 @@ eval(['!cp -r ' dirpath sourcedir '/*/Processed/*/*PRC*  . ' ]) % use for single
 % using the IMU or SBG files as reference to find each burst and the other sensors
 % (b/c either IMU or SBG is always present)
 
-refnames = dir('*IMU*_PRC*');
+refnames = dir('*IMU*_PRC*.dat');
 if isempty(refnames), 
-    refnames = dir('*SBG*_PRC*');
+    refnames = dir('*SBG*_PRC*.dat');
 else
     disp('NO IMU (or SBG) files found');
 end

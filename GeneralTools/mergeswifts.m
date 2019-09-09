@@ -3,9 +3,11 @@
 
 clear all, close all
 
+sigHRzoffset = 0; % first HR bin should be at 0.3
+
 %pwd
 
-flist = dir('SWIFT*.mat');
+flist = dir('*SWIFT*.mat');
 
 counter = 0;
 
@@ -23,47 +25,74 @@ for fi = 1:length(flist),
     subplot(2,1,2)
     plot([SWIFT.time],[SWIFT.windspd],'kx'), hold on
     
+    %% temps and salinities
+    figure(2),
+    subplot(3,1,1)
+    plot([SWIFT.time],[SWIFT.airtemp],'gx'), hold on
+    subplot(3,1,2)
+    for si=1:length(SWIFT)
+        plot([SWIFT(si).time],[median(SWIFT(si).watertemp)],'bx'), hold on
+    end
+    subplot(3,1,3)
+    for si=1:length(SWIFT)
+        plot([SWIFT(si).time],[median(SWIFT(si).salinity)],'bx'), hold on
+    end
+    
     
     %% dissipation
-    clear epsilon magprofile
+    clear epsilon magprofile z
     bad = [];
     for ai = 1:length(SWIFT)
-        if ~isnan(SWIFT(ai).uplooking.tkedissipationrate),
+        if isfield(SWIFT(ai),'uplooking') && any(~isnan(SWIFT(ai).uplooking.tkedissipationrate)),
             epsilon(:,ai) = SWIFT(ai).uplooking.tkedissipationrate;
-            epsilon(:,ai) = NaN;
+            z(:,ai) = SWIFT(ai).uplooking.z;
             magprofile(:,ai) = NaN;
         elseif isfield(SWIFT(ai).signature.HRprofile,'z'),
             if ~isempty( SWIFT(ai).signature.profile.z ),
                 epsilon(:,ai) = SWIFT(ai).signature.HRprofile.tkedissipationrate;
+                z(:,ai) = SWIFT(ai).signature.HRprofile.z + sigHRzoffset;
                 magprofile(:,ai) = sqrt( SWIFT(ai).signature.profile.east.^2 + SWIFT(ai).signature.profile.north.^2 ) ; hold on
             else
                 epsilon(:,ai) = NaN;
+                z(:,ai) = NaN;
                 magprofile(:,ai) = NaN;
             end
         else
                 epsilon(:,ai) = NaN;
+                z(:,ai) = NaN;
                 magprofile(:,ai) = NaN;
         end
     end
     
-    
-    figure(2),
-    if nansum(epsilon)~=0,
-        scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(epsilon)),'filled'), hold on
+    % map, colored by various fields
+    figure(3),
+    if ~isempty(SWIFT),%nansum(epsilon)~=0,
+        %scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(epsilon)),'filled'), hold on
         %scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(abs(gradient(magprofile)))),'filled'), hold on
         %scatter([SWIFT.lon],[SWIFT.lat],20,mean(magprofile(1:10,:)) - mean(magprofile(20:30,:)),'filled'), hold on
-        %scatter([SWIFT.lon],[SWIFT.lat],20,[SWIFT.driftspd]), hold on
+        scatter([SWIFT.lon],[SWIFT.lat],20,[SWIFT.driftspd]), hold on
     else
        %plot([SWIFT.lon],[SWIFT.lat],'b.'), hold on
     end
     
     %% wind stress
-    figure(3)
+    figure(4)
     if isfield(SWIFT,'windustar'),
     plot(1.3*[SWIFT.windspd],[SWIFT.windustar],'kx'), hold on
     else 
     end
     axis([0 15 0 .8])
+    
+    %% dissipation profiles
+    figure(5), 
+       if  ~isempty(SWIFT) && nansum(epsilon(:))~=0,
+           loglog(epsilon,z,'k-'), hold on
+           if length(epsilon) == 128, % v4 results
+            loglog(epsilon,z,'b-'), hold on
+           else
+           end
+    else
+    end
     
 end
 
@@ -75,32 +104,48 @@ set(gca,'FontSize',16,'fontweight','demi')
 datetick('x','ddmmm')
 set(gca,'YLim',[0 5])
 ylabel('Waves, H_s [m]')
-
 subplot(2,1,2)
 set(gca,'FontSize',16,'fontweight','demi')
 datetick('x','ddmmm')
 set(gca,'YLim',[0 15])
 ylabel('Wind, U_1 [m/s]')
+print -dpng windsandwaves.png
 
+figure(2)
+subplot(3,1,1)        
+set(gca,'FontSize',16,'fontweight','demi')
+datetick('x','ddmmm')
+%set(gca,'YLim',[0 5])
+ylabel('Air Temp [C]')
+subplot(3,1,2)
+set(gca,'FontSize',16,'fontweight','demi')
+datetick('x','ddmmm')
+%set(gca,'YLim',[0 15])
+ylabel('Water Temp [C]')
+subplot(3,1,3)
+set(gca,'FontSize',16,'fontweight','demi')
+datetick('x','ddmmm')
+%set(gca,'YLim',[0 15])
+ylabel('Salinity [C]')
+print -dpng tempsandsalinities.png
 
-figure(2),
+figure(3),
+hold on, colorbar, axis equal
+
 % GENERIC COAST:
-%ax = axis;
-%load coast
-%plot(long,lat,'k')
-%axis(ax);
-%colorbar
+ax = axis;
+load coast
+plot(long,lat,'k')
+axis(ax);
+colorbar
 
-% INNER SHELF
-hold on
-load('/Users/jthomson/Dropbox/InnerShelfDRI/MooringPlanning/Colosi/G200.mat'),
-patch(GRID.patch.X,GRID.patch.Y,[.5 .5 .5]);
-%colorbar
-%axis([-120.7182 -120.6318   34.8346   34.9715])
-axis equal
-axis([-120.9 -120.5   34.7   35.2])
+% INNER SHELF map specifics
+%load('/Users/jthomson/Dropbox/Projects/InnerShelfDRI/MooringPlanning/Colosi/G200.mat'),
+%patch(GRID.patch.X,GRID.patch.Y,[.5 .5 .5]);
+%axis([-120.9 -120.5   34.7   35.2]) %axis([-120.7182 -120.6318   34.8346   34.9715])
+print -dpng SWIFtmap.png
 
-figure(3), 
+figure(4), 
 set(gca,'FontSize',16,'fontweight','demi')
 xlabel('Wind Speed, U_{10} [m/s]'),
 ylabel('Wind friction velocity, u_* [m/s]')
@@ -113,3 +158,10 @@ Cd = a  +  b * windbins.^2; % ad hoc version of Smith, 1980
 ustarcurve = ( Cd .* windbins.^2 ).^.5;
 
 plot(windbins,ustarcurve,'m','linewidth',2)
+print -dpng windfrictionvel.png
+
+figure(5),
+set(gca,'YDir','reverse')
+xlabel('\epsilon [m^2/s^3')
+ylabel('z [m]')
+print -dpng epsilonprofiles.png
