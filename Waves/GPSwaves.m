@@ -60,10 +60,10 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs)
 %minEratio = .1; % min allowed ratio of Ezz to Exx + Eyy, default is 0.1
     
 
-%% fixed parameters
+%% fixed parameters (which will produce 42 frequency bands)
 wsecs = 256;   % windoz length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
-maxf = 1;       % frequency cutoff for telemetry Hz
+maxf = .5;       % frequency cutoff for telemetry Hz
 
 %% deal with variable input data, with priority for GPS velocity
 
@@ -91,7 +91,7 @@ z(badz) = mean( z(~badz) );
 %% begin processing, if data sufficient
 pts = length(u);       % record length in data points
 
-if pts >= 2*wsecs & fs>1 & sum(badu)<100 & sum(badv)<100,  % minimum length and quality for processing
+if pts >= 2*wsecs & fs>=1 & sum(badu)<100 & sum(badv)<100,  % minimum length and quality for processing
 
     
 %% high-pass RC filter, detrend first
