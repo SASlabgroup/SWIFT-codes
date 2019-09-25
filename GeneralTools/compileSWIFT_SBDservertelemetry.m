@@ -16,13 +16,14 @@
 %             9/2018 improve screening for bad bursts
 %             4/2019 disable screening for dir changes (proxy for ship recovery)
 %                   and give messages for burst screening
+%             9/2019   force timestamp from SBD filename always, rather than Airmar
 clear all,
 
 plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 
 minwaveheight = 0.0; % minimum wave height in data screening
 
-minsalinity = 2; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 5; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 3;  % m/s, for screening when buoy on deck of boat
 
@@ -53,7 +54,9 @@ for ai = 1:length(flist),
         oneSWIFT.lon = NaN;
     end
     
-    %% time fix, take the time from the filename if there is no airmar
+    %% time stamp: take the time from the filename, even when there is time from the airmar
+    % for telemetry, this is the telemtry time (at the end of the burst).  
+    % for offloaded data, this the concat file name (from the start of the burst)
     
     day = flist(ai).name(15:16);
     month = flist(ai).name(17:19);
@@ -62,11 +65,14 @@ for ai = 1:length(flist),
     minute = flist(ai).name(27:28);
     sec = flist(ai).name(29:30);
     
-    if isempty(oneSWIFT.time),
-        oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-    elseif oneSWIFT.time == 0 |  isnan(oneSWIFT.time) | oneSWIFT.time < datenum(2014,1,1),
-        oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-    end
+    oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+
+    
+%     if isempty(oneSWIFT.time),
+%         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+%     elseif oneSWIFT.time == 0 |  isnan(oneSWIFT.time) | oneSWIFT.time < datenum(2014,1,1),
+%         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+%     end
     
     
     %% remove bad Airmar data

@@ -9,11 +9,14 @@
 %               6/2016 v 3.4, includ sdi coms (Vasaila 536)
 %               1/2017  v4.0, include SBG, Nortek Signature and RM Young 8100 sonic, plus index on SBG, not AQ
 %               9/2017  add oxygen optode and sea owl fluorometer
+%               9/2019  changed time convention to use start of the burst,rather than end
 %
 
 clear all, close all, clc
 
 plotflag = 1;  % binary flag for plotting
+burstinterval = 12; % minutes between bursts
+burstlength = 512/60; % minutes of sampling during each burst
 
 dirpath = './'%'~/Desktop/'; '~/Dropbox/SWIFT_v3.x/TestData/';
 sourcedir = ''%'SWIFT11_02Oct2014_SDcard';%'SWIFT15_Test_19Jun2014'%'SWIFTdata_27Apr2014' %'SWIFT15_LakeWA_Stereo_09May2014';
@@ -77,7 +80,8 @@ ACOfile = [ID '_ACO_' date '_' hour '_' burst '_PRC.dat'];
 SWLfile = [ID '_SWL_' date '_' hour '_' burst '_PRC.dat'];
 
 
-minute = num2str(str2num(burst(2))*12);
+minute = num2str( (str2num(burst(2))-1) * burstinterval );
+if length(minute)==1, minute = ['0' minute]; else end
 outputfile = ['buoy-SWIFT_' ID(6:7) '-' date '_' hour  minute '000.sbd']; % name concat file same as if pulled from swiftserver
 
 %eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile '  ' ACSfilemid '  > ' outputfile]) % create the file
