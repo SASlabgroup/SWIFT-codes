@@ -72,16 +72,17 @@ for i = [ (disspts/2) : disspts/overlap : (pts-disspts/2) ],
     % fit structure function to A r^2/3
     for j=1:length(z),
         
+        maxr = inf;
         % need to limit r values used to be within internial subrange
             % smaller is better, but must have a least 6 points 
-            maxr = 6*median(diff(z));
+                maxr = 10*median(diff(z));
             % other ad hoc limit is proportion of depth
-                % maxr = max(z) ./ 2;
+                %maxr = max(z) ./ 2;
             % alternate limit is distanace to boundary
                 % maxr = min( abs(z(j) - max(z)), z(j) );
         
             % option for double sided fit using abs(r)
-            r = abs(r);             
+             r = abs(r);     
             
         % identify points for fitting, option to exclude r == 0 
         goodpts = ~isnan( D(j,:) )   &   r(j,:)< maxr  & r(j,:) >= 0;
@@ -109,7 +110,7 @@ for i = [ (disspts/2) : disspts/overlap : (pts-disspts/2) ],
                newfit = polyfit(real(rnew(j,goodpts).^(2/3)),A(j,ept).*r(j,goodpts).^(2/3) + N(j,ept),1);
                N(j,ept) = newfit(2);
                  
-               disp(N(j,ept))
+               %disp(N(j,ept))
                % show fit, if plog flag set to true
                if plots==1,
                Dplot = plot( real(rnew(j,goodpts).^(2/3)), D(j,goodpts),'.', real(rnew(j,goodpts).^(2/3)), A(j,ept).*r(j,goodpts).^(2/3) + N(j,ept),'--','color',cmap(round(j./length(z)*64),:),'markersize',14,'linewidth',1.5);, 
