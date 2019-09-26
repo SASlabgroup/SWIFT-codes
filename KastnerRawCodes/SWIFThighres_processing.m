@@ -10,6 +10,7 @@
 %                       remove fields for payloads not present (i.e., AQD, AQH)
 %                       prune Signature profiles for depth
 %                       apply a reference velocity (drift) to Signature profiles
+%                       include Signature backscatter in new burst ensembles
 %                       use dissipation_simple
 %   
 % left to do:
@@ -625,6 +626,7 @@ for sn=1:length(SW_list);
                 SWIFT_highres((kn-1)*num+tn).signature.HRprofile.z=NaN;
                 SWIFT_highres((kn-1)*num+tn).signature.HRprofile.wbar=NaN;
                 SWIFT_highres((kn-1)*num+tn).signature.HRprofile.wvar=NaN;
+                SWIFT_highres((kn-1)*num+tn).signature.HRprofile.backscatter=NaN;
 %                 SWIFT_highres((kn-1)*num+tn).HRprofile.tkedissipationrate_pp=NaN;
 %                 SWIFT_highres((kn-1)*num+tn).HRprofile.rawVel=NaN;
 %                 SWIFT_highres((kn-1)*num+tn).HRprofile.cor=NaN;
@@ -634,6 +636,10 @@ for sn=1:length(SW_list);
                 SWIFT_highres((kn-1)*num+tn).signature.profile.z=NaN;
                 SWIFT_highres((kn-1)*num+tn).signature.profile.wbar=NaN;
                 SWIFT_highres((kn-1)*num+tn).signature.profile.wvar=NaN;
+                SWIFT_highres((kn-1)*num+tn).signature.profile.depth=NaN;
+                SWIFT_highres((kn-1)*num+tn).signature.profile.gyro=NaN;
+                SWIFT_highres((kn-1)*num+tn).signature.profile.backscatter = NaN;
+                SWIFT_highres((kn-1)*num+tn).signature.profile.z = NaN;
                 %SWIFT_highres((kn-1)*num+tn).signature.profile.east_raw=NaN;
                 %SWIFT_highres((kn-1)*num+tn).signature.profile.north_raw=NaN;
                 %SWIFT_highres((kn-1)*num+tn).signature.profile.depth_raw=NaN;
