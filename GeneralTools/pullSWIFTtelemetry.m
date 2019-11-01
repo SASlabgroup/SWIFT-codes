@@ -78,6 +78,7 @@ if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
     eval(['!cp *SWIFT*/*SWIFT*start*.mat ./'])
     tempfig = mapSWIFT('watertemp');
     salinityfig = mapSWIFT('salinity');
+    wavefig = mapSWIFT('sigwaveheight');
     
     clc
     spaces(1:length(IDs)) = ' ';
