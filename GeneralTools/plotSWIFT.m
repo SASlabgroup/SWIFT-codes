@@ -68,7 +68,7 @@ if isfield(SWIFT,'sigwaveheight')
     plot( [SWIFT.time],[SWIFT.sigwaveheight],'g+','linewidth',2)
     datetick;
     ylabel('Wave H_s [m]')
-    set(gca,'Ylim',[0 ceil(max([SWIFT.sigwaveheight]))] )
+    set(gca,'Ylim',[0 inf])%ceil(max([SWIFT.sigwaveheight]))] )
 end %if
 
 if isfield(SWIFT,'peakwaveperiod')
@@ -228,7 +228,7 @@ if isfield(SWIFT,'wavespectra')
     
     xlabel('freq [Hz]');
     ylabel('Energy [m^2/Hz]');
-    axis([5e-2 7e-1 1e-5 inf])
+    axis([5e-2 7e-1 1e-3 inf])
     title('Scalar wave spectra');
     if isfield(SWIFT,'windspd') &&  ~isnan(max([SWIFT.windspd]))
         WindColorbar = colorbar('Location','East','Ticks',0:0.2:1,'TickLabels',round(linspace(0,max([SWIFT.windspd]),6)*10)/10);

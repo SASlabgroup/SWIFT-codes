@@ -48,6 +48,8 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %                       added SWIFT.id field using sbd filename
 %   J. Thomson 4/2019   correct Sig xcdr depth (0.2 m) and fill empty Signature results with NaNs.
 %                       move Airmar PB200 read to after SBG, so can fill missing positions
+%   J. Thomson 11/2019  fixed parsing of Airmar PB200 positions
+%
 
 recip = true; % binary flag to change wave direction to FROM
 
@@ -244,8 +246,16 @@ while 1
         SWIFT.winddirTstddev =  fread(fid,1,'float'); % std dev of wind direction (deg)
         SWIFT.windspd = fread(fid,1,'float'); % mean wind speed (m/s)
         SWIFT.windspdstddev = fread(fid,1,'float');  % std dev of wind spd (m/s)
-        PBlat = num2str(fread(fid,1,'float')); % latitude *** STILL NEEDS TO BE PARSED (like time str)
-        PBlon = num2str(fread(fid,1,'float'));  % longitude *** STILL NEEDS TO BE PARSED (like time str)
+        PBlat = num2str(fread(fid,1,'float')); % latitude
+        if length(PBlat)>5,
+            %dec = find( PBlat == '.');
+            PBlat = str2num( PBlat(1:2) ) + str2num( PBlat(3:end) ) / 60 ; % parsing might not be robust
+        end
+        PBlon = num2str(fread(fid,1,'float'));  % longitude
+        if length(PBlon)>5, 
+            %dec = find( PBlon == '.');
+            PBlon = - str2num( PBlon(1:3) ) + str2num( PBlon(4:end) ) / 60 ; % parsing might not be robust, esp +/-    
+        end
         if ~isfield(SWIFT,'lat'), % if no IMU, use this one
             disp('Using Airmar positions')
             SWIFT.lat = PBlat;
