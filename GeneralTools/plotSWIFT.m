@@ -239,7 +239,7 @@ if isfield(SWIFT,'wavespectra')
     
     % spectrogram
     subplot(2,1,2)
-    if size(t)>1,
+    if length(t)>1,
     pcolor(nanmean(f,1),t,log10(E)), shading flat
     axis([5e-2 5e-1 min(t) max(t)])
     xlabel('freq [Hz]');

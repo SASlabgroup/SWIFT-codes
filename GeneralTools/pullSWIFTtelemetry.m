@@ -49,7 +49,7 @@ if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
             wdi = find(wd == '/',1,'last');
             wd = wd((wdi+1):end);
             if ~isempty(SWIFT),
-                allbatterylevels(si) = min(battery);
+                allbatterylevels(si) = battery(end);
                 lasttime(si) = max([SWIFT.time]);
                 lastlat(si) = SWIFT(end).lat;
                 lastlon(si) = SWIFT(end).lon;
