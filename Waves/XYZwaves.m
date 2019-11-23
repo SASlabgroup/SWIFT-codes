@@ -260,12 +260,12 @@ end
 % quality control, with or without check factor 
 %   (should only test for check = unity if in deep water!)
 %if Tp>20 | nanmedian(check(f>.05)) > 5  |  Hs < 0.1, 
-if Tp>20  |  Hs < 0.1, 
+if Tp>20  |  Hs < 0.0, 
     disp('Bad spectral shape or low signal to noise')
      Hs = 9999;
      Tp = 9999; 
      Dp = 9999; 
-     E(:) = 9999; 
+     %E(:) = 9999; 
      a1(:) = 9999;
      b1(:) = 9999;
      a2(:) = 9999;
