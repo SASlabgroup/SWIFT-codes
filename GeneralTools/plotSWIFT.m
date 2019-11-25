@@ -241,7 +241,7 @@ if isfield(SWIFT,'wavespectra')
     subplot(2,1,2)
     if length(t)>1,
     pcolor(nanmean(f,1),t,log10(E)), shading flat
-    axis([5e-2 5e-1 min(t) max(t)])
+    axis([5e-2 7e-1 min(t) max(t)])
     xlabel('freq [Hz]');
     datetick('y')
     ylabel('Time -->')
