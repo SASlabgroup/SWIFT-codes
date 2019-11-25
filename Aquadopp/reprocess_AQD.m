@@ -12,7 +12,9 @@
 
 clear all; close all
 %parentdir = ('/Users/jthomson/Desktop/SWIFT15_14Jan2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
-parentdir='/Users/msmith/Documents/PIPERS/SWIFT/Polynya_May2017/SWIFT15_05May2017';
+%parentdir='/Users/msmith/Documents/PIPERS/SWIFT/Polynya_May2017/SWIFT15_05May2017';
+parentdir = './';
+parentdir = pwd;
 
 %quality control parameters
 minamp = 30; %amplitude cutoff, usually 30 or 40
@@ -30,7 +32,7 @@ wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
-load([ wd '_reprocessedAQD.mat'])
+load([ wd '.mat'])
 
 cd('AQD/Raw/') % v3.2 or V3.3
 
