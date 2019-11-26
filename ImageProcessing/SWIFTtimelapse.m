@@ -5,7 +5,7 @@
 %
 % J. Thomson, 4/2019
 
-clear all, close all
+clear all, clf
 tic
 
 com = 'COM-7'; % 7 is mast and 9 is hull (on v4 SWIFTs)
@@ -46,7 +46,7 @@ for di = 1:length(daydirs)
                         currFrame = im2frame(pic);
                     else % slow version, with timestamps
                         image(pic),
-                        text(10,10,[filelist(fi).name],'interpreter','none')
+                        text(10,10,[filelist(fi).name],'interpreter','none','fontsize',14,'fontweight','demi','color','g')
                         currFrame = getframe(gcf);
                     end
                     writeVideo(vidObj,currFrame);
