@@ -79,15 +79,23 @@ if isfield(SWIFT,'peakwaveperiod')
     set(gca,'Ylim',[0 20])
 end %if 
 
-if isfield(SWIFT,'winddirT') && isfield(SWIFT,'peakwavedirT')
+if isfield(SWIFT,'peakwavedirT')
     ax(4) = subplot(n,1,4);
-    plot([SWIFT.time],[SWIFT.winddirT],'bx','linewidth',2), hold on,
     plot([SWIFT.time],[SWIFT.peakwavedirT],'g+','linewidth',2), hold on
     datetick;
     ylabel('directions [^\circ T]')
     set(gca,'Ylim',[0 360])
     set(gca,'YTick',[0 180 360])
-    legend('Wind','Waves');
+end %if
+
+if isfield(SWIFT,'winddirT') 
+    ax(4) = subplot(n,1,4);
+    plot([SWIFT.time],[SWIFT.peakwavedirT],'g+','linewidth',2), hold on
+    datetick;
+    ylabel('directions [^\circ T]')
+    set(gca,'Ylim',[0 360])
+    set(gca,'YTick',[0 180 360])
+    %legend('Wind','Waves');
 end %if
 
 linkaxes(ax,'x')
