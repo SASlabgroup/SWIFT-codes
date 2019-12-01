@@ -15,9 +15,9 @@ tic
 
 parentdir = pwd;
 readraw = false; % reading the binaries doubles the run time
-makesmoothwHR = false; % make (and save a smoothed, but not averaged w)
-plotflag = false; 
-altimetertrim = true;
+makesmoothwHR = true; % make (and save a smoothed, but not averaged w)
+plotflag = true; 
+altimetertrim = false;
 xcdrdepth = 0.2; % depth of transducer [m]
 
 mincor = 50; % correlation cutoff, 50 recommended (max value recorded in air), 30 if single beam acq
@@ -51,7 +51,7 @@ for di = 1:length(dirlist),
             
             %% read or load raw data
             if isempty(dir([filelist(fi).name(1:end-4) '.mat'])) | readraw,
-                [burst avg ] = readSWIFTv4_SIG( filelist(fi).name );
+                [burst avg battery echo ] = readSWIFTv4_SIG( filelist(fi).name );
             else
                 load([filelist(fi).name(1:end-4) '.mat']),
             end
@@ -106,11 +106,13 @@ for di = 1:length(dirlist),
                 avgwvar(trimbin:end) = NaN;
             else
                 maxz = inf;
+                trimbin = length(profilez);
             end
             
             %% match time to SWIFT structure and replace values
             time=datenum(filelist(fi).name(13:21))+datenum(0,0,0,str2num(filelist(fi).name(23:24)),(str2num(filelist(fi).name(26:27))-1)*12,0);            
             [tdiff tindex] = min(abs([SWIFT.time]-time));
+            bad(tindex) = false;
             if ~isempty(tdiff) && tdiff < 1/(24*5) && ~outofwater, 
             SWIFT(tindex).signature.HRprofile.wbar = HRwbar;
             SWIFT(tindex).signature.HRprofile.wvar = HRwvar;
@@ -122,10 +124,11 @@ for di = 1:length(dirlist),
             SWIFT(tindex).signature.profile.altimeter = maxz;
             elseif ~isempty(tdiff) && tdiff < 1/(24*5) && outofwater, 
                 SWIFT(tindex) = [];
+                bad(tindex) = true;
             else
             end
    
-            if plotflag,
+            if plotflag && ~bad(tindex),
             figure(1), clf 
             plot(HRwbar,SWIFT(tindex).signature.HRprofile.z,'b-'), hold on
             plot(HRwbar+sqrt(HRwvar),SWIFT(tindex).signature.HRprofile.z,'b:'),
@@ -166,7 +169,9 @@ for di = 1:length(dirlist),
             subplot(2,1,2)
             avgsec = ( avg.time - min(avg.time) ) * 24 * 3600;
             pcolor(avgsec,profilez,mean(avg.AmplitudeData,3)'), shading flat, hold on
-            plot(avgsec,avg.AltimeterDistance,'k.'), 
+            if isfield(avg,'AltimeterDistance')
+                plot(avgsec,avg.AltimeterDistance,'k.'), 
+            end
             set(gca,'Ydir','reverse')
             colorbar
             drawnow, 
@@ -176,11 +181,24 @@ for di = 1:length(dirlist),
             
             print('-dpng',[filelist(fi).name(1:end-4) '_backscatter.png'])
             
-            echoHR = burst.AmplitudeData;
-            save([filelist(fi).name(1:end-4) '_smoothwHR'],'wHR','echoHR','burstsec','tstep','zstep','z')
+            HRbackscatter = burst.AmplitudeData;
+            save([filelist(fi).name(1:end-4) '_smoothwHR'],'wHR','HRbackscatter','burstsec','tstep','zstep','z')
             else
             end
             
+            if ~isempty(echo)
+                figure(4), clf
+                echo.z = echo.Blanking + echo.CellSize .* [1:length([echo.EchoSounder])];
+                pcolor(echo.time,echo.z,echo.EchoSounder'), shading flat
+                datetick
+                set(gca,'YDir','reverse')
+                ylabel('Depth [m]')
+                title([filelist(fi).name(1:end-4) '_echosounder'],'interpreter','none'),
+                print('-dpng',[filelist(fi).name(1:end-4) '_echosounder.png'])
+
+            else
+            end
+                
             else
             end
             

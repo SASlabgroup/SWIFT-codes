@@ -1,9 +1,9 @@
-function [ burst  avg  battery ] = readSWIFTv4_SIG(filename)
+function [ burst  avg  battery  echo] = readSWIFTv4_SIG(filename)
 % read binary Nortek Signature files recorded onboard SWIFT v4
 % input is string of filename with extension
 % output is structures with burst and avg data, plus average battery voltage
 %
-%    [ burst avg battery ] = readSWIFTv4_SIG(filename);
+%    [ burst avg battery echo] = readSWIFTv4_SIG(filename);
 %
 % the raw files (.dat) are offloaded from the CF card on the SWIFT
 % they begin a log of ASCII commands from the Sutron controller and instrument response
@@ -17,15 +17,23 @@ function [ burst  avg  battery ] = readSWIFTv4_SIG(filename)
 %                also now read NC and NB directly 
 %                also fixed velocity scaling and pitch, roll, heading units
 %             9/2018 force save before return, regardless of whether whole file read or not. 
+%             11/2019   revised to read echosounder data format (with
+%             additional output)
 %
 
 battery = NaN;
 
 fid = fopen( filename );
 
+% initialize structures
+burst = [];
+avg = [];
+echo = [];
+
 % initialize counters
 ensemblecount_burst = 0;
 ensemblecount_avg = 0;
+ensemblecount_echo = 0;
 
 while (~feof(fid))
     
@@ -37,7 +45,7 @@ while (~feof(fid))
         
         if HeaderSize == 10, % if header size correct, try reading data ID and family
             
-            ID = fread(fid,1,'uint8','ieee-le'); % ID byte
+            ID = fread(fid,1,'uint8','ieee-le'); % ID byte ('15' for burst, '16' for avg, '1C' for echo)
             Family = fread(fid,1,'uint8','ieee-le');    % instrument family, should be '10' (hex = 16) for AD2CP
             
             %% read burst data
@@ -384,6 +392,177 @@ while (~feof(fid))
                     return
                 end
                 
+            %% read echo data
+            elseif  strcmp('1C',dec2hex(ID)) &&  strcmp('10',dec2hex(Family)),
+                
+                % check data to be read is not longer than file
+                DataSize = fread(fid,1,'uint16','ieee-le');    % data size (in bytes)
+                presentposition = ftell(fid);
+                fseek(fid,0,'eof');
+                filelength = ftell(fid);
+                if (presentposition + DataSize) < filelength,
+                    
+                    fseek(fid,presentposition,'bof');
+                    DataChecksum = fread(fid,1,'uint16','ieee-le');    % data checksum
+                    HeaderChecksum = fread(fid,1,'uint16','ieee-le');    % header checksum
+                    
+                    startposition = ftell(fid);
+                    ensemblecount_echo = ensemblecount_echo + 1;
+                    
+                    Version = fread(fid,1,'uint8','ieee-le');
+                    offsetOfData = fread(fid,1,'uint8','ieee-le');
+                    
+                    Configuration_pressure = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_Temperature = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_compass = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_tilt = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_ = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_velocity = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_amplitude = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_correlation = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_altimeter = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_altimeterraw = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_AST = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_echosounder = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_AHRS = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_PG = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_SD = fread(fid,1,'ubit1','ieee-le');
+                    Configuration_unused = fread(fid,1,'ubit1','ieee-le');
+                    
+                    SerialNumber = fread(fid,1,'uint32','ieee-le');
+                    year = fread(fid,1,'uint8','ieee-le') + 1900;
+                    month = fread(fid,1,'uint8','ieee-le') + 1;
+                    day = fread(fid,1,'uint8','ieee-le');
+                    hour = fread(fid,1,'uint8','ieee-le');
+                    minute = fread(fid,1,'uint8','ieee-le');
+                    second = fread(fid,1,'uint8','ieee-le');
+                    microsecond = fread(fid,1,'uint16','ieee-le');
+                    echo.time(ensemblecount_echo) = datenum( year, month, day, hour, minute, second );
+                    
+                    echo.SoundSpeed(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le')./10;
+                    echo.Temperature(ensemblecount_echo) = fread(fid,1,'int16','ieee-le')./100;
+                    echo.Pressure(ensemblecount_echo) = fread(fid,1,'uint32','ieee-le')./1000;
+                    echo.Heading(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le')./100;
+                    echo.Pitch(ensemblecount_echo) = fread(fid,1,'int16','ieee-le')./100;
+                    echo.Roll(ensemblecount_echo) = fread(fid,1,'int16','ieee-le')./100;
+                    
+                    
+                    value = fread(fid,1,'uint16','ieee-le');
+                    NC = bitand(bitshift(value, 0),65535); % cells
+                    CY  = bitand(bitshift(value, -10),3);
+                    NB = bitand(bitshift(value, -12),15);  % beams
+                    
+                    echo.CellSize = fread(fid,1,'uint16','ieee-le')./1000;
+                    echo.Blanking = fread(fid,1,'uint16','ieee-le')./100;
+                    NominalCorrelation = fread(fid,1,'uint8','ieee-le');
+                    echoeraturePressureSenor = fread(fid,1,'uint8','ieee-le');
+                    BatteryVoltage(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                    echo.Magnetometer(ensemblecount_echo,1) = fread(fid,1,'int16','ieee-le');
+                    echo.Magnetometer(ensemblecount_echo,2) = fread(fid,1,'int16','ieee-le');
+                    echo.Magnetometer(ensemblecount_echo,3) = fread(fid,1,'int16','ieee-le');
+                    echo.Accelerometer(ensemblecount_echo,1) = fread(fid,1,'int16','ieee-le');
+                    echo.Accelerometer(ensemblecount_echo,2) = fread(fid,1,'int16','ieee-le');
+                    echo.Accelerometer(ensemblecount_echo,3) = fread(fid,1,'int16','ieee-le');
+                    AmbiquityVelocity(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                    DataSetDescription(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                    TransmitEnergy(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                    VelocityScaling_echo(ensemblecount_echo) = fread(fid,1,'int8','ieee-le');
+                    PowerLevel(ensemblecount_echo) = fread(fid,1,'int8','ieee-le');
+                    Magnetometerechoerature(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
+                    RealTimeClockechoerature(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
+                    Error(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                    Status0(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                    Status(ensemblecount_echo) = fread(fid,1,'uint32','ieee-le');
+                    EnsembleCounter(ensemblecount_echo) = fread(fid,1,'uint32','ieee-le');
+                    
+                    if Configuration_velocity==1,
+                        for ni=1:NB,
+                            echo.VelocityData(ensemblecount_echo,1:NC,ni) = fread(fid,NC,'int16','ieee-le') .* 10^VelocityScaling_echo(ensemblecount_echo);
+                        end
+                    else
+                    end
+                    if Configuration_amplitude==1,
+                        for ni=1:NB,
+                            echo.AmplitudeData(ensemblecount_echo,1:NC,ni) = fread(fid,NC,'uint8','ieee-le');
+                        end
+                    else
+                    end
+                    if Configuration_correlation==1,
+                        for ni=1:NB,             
+                            echo.CorrelationData(ensemblecount_echo,1:NC,ni) = fread(fid,NC,'uint8','ieee-le');
+                        end
+                    else
+                    end
+                    if Configuration_altimeter==1,
+                        echo.AltimeterDistance(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AltimeterQuality(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                        echo.AltimeterStatus(ensemblecount_echo) = fread(fid,1,'ubit16','ieee-le');
+                    else
+                    end
+                    if Configuration_AST==1,
+                        echo.ASTDistance(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.ASTQuality(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                        echo.ASToffsetStatus(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
+                        echo.ASTpressure(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AltimeterSpare(ensemblecount_echo) = fread(fid,1,'ubit64','ieee-le');
+                    else
+                    end
+                    if Configuration_altimeterraw==1,
+                        echo.AltimeterRawNumberSamples(ensemblecount_echo) = fread(fid,1,'uint32','ieee-le');
+                        echo.AltimeterRawSampleDistance(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                        echo.AltimeterRawSamples(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
+                    else
+                    end
+                    if Configuration_echosounder==1,
+                        echo.EchoSounder(ensemblecount_echo,1:NC) = fread(fid,NC,'uint16','ieee-le');
+                    else
+                    end
+                    if Configuration_AHRS==1,
+                        echo.AHRS_M11(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_M12(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_M13(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_M21(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_M22(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_M23(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_M31(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_M32(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_M33(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_Dummy(ensemblecount_echo,:) = fread(fid,4,'float32','ieee-le');
+                        echo.AHRS_GyroX(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_GyroY(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                        echo.AHRS_GyroZ(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
+                    else
+                    end
+                    if Configuration_PG==1,
+                        echo.PercentGood(ensemblecount_echo,NC) = fread(fid,NC,'uint8','ieee-le');
+                    else
+                    end
+                    if Configuration_SD==1,
+                        echo.SDpitch(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
+                        echo.SDroll(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
+                        echo.SDheading(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
+                        echo.SDpressure(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
+                        echo.SDdummy(ensemblecount_echo) = fread(fid,12,'int16','ieee-le');
+                    else
+                    end
+                    
+                    %% make sure that the DataSize from the header was the data read
+                    endposition = ftell(fid);
+                    if endposition > startposition + DataSize,
+                        disp('read too far')
+                        fseek(fid, -1, startposition + DataSize)
+                    else
+                    end
+                    
+                    
+                    % exit if data to be read extends beyond file length
+                else
+                    fclose (fid);
+                    battery = mean(BatteryVoltage) ./ 10;
+                    save([filename(1:end-4) '.mat'],'burst','avg','battery','echo')
+                    return
+                end
+                
                 
                 %% if invalid header, go back to where a sync byte was found and keep trying
             else
@@ -405,6 +584,6 @@ end % done reading the whole file
 % close out and save (if not already done when reading past file length
 fclose (fid);
 battery = mean(BatteryVoltage) ./ 10;  % was in 0.1 V, so divide by 10
-save([filename(1:end-4) '.mat'],'burst','avg','battery')
+save([filename(1:end-4) '.mat'],'burst','avg','battery','echo')
 
 
