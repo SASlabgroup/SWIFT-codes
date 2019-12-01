@@ -128,7 +128,7 @@ for di = 1:length(dirlist),
             else
             end
    
-            if plotflag && ~bad(tindex),
+            if plotflag & ~isempty(SWIFT),
             figure(1), clf 
             plot(HRwbar,SWIFT(tindex).signature.HRprofile.z,'b-'), hold on
             plot(HRwbar+sqrt(HRwvar),SWIFT(tindex).signature.HRprofile.z,'b:'),
