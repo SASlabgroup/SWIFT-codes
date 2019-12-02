@@ -90,7 +90,7 @@ end %if
 
 if isfield(SWIFT,'winddirT') 
     ax(4) = subplot(n,1,4);
-    plot([SWIFT.time],[SWIFT.peakwavedirT],'g+','linewidth',2), hold on
+    plot([SWIFT.time],[SWIFT.winddirT],'bx','linewidth',2), hold on
     datetick;
     ylabel('directions [^\circ T]')
     set(gca,'Ylim',[0 360])
