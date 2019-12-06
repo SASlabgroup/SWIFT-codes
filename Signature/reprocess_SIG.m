@@ -188,7 +188,7 @@ for di = 1:length(dirlist),
             
             if ~isempty(echo)
                 figure(4), clf
-                echo.z = echo.Blanking + echo.CellSize .* [1:length([echo.EchoSounder])];
+                echo.z = xcdrdepth + echo.Blanking + echo.CellSize .* [1:length([echo.EchoSounder])];
                 pcolor(echo.time,echo.z,echo.EchoSounder'), shading flat
                 datetick
                 set(gca,'YDir','reverse')
