@@ -7,11 +7,13 @@
 %                   and replace SWIFT data structure results.
 clear all, close all
 
+plotflag = true;
+
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 %parentdir = ('/Volumes/Data/Newport/SWIFT19_15-18Oct2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 
-readfromconcat = 0; % force starting with original onboard results 
-secondsofdata = 8*60;  % seconds of raw data to process (from the end of each burst, not beginning)
+readfromconcat = 1; % force starting with original onboard results 
+secondsofdata = 6*60;  % seconds of raw data to process (from the end of each burst, not beginning)
 
 %% load existing SWIFT structure created during concatSWIFT_processed, replace only the new wave results
 cd(parentdir);
@@ -49,11 +51,28 @@ for di = 1:length(dirlist),
             load([filelist(fi).name(1:end-4) '.mat']),
         end
         
-        %% find matching time index
+        
         alltime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour, sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
+
+                %% plot raw heave
+        if plotflag %& length(alltime)==length(sbgData.ShipMotion.heave)
+            %plot(alltime,sbgData.ShipMotion.heave,'k'), hold on
+            if length(alltime)>secondsofdata,
+                plot(alltime(end-secondsofdata*5+1:end),sbgData.ShipMotion.heave(end-secondsofdata*5+1:end),'b')
+            end
+            figure(1), clf
+            datetick
+            grid
+            ylabel('Sea surface elevation [m]')
+            print('-dpng',[filelist(fi).name(1:end-4) '_rawheave.png'])
+        end
+        
+        
+        
+        %% find matching time index
+        % match time to SWIFT structure and replace values
         % use median to get burst time, because first entries are bad (no satellites acquired yet)
         time = nanmedian(alltime);
-        % match time to SWIFT structure and replace values
         [tdiff tindex] = min(abs([SWIFT.time]-time));
         if tdiff>1/48,
             disp('time gap too large at '),
@@ -94,6 +113,9 @@ for di = 1:length(dirlist),
             end
 
             % replace scalar values
+            
+            newHs, disp('------')
+            
             SWIFT(tindex).sigwaveheight = newHs;
             SWIFT(tindex).sigwaveheight_alt = altHs;
             SWIFT(tindex).peakwaveperiod = newTp;
@@ -139,8 +161,9 @@ for di = 1:length(dirlist),
 
             
         else
-            % remove result if insufficient raw data
-            SWIFT(tindex) = [];
+            % ignoreif insufficient raw data
+            %disp('not enough raw data')
+            %SWIFT(tindex) = [];
         end
     end
     
@@ -166,6 +189,7 @@ SWIFT(bad) = [];
 %% (re)plotting
 
 if ~isempty(SWIFT)
+
 plotSWIFT(SWIFT)
 
 [Etheta theta f dir1 spread1 spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, 1, 1);
