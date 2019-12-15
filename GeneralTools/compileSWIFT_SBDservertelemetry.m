@@ -23,9 +23,11 @@ plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots.
 
 minwaveheight = 0.0; % minimum wave height in data screening
 
-minsalinity = 5; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 27; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
-maxdriftspd = 3;  % m/s, for screening when buoy on deck of boat
+maxdriftspd = 1;  % m/s, for screening when buoy on deck of boat
+
+maxwindspd = 30; % m/s for malfunctioning Airmars
 
 minairtemp = -20; % min airtemp
 
@@ -55,7 +57,7 @@ for ai = 1:length(flist),
     end
     
     %% time stamp: take the time from the filename, even when there is time from the airmar
-    % for telemetry, this is the telemtry time (at the end of the burst).  
+    % for telemetry, this is the telemtry time (at the end of the burst).
     % for offloaded data, this the concat file name (from the start of the burst)
     
     day = flist(ai).name(15:16);
@@ -66,13 +68,13 @@ for ai = 1:length(flist),
     sec = flist(ai).name(29:30);
     
     oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-
     
-%     if isempty(oneSWIFT.time),
-%         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-%     elseif oneSWIFT.time == 0 |  isnan(oneSWIFT.time) | oneSWIFT.time < datenum(2014,1,1),
-%         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
-%     end
+    
+    %     if isempty(oneSWIFT.time),
+    %         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+    %     elseif oneSWIFT.time == 0 |  isnan(oneSWIFT.time) | oneSWIFT.time < datenum(2014,1,1),
+    %         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+    %     end
     
     
     %% remove bad Airmar data
@@ -178,12 +180,13 @@ for ai = 1:length(flist),
         end
     end
     
-    % speed limit
+    % drift speed limit
     if isfield(oneSWIFT,'driftspd')
         if oneSWIFT.driftspd > maxdriftspd,
             badburst(ai) = true;
         end
     end
+    
     
     
     %% close telemetry file loop
@@ -261,6 +264,19 @@ if length([SWIFT.time]) > 1,
         end
     end
 else
+end
+
+% quality control with wind speed limit
+if length([SWIFT.time]) > 1,
+    if isfield(SWIFT(1),'windspd')
+        for si = 1:length(SWIFT),
+            if SWIFT(si).windspd > maxwindspd, % 1/12 of day is two hours
+                SWIFT(si).windspd = NaN;
+                SWIFT(si).winddirT = NaN;
+                SWIFT(si).winddirR = NaN;
+            end
+        end
+    end
 end
 
 %% save
