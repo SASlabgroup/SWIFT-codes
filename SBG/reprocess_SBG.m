@@ -57,10 +57,10 @@ for di = 1:length(dirlist),
                 %% plot raw heave
         if plotflag %& length(alltime)==length(sbgData.ShipMotion.heave)
             %plot(alltime,sbgData.ShipMotion.heave,'k'), hold on
-            if length(alltime)>secondsofdata,
+            figure(1), clf
+            if length(alltime)>secondsofdata*5,
                 plot(alltime(end-secondsofdata*5+1:end),sbgData.ShipMotion.heave(end-secondsofdata*5+1:end),'b')
             end
-            figure(1), clf
             datetick
             grid
             ylabel('Sea surface elevation [m]')
@@ -75,8 +75,8 @@ for di = 1:length(dirlist),
         time = nanmedian(alltime);
         [tdiff tindex] = min(abs([SWIFT.time]-time));
         if tdiff>1/48,
-            disp('time gap too large at '),
-            datestr(time)
+            %disp('time gap too large at '),
+            %datestr(time)
             continue
         else
         end
@@ -114,7 +114,7 @@ for di = 1:length(dirlist),
 
             % replace scalar values
             
-            newHs, disp('------')
+            %newHs, disp('------')
             
             SWIFT(tindex).sigwaveheight = newHs;
             SWIFT(tindex).sigwaveheight_alt = altHs;
