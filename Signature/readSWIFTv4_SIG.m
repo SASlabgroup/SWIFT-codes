@@ -216,7 +216,7 @@ while (~feof(fid))
                 else
                     fclose (fid);
                     battery = mean(BatteryVoltage) ./ 10;
-                    save([filename(1:end-4) '.mat'],'burst','avg','battery')
+                    save([filename(1:end-4) '.mat'],'burst','avg','battery','echo')
                     return
                 end
                 
@@ -388,7 +388,7 @@ while (~feof(fid))
                 else
                     fclose (fid);
                     battery = mean(BatteryVoltage) ./ 10;  % was in 0.1 V, so divide by 10
-                    save([filename(1:end-4) '.mat'],'burst','avg','battery')
+                    save([filename(1:end-4) '.mat'],'burst','avg','battery','echo')
                     return
                 end
                 
@@ -453,7 +453,7 @@ while (~feof(fid))
                     NB = bitand(bitshift(value, -12),15);  % beams
                     
                     echo.CellSize = fread(fid,1,'uint16','ieee-le')./1000;
-                    echo.Blanking = fread(fid,1,'uint16','ieee-le')./100;
+                    echo.Blanking = fread(fid,1,'uint16','ieee-le')./1000;
                     NominalCorrelation = fread(fid,1,'uint8','ieee-le');
                     echoeraturePressureSenor = fread(fid,1,'uint8','ieee-le');
                     BatteryVoltage(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
