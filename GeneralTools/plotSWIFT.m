@@ -60,7 +60,7 @@ if isfield(SWIFT,'windspd') && any(~isnan([SWIFT.windspd])),
     plot( [SWIFT.time],[SWIFT.windspd],'bx','linewidth',2)
     datetick;
     ylabel('Wind [m/s]')
-    set(gca,'Ylim',[0 ceil(max([SWIFT.windspd]))] )
+    set(gca,'Ylim',[0 20])% ceil(max([SWIFT.windspd]))] )
 end %if
 
 if isfield(SWIFT,'sigwaveheight')
@@ -127,6 +127,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     % number of CT sensors:
     numCT = size(Tarray,2);
     
+    legendlabs = {'0.18 m';'0.66 m';'1.22 m'};
     % Create arrays for assigning makers and legend labels based on numCT:
     namearray =  {'Marker';'Color';'Linestyle'}; 
     if isfield(SWIFT,'CTdepth')
@@ -134,7 +135,6 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
             legendlabs{cti,1} = [num2str(SWIFT(1).CTdepth(cti),3) ' m'];
         end
     elseif numCT == 3  
-        legendlabs = {'0.18 m';'0.66 m';'1.22 m'};
         disp('CTdepth field not found: using default SWIFT depths')
     end
     
