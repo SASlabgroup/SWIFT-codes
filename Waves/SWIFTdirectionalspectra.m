@@ -1,4 +1,4 @@
-function [Etheta theta f dir spread spread2 spread2alt] = SWIFTdirectionalspectra(SWIFT, varargin);
+function [Etheta theta E f dir spread spread2 spread2alt] = SWIFTdirectionalspectra(SWIFT, varargin);
 % make directional spectra from a SWIFT data structure
 % which can have multiple spectral results 
 % (and the results will average it)
@@ -10,7 +10,7 @@ function [Etheta theta f dir spread spread2 spread2alt] = SWIFTdirectionalspectr
 % this is intended to be used after post-processing wave data with
 % "reprocess_IMU.m" which uses "XYZwaves.m" to get coefficients
 %
-%    [Etheta theta f dir spread spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, plotflag, recip);
+%    [Etheta theta E f dir spread spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, plotflag, recip);
 %
 % J. Thomson, 10/2015, based on NCEX codes (J. Thomson, 2002)
 %             4/2016 editted by Fabrice Ardhuin to energy weight coefs in determining average
@@ -168,7 +168,7 @@ subplot(3,1,1)
 plot(f,E,'k',f,sum(Etheta*dtheta,2),'k--','linewidth',2), hold on
 set(gca,'Fontsize',14,'fontweight','demi')
 ylabel('Energy [m^2/Hz]')
-set(gca,'xlim',[0.05 0.5])
+set(gca,'xlim',[0.05 max(f)])
 title([ wd ', Hs = ' num2str(Hs,2) ' m'],'interpreter','none')
 
 
@@ -176,7 +176,7 @@ subplot(3,1,2)
 errorbar(f,dir,spread,'k','markersize',16,'linewidth',2), hold on
 set(gca,'Fontsize',14,'fontweight','demi')
 ylabel('Dir [deg T]')
-set(gca,'xlim',[0.05 0.5])
+set(gca,'xlim',[0.05 max(f)])
 set(gca,'ylim',[0 360],'YTick',[0 90 180 270 360])
 
 
@@ -186,7 +186,7 @@ set(gca,'Fontsize',14,'fontweight','demi')
 hold on
 plot([min(f) max(f)],[0 0],'k:')
 legend('a1','a2','b1','b2')
-set(gca,'xlim',[0.05 0.5])
+set(gca,'xlim',[0.05 max(f)])
 set(gca,'ylim',[-1 1])
 xlabel('Frequency [Hz]')
 ylabel('Moments []')
