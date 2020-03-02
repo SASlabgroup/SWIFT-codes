@@ -1,4 +1,4 @@
-function SWIFT2NC_v2(SWIFT_in,filename)
+function SWIFT2NC(SWIFT_in,filename)
 
 
 % creates a netCDF file using existing SWIFT structure and writes it into 'filename'
