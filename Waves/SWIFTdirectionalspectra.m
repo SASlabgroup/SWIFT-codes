@@ -58,14 +58,14 @@ for ai = 1:length(SWIFT),
     SWIFT(ai).wavespectra.b2( SWIFT(ai).wavespectra.b2==9999 ) = 0;
 
     
-    %if SWIFT(ai).sigwaveheight > 0 & SWIFT(ai).sigwaveheight < 10,
+    if SWIFT(ai).sigwaveheight > 0 & SWIFT(ai).sigwaveheight < 10 & all(~isnan(SWIFT(ai).wavespectra.a1)),
         E = E + SWIFT(ai).wavespectra.energy;
         a1 = a1 + SWIFT(ai).wavespectra.a1.*SWIFT(ai).wavespectra.energy;
         a2 = a2 + SWIFT(ai).wavespectra.a2.*SWIFT(ai).wavespectra.energy;
         b1 = b1 + SWIFT(ai).wavespectra.b1.*SWIFT(ai).wavespectra.energy;
         b2 = b2 + SWIFT(ai).wavespectra.b2.*SWIFT(ai).wavespectra.energy;
         counter = counter + 1;
-    %else end
+    else end
 end
 
 I=find(E > 0 & isnan(E) ==0);
