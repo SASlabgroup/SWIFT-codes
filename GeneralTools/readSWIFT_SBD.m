@@ -50,6 +50,7 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %                       move Airmar PB200 read to after SBG, so can fill missing positions
 %   J. Thomson 11/2019  fixed parsing of Airmar PB200 positions
 %
+%   J. Thomson 7/2020   add microSWIFT payload type (50)
 
 recip = true; % binary flag to change wave direction to FROM
 
@@ -82,7 +83,7 @@ while 1
     disp('-----------------')
     type = fread(fid,1,'uint8');
     port = fread(fid,1,'uint8');
-    size = fread(fid,1,'uint16');
+    size = fread(fid,1,'uint16')
     
     if type == 0 & size > 0, % uplooking high-resolution aquadopp (AQH)
         disp('reading AQH results')
@@ -103,7 +104,7 @@ while 1
         cells = length(SWIFT.downlooking.velocityprofile);
         z = blanking + res./2 + [0:(cells-1)]*res;
         SWIFT.downlooking.z = z; %fliplr(z) - blanking;
-          
+        
     elseif type == 3 & size > 0, % IMU
         disp('reading Microstrain IMU results')
         SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
@@ -209,11 +210,11 @@ while 1
     elseif type == 9 & size == 0, % Nortek Signature present, but empty results
         disp('Signature results are empty!')
         SWIFT.signature.HRprofile.tkedissipationrate = NaN(64,1);
-        SWIFT.signature.HRprofile.z = NaN(1,64); 
+        SWIFT.signature.HRprofile.z = NaN(1,64);
         SWIFT.signature.profile.east = NaN(40,1);
         SWIFT.signature.profile.north = NaN(40,1);
         SWIFT.signature.profile.z = NaN(1,40);
-    
+        
     elseif type == 10 & size > 0, % SBG Ellipse (same as IMU in v3, but with check factor and no histograms)
         disp('reading SBG IMU results'),
         SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
@@ -240,7 +241,7 @@ while 1
         SWIFTversion = 4;
         
         
-        elseif type == 2 & size > 0, % PB200 weather station (Airmar) and backup GPS
+    elseif type == 2 & size > 0, % PB200 weather station (Airmar) and backup GPS
         disp('reading Airmar results')
         SWIFT.winddirT = fread(fid,1,'float'); % mean wind direction (deg T)
         SWIFT.winddirTstddev =  fread(fid,1,'float'); % std dev of wind direction (deg)
@@ -252,9 +253,9 @@ while 1
             PBlat = str2num( PBlat(1:2) ) + str2num( PBlat(3:end) ) / 60 ; % parsing might not be robust
         end
         PBlon = num2str(fread(fid,1,'float'));  % longitude
-        if length(PBlon)>5, 
+        if length(PBlon)>5,
             %dec = find( PBlon == '.');
-            PBlon = - str2num( PBlon(1:3) ) + str2num( PBlon(4:end) ) / 60 ; % parsing might not be robust, esp +/-    
+            PBlon = - str2num( PBlon(1:3) ) + str2num( PBlon(4:end) ) / 60 ; % parsing might not be robust, esp +/-
         end
         if ~isfield(SWIFT,'lat'), % if no IMU, use this one
             disp('Using Airmar positions')
@@ -305,43 +306,75 @@ while 1
         else
             SWIFT.metheight = 0.4; % height of measurement, meters
         end
-
-      
         
-        elseif type == 11 & size > 0, % RM Young 8100 Sonic Anemometer
-            disp('reading Sonic Anemometer results')
-            SWIFT.windustar = fread(fid,1,'float'); % wind friction velocity
-            SWIFT.windepsilon = fread(fid,1,'float'); % air-side tke dissipation rate
-            SWIFT.windmeanu = fread(fid,1,'float'); % component mean
-            SWIFT.windmeanv = fread(fid,1,'float'); % component mean
-            SWIFT.windspd = sqrt( SWIFT.windmeanu.^2 + SWIFT.windmeanv.^2 ); % relative wind speed
-            SWIFT.windmeanw = fread(fid,1,'float'); % component mean
-            SWIFT.airtemp = fread(fid,1,'float'); % airtemp
-            SWIFT.windanisotropy = fread(fid,1,'float'); % inertial sub-range ratio
-            SWIFT.windustarquality = fread(fid,1,'float'); % quality of inertial spectral fit
-            SWIFT.windspectra.freq = fread(fid,116,'float'); % frequency
-            SWIFT.windspectra.energy = fread(fid,116,'float'); % spectral energy density of surface winds
-            SWIFT.winddirR = rad2deg(atan2(SWIFT.windmeanv, SWIFT.windmeanu) ); % mean wind direction (deg relative)
-            SWIFT.metheight = 0.71; % height of measurement, meters
-            
-            elseif type == 12 & size > 0, % Oxygen optode
-                disp('reading Oxygen optode results')
-                SWIFT.O2conc = fread(fid,1,'float');
-                
-                elseif type == 13 & size > 0, % SeaOwl
-                    disp('reading SeaOWl results')
-                    SWIFT.FDOM = fread(fid,1,'float');
-                    
-                    else
-                        
-end
-
-if isempty(type),% & size == 0,
-    %disp('----------')
-    disp('all done (nothing else in this file)')
-    break,
-end
-
+        
+        
+    elseif type == 11 & size > 0, % RM Young 8100 Sonic Anemometer
+        disp('reading Sonic Anemometer results')
+        SWIFT.windustar = fread(fid,1,'float'); % wind friction velocity
+        SWIFT.windepsilon = fread(fid,1,'float'); % air-side tke dissipation rate
+        SWIFT.windmeanu = fread(fid,1,'float'); % component mean
+        SWIFT.windmeanv = fread(fid,1,'float'); % component mean
+        SWIFT.windspd = sqrt( SWIFT.windmeanu.^2 + SWIFT.windmeanv.^2 ); % relative wind speed
+        SWIFT.windmeanw = fread(fid,1,'float'); % component mean
+        SWIFT.airtemp = fread(fid,1,'float'); % airtemp
+        SWIFT.windanisotropy = fread(fid,1,'float'); % inertial sub-range ratio
+        SWIFT.windustarquality = fread(fid,1,'float'); % quality of inertial spectral fit
+        SWIFT.windspectra.freq = fread(fid,116,'float'); % frequency
+        SWIFT.windspectra.energy = fread(fid,116,'float'); % spectral energy density of surface winds
+        SWIFT.winddirR = rad2deg(atan2(SWIFT.windmeanv, SWIFT.windmeanu) ); % mean wind direction (deg relative)
+        SWIFT.metheight = 0.71; % height of measurement, meters
+        
+    elseif type == 12 & size > 0, % Oxygen optode
+        disp('reading Oxygen optode results')
+        SWIFT.O2conc = fread(fid,1,'float');
+        
+    elseif type == 13 & size > 0, % SeaOwl
+        disp('reading SeaOWl results')
+        SWIFT.FDOM = fread(fid,1,'float');
+        
+    elseif type == 50 & size > 0, % microSWIFT, size should be 1228 bytes
+        disp('reading microSWIFT')
+        SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
+        SWIFT.peakwaveperiod = fread(fid,1,'float'); % dominant period
+        SWIFT.peakwavedirT = fread(fid,1,'float'); % dominant wave direction
+        SWIFT.wavespectra.energy = fread(fid,42,'float'); % spectral energy density of sea surface elevation
+        SWIFT.wavespectra.freq = fread(fid,42,'float'); % frequency
+        SWIFT.wavespectra.a1 = fread(fid,42,'float'); % spectral moment
+        SWIFT.wavespectra.b1 = fread(fid,42,'float'); % spectral moment
+        SWIFT.wavespectra.a2 = fread(fid,42,'float'); % spectral moment
+        SWIFT.wavespectra.b2 = fread(fid,42,'float'); % spectral moment
+        SWIFT.wavespectra.check = fread(fid,42,'float'); % spectral check factor (should be unity)
+        SWIFT.lat = fread(fid,1,'float'); % Latitude
+        SWIFT.lon = fread(fid,1,'float'); % Longitude
+        SWIFT.watertemp = fread(fid,1,'float'); % water temp
+        meanu = fread(fid,1,'float'); % east component speed
+        meanv = fread(fid,1,'float'); % north component speed
+        driftdir = atan2d(meanu, meanv);
+        if driftdir < 0, driftdir = 360+driftdir; end
+        SWIFT.driftdirT = driftdir;         
+        SWIFT.driftspd = ( meanu.^2 + meanv.^2 ) .^.5;
+        meanz = fread(fid,1,'float'); % altitude
+        unknown = fread(fid,1,'float'); % this seems to be an extra 32 byte entry, maybe voltage?
+        year = fread(fid,1,'uint32'); % year
+        month = fread(fid,1,'uint32'); % month
+        day = fread(fid,1,'uint32'); % day
+        hour = fread(fid,1,'uint32'); % hour
+        minute = fread(fid,1,'uint32'); % minute
+        second = fread(fid,1,'uint32'); % seconds
+        SWIFT.time = datenum( year, month, day, hour, minute, second);
+        
+        
+    else
+        
+    end
+    
+    if isempty(type),% & size == 0,
+        %disp('----------')
+        disp('all done (nothing else in this file)')
+        break,
+    end
+    
 end
 fclose(fid);
 
