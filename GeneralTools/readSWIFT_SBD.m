@@ -83,7 +83,7 @@ while 1
     disp('-----------------')
     type = fread(fid,1,'uint8');
     port = fread(fid,1,'uint8');
-    size = fread(fid,1,'uint16')
+    size = fread(fid,1,'uint16');
     
     if type == 0 & size > 0, % uplooking high-resolution aquadopp (AQH)
         disp('reading AQH results')
@@ -355,7 +355,7 @@ while 1
         SWIFT.driftdirT = driftdir;         
         SWIFT.driftspd = ( meanu.^2 + meanv.^2 ) .^.5;
         meanz = fread(fid,1,'float'); % altitude
-        unknown = fread(fid,1,'float'); % this seems to be an extra 32 byte entry, maybe voltage?
+        BatteryVoltage = fread(fid,1,'float'); % battery level
         year = fread(fid,1,'uint32'); % year
         month = fread(fid,1,'uint32'); % month
         day = fread(fid,1,'uint32'); % day
