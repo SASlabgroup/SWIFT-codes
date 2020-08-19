@@ -20,15 +20,25 @@ for fi = 1:length(flist),
     
     %% winds and waves
     figure(1),
-    subplot(2,1,1)
-    plot([SWIFT.time],[SWIFT.sigwaveheight],'kx'), hold on
-    subplot(2,1,2)
-    plot([SWIFT.time],[SWIFT.windspd],'kx'), hold on
-    
+    if isfield(SWIFT,'windspd')
+            subplot(4,1,1)
+    plot([SWIFT.time],[SWIFT.windspd],'bx'), hold on
+        subplot(4,1,4)
+            plot([SWIFT.time],[SWIFT.winddirT],'bx'), hold on
+    end
+    subplot(4,1,2)
+    plot([SWIFT.time],[SWIFT.sigwaveheight],'g+'), hold on
+        subplot(4,1,3)
+    plot([SWIFT.time],[SWIFT.peakwaveperiod],'g+'), hold on
+        subplot(4,1,4)
+    plot([SWIFT.time],[SWIFT.peakwavedirT],'g+'), hold on
+
     %% temps and salinities
     figure(2),
     subplot(3,1,1)
+    if isfield(SWIFT,'airtemp')
     plot([SWIFT.time],[SWIFT.airtemp],'gx'), hold on
+    end
     subplot(3,1,2)
     for si=1:length(SWIFT)
         plot([SWIFT(si).time],[median(SWIFT(si).watertemp)],'bx'), hold on
@@ -47,7 +57,7 @@ for fi = 1:length(flist),
             epsilon(:,ai) = SWIFT(ai).uplooking.tkedissipationrate;
             z(:,ai) = SWIFT(ai).uplooking.z;
             magprofile(:,ai) = NaN;
-        elseif isfield(SWIFT(ai).signature.HRprofile,'z'),
+        elseif isfield(SWIFT(ai),'signature'),
             if ~isempty( SWIFT(ai).signature.profile.z ),
                 epsilon(:,ai) = SWIFT(ai).signature.HRprofile.tkedissipationrate;
                 z(:,ai) = SWIFT(ai).signature.HRprofile.z + sigHRzoffset;
@@ -70,7 +80,7 @@ for fi = 1:length(flist),
         %scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(epsilon)),'filled'), hold on
         %scatter([SWIFT.lon],[SWIFT.lat],20,log10(max(abs(gradient(magprofile)))),'filled'), hold on
         %scatter([SWIFT.lon],[SWIFT.lat],20,mean(magprofile(1:10,:)) - mean(magprofile(20:30,:)),'filled'), hold on
-        scatter([SWIFT.lon],[SWIFT.lat],20,[SWIFT.driftspd]), hold on
+        scatter([SWIFT.lon],[SWIFT.lat],20,[SWIFT.driftspd]), hold on, title('drift speed')
     else
        %plot([SWIFT.lon],[SWIFT.lat],'b.'), hold on
     end
@@ -99,16 +109,31 @@ end
 %% clean up plots
 
 figure(1)
-subplot(2,1,1)        
-set(gca,'FontSize',16,'fontweight','demi')
-datetick('x','ddmmm')
-set(gca,'YLim',[0 5])
-ylabel('Waves, H_s [m]')
-subplot(2,1,2)
-set(gca,'FontSize',16,'fontweight','demi')
+subplot(4,1,1)
+title('SWIFT')
+set(gca,'FontSize',14,'fontweight','demi')
 datetick('x','ddmmm')
 set(gca,'YLim',[0 15])
 ylabel('Wind, U_1 [m/s]')
+
+subplot(4,1,2)        
+set(gca,'FontSize',14,'fontweight','demi')
+datetick('x','ddmmm')
+set(gca,'YLim',[0 5])
+ylabel('Waves, H_s [m]')
+
+subplot(4,1,3)        
+set(gca,'FontSize',14,'fontweight','demi')
+datetick('x','ddmmm')
+set(gca,'YLim',[0 20])
+ylabel('Waves, T_p [s]')
+
+subplot(4,1,4)        
+set(gca,'FontSize',14,'fontweight','demi')
+datetick('x','ddmmm')
+set(gca,'YLim',[0 360],'YTick',[0 180 360])
+ylabel('Dirs [dir T]')
+
 print -dpng windsandwaves.png
 
 figure(2)
