@@ -18,6 +18,10 @@ function [ustar epsilon meanu meanv meanw meantemp anisotropy quality freq tkesp
 %       note that works best with WG into the wind (strong negative u component measured)
 % M. Schwendeman, Nov 2016 - modified from waveglider to SWIFT, fixed
 % output vectors to length 116 (assumes wsecs = 256, merge = 11, fs = 10)
+% J. Thomson, Sep 2020, remove despiking, which was incorrectly done before
+%   removing mean (and would fail for large mean winds)... better to
+%   despike separately
+%  
 %
 %#codegen
 
@@ -27,8 +31,8 @@ wsecs = 256;   % window length in seconds, should make 2^N samples
 merge = 11;      % freq bands to merge, must be odd?
 K = (4/3) * 0.55 ; % Kolmogorov const, where factor 4/3 is for cross-flow components... i.e., vertical)
 kv = 0.4 ; % von Karman const  
-nstd = 5; % number of std deviations to use for simple despiking
 windowlength = round(fs * wsecs);  % window length in data points
+
 
 %% quality control... later require no more than 10% data loss in this screening
 bad = [u == 0 | v == 0 | w == 0 | temp == 0];
@@ -65,15 +69,6 @@ for q=1:windows,
 	uwindow(:,q) = u(  (q-1)*(.25*windowlength)+1  :  (q-1)*(.25*windowlength)+windowlength  );  
 	vwindow(:,q) = v(  (q-1)*(.25*windowlength)+1  :  (q-1)*(.25*windowlength)+windowlength  );  
   	wwindow(:,q) = w(  (q-1)*(.25*windowlength)+1  :  (q-1)*(.25*windowlength)+windowlength  );  
-end
-
-%% despike each window (use windows rather than whole set, because changes in vehicle nav might cause non-stationary statistics)
-for q=1:windows,
-    spikes = uwindow(:,q) > nstd*std(uwindow(:,q)) | vwindow(:,q) > nstd*std(vwindow(:,q)) | wwindow(:,q) > nstd*std(wwindow(:,q))  ;
-    %disp('spikes'), sum(spikes) % debug
-    uwindow(spikes,q) = mean( uwindow(~spikes,q) );
-    vwindow(spikes,q) = mean( vwindow(~spikes,q) );
-    wwindow(spikes,q) = mean( wwindow(~spikes,q) ); 
 end
 
 %% detrend individual windows (full series already detrended)
