@@ -10,6 +10,7 @@
 %               and plot echograms, with vertical velocities
 %       12/2019 add option for spectral dissipation,
 %               with screening for too much rotational variance
+%       Sep 2020 corrected bug in advective velocity applied to spectra
 %
 clear all; close all
 
@@ -18,9 +19,9 @@ tic
 parentdir = pwd;
 readraw = false; % reading the binaries doubles the run time
 makesmoothwHR = false; % make (and save a smoothed, but not averaged w)
-plotflag = true;
+plotflag = false;
 altimetertrim = false;
-spectraldissipation = true;
+spectraldissipation = false;
 xcdrdepth = 0.2; % depth of transducer [m]
 
 mincor = 50; % correlation cutoff, 50 recommended (max value recorded in air), 30 if single beam acq
@@ -48,13 +49,14 @@ for di = 1:length(dirlist),
     
     for fi=1:length(filelist),
         
-        disp(['file ' num2str(fi) ' of ' num2str(length(filelist)) ])
+        disp(['file ' num2str(fi) ' of ' num2str(length(filelist)) ' in ' dirlist(di).name ])
         
         if filelist(fi).bytes > 1e6%2e6,
             
             %% read or load raw data
             if isempty(dir([filelist(fi).name(1:end-4) '.mat'])) | readraw,
                 [burst avg battery echo ] = readSWIFTv4_SIG( filelist(fi).name );
+                disp('reading raw data')
             else
                 load([filelist(fi).name(1:end-4) '.mat']),
                 if ~isstruct('echo')
@@ -88,12 +90,20 @@ for di = 1:length(dirlist),
                 fs = length( burst.VelocityData(:,1) )./ ( range(burst.time)*24*3000 );
                 
                 parfor HRbin=1:size(burst.VelocityData,2),
+                    wraw(:,HRbin) = filloutliers(wraw(:,HRbin), 'linear');
                     [wpsd f] = pwelch(detrend( wraw(:,HRbin) ),windowlength, [], [], fs);
+                    [wxpsd f] = pwelch(detrend( wxrotz(:,HRbin) ),windowlength, [], [], fs);
+                    [wypsd f] = pwelch(detrend( wxrotz(:,HRbin) ),windowlength, [], [], fs);
                     inertial = find(f>1);
-                    compwpsd = mean( wpsd(inertial) .* ( 2*3.14* f(inertial)).^(5/3) )./ 8;
-                    wrms = ( var(wraw(:,HRbin)) - var(wxrotz(:,HRbin)) - var(wyrotz(:,HRbin)) ).^.5;
-                    if wrms>0
-                        epsilon(HRbin) = ( compwpsd .* wrms.^(3/2) ).^(3/2);
+                    tkepsd = wpsd - wxpsd - wypsd; % option to remove motion variance from inertial subrange
+                    compwpsd = mean( tkepsd(inertial) .* ( 2*3.14* f(inertial)).^(5/3) )./ 8; 
+                    %advect = ( var(wraw(:,HRbin)) - var(wxrotz(:,HRbin)) - var(wyrotz(:,HRbin)) ).^.5;
+                    advect = std(wraw(:,HRbin)); %most consistent with Tennekes '75
+                    %advect = mean((mean(avg.VelocityData(:,1:2,1)).^2 + mean(avg.VelocityData(:,1:2,2)).^2).^.5); % horizontal advection from BB profiles
+                    %advect = 0.1; % constant
+                    
+                    if advect>0 & compwpsd > 0
+                        epsilon(HRbin) = ( compwpsd .* advect.^(-2/3) ).^(3/2);
                     else
                         epsilon(HRbin) = NaN;
                     end
@@ -191,7 +201,8 @@ for di = 1:length(dirlist),
                     burstsec = (burst.time - min(burst.time))*24*3600;
                     subplot(2,1,1)
                     pcolor(burstsec,z,burst.AmplitudeData'),shading flat
-                    hold on, quiver(burstsec([1:tstep:end])'*ones(1,size(wHR,2)), ones(size(wHR,1),1)*z([1:zstep:end]), zeros(size(wHR)), -wHR,0,'k','linewidth',2)
+                    hold on, quiver(burstsec([1:tstep:end])'*ones(1,size(wHR,2)), ones(size(wHR,1),1)*z([1:zstep:end]),...
+                        zeros(size(wHR)), -wHR,0,'k','linewidth',2)
                     set(gca,'Ydir','reverse')
                     quiver(530,.5,0,.1,0,'k','linewidth',2)
                     text(540,.55,'10 cm/s')
