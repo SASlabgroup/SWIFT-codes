@@ -88,7 +88,7 @@ if isfield(SWIFT,'peakwavedirT')
     set(gca,'YTick',[0 180 360])
 end %if
 
-if isfield(SWIFT,'winddirT') 
+if isfield(SWIFT,'winddirT') && length([SWIFT.winddirT]) == length([SWIFT.time])
     ax(4) = subplot(n,1,4);
     plot([SWIFT.time],[SWIFT.winddirT],'bx','linewidth',2), hold on
     datetick;
@@ -173,7 +173,7 @@ if isfield(SWIFT,'airtemp')
 end
 
 % Plot water temperature:
-if isfield(SWIFT,'watertemp')
+if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     tax(2) = subplot(312);
     h = plot([SWIFT.time],Tarray,'linewidth',2);
     datetick;
@@ -184,7 +184,7 @@ if isfield(SWIFT,'watertemp')
 end
 
 % Plot salinity:
-if isfield(SWIFT,'salinity')
+if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     tax(3) = subplot(313);
     h = plot([SWIFT.time],Sarray,'linewidth',2);
     datetick;
@@ -194,7 +194,7 @@ if isfield(SWIFT,'salinity')
     %set(gca,'Ylim',[0 36])
 end
 
-if isfield(SWIFT,'airtemp') | isfield(SWIFT,'watertemp') | isfield(SWIFT,'salinity'),
+if isfield(SWIFT,'airtemp') | isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity'),
     linkaxes(tax,'x');
     set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
     print('-dpng',[wd '_tempandsalinity.png'])
