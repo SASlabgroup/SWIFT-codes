@@ -127,15 +127,22 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     % number of CT sensors:
     numCT = size(Tarray,2);
     
-    legendlabs = {'0.18 m';'0.66 m';'1.22 m'};
+  
     % Create arrays for assigning makers and legend labels based on numCT:
     namearray =  {'Marker';'Color';'Linestyle'}; 
     if isfield(SWIFT,'CTdepth')
         for cti = 1:numCT
             legendlabs{cti,1} = [num2str(SWIFT(1).CTdepth(cti),3) ' m'];
         end
-    elseif numCT == 3  
+    elseif numCT == 3  & ~isfield(SWIFT,'CTdepth')
         disp('CTdepth field not found: using default SWIFT depths')
+        legendlabs = {'0.18 m';'0.66 m';'1.22 m'};
+    elseif numCT == 2  & ~isfield(SWIFT,'CTdepth')
+        disp('CTdepth field not found: using default SWIFT depths')
+        legendlabs = {'0.66 m';'1.22 m'};
+    elseif numCT == 1  & ~isfield(SWIFT,'CTdepth')
+        disp('CTdepth field not found: using default SWIFT depths')
+        legendlabs = {'0.5 m'};
     end
     
     if numCT == 3
@@ -145,7 +152,6 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     elseif numCT == 1
         valuearray = {'x','b','none'};
     elseif numCT == 2
-        legendlabs = legendlabs(2:3);
         valuearray = {'x','b','none';
             '+','c','none'};
     end %if
