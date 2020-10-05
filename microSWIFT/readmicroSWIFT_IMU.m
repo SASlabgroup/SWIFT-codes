@@ -23,18 +23,22 @@ if plotflag,
     figure(1), clf
     plot(IMU.clock-min(IMU.clock),IMU.acc)
     ylabel('Acceleration [m/s^2]')
+    xlabel('seconds')
     
     figure(2), clf
     plot(IMU.clock-min(IMU.clock),IMU.mag)
     ylabel('magnetometer [uTesla]')
-    
+    xlabel('seconds')
+
     figure(3), clf
     plot(IMU.clock-min(IMU.clock),IMU.gyro)
     ylabel('Gyro [rad/s]')
-    
+    xlabel('seconds')
+
     figure(4), clf
     plot(IMU.clock-min(IMU.clock),IMU.angles)
     ylabel('Euler angles [deg]')
+    xlabel('seconds')
     
 end
 

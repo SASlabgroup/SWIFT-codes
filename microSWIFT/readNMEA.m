@@ -58,11 +58,19 @@ while 1
             gpsdata = textscan(tline,'%s%s%s%s%s%s%s%n%s%n%s%[^\n]','Delimiter',',');
             ggalength = ggalength + 1;
             latstring = char(gpsdata{2+1}); % string
-            lat(ggalength) = ( str2num(latstring(1:2)) + str2num(latstring(3:9))./60 ); % decimal degress W
+            if length(latstring)==9
+                lat(ggalength) = ( str2num(latstring(1:2)) + str2num(latstring(3:9))./60 ); % decimal degress W
+            else
+                lat(ggalength) = NaN;
+            end
             %thislat = str2num(latstring(1:2)) + str2num(latstring(3:9))./60; % decimal degrees
             %if length(thislat)==1, lat(ggalength) = thislat; else lat(ggalength) = NaN; end
             lonstring = char(gpsdata{4+1}); % string
-            lon(ggalength) = - ( str2num(lonstring(1:3)) + str2num(lonstring(4:10))./60 ); % decimal degress W
+            if length(lonstring)==10
+                lon(ggalength) = - ( str2num(lonstring(1:3)) + str2num(lonstring(4:10))./60 ); % decimal degress W
+            else
+                lon(ggalength) = NaN;
+            end
             gpsquality(ggalength) = gpsdata{6+1}; % 2 is differential (best)
             positionlinenum(ggalength) = linenum;
         elseif tline(1:6) == '$GPZDA' & length(tline) > 25,
@@ -74,10 +82,10 @@ while 1
             year = timedata{4+1};
             time(zdalength) = datenum( year, month, day, str2num(hhmmss(1:2)), str2num(hhmmss(3:4)), str2num(hhmmss(5:6)) );
             timelinenum(zdalength) = linenum;
-        elseif tline(1:6) == '$GPDBT' & length(tline) > 25,
-            dbtdata = textscan(tline,'%s%n%s%n%s%[^\n]','Delimiter',',');
+        elseif tline(1:6) == '$GPDBT' & length(tline) > 20,
+            dbtdata = textscan(tline,'%s%n%s%n%s%n%[^\n]','Delimiter',','); % feet, meter, fathoms
             dbtlength = dbtlength + 1;
-            depthft(dbtlength) = dbtdata{2+1};
+            depthft(dbtlength) = dbtdata{1+1};
             depth(dbtlength) = dbtdata{3+1}; % meters
             dbtlinenum(dbtlength) = linenum;
         else
