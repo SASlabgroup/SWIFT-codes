@@ -15,11 +15,15 @@ function h = quiverSWIFT(colorfield, quiverscale);
 %   add a plan view with drift vector and lower layer
 %   include drift vectors for SWIFTs without signature
 %   include option to spoof wave glider structure (with ADCP) as signature
+%   10/2020, enable GPS ref velocity (if already applied)
+%           allow time as colorfield input
+
+twolayerplot = false;
 
 h(1) = figure(1); clf
 h(2) = figure(2); clf
 ax(1) = subplot(2,1,1); ax(2) = subplot(2,1,2);
-h(3) = figure(3); clf
+if twolayerplot, h(3) = figure(3); clf, end
 
 flist = dir('*SWIFT*.mat');
 
@@ -55,10 +59,17 @@ for fi=1:length(flist),
             nc = length( SWIFT(si).signature.profile.east );  % number of cells
             lowerlayer = [round(nc/2):nc]; % define lower layer for plan view plots
             
-            u(si,2:(nc+1)) = SWIFT(si).signature.profile.east'  + SWIFT(si).driftspd * sind( SWIFT(si).driftdirT ) .* ones( 1, nc );
-            v(si,2:(nc+1)) = SWIFT(si).signature.profile.north' + SWIFT(si).driftspd * cosd( SWIFT(si).driftdirT ) .* ones( 1, nc );;
-            w(si,1:(nc+1)) = zeros( 1, nc+1 ) ;
-            
+            if isfield(SWIFT(si).signature.profile,'velreference') && all(SWIFT(si).signature.profile.velreference == 'GPS')
+                disp('using GPS ref velocity (already included)')
+                u(si,2:(nc+1)) = SWIFT(si).signature.profile.east' ;
+                v(si,2:(nc+1)) = SWIFT(si).signature.profile.north' ;
+                w(si,1:(nc+1)) = zeros( 1, nc+1 ) ;
+            else
+                disp('adding GPS ref velocity (for plotting only)')
+                u(si,2:(nc+1)) = SWIFT(si).signature.profile.east'  + SWIFT(si).driftspd * sind( SWIFT(si).driftdirT ) .* ones( 1, nc );
+                v(si,2:(nc+1)) = SWIFT(si).signature.profile.north' + SWIFT(si).driftspd * cosd( SWIFT(si).driftdirT ) .* ones( 1, nc );;
+                w(si,1:(nc+1)) = zeros( 1, nc+1 ) ;
+            end
             x(si,:) = SWIFT(si).lon * ones( 1, nc+1 );
             y(si,:) = SWIFT(si).lat * ones( 1,  nc+1 );
             z(si,:) = [0 SWIFT(si).signature.profile.z];
@@ -67,7 +78,7 @@ for fi=1:length(flist),
             x(si,:) = SWIFT(si).lon;
             y(si,:) = SWIFT(si).lat;
             z(si,:) = 0;
-            
+            disp('no sig')
         end
         
         if max( getfield(SWIFT(si),colorfield) ) ~= 0,
@@ -82,16 +93,17 @@ for fi=1:length(flist),
     
     figure(1)
     quiver3(x,y,z,u,v,w,quiverscale,'k'), hold on
-    scatter([SWIFT.lon],[SWIFT.lat],50,color,'filled'), colorbar
+    scatter([SWIFT.lon],[SWIFT.lat],50,color,'filled'), 
     
     figure(2)
     axes(ax(1))
     scatter3(x(:),y(:),z(:),10,u(:),'filled'), hold on
-    title('east velocity [m/s]'), caxis([-.5 .5]), colorbar
+    title('east velocity [m/s]'), caxis([-2 2]), colorbar
     axes(ax(2))
     scatter3(x(:),y(:),z(:),10,v(:),'filled'), hold on
-    title('north velocity [m/s]'), caxis([-.5 .5]), colorbar
+    title('north velocity [m/s]'), caxis([-2 2]), colorbar
     
+    if twolayerplot,
     figure(3)
     quiver(x(:,1),y(:,1),u(:,1),v(:,1),quiverscale,'k-'), hold on
     if isfield(SWIFT,'signature'),
@@ -100,7 +112,9 @@ for fi=1:length(flist),
         quiver(x(1,1),y(1,1),0,0,quiverscale,'r-')
     end
     scatter([SWIFT.lon],[SWIFT.lat],50,color,'filled'),
+    end
     
+    clear x y z u v w
 end
 
 
@@ -110,13 +124,17 @@ figure(1)
 xlabel('lon')
 ylabel('lat')
 zlabel('z [m]')
-title(['SWIFT ' wd ' ' colorfield])
+title(['SWIFT ' wd ' ' colorfield],'interp','none')
 grid
 %ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,100];  % ratio of lat to lon distances at a given latitude
 %daspect(ratio)
 set(gca,'ZDir','reverse')
 grid
-cb.Label.String = colorfield;
+cb1 = colorbar; 
+cb1.Label.String = colorfield;
+if colorfield(1:4) == 'time'
+    cb1.TickLabels = datestr([SWIFT.time]);  
+end
 print('-dpng',[wd '_quiverSWIFT_' colorfield '.png'])
 
 figure(2)
@@ -127,18 +145,21 @@ xlabel('lon')
 ylabel('lat')
 zlabel('z [m]')
 set(gca,'ZDir','reverse')
-grid
+colormap nawhimar
+grid on
 axes(ax(2))
 %daspect(ratio)
 xlabel('lon')
 ylabel('lat')
 zlabel('z [m]')
 set(gca,'ZDir','reverse')
-grid
+colormap nawhimar
+grid on
 hlink = linkprop(ax,{'CameraPosition','CameraUpVector'});
 rotate3d on
 print('-dpng',[wd '_curtainSWIFT.png'])
 
+if twolayerplot
 figure(3),
 set(gca,'fontsize',16,'fontweight','demi')
 xlabel('lon')
@@ -147,10 +168,13 @@ grid
 ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,100];  % ratio of lat to lon distances at a given latitude
 daspect(ratio)
 legend('surface','lowerlayer','Location','Northwest')
-cb = colorbar;
-cb.Label.String = colorfield;
+cb3 = colorbar;
+cb3.Label.String = colorfield;
+if colorfield(1:4) == 'time'
+    cb3.TickLabels = datestr([SWIFT.time]);  
+end
 print('-dpng',[wd '_twolayervectors_' colorfield '.png'])
-
+end
 
 end
 
