@@ -21,11 +21,11 @@ clear all,
 
 plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 
-minwaveheight = 0.1; % minimum wave height in data screening
+minwaveheight = .1; % minimum wave height in data screening
 
-minsalinity = 20; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 25; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
-maxdriftspd = 2;  % m/s, for screening when buoy on deck of boat
+maxdriftspd = 3;  % m/s, for screening when buoy on deck of boat
 
 maxwindspd = 30; % m/s for malfunctioning Airmars
 
