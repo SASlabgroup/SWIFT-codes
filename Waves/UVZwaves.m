@@ -29,6 +29,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = UVZwaves(u,v,z,fs)
 %             4/2017 adapted again for application to AWAC data
 %             5/2018 fixed normalization of directional moments
 %             8/2019    add RC filter for z (not just u,v)
+%             10/2020   correct bug (typo) in estimate of spread1
 %#codegen
   
 
@@ -196,7 +197,7 @@ b2 = 2 .* Cuv ./ ( UU + VV );
 % note that 0 deg is for waves headed towards positive x (EAST, right hand system)
 dir1 = atan2(b1,a1) ;  % [rad], 4 quadrant
 dir2 = atan2(b2,a2)/2 ; % [rad], only 2 quadrant
-spread1 = sqrt( 2 * ( 1 - sqrt(a1.^2 + b2.^2) ) );
+spread1 = sqrt( 2 * ( 1 - sqrt(a1.^2 + b1.^2) ) );
 spread2 = sqrt( abs( 0.5 - 0.5 .* ( a2.*cos(2.*dir2) + b2.*cos(2.*dir2) )  ));
 
 
@@ -293,12 +294,6 @@ if Tp>20  |  Hs < 0.1,
      Hs = NaN;
      Tp = NaN; 
      Dp = NaN; 
-     E(:) = NaN; 
-     a1(:) = NaN;
-     b1(:) = NaN;
-     a2(:) = NaN;
-     b2(:) = NaN;
-     check(:) = NaN;
 else 
 end
 
