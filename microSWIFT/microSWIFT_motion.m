@@ -79,8 +79,8 @@ ENU.acc(ii,:) = T * IMU.acc(ii,:)';
 % (which is min/max on x channel)
 
 % need to understand these definitions better... p and r might be switched
-rrate = IMU.gyro(ii,1);
-prate = IMU.gyro(ii,2);
+prate = IMU.gyro(ii,1);
+rrate = IMU.gyro(ii,2);
 yrate = IMU.gyro(ii,3);
 
 Omega = [0; 0; yrate;]  +    Y*[0; prate; 0;]    +  Y*P*[rrate; 0; 0;];
