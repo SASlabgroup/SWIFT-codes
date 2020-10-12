@@ -206,8 +206,10 @@ while (~feof(fid))
                     %% make sure that the DataSize from the header was the data read
                     endposition = ftell(fid);
                     if endposition > startposition + DataSize,
-                        disp('read too far')
-                        fseek(fid, -1, startposition + DataSize)
+                        disp('read too far, saving partial file')
+                        save([filename(1:end-4) '_partial.mat'],'burst','avg','battery','echo')
+                        return
+                        %fseek(fid, -1, startposition + DataSize)
                     else
                     end
                     
@@ -216,7 +218,7 @@ while (~feof(fid))
                 else
                     fclose (fid);
                     battery = mean(BatteryVoltage) ./ 10;
-                    save([filename(1:end-4) '.mat'],'burst','avg','battery','echo')
+                    save([filename(1:end-4) '_partial.mat'],'burst','avg','battery','echo')
                     return
                 end
                 
@@ -549,8 +551,10 @@ while (~feof(fid))
                     %% make sure that the DataSize from the header was the data read
                     endposition = ftell(fid);
                     if endposition > startposition + DataSize,
-                        disp('read too far')
-                        fseek(fid, -1, startposition + DataSize)
+                        disp('read too far, saving partial file')
+                        save([filename(1:end-4) '_partial.mat'],'burst','avg','battery','echo')
+                        return
+                        %fseek(fid, -1, startposition + DataSize)
                     else
                     end
                     
