@@ -1,0 +1,24 @@
+#!/bin/bash
+###########################################################################################
+# read and write temp data 
+# TMP36 stemperature sensors 
+###########################################################################################
+
+#directories and files needed 
+tempDir=/home/pi/microSWIFT/sensors
+config=/home/pi/microSWIFT/utils/Config.dat
+utilsDir=/home/pi/microSWIFT/utils
+
+#get PIDs  
+#tempPID=$(ps -ef | grep "recordTemp.py" | grep -v grep | awk '{ print $2 }')
+#echo "tempPID=" $tempPID
+
+#add directories needed to run temp recorder app to pythonpath 
+export PYTHONPATH=$PYTHONPATH/$tempDir:/$utilsDir
+     
+#=================================================================================
+#Run app
+#=================================================================================
+echo ""
+echo " --- RUN TEMP RECORDER ---"
+python2 recordTemp.py $config &

@@ -1,0 +1,136 @@
+###############################################################
+# Configuration data file for microSWIFT application.
+#
+# This is an "INI" file format, with "sections" which include
+# individual key=value pairs.
+#
+# Notes:
+#
+# - Sections are delineated by names within [SquareBrackets]
+#
+# - You can use the same name for a value in different
+#   sections and they will be maintained separately.
+#
+# - Anything to the right of the "#" sign is ignored, either
+#   an entire line or the tail end.
+#
+# - You can "parameterize" a variable by declaring it at
+#   the beginning of the file prefixed with "$"
+#   This allows you to define - once - a value which may
+#   need to be referred to repeatedly. E.G.:
+#     $MyParameter = 10
+#   Then later in the file refer to this variable:
+#     MyValue = $MyParameter
+#   Note that parameterized variables MUST be declared before
+#   ANY data section.
+#
+###############################################################
+
+#### Common variable usage ####
+
+BASEDIR=/home/pi/microSWIFT/
+
+#========================= System Parameters ====================
+[LogLocation]
+#where to put logs 
+dataDir=/home/pi/microSWIFT/data/
+logDir=/home/pi/microSWIFT/logs/
+shipDir=/home/pi/Desktop
+
+# ========================== Logging Parameters =================
+[Loggers]
+
+# Set the default logging level.
+# This is used in any module which does not specify a level
+DefaultLogLevel=INFO
+
+# Set log level for individual loggers.
+# This overrides the default log level specified above.
+# The names here must match those in the code at lines that 
+# look like:
+#  _myLogger = new Logger("TheLoggerName")
+# For example, in the CameraCalibrator class we might have 
+# a line like:
+#  _myLogger = new Logger("CameraCalibrator")
+
+# Main app(s)
+microSWIFTHandler=INFO
+
+#=============== micoSWIFT Communications Parameters ===============
+[System]
+#where to send data 
+shipIP=192.168.0.28
+shipUser=pi
+shipPass='apluw'
+
+# 4 digit string for float id
+floatID=006
+# 2 digit string for project id
+projectName=TX
+#PayLoadType either 7 or the new type 50
+#PayLoadType=7
+payLoadType=50
+payloadVersion=7
+badValue=999
+
+#change num samples to log for a longer period of time
+#360 = 6min       --> 1440 total samples
+#512 = 8min 30sec --> 2048 total samples
+#1850 = 31 min    --> 7400 total samples 
+#3400 = 1hr       --> 13600 total samples 
+numSamplesConst=360
+port=6
+numCoef=42
+#======================== Iridium Parameters =======================
+[Iridium]
+port=/dev/ttyUSB0
+baud=19200
+burstNum=0 
+formatType=10
+portNum=6
+timeToWrite=8
+iridiumGpio=16
+
+IfHourlyCall=False 
+MakeCall=True
+#time between calls to record_serial
+burstInt=3    
+#interval between SBD calls
+callInt=1      
+#========================== GPS Parameters ========================
+[GPS]
+port=/dev/ttyS0
+startBaud=9600
+baud=115200
+gpsGpio=21
+#sampling rate
+GPSfrequency=4  
+numLines=5
+getFix=2
+
+#========================== IMU Parameters ========================
+[IMU]
+imuFreq=4
+imuGpio=20
+recRate=4
+maxHours=3
+
+#===================== Temperature Parameters =====================
+[Temp]
+tempfreq=1
+maxHours=3
+recRate=1
+
+#SPI pins for ADC
+CLK=11
+MISO=9
+MOSI=10
+CS=8
+
+#======================== Voltage Parameters =====================
+[Voltage]
+shuntOhms=0.1
+maxExpectedAmps=2.0
+recRate=1
+voltFreq=1
+maxHours=3

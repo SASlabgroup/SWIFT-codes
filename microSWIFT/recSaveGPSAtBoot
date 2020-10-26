@@ -1,0 +1,30 @@
+#! /bin/bash 
+
+### BEGIN INIT INFO
+# Provides:          recSaveGPSAtBoot
+# Required-start:    $all
+# Required-stop:     $all
+# Default-Start:     2 3 4 5 
+# Default-Stop:      0 1 6  
+# Short-Description: 
+# Description: 
+### END INIT INFO 
+
+gpsWaveDir=/home/pi/testmicoWave/GPSwaves/
+
+case "$1" in
+	start)
+		cd $gpsWaveDir
+		./record_and_send_gps.py
+		echo "Starting to record and send gps data"
+		;;
+	stop)
+		echo "stopping recording and sending gps data"
+		killall relayAtBoot
+		;;
+	*)
+		echo "Usage: /etc/init.d/recSaveGPSAtBoot start|stop"
+		exit 1 
+		;;
+esac 
+done

@@ -1,0 +1,16 @@
+#! /bin/bash
+
+year=$1
+month=$2
+day=$3
+hour=$4
+minute=$5
+sec=$6
+
+echo $month
+echo $day
+echo $hour
+echo $minute
+echo $sec
+echo $year
+sudo date --set "$year-$month-$day $hour:$minute:$sec"
