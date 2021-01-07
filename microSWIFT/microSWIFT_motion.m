@@ -21,9 +21,8 @@ RC = 4;  % high pass RC filter constant, T > 2 * pi * RC
 
 M = [-0.076;  -0.013;  0; ]; % position vector of IMU relative to buoy center [meters]
 
-dt = median(diff(IMU.clock)); % time steps
-
-fs = 1/dt; % sampling freq
+fs =  length(IMU.acc)./512; % sampling freq (Hz)
+dt = 1./fs;
 
 %% despike
 

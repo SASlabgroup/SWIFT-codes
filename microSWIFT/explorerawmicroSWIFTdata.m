@@ -46,7 +46,7 @@ for gi = 1:length(GPSflist)
 end
 
 
-IMUflist = dir('*Imu*.dat')
+IMUflist = dir('*IMU*.dat')
 
 
 for ii = 1:length(IMUflist)
@@ -54,17 +54,18 @@ for ii = 1:length(IMUflist)
     %% IMU (with 4 embedded figures)
     
     if IMUflist(ii).bytes > 0, 
+        
     IMU = readmicroSWIFT_IMU([IMUflist(ii).name], true);
     
-    figure(1), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_accelerations.png'])
+    figure(1), plot(IMU.acc),     ylabel('Acceleration [m/s^2]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_accelerations.png'])
     figure(2), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_magnetometer.png'])
     figure(3), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_gyro.png'])
-    figure(4), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_Euler.png'])
+    figure(4),  print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_Euler.png'])
     
     
     %% IMU post-processing
     
-    IMUsamplingrate =  1./median(diff(IMU.clock));
+    IMUsamplingrate =  length(IMU.acc)./512; % Hz
     [Ezz fzz] = pwelch(detrend(IMU.acc(:,3)),[],[],[], IMUsamplingrate );
     Ezz(1) = []; fzz(1) = [];
     dfzz = (fzz(2)-fzz(1));

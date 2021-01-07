@@ -15,35 +15,36 @@ function IMU = readmicroSWIFT_IMU(filename, plotflag)
 
 data = importdata(filename);
 
-IMU.clock = data(:,1);
-IMU.acc = data(:,2:4);
-IMU.mag = data(:,5:7);
-IMU.gyro = data(:,8:10);
-IMU.angles = data(:,11:13);
+IMU.clock = data.textdata;
+IMU.acc = data.data(:,1:3);
+IMU.mag = data.data(:,4:6);
+IMU.gyro = data.data(:,7:9);
+IMU.angles = data.data(:,10:12);
 
 save(filename(1:end-4),'IMU');
 
 if plotflag, 
     
     figure(1), clf
-    plot(IMU.clock-min(IMU.clock),IMU.acc)
+    plot(IMU.acc)
     ylabel('Acceleration [m/s^2]')
-    xlabel('seconds')
+    xlabel('index')
     
     figure(2), clf
-    plot(IMU.clock-min(IMU.clock),IMU.mag)
+    plot(IMU.mag)
     ylabel('magnetometer [uTesla]')
-    xlabel('seconds')
+    xlabel('index')
 
     figure(3), clf
-    plot(IMU.clock-min(IMU.clock),IMU.gyro)
+    plot(IMU.gyro)
     ylabel('Gyro [deg/s]')
-    xlabel('seconds')
+    xlabel('index')
 
     figure(4), clf
-    plot(IMU.clock-min(IMU.clock),IMU.angles)
+    plot(IMU.angles)
     ylabel('Euler angles [deg]')
-    xlabel('seconds')
+    xlabel('index')
+    
     
 end
 
