@@ -55,12 +55,12 @@ for ii = 1:length(IMUflist)
     
     if IMUflist(ii).bytes > 0, 
         
-    IMU = readmicroSWIFT_IMU([IMUflist(ii).name], true);
+    IMU = readmicroSWIFT_IMU([IMUflist(ii).name], false);
     
-    figure(1), plot(IMU.acc),     ylabel('Acceleration [m/s^2]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_accelerations.png'])
-    figure(2), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_magnetometer.png'])
-    figure(3), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_gyro.png'])
-    figure(4),  print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_Euler.png'])
+    figure(1), plot(IMU.acc),  ylabel('Acceleration [m/s^2]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_accelerations.png'])
+    figure(2), plot(IMU.mag), ylabel('magnetometer [uTesla]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_magnetometer.png'])
+    figure(3), plot(IMU.gyro), ylabel('Gyro [deg/s]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_gyro.png'])
+    figure(4), plot(IMU.angles), ylabel('Euler angles [deg]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_Euler.png'])
     
     
     %% IMU post-processing
