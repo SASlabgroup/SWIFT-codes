@@ -18,7 +18,7 @@ function [ lat lon sog cog depth time ] = readNMEA(filename);
 %% params
 
 bootlines = 0;
-preferedsentence = 'RMC'; % GGA or RMC or GLL
+preferedsentence = 'GGA'; % GGA or RMC or GLL
 
 
 %% initialize

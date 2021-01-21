@@ -65,6 +65,8 @@ for ii = 1:length(IMUflist)
     
     %% IMU post-processing
     
+    if length(IMU.clock) == length(IMU.acc), % check data was read properly
+    
     IMUsamplingrate =  length(IMU.acc)./512; % Hz
     [Ezz fzz] = pwelch(detrend(IMU.acc(:,3)),[],[],[], IMUsamplingrate );
     Ezz(1) = []; fzz(1) = [];
@@ -83,6 +85,12 @@ for ii = 1:length(IMUflist)
     ylabel('Energy density [m^2/Hz]')
     title(['IMU spectra, H_s = ' num2str(Hs,2) ', T_p = ' num2str(Tp,2)])    
     print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_spectra.png'])
+    
+    figure(9), clf
+    plot(ENU.pos), ylabel('Displacements [m]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_Displacements.png'])
+    
+    else 
+    end
     
     end
     
