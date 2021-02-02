@@ -168,7 +168,7 @@ b2 = 2 .* Cxy ./ ( Exx + Eyy );
 % note that 0 deg is for waves headed towards positive x (EAST, right hand system)
 dir1 = atan2(b1,a1) ;  % [rad], 4 quadrant
 dir2 = atan2(b2,a2)/2 ; % [rad], only 2 quadrant
-spread1 = sqrt( 2 * ( 1 - sqrt(a1.^2 + b2.^2) ) );
+spread1 = sqrt( 2 * ( 1 - sqrt(a1.^2 + b1.^2) ) );
 spread2 = sqrt( abs( 0.5 - 0.5 .* ( a2.*cos(2.*dir2) + b2.*cos(2.*dir2) )  ));
 
 
