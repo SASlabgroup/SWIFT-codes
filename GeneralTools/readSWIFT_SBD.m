@@ -348,6 +348,7 @@ while 1
         SWIFT.lat = fread(fid,1,'float'); % Latitude
         SWIFT.lon = fread(fid,1,'float'); % Longitude
         SWIFT.watertemp = fread(fid,1,'float'); % water temp
+        BatteryVoltage = fread(fid,1,'float'); % battery level
         meanu = fread(fid,1,'float'); % east component speed
         meanv = fread(fid,1,'float'); % north component speed
         driftdir = atan2d(meanu, meanv);
@@ -355,7 +356,6 @@ while 1
         SWIFT.driftdirT = driftdir;         
         SWIFT.driftspd = ( meanu.^2 + meanv.^2 ) .^.5;
         meanz = fread(fid,1,'float'); % altitude
-        BatteryVoltage = fread(fid,1,'float'); % battery level
         year = fread(fid,1,'uint32'); % year
         month = fread(fid,1,'uint32'); % month
         day = fread(fid,1,'uint32'); % day
@@ -416,7 +416,7 @@ if isfield(SWIFT,'CTdepth')
             SWIFT.CTdepth = nan;
         end
     elseif length(SWIFT.CTdepth) == 2
-        SWIFT.CTdepth = nan(2,1);
+        SWIFT.CTdepth = [0.66; 1.22;]; % salty SWIFT with uppermost CT removed
     end
 end
 
