@@ -19,6 +19,7 @@ function [ burst  avg  battery  echo] = readSWIFTv4_SIG(filename)
 %             9/2018 force save before return, regardless of whether whole file read or not. 
 %             11/2019   revised to read echosounder data format (with
 %             additional output)
+%               3/2021 include microseconds in timestamps
 %
 
 battery = NaN;
@@ -93,7 +94,7 @@ while (~feof(fid))
                     minute = fread(fid,1,'uint8','ieee-le');
                     second = fread(fid,1,'uint8','ieee-le');
                     microsecond = fread(fid,1,'uint16','ieee-le');
-                    burst.time(ensemblecount_burst) = datenum( year, month, day, hour, minute, second );
+                    burst.time(ensemblecount_burst) = datenum( year, month, day, hour, minute, second + microsecond./1e4 );
                     
                     burst.SoundSpeed(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le')./10;
                     burst.Temperature(ensemblecount_burst) = fread(fid,1,'int16','ieee-le')./100;
@@ -268,7 +269,7 @@ while (~feof(fid))
                     minute = fread(fid,1,'uint8','ieee-le');
                     second = fread(fid,1,'uint8','ieee-le');
                     microsecond = fread(fid,1,'uint16','ieee-le');
-                    avg.time(ensemblecount_avg) = datenum( year, month, day, hour, minute, second );
+                    avg.time(ensemblecount_avg) = datenum( year, month, day, hour, minute, second + microsecond./1e4 );
                     
                     avg.SoundSpeed(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le')./10;
                     avg.Temperature(ensemblecount_avg) = fread(fid,1,'int16','ieee-le')./100;
@@ -439,7 +440,7 @@ while (~feof(fid))
                     minute = fread(fid,1,'uint8','ieee-le');
                     second = fread(fid,1,'uint8','ieee-le');
                     microsecond = fread(fid,1,'uint16','ieee-le');
-                    echo.time(ensemblecount_echo) = datenum( year, month, day, hour, minute, second );
+                    echo.time(ensemblecount_echo) = datenum( year, month, day, hour, minute, second + microsecond./1e4 );
                     
                     echo.SoundSpeed(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le')./10;
                     echo.Temperature(ensemblecount_echo) = fread(fid,1,'int16','ieee-le')./100;
