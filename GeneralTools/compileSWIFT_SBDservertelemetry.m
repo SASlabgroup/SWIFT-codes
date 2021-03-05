@@ -21,7 +21,7 @@ clear all,
 
 plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 
-minwaveheight = .1; % minimum wave height in data screening
+minwaveheight = 0.1; % minimum wave height in data screening
 
 minsalinity = 25; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
@@ -60,12 +60,20 @@ for ai = 1:length(flist),
     % for telemetry, this is the telemtry time (at the end of the burst).
     % for offloaded data, this the concat file name (from the start of the burst)
     
-    day = flist(ai).name(15:16);
-    month = flist(ai).name(17:19);
-    year = flist(ai).name(20:23);
-    hr = flist(ai).name(25:26);
-    minute = flist(ai).name(27:28);
-    sec = flist(ai).name(29:30);
+    if flist(ai).name(6)=='S', % SWIFT
+        nameoffset = 14;
+    elseif flist(ai).name(6)=='m', % microSWIFT
+        nameoffset = 20;
+    else
+        nameoffset = 0;
+    end
+    
+    day = flist(ai).name(nameoffset + [1:2]);
+    month = flist(ai).name(nameoffset + [3:5]);
+    year = flist(ai).name(nameoffset + [6:9]);
+    hr = flist(ai).name(nameoffset + [11:12]);
+    minute = flist(ai).name(nameoffset + [13:14]);
+    sec = flist(ai).name(nameoffset + [15:16]);
     
     oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
     
