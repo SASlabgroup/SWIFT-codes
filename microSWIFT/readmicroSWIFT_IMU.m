@@ -19,7 +19,7 @@ IMU.clock = data.textdata;
 IMU.acc = data.data(:,1:3);
 IMU.mag = data.data(:,4:6);
 IMU.gyro = data.data(:,7:9);
-IMU.angles = data.data(:,10:12);
+%IMU.angles = data.data(:,10:12);
 
 save(filename(1:end-4),'IMU');
 
@@ -40,10 +40,10 @@ if plotflag,
     ylabel('Gyro [deg/s]')
     xlabel('index')
 
-    figure(4), clf
-    plot(IMU.angles)
-    ylabel('Euler angles [deg]')
-    xlabel('index')
+%     figure(4), clf
+%     plot(IMU.angles)
+%     ylabel('Euler angles [deg]')
+%     xlabel('index')
     
     
 end
