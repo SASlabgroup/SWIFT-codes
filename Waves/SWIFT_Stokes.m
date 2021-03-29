@@ -36,7 +36,7 @@ function SWIFT_Stokes = SWIFT_Stokes(SWIFT, varargin)
 %                               corrected absolute velocity at z (m)
 %                              (profile - bias)
 %
-% M. Moulton
+% M. Moulton,        revised by J. Thomson in Mar 2021 to include factor of 2 at lines 176-183
 
 % Get water depth or assume deep water waves
 if ~isempty(varargin)
@@ -172,15 +172,15 @@ for jj=1:length(frequency)
         WaveBias_jj = om*k*energy(jj)*exp(k*z);
     end
     
-    % Sum component-wise with contributions from other frequencies
-    Stokes_spectral_east_0 = Stokes_spectral_east_0+Stokes_jj_0.*(-a1(jj))*df;
-    Stokes_spectral_north_0 = Stokes_spectral_north_0+Stokes_jj_0.*(-b1(jj))*df;
-    Stokes_spectral_east = Stokes_spectral_east+Stokes_jj.*(-a1(jj))*df;
-    Stokes_spectral_north = Stokes_spectral_north+Stokes_jj.*(-b1(jj))*df;        
-    WaveBias_spectral_east = WaveBias_spectral_east+WaveBias_jj.*(-a1(jj))*df;
-    WaveBias_spectral_north = WaveBias_spectral_north+WaveBias_jj.*(-b1(jj))*df;
-    WaveBias_spectral_east_0 = WaveBias_spectral_east_0+WaveBias_jj_0.*(-a1(jj))*df;
-    WaveBias_spectral_north_0 = WaveBias_spectral_north_0+WaveBias_jj_0.*(-b1(jj))*df;    
+    % Sum component-wise with contributions from other frequencies ** added factors of 2 in Mar 2021
+    Stokes_spectral_east_0 = Stokes_spectral_east_0+2*Stokes_jj_0.*(-a1(jj))*df; 
+    Stokes_spectral_north_0 = Stokes_spectral_north_0+2*Stokes_jj_0.*(-b1(jj))*df; 
+    Stokes_spectral_east = Stokes_spectral_east+2*Stokes_jj.*(-a1(jj))*df; 
+    Stokes_spectral_north = Stokes_spectral_north+2*Stokes_jj.*(-b1(jj))*df; 
+    WaveBias_spectral_east = WaveBias_spectral_east+2*WaveBias_jj.*(-a1(jj))*df;
+    WaveBias_spectral_north = WaveBias_spectral_north+2*WaveBias_jj.*(-b1(jj))*df;
+    WaveBias_spectral_east_0 = WaveBias_spectral_east_0+2*WaveBias_jj_0.*(-a1(jj))*df;
+    WaveBias_spectral_north_0 = WaveBias_spectral_north_0+2*WaveBias_jj_0.*(-b1(jj))*df;    
 end
 
 % Save Stokes and Wave Bias profiles
