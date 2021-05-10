@@ -39,7 +39,15 @@ for gi = 1:length(GPSflist)
     
     
     %% GPS post-processing
-    GPSsamplingrate = 2; % Hz
+    if length(GPS.time) > 512, 
+        
+    GPSsamplingrate = length(GPS.time)./(range(GPS.time)*24*3600); % Hz
+    
+    % raw velocities
+     [Euu fuu] = pwelch(detrend(GPS.u),[],[],[], GPSsamplingrate );
+     [Evv fvv] = pwelch(detrend(GPS.v),[],[],[], GPSsamplingrate );
+         
+    % full process
     [ Hs, Tp, Dp, E, f, a1, b1, a2, b2 ] = GPSwaves(GPS.u,GPS.v,GPS.z,GPSsamplingrate);
     GPSresults(gi).sigwaveheight = Hs;
     GPSresults(gi).peakwaveperiod = Tp;
@@ -52,11 +60,15 @@ for gi = 1:length(GPSflist)
     GPSresults(gi).wavespectra.b2 = b2;
     
     figure(7), clf
-    loglog(f,E), hold on
+    loglog(fuu,Euu+Evv,f,E), hold on
+    legend('vel','sse')
     title(['GPS spectra, H_s = ' num2str(Hs,2) ', T_p = ' num2str(Tp,2)])
     xlabel('frequency [Hz]')
     ylabel('Energy density [m^2/Hz]')
     print('-dpng',[ GPSflist(gi).name(1:end-4) '_spectra.png'])
+    
+    else
+    end
     
 end
 
@@ -77,7 +89,7 @@ for ii = 1:length(IMUflist)
         
     IMU = readmicroSWIFT_IMU([IMUflist(ii).name], false);
     
-    IMUresults(ii).time = datenum(IMU.clock((round(end/2))));
+    IMUresults(ii).time = median(IMU.time(:)); %datenum(IMU.clock((round(end/2))));
     IMUresults(ii).ID =  [IMUflist(ii).name(11:13)];
     
     figure(1), plot(IMU.acc),  ylabel('Acceleration [m/s^2]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_accelerations.png'])
@@ -90,7 +102,7 @@ for ii = 1:length(IMUflist)
     
     if length(IMU.clock) == length(IMU.acc), % check data was read properly
     
-    IMUsamplingrate =  length(IMU.acc)./512; % Hz
+    IMUsamplingrate =  length(IMU.acc)./(range(IMU.time)*24*3600); % Hz
     [Ezz fzz] = pwelch(detrend(IMU.acc(:,3)),[],[],[], IMUsamplingrate );
     Ezz(1) = []; fzz(1) = [];
     dfzz = (fzz(2)-fzz(1));
@@ -125,7 +137,7 @@ mx = IMU.mag(:,1); % magnetometer in x [uT]
 my = IMU.mag(:,2); % magnetometer in y [uT]
 mz = IMU.mag(:,3); % magnetometer in z [uT]
  mxo = 60; myo = 60; mzo = 120;
- Wd = 0;
+ Wd = 0.0;  % 0 to 1
  fs = IMUsamplingrate;
 [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = processIMU(ax, ay, az, gx, gy, gz, mx, my, mz, mxo, myo, mzo, Wd, fs );
 
