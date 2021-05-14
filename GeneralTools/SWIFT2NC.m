@@ -8,7 +8,7 @@ function SWIFT2NC(SWIFT_in,filename)
 
 SWIFT=SWIFT_in
 if isfield(SWIFT,'wavehistogram')
-    SWIFT=rmfield(SWIFT,'wavehistogram')
+    SWIFT=rmfield(SWIFT,'wavehistogram');
 end
 
 %% loading variables
@@ -279,7 +279,7 @@ for i=1:length(names)
         end       
         if strcmp(names(i),'peakwavedirT')
             ncwriteatt(filename,'peakwavedirT','units','degrees from north')
-            ncwriteatt(filename,'peakwavedirT','long_name','wind direction FROM North')
+            ncwriteatt(filename,'peakwavedirT','long_name','wave direction FROM North')
         end  
         if strcmp(names(i),'peakwaveperiod')
             ncwriteatt(filename,'peakwaveperiod','units','s')
@@ -295,7 +295,7 @@ for i=1:length(names)
         end      
         if strcmp(names(i),'windspd')
             ncwriteatt(filename,'windspd','units','m/s')
-            ncwriteatt(filename,'windspd','long_name','1 m height above the wave-following surface')
+            ncwriteatt(filename,'windspd','long_name','wind speed at 1 m height above the wave-following surface')
         end   
         if strcmp(names(i),'windspdstddev')
             ncwriteatt(filename,'windspdstddev','units','m/s')
