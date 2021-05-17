@@ -22,27 +22,34 @@ for gi = 1:length(GPSflist)
     
     GPSresults(gi).time = median(GPS.time); % ** not a full time stamp ***
     GPSresults(gi).ID =  [GPSflist(gi).name(11:13)];
+    
+    GPSsamplingrate = length(GPS.time)./((max(GPS.time)-min(GPS.time))*24*3600); % Hz
 
     
-    figure(5), clf
+    figure(4), clf
     plot(GPS.lon,GPS.lat,'.')
     xlabel('lon'), ylabel('lat')
     print('-dpng',[ GPSflist(gi).name(1:end-4) '_positions.png'])
     
     
-    figure(6), clf
-    plot(GPS.u), hold on
-    plot(GPS.v), hold on
-    xlabel('index'), ylabel('m/s')
-    legend('east','north')
+    figure(5), clf
+    subplot(1,2,1), plot(GPS.u), hold on, plot(GPS.v), hold on
+    xlabel('index'), ylabel('m/s'), legend('east','north')
+    subplot(1,2,2), pwelch(detrend([GPS.u; GPS.v;]'),[],[],[], GPSsamplingrate ); set(gca,'Xscale','log')
     print('-dpng',[ GPSflist(gi).name(1:end-4) '_speeds.png'])
     
+    if ~isempty(GPS.z),
+        figure(6), clf
+        subplot(1,2,1), plot(GPS.z), xlabel('index'), ylabel('elevation [m]'), 
+        subplot(1,2,2), pwelch(detrend(GPS.z),[],[],[], GPSsamplingrate ); set(gca,'Xscale','log')
+        print('-dpng',[ GPSflist(gi).name(1:end-4) '_elevation.png'])
+    else
+    end
     
     %% GPS post-processing
     if length(GPS.time) > 512, 
         
-    GPSsamplingrate = length(GPS.time)./(range(GPS.time)*24*3600); % Hz
-    
+   
     % raw velocities
      [Euu fuu] = pwelch(detrend(GPS.u),[],[],[], GPSsamplingrate );
      [Evv fvv] = pwelch(detrend(GPS.v),[],[],[], GPSsamplingrate );
@@ -89,12 +96,29 @@ for ii = 1:length(IMUflist)
         
     IMU = readmicroSWIFT_IMU([IMUflist(ii).name], false);
     
+    IMUsamplingrate =  length(IMU.acc)./((max(IMU.time)-min(IMU.time))*24*3600); % Hz
+
     IMUresults(ii).time = median(IMU.time(:)); %datenum(IMU.clock((round(end/2))));
     IMUresults(ii).ID =  [IMUflist(ii).name(11:13)];
     
-    figure(1), plot(IMU.acc),  ylabel('Acceleration [m/s^2]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_accelerations.png'])
-    figure(2), plot(IMU.mag), ylabel('magnetometer [uTesla]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_magnetometer.png'])
-    figure(3), plot(IMU.gyro), ylabel('Gyro [deg/s]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_gyro.png'])
+    IMU.acc(isnan(IMU.acc)) = 0;
+    IMU.mag(isnan(IMU.mag)) = 0;
+    IMU.gyro(isnan(IMU.gyro)) = 0;
+    
+    figure(1), 
+    subplot(1,2,1), plot(IMU.acc),  ylabel('Acceleration [m/s^2]'), 
+    subplot(1,2,2), pwelch(detrend(IMU.acc),[],[],[], IMUsamplingrate ); set(gca,'Xscale','log')
+    print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_accelerations.png'])
+    
+    figure(2), 
+    subplot(1,2,1), plot(IMU.mag), ylabel('magnetometer [uTesla]'), 
+    subplot(1,2,2), pwelch(detrend(IMU.mag),[],[],[], IMUsamplingrate ); set(gca,'Xscale','log')
+    print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_magnetometer.png'])
+    
+    figure(3), 
+    subplot(1,2,1), plot(IMU.gyro), ylabel('Gyro [deg/s]'), 
+    subplot(1,2,2), pwelch(detrend(IMU.gyro),[],[],[], IMUsamplingrate ); set(gca,'Xscale','log')
+    print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_gyro.png'])
 %    figure(4), plot(IMU.angles), ylabel('Euler angles [deg]'), print('-dpng',[ [IMUflist(ii).name(1:end-4)] '_Euler.png'])
     
     
@@ -102,7 +126,6 @@ for ii = 1:length(IMUflist)
     
     if length(IMU.clock) == length(IMU.acc), % check data was read properly
     
-    IMUsamplingrate =  length(IMU.acc)./(range(IMU.time)*24*3600); % Hz
     [Ezz fzz] = pwelch(detrend(IMU.acc(:,3)),[],[],[], IMUsamplingrate );
     Ezz(1) = []; fzz(1) = [];
     dfzz = (fzz(2)-fzz(1));
