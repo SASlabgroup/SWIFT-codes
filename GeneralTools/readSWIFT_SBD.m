@@ -353,7 +353,7 @@ while 1
         meanv = fread(fid,1,'float'); % north component speed
         driftdir = atan2d(meanu, meanv);
         if driftdir < 0, driftdir = 360+driftdir; end
-        SWIFT.driftdirT = driftdir;         
+        SWIFT.driftdirT = driftdir;
         SWIFT.driftspd = ( meanu.^2 + meanv.^2 ) .^.5;
         meanz = fread(fid,1,'float'); % altitude
         year = fread(fid,1,'uint32'); % year
@@ -364,6 +364,38 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second);
         
+    else
+        
+    elseif type == 51 & size > 0, % microSWIFT, size should be 237 bytes
+        disp('reading microSWIFT (light)')
+        SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
+        SWIFT.peakwaveperiod = fread(fid,1,'float'); % dominant period
+        SWIFT.peakwavedirT = fread(fid,1,'float'); % dominant wave direction
+        SWIFT.wavespectra.energy = fread(fid,42,'float'); % spectral energy density of sea surface elevation
+        SWIFT.wavespectra.freq = [0.0098:0.0117:0.5]; % fixed, according to 4 Hz GPS sampling with 256 s windows and merge 3 bands
+        SWIFT.wavespectra.a1 =  NaN(1,42);
+        SWIFT.wavespectra.b1 = NaN(1,42);
+        SWIFT.wavespectra.a2 = NaN(1,42);
+        SWIFT.wavespectra.b2 = NaN(1,42);
+        SWIFT.wavespectra.check = NaN(1,42);
+        SWIFT.lat = fread(fid,1,'float'); % Latitude
+        SWIFT.lon = fread(fid,1,'float'); % Longitude
+        SWIFT.watertemp = fread(fid,1,'float'); % water temp
+        BatteryVoltage = fread(fid,1,'float'); % battery level
+        meanu = fread(fid,1,'float'); % east component speed
+        meanv = fread(fid,1,'float'); % north component speed
+        driftdir = atan2d(meanu, meanv);
+        if driftdir < 0, driftdir = 360+driftdir; end
+        SWIFT.driftdirT = driftdir;
+        SWIFT.driftspd = ( meanu.^2 + meanv.^2 ) .^.5;
+        meanz = fread(fid,1,'float'); % altitude
+        year = fread(fid,1,'uint32'); % year
+        month = fread(fid,1,'uint32'); % month
+        day = fread(fid,1,'uint32'); % day
+        hour = fread(fid,1,'uint32'); % hour
+        minute = fread(fid,1,'uint32'); % minute
+        second = fread(fid,1,'uint32'); % seconds
+        SWIFT.time = datenum( year, month, day, hour, minute, second);
         
     else
         
