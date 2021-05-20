@@ -372,7 +372,10 @@ while 1
         SWIFT.peakwaveperiod = fread(fid,1,'float'); % dominant period
         SWIFT.peakwavedirT = fread(fid,1,'float'); % dominant wave direction
         SWIFT.wavespectra.energy = fread(fid,42,'float'); % spectral energy density of sea surface elevation
-        SWIFT.wavespectra.freq = [0.0098:0.0117:0.5]; % fixed, according to 4 Hz GPS sampling with 256 s windows and merge 3 bands
+        fmin = fread(fid,1,'float'); % min frequency
+        fmax = fread(fid,1,'float'); % max frequency
+        df = fread(fid,1,'float'); % frequency resolution
+        SWIFT.wavespectra.freq = [fmin:df:fmax]; % frequency (should be 1x42)
         SWIFT.wavespectra.a1 =  NaN(1,42);
         SWIFT.wavespectra.b1 = NaN(1,42);
         SWIFT.wavespectra.a2 = NaN(1,42);
