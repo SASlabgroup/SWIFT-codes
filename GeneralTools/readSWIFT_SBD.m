@@ -364,8 +364,7 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second);
         
-    else
-        
+     
     elseif type == 51 & size > 0, % microSWIFT, size should be 237 bytes
         disp('reading microSWIFT (light)')
         SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
