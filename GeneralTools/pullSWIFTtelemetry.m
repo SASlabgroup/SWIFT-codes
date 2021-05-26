@@ -51,7 +51,7 @@ end
 
 %% loop thru pulling SBDs for each SWIFT ID
 
-for si=1:length(IDs),
+for si=1:size(IDs,1),
     
     baseurl = 'http://swiftserver.apl.washington.edu/services/buoy?action=get_data&buoy_name=';
     
