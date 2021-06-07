@@ -90,7 +90,7 @@ while (~feof(fid))
     %(Pressure = 65536×PressureMSB + PressureLSW)
     [status(ii) count] = fread(fid,1,'uint8','ieee-le'); %Status 1 byte
     [PressureLSW(ii)  count] = fread(fid,1,'uint16','ieee-le'); %Pressure LSW 2 bytes
-    Pressure(ii) = 65536.*PressureMSB(ii) + PressureLSW(ii);
+    Pressure(ii) = PressureMSB(ii) + PressureLSW(ii)./4096;
     
     [Temp(ii) count] = fread(fid,1,'int16','ieee-le'); %Temp 2 bytes, 0.01C
     Temp(ii) = Temp(ii)./100;

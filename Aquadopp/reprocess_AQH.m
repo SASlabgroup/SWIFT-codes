@@ -26,7 +26,7 @@ function [SWIFT] = reprocess_AQH(parentdir, readraw, iceflag)
 %
 
 %% OPTIONS for quality control and AQH settings
-mincor = 30; % correlation cutoff, 50 recommended (max value recorded in air), 30 if single beam acq
+mincor = 50; % correlation cutoff, 50 recommended (max value recorded in air), 30 if single beam acq
 minamp = 30;  % amplitude cutoff, 30 usually means air
 maxQCratio = .5; % maximum allowable ration of remove points to total points
 
@@ -36,6 +36,8 @@ blanking = 0.10; % blanking distance (m) from hdr file
 sigma = 0.025;  % nominal velocity noise [m/s]
 rate = 4; % sampling rate
 
+spectral = true % spectral processing for dissipation rate
+
 
 %% load existing SWIFT structure created during concatSWIFTv3_processed or IMUreprocessing, replace only the new results
 cd(parentdir);
@@ -44,6 +46,8 @@ wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
 load([wd '_reprocessedIMU_RC_displacements.mat'])
+%load([wd '.mat'])
+
 
 cd('AQH/Raw/') % v3.2 or V3.3
 
@@ -74,6 +78,26 @@ for di = 1:length(dirlist),
         z = blanking + res./2 + [0:(cells-1)]*res; % cell depth
         r = [0.157 0.202 0.246 0.290 0.334 0.378 0.422 0.466 0.510 0.554 0.598 0.642 0.687 0.731 0.775 0.819]; % cell range
         
+        % alternate spectral processing 
+        if spectral
+            beam = 1;
+            %[Vc,pTerm,rotTerm] = AQDmotionCorrect2(Vel,heading,pitch,roll,Pressure,beam); 
+            [vpsd f ]= pwelch(Vel,[],[],[],4);
+            inertial = find(f>0.5 & f < 1.5);
+            compwpsd = mean( vpsd(inertial,:) .* ( (2*3.14* f(inertial))).^(5/3) )./ 128;
+            advect = std(Vel); %most consistent with Tennekes '75
+            
+            if advect>0 & compwpsd > 0
+                epsilon = ( compwpsd .* advect.^(-2/3) ).^(3/2);
+            else
+                epsilon = NaN;
+            end
+            
+            epsilon = epsilon';
+         
+        end
+
+        
         % correct for tilting (range shift to be applied in call to dissipation.m)
         bobbing = min([0.05 std(Pressure)]); % m, usually less than 0.05
         deltatheta = min([ 3.14/180*(5) std(3.14/180*(pitch)) ]);
@@ -100,7 +124,12 @@ for di = 1:length(dirlist),
         
         
         % phase averaged TKE dissipation rate of the whole burst
-        [tke epsilon residual A Aerror N Nerror ] = dissipation(Vel', r, length(Vel), 0, deltar);
+        if ~spectral
+            [tke epsilon residual A Aerror N Nerror ] = dissipation(Vel', r, length(Vel), 0, deltar);
+        end
+        
+        epsilon(1:3) = NaN;
+            
         
         
 %         % phase resolved processing
@@ -134,6 +163,12 @@ end
 
 cd('../')
 cd('../')
-save([ wd '_reprocessedAQH.mat'],'SWIFT')
+
+if ~spectral
+    save([ wd '_reprocessedAQH.mat'],'SWIFT')
+elseif spectral
+    save([ wd '_reprocessedAQH_spectral.mat'],'SWIFT')
+end
+
 
 end
