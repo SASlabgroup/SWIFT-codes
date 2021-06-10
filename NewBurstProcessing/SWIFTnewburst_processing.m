@@ -22,7 +22,7 @@ fullprocess = false; % option to force concatSWIFT_offloadedSDcard, reprocess_SI
 applyvelreference = true; % apply drift correction to signature velocity data
 rmwaves = true; % remove wave products (for short dt)
 
-dt=30; %timestep to average over in seconds
+dt=10; %timestep to average over in seconds
 num=floor(512/dt); % number of new bursts per normal burst (512 s)
 
 maxsalinity = 35; % for QC
@@ -32,10 +32,10 @@ percentdry = .1; % maximum precent dry to allow when retaining a new burst, incr
 mincor = 0; % for QC when reprocessing turbulence data
 maxdriftspd = 2.5;
 
-parentdir = '/Users/jthomson/Desktop/AgatePass/';  % change to suit data
+parentdir = '/Volumes/USRSdata/MobileBay/SWIFT/';  % change to suit data
 cd(parentdir)
 
-SW_list=dir('SWIFT*'); % list of SWIFT directories to reprocess
+SW_list=dir('SWIFT*09Jun2021'); % list of SWIFT directories to reprocess
 
 for sn=1:length(SW_list);
     disp(['SWIFT ' num2str(sn) ' of ' num2str(length(SW_list))])
@@ -753,7 +753,7 @@ for sn=1:length(SW_list);
     clear SWIFT
     SWIFT=SWIFT_highres;
     save([SW_list(sn).name '_highres_dt' num2str(dt) 's.mat'],'SWIFT')
-    clearvars -except SW_list parentdir num dt fullprocess applyvelreference maxsalinity minsalinity mincor percentdry
+    clearvars -except SW_list parentdir num dt fullprocess applyvelreference maxsalinity minsalinity mincor percentdry maxdriftspd rmwaves
     cd ..
     
     
