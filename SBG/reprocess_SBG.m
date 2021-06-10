@@ -12,7 +12,7 @@ plotflag = true;
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 %parentdir = ('/Volumes/Data/Newport/SWIFT19_15-18Oct2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 
-readfromconcat = 1; % force starting with original onboard results 
+readfromconcat = 0; % force starting with original onboard results 
 secondsofdata = 6*60;  % seconds of raw data to process (from the end of each burst, not beginning)
 
 %% load existing SWIFT structure created during concatSWIFT_processed, replace only the new wave results
