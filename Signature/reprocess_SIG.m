@@ -18,9 +18,9 @@ tic
 
 parentdir = pwd;
 readraw = false; % reading the binaries doubles the run time
-makesmoothwHR = false; % make (and save a smoothed, but not averaged w)
-plotflag = false;
-altimetertrim = false;
+makesmoothwHR = true; % make (and save) a smoothed, but not averaged w
+plotflag = true;
+altimetertrim = true;
 spectraldissipation = false;
 xcdrdepth = 0.2; % depth of transducer [m]
 
@@ -253,7 +253,7 @@ for di = 1:length(dirlist),
                     ylabel('[deg]')
                     
                     subplot(2,1,2),
-                    echo.z = xcdrdepth + echo.Blanking + echo.CellSize .* [1:length([echo.EchoSounder])];
+                    echo.z = xcdrdepth + echo.Blanking + echo.CellSize .* [1:size([echo.EchoSounder],2)];
                     pcolor(echo.time,echo.z,echo.EchoSounder'), shading flat
                     colormap bone
                     datetick
