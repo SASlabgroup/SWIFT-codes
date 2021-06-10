@@ -1,18 +1,31 @@
-function h = mapSWIFT(colorfield);
+function h = mapSWIFT(colorfield,varargin);
 % make a map of SWIFT drift vectors
 %   for a given set of SWIFT files in a directory
 %   (i.e., for a given mission/project/day)
 % color the drift vectors by the fieldcolor input
 %   such as temperature, salinity, or even just time
 %
-%  h = mapSWIFT(colorfield);
+%  h = mapSWIFT(colorfield,cmap,cscale));
 %
 % where colorfield is string with the field name to use for the colors
-% and returns h as the handle to the figure
+% and cmap, cscale are optional inputs if plotting on top of bathy
+%
+% function returns h as the handle to the figure
 %
 % J. Thomson, 9/2018
 
-h = figure; clf
+newmap = false;
+
+if isempty(varargin)
+    figure, clf
+    newmap = true;
+elseif length(varargin)==2
+    cmap = varargin{1};
+    cscale = varargin{2};
+    h = gcf;
+else
+    return
+end
 
 flist = dir('*SWIFT*.mat');
 
@@ -35,17 +48,22 @@ for fi = 1:length(flist),
             else
                 color(si) = NaN;
             end
+            if ~newmap,
+                cindex = round((color(si)-cscale(1))./(cscale(2)-cscale(1))*64);
+                if ~isnan(cindex) && cindex>0 && cindex<65,
+                    plot([SWIFT(si).lon],[SWIFT(si).lat],'.','markersize',12,'color',cmap(cindex,:)); hold on % version with bathy
+                end
+            end
         end
             
-            h = scatter([SWIFT.lon],[SWIFT.lat],60,color,'filled'); 
-            
+        if newmap
+            h = scatter([SWIFT.lon],[SWIFT.lat],60,color,'filled'); % version with no bathy          
             hold on
-            
             u = [SWIFT.driftspd] .* sind([SWIFT.driftdirT]);
             v = [SWIFT.driftspd] .* cosd([SWIFT.driftdirT]);
-            
             quiver([SWIFT.lon],[SWIFT.lat],u,v,.5,'k-');
-            
+        end
+        
         else,
             
             disp([colorfield ' not found in SWIFT data structure'])
@@ -55,8 +73,12 @@ for fi = 1:length(flist),
 end
    
 set(gca,'color',[.8 .8 .8],'Fontsize',16,'fontweight','demi')
-title([wd ' ' colorfield ],'interp','none')
-colorbar
+if newmap
+    title([wd ' ' colorfield ],'interp','none')
+    colorbar
+else
+    title([wd ' ' colorfield ', ' num2str(min(cscale)) ' to ' num2str(max(cscale)) ],'interp','none')
+end
 xlabel('lon')
 ylabel('lat')
 grid
