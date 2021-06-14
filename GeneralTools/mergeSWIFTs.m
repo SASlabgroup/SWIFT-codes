@@ -3,6 +3,8 @@
 
 clear all, close all
 
+plots = false;
+makeallSWIFT = true; 
 sigHRzoffset = 0; % first HR bin should be at 0.3
 useonboardepsilon = true; % binary flag
 onboardcorrection = 1/8;
@@ -17,8 +19,12 @@ for fi = 1:length(flist),
    
     load(flist(fi).name)
     
-    %allSWIFT( counter + [1:length(SWIFT)] ) = SWIFT;
-    %counter = length(allSWIFT);
+    if makeallSWIFT
+        allSWIFT( counter + [1:length(SWIFT)] ) = SWIFT;
+        counter = length(allSWIFT);
+    end
+    
+    if plots, 
     
     %% winds and waves
     figure(1),
@@ -28,12 +34,14 @@ for fi = 1:length(flist),
         subplot(4,1,4)
         plot([SWIFT.time],[SWIFT.winddirT],'bx'), hold on
     end
+    if isfield(SWIFT,'sigwaveheight')
     subplot(4,1,2)
     plot([SWIFT.time],[SWIFT.sigwaveheight],'g+'), hold on
     subplot(4,1,3)
     plot([SWIFT.time],[SWIFT.peakwaveperiod],'g+'), hold on
     subplot(4,1,4)
     plot([SWIFT.time],[SWIFT.peakwavedirT],'g+'), hold on
+    end
     
     %% mean square slope
     [mss, mssnorm] = SWIFTmss( SWIFT );
@@ -109,11 +117,19 @@ for fi = 1:length(flist),
     end
     axis([0 15 0 .8])
    
+    end
     
 end
 
-%% clean up plots
+%% save allSWIFT
+if makeallSWIFT
+    SWIFT = allSWIFT;
+    save('allSWIFT.mat','SWIFT')
+end
 
+%% clean up plots
+if plots
+    
 figure(1)
 subplot(4,1,1)
 title('SWIFT')
@@ -196,3 +212,5 @@ set(gca,'YDir','reverse')
 xlabel('\epsilon [m^2/s^3')
 ylabel('z [m]')
 print -dpng epsilonprofiles.png
+
+end
