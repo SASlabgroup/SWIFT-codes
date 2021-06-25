@@ -28,7 +28,7 @@ for fi = 1:length(flist),
         if ~isnan(SWIFT(si).uplooking.tkedissipationrate),
             epsilon = SWIFT(si).uplooking.tkedissipationrate;
             z = SWIFT(si).uplooking.z;
-        elseif isfield(SWIFT(si).signature.HRprofile,'z'),
+        elseif isfield(SWIFT(si),'signature'),
             if ~isempty( SWIFT(si).signature.profile.z ),
                 epsilon = SWIFT(si).signature.HRprofile.tkedissipationrate;
                 z = SWIFT(si).signature.HRprofile.z;
