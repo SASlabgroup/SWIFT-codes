@@ -8,6 +8,7 @@ clear all,
 
 GPSflist = dir('*GPS*.dat')
 
+if ~isempty(GPSflist)
 for gi = 1:length(GPSflist)
     
     %% GPS
@@ -80,6 +81,10 @@ for gi = 1:length(GPSflist)
 end
 
 save([GPSflist(1).name(1:13) '_results'],'GPSresults');
+
+else
+    GPSresults = [];
+end
 
 
 %%% IMU %%%%
@@ -160,7 +165,7 @@ mx = IMU.mag(:,1); % magnetometer in x [uT]
 my = IMU.mag(:,2); % magnetometer in y [uT]
 mz = IMU.mag(:,3); % magnetometer in z [uT]
  mxo = 60; myo = 60; mzo = 120;
- Wd = 0.0;  % 0 to 1
+ Wd = .5;  % 0 to 1
  fs = IMUsamplingrate;
 [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = processIMU(ax, ay, az, gx, gy, gz, mx, my, mz, mxo, myo, mzo, Wd, fs );
 
@@ -196,5 +201,5 @@ mz = IMU.mag(:,3); % magnetometer in z [uT]
     
 end
 
-save([GPSflist(1).name(1:13) '_results'],'GPSresults','IMUresults');
+save([IMUflist(1).name(1:13) '_results'],'GPSresults','IMUresults');
 
