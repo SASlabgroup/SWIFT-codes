@@ -305,7 +305,7 @@ drawnow
 %% wave stats
 fwaves = f>0.05 & f<1; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
 
-E( ~fwaves ) = 0;
+%E( ~fwaves ) = 0;
 
 % significant wave height
 Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
@@ -320,7 +320,7 @@ Ta = 1./fe;
 %[~ , fpindex] = max(E);
 Tp = 1./f(fpindex);
 
-if Tp > 20, % if peak not found, use centroid
+if Tp > 18, % if peak not found, use centroid
     Tp = Ta;
     fpindex = feindex;
 end

@@ -51,9 +51,9 @@ xwindow = zeros(w,windows);
 ywindow = zeros(w,windows);
 zwindow = zeros(w,windows);
 for q=1:windows, 
-	xwindow(:,q) = x(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
-	ywindow(:,q) = y(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
-  	zwindow(:,q) = z(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
+	xwindow(:,q) = x(  (q-1)*round(.25*w)+1  :  (q-1)*round(.25*w)+w  );  
+	ywindow(:,q) = y(  (q-1)*round(.25*w)+1  :  (q-1)*round(.25*w)+w  );  
+  	zwindow(:,q) = z(  (q-1)*round(.25*w)+1  :  (q-1)*round(.25*w)+w  );  
 end
 
 %% detrend individual windows (full series already detrended)
@@ -177,7 +177,7 @@ E = Ezz;
 
 fwaves = f>0.04 & f<maxf; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
 
-E( ~fwaves ) = 0;
+%E( ~fwaves ) = 0;
 
 % significant wave height
 Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
@@ -191,7 +191,9 @@ Ta = 1./fe;
 [~ , fpindex] = max(Ezz); 
 %[~ , fpindex] = max(E);
 Tp = 1./f(fpindex);
-
+if f(fpindex) < 0.06
+    Tp = Ta;
+end
 
 %% spectral directions
 dir = - 180 ./ 3.14 * dir1;  % switch from rad to deg, and CCW to CW (negate)
