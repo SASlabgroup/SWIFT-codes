@@ -6,10 +6,8 @@ function IMU = readmicroSWIFT_IMU(filename, plotflag)
 % columns of raw data are: 
 % elapsedTime(s), accelX(m/s^2), accelY(m/s^2) , accelZ(m/s^2) , 
 %   magX(uTesla), magY(uTesla), magZ(uTesla), 
-%       gyroX(radians/s), gyroY(radians/s), gyroZ(radians/s), 
+%       gyroX(deg/s), gyroY(deg/s), gyroZ(deg/s), 
 % 
-% suspect that gyro values are really deg/s, not rad/s
-%
 % J. Thomson,  7/2020
 %               5/2021 covert timestamps to datenums
 
