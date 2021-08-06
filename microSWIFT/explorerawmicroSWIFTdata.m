@@ -12,15 +12,15 @@ if ~isempty(GPSflist)
     
     for gi = 1:length(GPSflist)
         
-        [ lat lon sog cog depth time] = readNMEA([GPSflist(gi).name]);
+        [ lat lon sog cog depth time altitude] = readNMEA([GPSflist(gi).name]);
         GPS.lat = lat;
         GPS.lon = lon;
         GPS.time = time;
         GPS.u = sog .* sind(cog);
         GPS.v = sog .* cosd(cog);
-        GPS.z = []; % need to update readNEMA to include altitude
+        GPS.z = altitude; 
         save([GPSflist(gi).name(1:end-4)],'GPS')
-             
+        
         GPSsamplingrate = length(GPS.time)./((max(GPS.time)-min(GPS.time))*24*3600); % Hz
         
         %% plot raw GPS data
@@ -50,13 +50,32 @@ if ~isempty(GPSflist)
         
         if length(GPS.time) > 1024,
             
-            % raw velocity spectra (sanity check)
-            [Euu fuu] = pwelch(detrend(GPS.u),[],[],[], GPSsamplingrate );
-            [Evv fvv] = pwelch(detrend(GPS.v),[],[],[], GPSsamplingrate );
+            % raw position spectra
+            [Elat fgps] = pwelch(detrend(deg2km(lat)*1000),[],[],[], GPSsamplingrate );
+            [Elon fgps] = pwelch(detrend(deg2km(lon,cosd(median(lat))*6371)*1000),[],[],[], GPSsamplingrate );
+            [Ezz fgps] = pwelch(detrend(GPS.z),[],[],[], GPSsamplingrate );
             
-            % full GPS wave processing
+            % raw velocity spectra (sanity check)
+            [Esog fgps] = pwelch(detrend(sog),[],[],[], GPSsamplingrate );
+            [Euu fgps] = pwelch(detrend(GPS.u),[],[],[], GPSsamplingrate );
+            [Evv fgps] = pwelch(detrend(GPS.v),[],[],[], GPSsamplingrate );
+            
+            % standard GPS wave processing
             [ Hs, Tp, Dp, E, f, a1, b1, a2, b2 ] = ...
                 GPSwaves(GPS.u,GPS.v,GPS.z,GPSsamplingrate);
+            
+            % alternate processing by integrating velocites to displacements
+            RC = 4;
+            u = RCfilter(GPS.u, RC, GPSsamplingrate);
+            v = RCfilter(GPS.v, RC, GPSsamplingrate);
+            x = cumtrapz(u)*(1/GPSsamplingrate);
+            y = cumtrapz(v)*(1/GPSsamplingrate);       
+            x = detrend(x);
+            y = detrend(y);           
+            x = RCfilter(x, RC, GPSsamplingrate);
+            y = RCfilter(y, RC, GPSsamplingrate);
+            [Exx fgps] = pwelch(x,[],[],[], GPSsamplingrate );
+            [Eyy fgps] = pwelch(y,[],[],[], GPSsamplingrate );
             
             % store in SWIFT structure
             GPSresults(gi).sigwaveheight = Hs;
@@ -72,8 +91,8 @@ if ~isempty(GPSflist)
             GPSresults(gi).ID =  [GPSflist(gi).name(11:13)];
             
             figure(7), clf
-            loglog(fuu,Euu+Evv,f,E), hold on
-            legend('vel','sse')
+            loglog(fgps,Ezz,fgps,Elat+Elon,fgps,Esog,fgps,Euu+Evv,fgps,Exx+Eyy,f,E), hold on
+            legend('alt','lat+lon','sog','uu+vv','xx+yy','sse')
             title(['GPS spectra, H_s = ' num2str(Hs,2) ', T_p = ' num2str(Tp,2)])
             xlabel('frequency [Hz]')
             ylabel('Energy density [m^2/Hz]')
@@ -102,7 +121,7 @@ for ii = 1:length(IMUflist)
         IMU = readmicroSWIFT_IMU([IMUflist(ii).name], false);
         
         IMUsamplingrate =  length(IMU.acc)./((max(IMU.time)-min(IMU.time))*24*3600); % Hz
-      
+        
         %% plot IMU raw data
         
         figure(1),
@@ -124,10 +143,10 @@ for ii = 1:length(IMUflist)
         % IMU processing
         
         if length(IMU.clock) == length(IMU.acc), % check data was read properly
-          
+            
             %% post-processing in body reference from (simple)
             [Ezz fzz] = pwelch(IMU.acc(:,3),[],[],[],IMUsamplingrate);
-            Ezz = Ezz ./ ( (2*pi*fzz).^4); 
+            Ezz = Ezz ./ ( (2*pi*fzz).^4);
             Hs_simple = 4 * sqrt( nansum( Ezz( fzz > 0.05 & fzz < 0.5 ) ) * (fzz(3)-fzz(2)));
             
             %%  post-processing with Matlab navigation toolbox
@@ -157,10 +176,10 @@ for ii = 1:length(IMUflist)
             IMUresults(ii).wavespectra.check = check;
             
             IMUresults(ii).z = ENU.xyz(:,3); % raw wave displacements
-                    
+            
             IMUresults(ii).time = median(IMU.time(:)); %datenum(IMU.clock((round(end/2))));
             IMUresults(ii).ID =  [IMUflist(ii).name(11:13)];
-       
+            
             figure(8), clf
             loglog(fzz, Ezz, f,E)
             legend(['Body frame, Hs = ' num2str(Hs_simple)],['Earth frame, H_s = ' num2str(Hs)])
@@ -179,4 +198,18 @@ for ii = 1:length(IMUflist)
 end
 
 save([IMUflist(1).name(1:13) '_results'],'GPSresults','IMUresults');
+
+
+%% EMBEDDED RC FILTER function (high pass filter) %%
+
+function a = RCfilter(b, RC, fs);
+
+alpha = RC / (RC + 1./fs);
+a = b;
+
+for ui = 2:length(b)
+    a(ui) = alpha * a(ui-1) + alpha * ( b(ui) - b(ui-1) );
+end
+
+end
 

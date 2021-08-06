@@ -1,8 +1,8 @@
-function [ lat lon sog cog depth time ] = readNMEA(filename);
+function [ lat lon sog cog depth time altitude ] = readNMEA(filename);
 % function to read NMEA data from SWIFTs and other platforms
 % return variables and automatically save mat file
 %
-% [ lat lon sog cog depth time] = readNMEA(filename);
+% [ lat lon sog cog depth time altitude] = readNMEA(filename);
 %
 %
 % J. Thomson,  4/2012
@@ -12,7 +12,8 @@ function [ lat lon sog cog depth time ] = readNMEA(filename);
 %               7/2020 adapted to generic use, without wind data (use PB200 for that)
 %               9/2020  include depth (DBT) sentence
 %               1/2021  read time from GGA when ZDA not present, but note that it is only time (not date)
-
+%               8/2021 include altitude from GGA               
+%   
 % TO DO: still need to acount for S or E hemispheres
 
 %% params
@@ -28,6 +29,7 @@ sog = [];
 cog = [];
 depth = [];
 time = [];
+altitude =[];
 
 linenum = 0;
 vtglength = 0;
@@ -96,6 +98,7 @@ while 1
                 ggalon(ggalength) = NaN;
             end
             gpsquality(ggalength) = gpsdata{6+1}; % 2 is differential (best)
+            altitude(ggalength) = gpsdata{9+1};
             ggalinenum(ggalength) = linenum;
             
             %% RMC
