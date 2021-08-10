@@ -13,6 +13,7 @@ parentdir = pwd;  % change this to be the parent directory of all raw raw data (
 %parentdir = ('/Volumes/Data/Newport/SWIFT19_15-18Oct2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 
 readfromconcat = 0; % force starting with original onboard results
+useGPSpositions = true; % option instead of GPS velocities for alt spectra
 secondsofdata = 6*60;  % seconds of raw data to process (from the end of each burst, not beginning)
 
 %% load existing SWIFT structure created during concatSWIFT_processed, replace only the new wave results
@@ -89,15 +90,25 @@ for di = 1:length(dirlist),
             fs = 5; % should be 5 Hz for standard SBG settings
             
             % reprocess to get proper directional momements (bug fix in 11/2017)
-            [ newHs, newTp, newDp, newE, newf, newa1, newb1, newa2, newb2, check ] = SBGwaves(sbgData.GpsVel.vel_e(end-secondsofdata*5+1:end),sbgData.GpsVel.vel_n(end-secondsofdata*5+1:end),sbgData.ShipMotion.heave(end-secondsofdata*5+1:end),5);
+            [ newHs, newTp, newDp, newE, newf, newa1, newb1, newa2, newb2, check ] = SBGwaves(sbgData.GpsVel.vel_e(end-secondsofdata*5+1:end),sbgData.GpsVel.vel_n(end-secondsofdata*5+1:end),sbgData.ShipMotion.heave(end-secondsofdata*5+1:end),fs);
             
             % reprocess using GPS velocites to get alternate results
-            [ altHs, altTp, altDp, altE, altf, alta1, altb1, alta2, altb2 ] = GPSwaves(sbgData.GpsVel.vel_e(end-secondsofdata*5+1:end),sbgData.GpsVel.vel_n(end-secondsofdata*5+1:end),[],5);
+            [ altHs, altTp, altDp, altE, altf, alta1, altb1, alta2, altb2 ] = GPSwaves(sbgData.GpsVel.vel_e(end-secondsofdata*5+1:end),sbgData.GpsVel.vel_n(end-secondsofdata*5+1:end),[],fs);
+            
+            % reprocess using GPS positions
+            lat = sbgData.GpsPos.lat(end-2047:end);
+            [Elat fgps] = pwelch(detrend(deg2km(lat)*1000),[],[],[], fs );
+            lon = sbgData.GpsPos.long(end-2047:end);
+            [Elon fgps] = pwelch(detrend(deg2km(lon,cosd(median(lat))*6371)*1000),[],[],[], fs );
             
             
             % interp to the original freq bands
             E = interp1(newf,newE,f);
             altE = interp1(altf,altE,f);
+            if useGPSpositions
+                altE = interp1(fgps, Elat + Elon, f);
+            end
+            
             %altE = interp1(altf,altE,f);
             a1 = interp1(newf,newa1,f);
             b1 = interp1(newf,newb1,f);
