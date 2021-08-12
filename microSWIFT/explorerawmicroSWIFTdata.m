@@ -103,7 +103,7 @@ if ~isempty(GPSflist)
         
     end
     
-    save([GPSflist(1).name(1:13) '_results'],'GPSresults');
+    save([GPSflist(end).name(1:13) '_' GPSflist(end).name(19:26) '_results'],'GPSresults');
     
 else
     GPSresults = [];
@@ -197,7 +197,7 @@ for ii = 1:length(IMUflist)
     
 end
 
-save([IMUflist(1).name(1:13) '_results'],'GPSresults','IMUresults');
+save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:26) '_results'],'GPSresults','IMUresults');
 
 
 %% EMBEDDED RC FILTER function (high pass filter) %%
