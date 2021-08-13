@@ -23,25 +23,25 @@ options = weboptions('Timeout', 60);
 if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
     
     SWIFTtype = 'v3v4s'
-    allbatterylevels = NaN(1,length(IDs)); % initialize battery array
-    lasttime =  NaN(1,length(IDs)); % initialize time array
-    lastlat = NaN(1,length(IDs)); % initialize
-    lastlon = NaN(1,length(IDs)); % initialize
+    allbatterylevels = NaN(1,size(IDs,1)); % initialize battery array
+    lasttime =  NaN(1,size(IDs,1)); % initialize time array
+    lastlat = NaN(1,size(IDs,1)); % initialize
+    lastlon = NaN(1,size(IDs,1)); % initialize
     
-elseif  size(IDs,2) == 3 && ischar(IDs), % enforce two digit strings for SWIFT IDs
+elseif  size(IDs,2) == 3 && ischar(IDs), % enforce three digit strings for microSWIFT IDs
     
     SWIFTtype = 'micro'
-    allbatterylevels = NaN(1,length(IDs)); % initialize battery array
-    lasttime =  NaN(1,length(IDs)); % initialize time array
-    lastlat = NaN(1,length(IDs)); % initialize
-    lastlon = NaN(1,length(IDs)); % initialize
+    allbatterylevels = NaN(1,size(IDs,1)); % initialize battery array
+    lasttime =  NaN(1,size(IDs,1)); % initialize time array
+    lastlat = NaN(1,lsize(IDs,1)); % initialize
+    lastlon = NaN(1,size(IDs,1)); % initialize
     
 else
     
-    allbatterylevels = NaN(1,length(IDs)); % initialize battery array
-    lasttime =  NaN(1,length(IDs)); % initialize time array
-    lastlat = NaN(1,length(IDs)); % initialize
-    lastlon = NaN(1,length(IDs)); % initialize
+    allbatterylevels = NaN(1,size(IDs,1)); % initialize battery array
+    lasttime =  NaN(1,size(IDs,1)); % initialize time array
+    lastlat = NaN(1,size(IDs,1)); % initialize
+    lastlon = NaN(1,size(IDs,1)); % initialize
     
     disp('invalid IDs')
     
@@ -109,12 +109,12 @@ tempfig = mapSWIFT('watertemp');
 salinityfig = mapSWIFT('salinity');
 wavefig = mapSWIFT('sigwaveheight');
 
-clc
-spaces(1:length(IDs)) = ' ';
-commas(1:length(IDs)) = ',';
-Vs(1:length(IDs)) = 'V';
+clc,
+spaces(1:size(IDs,1)) = ' ';
+commas(1:size(IDs,1)) = ',';
+Vs(1:size(IDs,1)) = 'V';
+
 [IDs commas' spaces' datestr(lasttime) commas' spaces' num2str(lastlat',6) commas' spaces' ...
     num2str(lastlon',6) commas' spaces' num2str(allbatterylevels',3) Vs']
-
 
 
