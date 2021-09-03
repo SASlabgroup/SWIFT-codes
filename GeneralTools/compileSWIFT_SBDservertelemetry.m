@@ -20,10 +20,12 @@
 clear all,
 
 plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
+fixspectra = false; % binary flag to redact low freq wave spectra
+                    % note this also recalcs wave heights
 
-minwaveheight = 0.01; % minimum wave height in data screening
+minwaveheight = 0; % minimum wave height in data screening
 
-minsalinity = 10; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 1.5;  % m/s, for screening when buoy on deck of boat
 
@@ -99,7 +101,7 @@ for ai = 1:length(flist),
     % while requiring energy at lowest frequenc to be zero
     % not neccessary if post-processing for raw displacements
     % less necessary after Oct 2017 rev of onboard processing with improved RC filter
-    if isfield(oneSWIFT,'wavespectra')
+    if fixspectra & isfield(oneSWIFT,'wavespectra')
         notzero = find(oneSWIFT.wavespectra.energy ~= 0 & oneSWIFT.wavespectra.freq > 0.04);
         tobereplaced =  find(oneSWIFT.wavespectra.energy == 0 & oneSWIFT.wavespectra.freq > 0.04);
         if length(notzero) > 10,

@@ -51,12 +51,20 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %   J. Thomson 11/2019  fixed parsing of Airmar PB200 positions
 %
 %   J. Thomson 7/2020   add microSWIFT payload type (50)
+%
+%   J. Thomson ?/2021   add microSWIFT light payload type (51)
+%
+%   J. Thomson 9/2021   fix parsing of Airmar PB200 positions (again)
+%                       * note ambiquity of E-W (+/-) longitudes persists,
+%                       so assume W (-)
 
 recip = true; % binary flag to change wave direction to FROM
 
 SWIFT.time = [];
 SWIFT.lat = [];
 SWIFT.lon = [];
+PBlat = NaN;
+PBlon = NaN;
 
 fid = fopen(fname); % open file for reading
 BatteryVoltage = NaN; % placeholder
@@ -104,6 +112,62 @@ while 1
         cells = length(SWIFT.downlooking.velocityprofile);
         z = blanking + res./2 + [0:(cells-1)]*res;
         SWIFT.downlooking.z = z; %fliplr(z) - blanking;
+        
+    elseif type == 2 & size > 0, % PB200 weather station (Airmar) and backup GPS
+        disp('reading Airmar results')
+        SWIFT.winddirT = fread(fid,1,'float'); % mean wind direction (deg T)
+        SWIFT.winddirTstddev =  fread(fid,1,'float'); % std dev of wind direction (deg)
+        SWIFT.windspd = fread(fid,1,'float'); % mean wind speed (m/s)
+        SWIFT.windspdstddev = fread(fid,1,'float');  % std dev of wind spd (m/s)
+        PBlat = num2str(fread(fid,1,'float')); % latitude
+        if length(PBlat)>5,
+            dec = find( PBlat == '.');
+            PBlat = str2num( PBlat([1:(dec-3)]) ) + str2num( PBlat([(dec-2):end]) ) / 60;  % parsing might not be robust
+        end
+        PBlon = num2str(fread(fid,1,'float'));  % longitude
+        if length(PBlon)>5,
+            dec = find( PBlon == '.');
+            PBlon = str2num( PBlon([1:(dec-3)]) ) + str2num( PBlon([(dec-2):end]) ) / 60;  % parsing might not be robust, esp +/-
+            PBlon = - PBlon;  % assume western hemisphere (airmar telemetry is ambiguous) 
+        end
+        PByear = num2str(fread(fid,1,'uint32')); % year
+        PBMonth = num2str(fread(fid,1,'uint32')); % month
+        PBDay = num2str(fread(fid,1,'uint32'));  % day
+        PBhhmmss = num2str(fread(fid,1,'uint32')); % time of day (UTC)
+        dec = find( PBhhmmss == '.');
+        if dec == 7, hour = str2num(PBhhmmss(1:2));,
+        elseif dec == 6, hour = str2num(PBhhmmss(1));, mm = str2num(PBhhmmss(2:3));,
+        elseif dec <=5, hour = 0;
+        elseif isempty(dec) & length(PBhhmmss)==6, hour = str2num(PBhhmmss(1:2));, mm = str2num(PBhhmmss(3:4));,
+        elseif isempty(dec) & length(PBhhmmss)==5, hour = str2num(PBhhmmss(1));, mm = str2num(PBhhmmss(2:3));,
+        elseif isempty(dec) & length(PBhhmmss)==4, hour = 0;, mm = str2num(PBhhmmss(1:2));,
+        elseif isempty(dec) & length(PBhhmmss)==3, hour = 0;, mm = str2num(PBhhmmss(1));,
+        else hour = 0; mm = 0;
+        end
+        SWIFT.time = datenum( str2num(PByear), str2num(PBMonth), str2num(PBDay), hour, mm, 0);
+        SWIFT.date = [PBDay PBMonth PByear];
+        SWIFT.airtemp = fread(fid,1,'float');
+        SWIFT.airtempstddev = fread(fid,1,'float');
+        SWIFT.airpres = fread(fid,1,'float');
+        SWIFT.airpresstddev = fread(fid,1,'float');
+        SWIFT.driftdirT = fread(fid,1,'float');
+        SWIFT.driftdirTstddev = fread(fid,1,'float');
+        SWIFT.driftspd = fread(fid,1,'float');
+        SWIFT.driftspdstddev = fread(fid,1,'float');
+        if PBlat == 0, % if no GPS for AirMar PB200, winddir is relative, not true
+            SWIFT.winddirR = SWIFT.winddirT;
+            SWIFT.winddirT = NaN;
+        else
+            SWIFT.winddirR = NaN;
+            SWIFT.winddirRstddev = NaN;
+        end
+        if ~isempty(SWIFTversion) && SWIFTversion==3,
+            SWIFT.metheight = 0.84; % height of measurement, meters
+        elseif ~isempty(SWIFTversion) && SWIFTversion==4,
+            SWIFT.metheight = 0.4; % height of measurement, meters
+        else
+            SWIFT.metheight = 0.4; % height of measurement, meters
+        end
         
     elseif type == 3 & size > 0, % IMU
         disp('reading Microstrain IMU results')
@@ -240,75 +304,6 @@ while 1
         end
         SWIFTversion = 4;
         
-        
-    elseif type == 2 & size > 0, % PB200 weather station (Airmar) and backup GPS
-        disp('reading Airmar results')
-        SWIFT.winddirT = fread(fid,1,'float'); % mean wind direction (deg T)
-        SWIFT.winddirTstddev =  fread(fid,1,'float'); % std dev of wind direction (deg)
-        SWIFT.windspd = fread(fid,1,'float'); % mean wind speed (m/s)
-        SWIFT.windspdstddev = fread(fid,1,'float');  % std dev of wind spd (m/s)
-        PBlat = num2str(fread(fid,1,'float')); % latitude
-        if length(PBlat)>5,
-            %dec = find( PBlat == '.');
-            PBlat = str2num( PBlat(1:2) ) + str2num( PBlat(3:end) ) / 60 ; % parsing might not be robust
-        end
-        PBlon = num2str(fread(fid,1,'float'));  % longitude
-        if length(PBlon)>5,
-            %dec = find( PBlon == '.');
-            PBlon = - str2num( PBlon(1:3) ) + str2num( PBlon(4:end) ) / 60 ; % parsing might not be robust, esp +/-
-        end
-        if ~isfield(SWIFT,'lat'), % if no IMU, use this one
-            disp('Using Airmar positions')
-            SWIFT.lat = PBlat;
-            SWIFT.lon = PBlon;
-        end
-        if isfield(SWIFT,'lat') & ( SWIFT.lat == 0 | isempty(SWIFT.lat) ), % if IMU did not give position, use this one
-            disp('Using Airmar positions')
-            SWIFT.lat = PBlat;
-            SWIFT.lon = PBlon;
-        else
-        end
-        PByear = num2str(fread(fid,1,'uint32')); % year
-        PBMonth = num2str(fread(fid,1,'uint32')); % month
-        PBDay = num2str(fread(fid,1,'uint32'));  % day
-        PBhhmmss = num2str(fread(fid,1,'uint32')); % time of day (UTC)
-        dec = find( PBhhmmss == '.');
-        if dec == 7, hour = str2num(PBhhmmss(1:2));,
-        elseif dec == 6, hour = str2num(PBhhmmss(1));, mm = str2num(PBhhmmss(2:3));,
-        elseif dec <=5, hour = 0;
-        elseif isempty(dec) & length(PBhhmmss)==6, hour = str2num(PBhhmmss(1:2));, mm = str2num(PBhhmmss(3:4));,
-        elseif isempty(dec) & length(PBhhmmss)==5, hour = str2num(PBhhmmss(1));, mm = str2num(PBhhmmss(2:3));,
-        elseif isempty(dec) & length(PBhhmmss)==4, hour = 0;, mm = str2num(PBhhmmss(1:2));,
-        elseif isempty(dec) & length(PBhhmmss)==3, hour = 0;, mm = str2num(PBhhmmss(1));,
-        else hour = 0; mm = 0;
-        end
-        SWIFT.time = datenum( str2num(PByear), str2num(PBMonth), str2num(PBDay), hour, mm, 0);
-        SWIFT.date = [PBDay PBMonth PByear];
-        SWIFT.airtemp = fread(fid,1,'float');
-        SWIFT.airtempstddev = fread(fid,1,'float');
-        SWIFT.airpres = fread(fid,1,'float');
-        SWIFT.airpresstddev = fread(fid,1,'float');
-        SWIFT.driftdirT = fread(fid,1,'float');
-        SWIFT.driftdirTstddev = fread(fid,1,'float');
-        SWIFT.driftspd = fread(fid,1,'float');
-        SWIFT.driftspdstddev = fread(fid,1,'float');
-        if PBlat == 0, % if no GPS for AirMar PB200, winddir is relative, not true
-            SWIFT.winddirR = SWIFT.winddirT;
-            SWIFT.winddirT = NaN;
-        else
-            SWIFT.winddirR = NaN;
-            SWIFT.winddirRstddev = NaN;
-        end
-        if ~isempty(SWIFTversion) && SWIFTversion==3,
-            SWIFT.metheight = 0.84; % height of measurement, meters
-        elseif ~isempty(SWIFTversion) && SWIFTversion==4,
-            SWIFT.metheight = 0.4; % height of measurement, meters
-        else
-            SWIFT.metheight = 0.4; % height of measurement, meters
-        end
-        
-        
-        
     elseif type == 11 & size > 0, % RM Young 8100 Sonic Anemometer
         disp('reading Sonic Anemometer results')
         SWIFT.windustar = fread(fid,1,'float'); % wind friction velocity
@@ -364,7 +359,7 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second);
         
-     
+        
     elseif type == 51 & size > 0, % microSWIFT, size should be 237 bytes
         disp('reading microSWIFT (light)')
         SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
@@ -411,6 +406,20 @@ while 1
     
 end
 fclose(fid);
+
+%% apply backup positions from Airmar PB200, if needed
+
+if ~isfield(SWIFT,'lat'), % if no IMU, use this one
+    disp('Using Airmar positions')
+    SWIFT.lat = PBlat;
+    SWIFT.lon = PBlon;
+end
+if isfield(SWIFT,'lat') & ( SWIFT.lat == 0 | isempty(SWIFT.lat) ), % if IMU did not give position, use this one
+    disp('Using Airmar positions')
+    SWIFT.lat = PBlat;
+    SWIFT.lon = PBlon;
+else
+end
 
 %% recalc ustar from wind spectra and change indicator for no windstress from 9999 to NaN
 
