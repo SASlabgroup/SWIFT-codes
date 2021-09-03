@@ -33,7 +33,7 @@ elseif  size(IDs,2) == 3 && ischar(IDs), % enforce three digit strings for micro
     SWIFTtype = 'micro'
     allbatterylevels = NaN(1,size(IDs,1)); % initialize battery array
     lasttime =  NaN(1,size(IDs,1)); % initialize time array
-    lastlat = NaN(1,lsize(IDs,1)); % initialize
+    lastlat = NaN(1,size(IDs,1)); % initialize
     lastlon = NaN(1,size(IDs,1)); % initialize
     
 else
