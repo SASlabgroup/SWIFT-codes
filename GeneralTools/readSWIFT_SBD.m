@@ -122,13 +122,21 @@ while 1
         PBlat = num2str(fread(fid,1,'float')); % latitude
         if length(PBlat)>5,
             dec = find( PBlat == '.');
-            PBlat = str2num( PBlat([1:(dec-3)]) ) + str2num( PBlat([(dec-2):end]) ) / 60;  % parsing might not be robust
+            if dec>4,
+                PBlat = str2num( PBlat([1:(dec-3)]) ) + str2num( PBlat([(dec-2):end]) ) / 60;  % parsing might not be robust
+            else
+                PBlat = NaN;
+            end
         end
         PBlon = num2str(fread(fid,1,'float'));  % longitude
         if length(PBlon)>5,
             dec = find( PBlon == '.');
-            PBlon = str2num( PBlon([1:(dec-3)]) ) + str2num( PBlon([(dec-2):end]) ) / 60;  % parsing might not be robust, esp +/-
-            PBlon = - PBlon;  % assume western hemisphere (airmar telemetry is ambiguous) 
+            if dec>4,
+                PBlon = str2num( PBlon([1:(dec-3)]) ) + str2num( PBlon([(dec-2):end]) ) / 60;  % parsing might not be robust, esp +/-
+                PBlon = - PBlon;  % assume western hemisphere (airmar telemetry is ambiguous) 
+            else
+                PBlon = NaN;
+            end
         end
         PByear = num2str(fread(fid,1,'uint32')); % year
         PBMonth = num2str(fread(fid,1,'uint32')); % month
