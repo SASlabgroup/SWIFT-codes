@@ -19,6 +19,9 @@ if ~isempty(GPSflist)
         GPS.u = sog .* sind(cog);
         GPS.v = sog .* cosd(cog);
         GPS.z = altitude; 
+        shortest = min( [ length(GPS.u), length(GPS.v), length(GPS.z) ] );
+        GPS.u(shortest:end) = []; GPS.v(shortest:end) = []; GPS.z(shortest:end) = [];
+        bad = isnan(GPS.z);
         save([GPSflist(gi).name(1:end-4)],'GPS')
         
         GPSsamplingrate = length(GPS.time)./((max(GPS.time)-min(GPS.time))*24*3600); % Hz
@@ -87,7 +90,9 @@ if ~isempty(GPSflist)
             GPSresults(gi).wavespectra.b1 = b1;
             GPSresults(gi).wavespectra.a2 = a2;
             GPSresults(gi).wavespectra.b2 = b2;
-            GPSresults(gi).time = median(GPS.time); % ** not a full time stamp ***
+            GPSresults(gi).time = median(GPS.time); 
+            GPSresults(gi).lat = median(GPS.lat); 
+            GPSresults(gi).lon = median(GPS.lon); 
             GPSresults(gi).ID =  [GPSflist(gi).name(11:13)];
             
             figure(7), clf
@@ -99,6 +104,7 @@ if ~isempty(GPSflist)
             print('-dpng',[ GPSflist(gi).name(1:end-4) '_spectra.png'])
             
         else
+            disp([num2str(gi) ', GPS record not long enough'])
         end
         
     end
@@ -120,7 +126,12 @@ for ii = 1:length(IMUflist)
         
         IMU = readmicroSWIFT_IMU([IMUflist(ii).name], false);
         
-        IMUsamplingrate =  length(IMU.acc)./((max(IMU.time)-min(IMU.time))*24*3600); % Hz
+        IMUsamplingrate =  length(IMU.acc)./((max(IMU.time)-min(IMU.time))*24*3600); % usually 12 Hz
+        IMU.acc(end,:) = []; % trim last entry
+        IMU.mag(end,:) = []; % trim last entry
+        IMU.gyro(end,:) = []; % trim last entry
+        IMU.clock(end) = [];  % trim last entry
+        IMU.time(end) = [];   % trim last entry
         
         %% plot IMU raw data
         
@@ -191,14 +202,39 @@ for ii = 1:length(IMUflist)
             
             
         else
+            disp([nums2tr(ii) ', IMU not processed'])
         end
         
     end
     
 end
 
-save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:26) '_results'],'GPSresults','IMUresults');
+save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_results'],'GPSresults','IMUresults');
 
+%% summary plot
+
+skip = 4; % bursts to skip
+index = 0; % cummulative index for raw heave
+figure(10), clf
+for bi = (1+skip):length(IMUresults),
+    matchburst = find(abs(IMUresults(bi).time-[GPSresults.time]) < 10/60/24);
+    if ~isempty(matchburst) && length(matchburst)==1,
+        subplot(2,2,1),
+        plot(GPSresults(matchburst).lon,GPSresults(matchburst).lat,'.','markersize',18), hold on
+        ylabel('lat'),xlabel('lon')
+        subplot(2,2,2),
+        loglog(IMUresults(bi).wavespectra.freq, IMUresults(bi).wavespectra.energy,'-','linewidth',2), hold on
+        ylabel('Energy [m^2/Hz]'), xlabel('f [Hz]')
+        subplot(2,1,2),%subplot(2,length(IMUresults),bi+length(IMUresults)),
+        plot(index+[1:length(IMUresults(bi).z)], IMUresults(bi).z), hold on
+        index = index + length(IMUresults(bi).z);
+    end
+end
+set(gca,'YLim',[-1 1])
+ylabel('heave [m]')
+xlabel('index []')
+
+print('-dpng',[IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_map_spectra_heave.png']);
 
 %% EMBEDDED RC FILTER function (high pass filter) %%
 
