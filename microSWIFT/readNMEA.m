@@ -186,6 +186,11 @@ elseif preferedsentence == 'GLL' & glllength>0,
     end
 end
 
+%% interpolate to full timestamps (if avail from RMC)
+if preferedsentence ~= 'RMC' & rmclength>0,
+    newtime = interp1(rmclinenum,rmctime,timelinenum,'linear','extrap');
+    time = newtime;
+end
 
 %% interpolate to depth readings
 if ~isempty(depth) & ~isempty(time),
