@@ -4,6 +4,8 @@
 
 clear all,
 
+useAHRStoolbox = false;
+
 %%% GPS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 GPSflist = dir('*GPS*.dat')
@@ -18,7 +20,7 @@ if ~isempty(GPSflist)
         GPS.time = time;
         GPS.u = sog .* sind(cog);
         GPS.v = sog .* cosd(cog);
-        GPS.z = altitude; 
+        GPS.z = altitude;
         shortest = min( [ length(GPS.u), length(GPS.v), length(GPS.z) ] );
         GPS.u(shortest:end) = []; GPS.v(shortest:end) = []; GPS.z(shortest:end) = [];
         bad = isnan(GPS.z);
@@ -72,9 +74,9 @@ if ~isempty(GPSflist)
             u = RCfilter(GPS.u, RC, GPSsamplingrate);
             v = RCfilter(GPS.v, RC, GPSsamplingrate);
             x = cumtrapz(u)*(1/GPSsamplingrate);
-            y = cumtrapz(v)*(1/GPSsamplingrate);       
+            y = cumtrapz(v)*(1/GPSsamplingrate);
             x = detrend(x);
-            y = detrend(y);           
+            y = detrend(y);
             x = RCfilter(x, RC, GPSsamplingrate);
             y = RCfilter(y, RC, GPSsamplingrate);
             [Exx fgps] = pwelch(x,[],[],[], GPSsamplingrate );
@@ -90,9 +92,9 @@ if ~isempty(GPSflist)
             GPSresults(gi).wavespectra.b1 = b1;
             GPSresults(gi).wavespectra.a2 = a2;
             GPSresults(gi).wavespectra.b2 = b2;
-            GPSresults(gi).time = median(GPS.time); 
-            GPSresults(gi).lat = median(GPS.lat); 
-            GPSresults(gi).lon = median(GPS.lon); 
+            GPSresults(gi).time = median(GPS.time);
+            GPSresults(gi).lat = median(GPS.lat);
+            GPSresults(gi).lon = median(GPS.lon);
             GPSresults(gi).ID =  [GPSflist(gi).name(11:13)];
             
             figure(7), clf
@@ -109,7 +111,7 @@ if ~isempty(GPSflist)
         
     end
     
-    save([GPSflist(end).name(1:13) '_' GPSflist(end).name(19:26) '_results'],'GPSresults');
+    save([GPSflist(end).name(1:13) '_' GPSflist(end).name(19:27) '_results'],'GPSresults');
     
 else
     GPSresults = [];
@@ -156,22 +158,28 @@ for ii = 1:length(IMUflist)
         if length(IMU.clock) == length(IMU.acc), % check data was read properly
             
             %% post-processing in body reference from (simple)
+            
             [Ezz fzz] = pwelch(IMU.acc(:,3),[],[],[],IMUsamplingrate);
             Ezz = Ezz ./ ( (2*pi*fzz).^4);
             Hs_simple = 4 * sqrt( nansum( Ezz( fzz > 0.05 & fzz < 0.5 ) ) * (fzz(3)-fzz(2)));
             
             %%  post-processing with Matlab navigation toolbox
             
-            ENU = microSWIFT_AHRSfilter( IMU );
-            
-            [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = XYZwaves(ENU.xyz(:,1), ENU.xyz(:,2), ENU.xyz(:,3), IMUsamplingrate) ;
-            
+            if useAHRStoolbox,
+                
+                ENU = microSWIFT_AHRSfilter( IMU );
+                
+                [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = XYZwaves(ENU.xyz(:,1), ENU.xyz(:,2), ENU.xyz(:,3), IMUsamplingrate) ;
+                
             %% onboard processing with custom code (beta)
-            
-            mxo = 60; myo = 60; mzo = 120; % magnetometer offsets
-            Wd = .5;  % weighting in complimentary filter, 0 to 1
-            %[ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = ...
-            %    processIMU(IMU.acc(:,1), IMU.acc(:,2), IMU.acc(:,3), IMU.gyro(:,1), IMU.gyro(:,2), IMU.gyro(:,3), IMU.mag(:,1), IMU.mag(:,2), IMU.mag(:,3), mxo, myo, mzo, Wd, IMUsamplingrate);
+                
+            else
+                mxo = 60; myo = 60; mzo = 120; % magnetometer offsets
+                Wd = .5;  % weighting in complimentary filter, 0 to 1
+                [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = ...
+                    processIMU(IMU.acc(:,1), IMU.acc(:,2), IMU.acc(:,3), IMU.gyro(:,1), IMU.gyro(:,2), IMU.gyro(:,3), IMU.mag(:,1), IMU.mag(:,2), IMU.mag(:,3), mxo, myo, mzo, Wd, IMUsamplingrate);
+                ENU.xyz = NaN(length(IMU.acc(:,1)),3); % these displacements are calculated in processIMU, just not stored
+            end
             
             %% store results in SWIFT structure
             
@@ -213,7 +221,7 @@ save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_results'],'GPSres
 
 %% summary plot
 
-skip = 4; % bursts to skip
+skip = 1; % bursts to skip
 index = 0; % cummulative index for raw heave
 figure(10), clf
 for bi = (1+skip):length(IMUresults),
@@ -234,7 +242,7 @@ set(gca,'YLim',[-1 1])
 ylabel('heave [m]')
 xlabel('index []')
 
-print('-dpng',[IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_map_spectra_heave.png']);
+%print('-dpng',[IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_map_spectra_heave.png']);
 
 %% EMBEDDED RC FILTER function (high pass filter) %%
 
