@@ -1,4 +1,6 @@
 % script to explore microSWIFT raw data
+% intended to be run in directory with mission data from a single buoy
+% loops thru GPS files and then IMU files; reading, plotting, processing each
 %
 % J. Thomson, 10/2020
 
