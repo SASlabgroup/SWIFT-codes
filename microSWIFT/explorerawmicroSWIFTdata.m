@@ -4,29 +4,42 @@
 
 clear all,
 
-useAHRStoolbox = false;
+useAHRStoolbox = false; % binary flag to use Navigation toolbox for AHRS (required toolbox, Matlab 2019 and later)
+readraw = false;  % binary flag to force re-read of raw txt data (otherwise use converted mat file)
 
 %%% GPS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-GPSflist = dir('*GPS*.dat')
+GPSflist = dir('*GPS*.dat');
 
 if ~isempty(GPSflist)
     
     for gi = 1:length(GPSflist)
         
-        [ lat lon sog cog depth time altitude] = readNMEA([GPSflist(gi).name]);
-        GPS.lat = lat;
-        GPS.lon = lon;
-        GPS.time = time;
-        GPS.u = sog .* sind(cog);
-        GPS.v = sog .* cosd(cog);
-        GPS.z = altitude;
-        shortest = min( [ length(GPS.u), length(GPS.v), length(GPS.z) ] );
-        GPS.u(shortest:end) = []; GPS.v(shortest:end) = []; GPS.z(shortest:end) = [];
-        bad = isnan(GPS.z);
-        save([GPSflist(gi).name(1:end-4)],'GPS')
+        disp(['GPS file ' num2str(gi) ' of ' num2str(length(GPSflist))])
         
-        GPSsamplingrate = length(GPS.time)./((max(GPS.time)-min(GPS.time))*24*3600); % Hz
+        matfile = dir([GPSflist(gi).name(1:end-4) '.mat']);
+        
+        if readraw | isempty(matfile),
+            [ lat lon sog cog depth time altitude] = readNMEA([GPSflist(gi).name]);
+            GPS.lat = lat;
+            GPS.lon = lon;
+            GPS.sog = sog;
+            GPS.time = time;
+            GPS.u = sog .* sind(cog);
+            GPS.v = sog .* cosd(cog);
+            GPS.z = altitude;
+            shortest = min( [ length(GPS.u), length(GPS.v), length(GPS.z) ] );
+            GPS.u(shortest:end) = []; GPS.v(shortest:end) = []; GPS.z(shortest:end) = [];
+            bad = isnan(GPS.z);
+            save([GPSflist(gi).name(1:end-4)],'GPS')
+            
+            GPSsamplingrate = length(GPS.time)./((max(GPS.time)-min(GPS.time))*24*3600); % Hz
+            save([GPSflist(gi).name(1:end-4) '.mat'],'GPS*');
+            
+        else
+            load([GPSflist(gi).name(1:end-4) '.mat']);
+            disp('loading existing mat file')
+        end
         
         %% plot raw GPS data
         
@@ -56,12 +69,12 @@ if ~isempty(GPSflist)
         if length(GPS.time) > 1024,
             
             % raw position spectra
-            [Elat fgps] = pwelch(detrend(deg2km(lat)*1000),[],[],[], GPSsamplingrate );
-            [Elon fgps] = pwelch(detrend(deg2km(lon,cosd(median(lat))*6371)*1000),[],[],[], GPSsamplingrate );
+            [Elat fgps] = pwelch(detrend(deg2km(GPS.lat)*1000),[],[],[], GPSsamplingrate );
+            [Elon fgps] = pwelch(detrend(deg2km(GPS.lon,cosd(median(GPS.lat))*6371)*1000),[],[],[], GPSsamplingrate );
             [Ezz fgps] = pwelch(detrend(GPS.z),[],[],[], GPSsamplingrate );
             
             % raw velocity spectra (sanity check)
-            [Esog fgps] = pwelch(detrend(sog),[],[],[], GPSsamplingrate );
+            [Esog fgps] = pwelch(detrend(GPS.sog),[],[],[], GPSsamplingrate );
             [Euu fgps] = pwelch(detrend(GPS.u),[],[],[], GPSsamplingrate );
             [Evv fgps] = pwelch(detrend(GPS.v),[],[],[], GPSsamplingrate );
             
@@ -120,21 +133,31 @@ end
 
 %%% IMU %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-IMUflist = dir('*IMU*.dat')
+IMUflist = dir('*IMU*.dat');
 
 for ii = 1:length(IMUflist)
     
+    disp(['IMU file ' num2str(ii) ' of ' num2str(length(IMUflist))])
+    
     if IMUflist(ii).bytes > 0,
         
-        IMU = readmicroSWIFT_IMU([IMUflist(ii).name], false);
+        matfile = dir([IMUflist(ii).name(1:end-4) '.mat']);
         
-        IMUsamplingrate =  length(IMU.acc)./((max(IMU.time)-min(IMU.time))*24*3600); % usually 12 Hz
-        IMU.acc(end,:) = []; % trim last entry
-        IMU.mag(end,:) = []; % trim last entry
-        IMU.gyro(end,:) = []; % trim last entry
-        IMU.clock(end) = [];  % trim last entry
-        IMU.time(end) = [];   % trim last entry
-        
+        if readraw | isempty(matfile),
+            
+            IMU = readmicroSWIFT_IMU([IMUflist(ii).name], false);
+            
+            IMUsamplingrate =  length(IMU.acc)./((max(IMU.time)-min(IMU.time))*24*3600); % usually 12 Hz
+            IMU.acc(end,:) = []; % trim last entry
+            IMU.mag(end,:) = []; % trim last entry
+            IMU.gyro(end,:) = []; % trim last entry
+            IMU.clock(end) = [];  % trim last entry
+            IMU.time(end) = [];   % trim last entry
+            save([IMUflist(ii).name(1:end-4) '.mat'],'IMU*')
+        else
+            load([IMUflist(ii).name(1:end-4) '.mat'])
+            disp('loading existing mat file')
+        end
         %% plot IMU raw data
         
         figure(1),
@@ -171,14 +194,19 @@ for ii = 1:length(IMUflist)
                 
                 [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = XYZwaves(ENU.xyz(:,1), ENU.xyz(:,2), ENU.xyz(:,3), IMUsamplingrate) ;
                 
-            %% onboard processing with custom code (beta)
+                %% onboard processing with custom code (beta)
                 
             else
                 mxo = 60; myo = 60; mzo = 120; % magnetometer offsets
                 Wd = .5;  % weighting in complimentary filter, 0 to 1
-                [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = ...
-                    processIMU(IMU.acc(:,1), IMU.acc(:,2), IMU.acc(:,3), IMU.gyro(:,1), IMU.gyro(:,2), IMU.gyro(:,3), IMU.mag(:,1), IMU.mag(:,2), IMU.mag(:,3), mxo, myo, mzo, Wd, IMUsamplingrate);
-                ENU.xyz = NaN(length(IMU.acc(:,1)),3); % these displacements are calculated in processIMU, just not stored
+                [x, y, z, roll, pitch, yaw, heading] = ... 
+                    IMUtoXYZ(IMU.acc(:,1), IMU.acc(:,2), IMU.acc(:,3), IMU.gyro(:,1), IMU.gyro(:,2), ... 
+                        IMU.gyro(:,3), IMU.mag(:,1), IMU.mag(:,2), IMU.mag(:,3), mxo, myo, mzo, Wd, IMUsamplingrate);
+                [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = XYZwaves(x, y, z, IMUsamplingrate) ;
+                clear ENU
+                ENU.xyz(:,1) = x;
+                ENU.xyz(:,2) = y;
+                ENU.xyz(:,3) = z;
             end
             
             %% store results in SWIFT structure
@@ -194,6 +222,8 @@ for ii = 1:length(IMUflist)
             IMUresults(ii).wavespectra.b2 = b2;
             IMUresults(ii).wavespectra.check = check;
             
+            IMUresults(ii).x = ENU.xyz(:,1); % raw wave displacements
+            IMUresults(ii).y = ENU.xyz(:,2); % raw wave displacements
             IMUresults(ii).z = ENU.xyz(:,3); % raw wave displacements
             
             IMUresults(ii).time = median(IMU.time(:)); %datenum(IMU.clock((round(end/2))));
@@ -217,14 +247,20 @@ for ii = 1:length(IMUflist)
     
 end
 
-save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_results'],'GPSresults','IMUresults');
+if useAHRStoolbox
+    save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_results_simple'],'GPSresults','IMUresults');
+else
+    save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_results_AHRS'],'GPSresults','IMUresults');
+end
 
 %% summary plot
 
-skip = 1; % bursts to skip
+skip = 0; % bursts to skip (beginning) 
+crop = 0; % bursts to skip (end)
+
 index = 0; % cummulative index for raw heave
 figure(10), clf
-for bi = (1+skip):length(IMUresults),
+for bi = (1+skip):(length(IMUresults)-crop),
     matchburst = find(abs(IMUresults(bi).time-[GPSresults.time]) < 10/60/24);
     if ~isempty(matchburst) && length(matchburst)==1,
         subplot(2,2,1),
@@ -238,11 +274,14 @@ for bi = (1+skip):length(IMUresults),
         index = index + length(IMUresults(bi).z);
     end
 end
-set(gca,'YLim',[-1 1])
+set(gca,'YLim',[-2 2])
 ylabel('heave [m]')
 xlabel('index []')
-
-%print('-dpng',[IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_map_spectra_heave.png']);
+if useAHRStoolbox
+    print('-dpng',[IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_map_spectra_AHRSheave.png']);
+else
+    print('-dpng',[IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_map_spectra_simpleheave.png']);
+end
 
 %% EMBEDDED RC FILTER function (high pass filter) %%
 
