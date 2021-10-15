@@ -211,7 +211,7 @@ end
 
 %% Figure 3: Wave Spectra Plot
 % Available for all SWIFTs, using either Microstrain or SBG inertial motion units with GPS
-
+ t=[];
 if isfield(SWIFT,'wavespectra')
     figure(3), clf;
     
