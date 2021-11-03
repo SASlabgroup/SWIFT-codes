@@ -36,7 +36,7 @@ if ~isempty(GPSflist)
             save([GPSflist(gi).name(1:end-4)],'GPS')
             
             GPSsamplingrate = length(GPS.time)./((max(GPS.time)-min(GPS.time))*24*3600); % Hz
-            save([GPSflist(gi).name(1:end-4) '.mat'],'GPS*');
+            save([GPSflist(gi).name(1:end-4) '.mat'],'GPS','GPSsamplingrate');
             
         else
             load([GPSflist(gi).name(1:end-4) '.mat']);
@@ -58,7 +58,7 @@ if ~isempty(GPSflist)
         end
         print('-dpng',[ GPSflist(gi).name(1:end-4) '_speeds.png'])
         
-        if ~isempty(GPS.z) && length(GPS.z)>256,
+        if ~isempty(GPS.z) && length(GPS.z)>256 && all(~isnan(detrend(GPS.z))),
             figure(6), clf
             subplot(1,2,1), plot(GPS.z), xlabel('index'), ylabel('elevation [m]'),
             subplot(1,2,2), pwelch(detrend(GPS.z),[],[],[], GPSsamplingrate ); set(gca,'Xscale','log')
@@ -68,7 +68,7 @@ if ~isempty(GPSflist)
         
         %% GPS post-processing
         
-        if length(GPS.time) > 1024,
+        if length(GPS.time) > 2048,
             
             % raw position spectra
             [Elat fgps] = pwelch(detrend(deg2km(GPS.lat)*1000),[],[],[], GPSsamplingrate );
@@ -180,7 +180,7 @@ for ii = 1:length(IMUflist)
         
         % IMU processing
         
-        if length(IMU.clock) == length(IMU.acc), % check data was read properly
+        if length(IMU.clock) == length(IMU.acc) && length(IMU.clock)/IMUsamplingrate > 512, % check data was read properly
             
             %% post-processing in body reference from (simple)
             
@@ -242,7 +242,7 @@ for ii = 1:length(IMUflist)
             
             
         else
-            disp([nums2tr(ii) ', IMU not processed'])
+            disp([num2str(ii) ', IMU not processed'])
         end
         
     end
@@ -276,7 +276,7 @@ for bi = (1+skip):(length(IMUresults)-crop),
         index = index + length(IMUresults(bi).z);
     end
 end
-set(gca,'YLim',[-2 2])
+set(gca,'YLim',[-3 3])
 ylabel('heave [m]')
 xlabel('index []')
 if useAHRStoolbox
