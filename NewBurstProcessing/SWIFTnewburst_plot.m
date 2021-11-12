@@ -5,7 +5,7 @@
 
 clear all, close all
 
-filename = 'SWIFT25_16Jun2021_highres_dt30s.mat';
+filename = 'SWIFT22_12Jun2021_highres_dt30s.mat';
 load(filename)
 nplots = 3;
 
@@ -32,6 +32,7 @@ t = [SWIFT.time];
 for si=1:length(SWIFT),
     z = SWIFT(si).signature.profile.z;
     current(si,:) = (SWIFT(si).signature.profile.east.^2 + SWIFT(si).signature.profile.north.^2).^.5;
+    w(si,:) = SWIFT(si).signature.profile.wbar;
     depth(si) = SWIFT(si).signature.profile.depth;
 end
 subplot(nplots,1,3)
@@ -42,6 +43,21 @@ set(gca,'YDir','reverse')
 set(gca,'FontSize',14,'fontweight','demi')
 datetick
 ylabel('z [m]')
-cb = colorbar; cb.Label.String = '[m/s]';
+cb = colorbar; cb.Label.String = '|u| [m/s]';
 
-print('-dpng',[filename '_alongtrack.png'])
+print('-dpng',[filename '_alongtrack_ubar.png'])
+
+pause(5)
+
+subplot(nplots,1,3)
+pcolor(t,z,w'), shading flat
+hold on
+plot(t,depth,'k.','markersize',14)
+set(gca,'YDir','reverse')
+set(gca,'FontSize',14,'fontweight','demi')
+datetick
+ylabel('z [m]')
+cb = colorbar; cb.Label.String = 'w [m/s]';
+caxis([-.25 .25])
+
+print('-dpng',[filename '_alongtrack_wbar.png'])
