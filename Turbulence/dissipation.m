@@ -61,13 +61,13 @@ for j=fliplr(1:length(z)),%[1 2 5 10 15 20:20:120],%round(linspace(1,length(z),1
     %% need to limit r values used to be within internial subrange
     
     % scales can't be too big, but must have a least 6 points
-    maxr = 6*median(diff(z));
+    maxr = 5*median(diff(z));
 
     % smallest r's can be noise contaminated
     minr = 1*median(diff(z));
 
     % option for double sided fit using abs(r)
-    %r = abs(r);
+    r = abs(r);
 
     %% fit structure to r^2/3
     
@@ -101,9 +101,9 @@ for j=fliplr(1:length(z)),%[1 2 5 10 15 20:20:120],%round(linspace(1,length(z),1
             % show fit, if plog flag set to true
             if plots==1,
                 Dplot = plot( r(j,goodpts), D(j,goodpts),'.','color',cmap(round(j./length(z)*64),:),'markersize',14,'linewidth',1.5);
-                drawnow, hold on
+                hold on
                 fitplot = plot( r(j,goodpts), A(j).*r(j,goodpts).^(2/3)+ N(j),'--','color',cmap(round(j./length(z)*64),:),'markersize',14,'linewidth',1.5);
-                drawnow, hold on
+                hold on
                 if j==length(z),
                     set(gca,'FontSize',14,'FontWeight','demi'),
                     Dplot = gca;
@@ -129,7 +129,8 @@ epsilon(posA) = ( A(posA) ./ Cvsq ).^(3/2);  % m^2/s^3
 
 if plots==1,
     set(gca,'fontsize',16,'fontweight','demi')
-    colorbar('peer',gca,'EastOutside','YTickLabel',linspace(min(z),max(z),5),'Ytick',[0:.25:1],'ydir','reverse')
+    cb=colorbar('peer',gca,'EastOutside','YTickLabel',linspace(min(z),max(z),5),'Ytick',[0:.25:1],'ydir','reverse');
+    cb.Label.String='z [m]';
     title('Structure function fit colored by range bin')
     xlabel('r [m]')
     ylabel('D [m^/s^2]')
