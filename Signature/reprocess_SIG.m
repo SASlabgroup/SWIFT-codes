@@ -18,7 +18,7 @@ clear all; close all
 tic
 
 parentdir = pwd;
-readraw = false; % reading the binaries doubles the run time
+readraw = true; % reading the binaries doubles the run time
 makesmoothwHR = false; % make (and save) a smoothed, but not averaged w
 plotflag = true;
 altimetertrim = true;
@@ -69,11 +69,12 @@ for di = 1:length(dirlist),
             %% reprocess HR (burst) data
             
             z = xcdrdepth + burst.Blanking + burst.CellSize * [1:size(burst.VelocityData,2)];
-            dt = range(burst.time)./length(burst.time)*24*3600;
+            dt = (max(burst.time)-min(burst.time))./length(burst.time)*24*3600;
             fs = 1/dt;
             windowlength=64;
             
             % quality control burst (HR) velocity data
+            clear wdespiked;
             wraw = burst.VelocityData;
             for HRbin=1:size(burst.VelocityData,2)
                 wdespiked(:,HRbin) = filloutliers( wraw(:,HRbin), 'linear');
@@ -254,8 +255,10 @@ for di = 1:length(dirlist),
             
             %% echo sounder processing
             
-            echo.z = xcdrdepth + echo.Blanking + echo.CellSize .* [1:size([echo.EchoSounder],2)];
-            rescaleacc = -9.8/nanmean(echo.Accelerometer(:,3));
+            if ~isempty(echo)
+                echo.z = xcdrdepth + echo.Blanking + echo.CellSize .* [1:size([echo.EchoSounder],2)];
+                rescaleacc = -9.8/nanmean(echo.Accelerometer(:,3));
+            end
 
             if ~isempty(echo) & plotflag
                 
