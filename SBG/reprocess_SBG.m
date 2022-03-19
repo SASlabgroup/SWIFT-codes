@@ -7,7 +7,7 @@
 %                   and replace SWIFT data structure results.
 clear all, close all
 
-plotflag = false;
+plotflag = true;
 
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 %parentdir = ('/Volumes/Data/Newport/SWIFT19_15-18Oct2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
@@ -15,6 +15,7 @@ parentdir = pwd;  % change this to be the parent directory of all raw raw data (
 readfromconcat = 0; % force starting with original onboard results
 useGPSpositions = true; % option instead of GPS velocities for alt spectra
 secondsofdata = 6*60;  % seconds of raw data to process (from the end of each burst, not beginning)
+interpf = false; % binary flag to interp to original (onboard) frequency bands
 
 %% load existing SWIFT structure created during concatSWIFT_processed, replace only the new wave results
 cd(parentdir);
@@ -103,18 +104,27 @@ for di = 1:length(dirlist),
             
             
             % interp to the original freq bands
-            E = interp1(newf,newE,f);
-            altE = interp1(altf,altE,f);
+            if interpf
+                E = interp1(newf,newE,f);
+                altE = interp1(altf,altE,f);
+                a1 = interp1(newf,newa1,f);
+                b1 = interp1(newf,newb1,f);
+                a2 = interp1(newf,newa2,f);
+                b2 = interp1(newf,newb2,f);
+            else
+                E = newE;
+                f = newf;
+                a1 = newa1;
+                b1 = newb1;
+                a2 = newa2;
+                b2 = newb2;
+            end
+            
             if useGPSpositions
                 altE = interp1(fgps, Elat + Elon, f);
             end
             
-            %altE = interp1(altf,altE,f);
-            a1 = interp1(newf,newa1,f);
-            b1 = interp1(newf,newb1,f);
-            a2 = interp1(newf,newa2,f);
-            b2 = interp1(newf,newb2,f);
-            
+           
             % take reciprocal of wave directions (to make result direction FROM)
             dirto = newDp;
             if dirto >=180,
@@ -135,6 +145,7 @@ for di = 1:length(dirlist),
             SWIFT(tindex).peakwavedirT = newDp;
             SWIFT(tindex).wavespectra.energy = E;
             SWIFT(tindex).wavespectra.energy_alt = altE;
+            SWIFT(tindex).wavespectra.freq = f;
             SWIFT(tindex).wavespectra.a1 = a1;
             SWIFT(tindex).wavespectra.b1 = b1;
             SWIFT(tindex).wavespectra.a2 = a2;

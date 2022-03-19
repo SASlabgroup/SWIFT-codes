@@ -36,7 +36,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = SBGwaves(u,v,heave,fs)
 %% fixed parameters
 wsecs = 256;   % window length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
-maxf = .5;       % frequency cutoff for telemetry Hz
+maxf = 2;       % frequency cutoff for telemetry Hz
 recip = true;   % flip wave directions (but not moments)
 RC = 3.5;   % RC fitler... cuttoff freq is 1/(2*pi*RC), so nominal value is RC = 3.5
 fmin = 0.05;  % lower frequency limit (usually 0.05 Hz)
@@ -265,26 +265,24 @@ end
 
 
 %% prune high frequency results
-% E( f > maxf ) = [];
-% dir( f > maxf ) = [];
-% % spread( f > maxf ) = [];
-% a1( f > maxf ) = [];
-% b1( f > maxf ) = [];
-% a2( f > maxf ) = [];
-% b2( f > maxf ) = [];
-% check( f > maxf ) = [];
-% f( f > maxf ) = [];
+E( f > maxf ) = [];
+dir( f > maxf ) = [];
+a1( f > maxf ) = [];
+b1( f > maxf ) = [];
+a2( f > maxf ) = [];
+b2( f > maxf ) = [];
+check( f > maxf ) = [];
+f( f > maxf ) = [];
 
 % Mike S: Prune to exactly 42 frequency bands - assumes fs = 5 Hz!!
-E = E(1:42);
-dir = dir(1:42);
-% spread( f > maxf ) = [];
-a1 = a1(1:42);
-b1 = b1(1:42);
-a2 = a2(1:42);
-b2 = b2(1:42);
-check = check(1:42);
-f = f(1:42);
+% E = E(1:42);
+% dir = dir(1:42);
+% a1 = a1(1:42);
+% b1 = b1(1:42);
+% a2 = a2(1:42);
+% b2 = b2(1:42);
+% check = check(1:42);
+% f = f(1:42);
 
 else % if not enough points or sufficent sampling rate or data, give 9999
   
