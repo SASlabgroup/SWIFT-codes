@@ -25,7 +25,7 @@ fixspectra = false; % binary flag to redact low freq wave spectra
 
 minwaveheight = 0; % minimum wave height in data screening
 
-minsalinity = 0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 25; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 1.5;  % m/s, for screening when buoy on deck of boat
 

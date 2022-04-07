@@ -18,24 +18,24 @@
 %
 clear; close all
 
-fullprocess = false; % option to force concatSWIFT_offloadedSDcard, reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
+fullprocess = true; % option to force concatSWIFT_offloadedSDcard, reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
 applyvelreference = true; % apply drift correction to signature velocity data
 rmwaves = true; % remove wave products (for short dt)
 
-dt=10; %timestep to average over in seconds
+dt=30; %timestep to average over in seconds
 num=floor(512/dt); % number of new bursts per normal burst (512 s)
 
 maxsalinity = 35; % for QC
-minsalinity = 5; % for QC
+minsalinity = 25; % for QC
 percentdry = .1; % maximum precent dry to allow when retaining a new burst, increase to keep more
     % also relax the QC in compileSWIFT_SBDtelemetry to keep more partial bursts
 mincor = 0; % for QC when reprocessing turbulence data
 maxdriftspd = 2.5;
 
-parentdir = '/Volumes/USRSdata/MobileBay/SWIFT/';  % change to suit data
+parentdir = '/Volumes/NORSE/CoastalFronts_Pilot_Apr2022/';  % change to suit data
 cd(parentdir)
 
-SW_list=dir('SWIFT*09Jun2021'); % list of SWIFT directories to reprocess
+SW_list=dir('SWIFT*06Apr2022'); % list of SWIFT directories to reprocess
 
 for sn=1:length(SW_list);
     disp(['SWIFT ' num2str(sn) ' of ' num2str(length(SW_list))])
@@ -598,7 +598,7 @@ for sn=1:length(SW_list);
                 rawVel(exclude)=NaN;
                 
                 [tke , epsilon , residual, A, Aerror, N, Nerror] = ...
-                    dissipation_simple(rawVel', z_SIGhr_original, size(rawVel,1), 0, zeros(size(z_SIGhr_original)));
+                    dissipation(rawVel', z_SIGhr_original, size(rawVel,1), 0, zeros(size(z_SIGhr_original)));
                 %warning('off','last')
                 
                 
