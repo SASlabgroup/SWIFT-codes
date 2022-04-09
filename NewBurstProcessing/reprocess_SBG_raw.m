@@ -9,9 +9,8 @@
 % clear all, close all
 
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
-%parentdir = ('/Volumes/Data/Newport/SWIFT19_15-18Oct2016');  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
+%parentdir = ('/Volumes/Data/Newport/SWIFT19_15-18Oct2016');  % change this to be the parent directory of all raw raw data 
 
-readfromconcat = 1; % force starting with original onboard results 
 secondsofdata = 8*60;  % seconds of raw data to process (from the end of each burst, not beginning)
 
 %% load existing SWIFT structure created during concatSWIFTv3_processed, replace only the new wave results
@@ -51,9 +50,11 @@ for di = 1:length(dirlist),
         end
         
         %% find matching time index
-        alltime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour, sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
+        alltime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour, ... 
+            sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
         % use median to get burst time, because first entries are bad (no satellites acquired yet)
         time = nanmedian(alltime);
+        length(SWIFT)
         % match time to SWIFT structure and replace values
         [tdiff tindex] = min(abs([SWIFT.time]-time));
         if tdiff>1/48,
@@ -65,17 +66,21 @@ for di = 1:length(dirlist),
         end
         
         %% make sure there is data to work with
-        if length(sbgData.GpsVel.vel_e)>secondsofdata*5 & length(sbgData.GpsVel.vel_n)>secondsofdata*5 & length(sbgData.ShipMotion.heave)>secondsofdata*5,
+        if length(sbgData.GpsVel.vel_e)>secondsofdata*5 & length(sbgData.GpsVel.vel_n)>secondsofdata*5 & ... 
+                length(sbgData.ShipMotion.heave)>secondsofdata*5,
             
             f = SWIFT(tindex).wavespectra.freq;  % original frequency bands
             
             fs = 5; % should be 5 Hz for standard SBG settings
             
             % reprocess to get proper directional momements (bug fix in 11/2017)
-            [ newHs, newTp, newDp, newE, newf, newa1, newb1, newa2, newb2, check ] = SBGwaves(sbgData.GpsVel.vel_e(end-secondsofdata*5+1:end),sbgData.GpsVel.vel_n(end-secondsofdata*5+1:end),sbgData.ShipMotion.heave(end-secondsofdata*5+1:end),5);
+            [ newHs, newTp, newDp, newE, newf, newa1, newb1, newa2, newb2, check ] = ... 
+                SBGwaves(sbgData.GpsVel.vel_e(end-secondsofdata*5+1:end),sbgData.GpsVel.vel_n(end-secondsofdata*5+1:end),... 
+                sbgData.ShipMotion.heave(end-secondsofdata*5+1:end),5);
             
             % reprocess using GPS velocites to get alternate results
-            [ altHs, altTp, altDp, altE, altf, alta1, altb1, alta2, altb2 ] = GPSwaves(sbgData.GpsVel.vel_e(end-secondsofdata*5+1:end),sbgData.GpsVel.vel_n(end-secondsofdata*5+1:end),[],5);
+            [ altHs, altTp, altDp, altE, altf, alta1, altb1, alta2, altb2 ] = ... 
+                GPSwaves(sbgData.GpsVel.vel_e(end-secondsofdata*5+1:end),sbgData.GpsVel.vel_n(end-secondsofdata*5+1:end),[],5);
 
             
             % interp to the original freq bands, letting error codes act

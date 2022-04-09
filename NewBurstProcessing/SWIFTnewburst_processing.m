@@ -35,7 +35,7 @@ maxdriftspd = 2.5;
 parentdir = '/Volumes/NORSE/CoastalFronts_Pilot_Apr2022/';  % change to suit data
 cd(parentdir)
 
-SW_list=dir('SWIFT*06Apr2022'); % list of SWIFT directories to reprocess
+SW_list=dir('SWIFT*07Apr2022'); % list of SWIFT directories to reprocess
 
 for sn=1:length(SW_list);
     disp(['SWIFT ' num2str(sn) ' of ' num2str(length(SW_list))])
