@@ -21,6 +21,7 @@ clear; close all
 fullprocess = true; % option to force concatSWIFT_offloadedSDcard, reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
 applyvelreference = true; % apply drift correction to signature velocity data
 rmwaves = true; % remove wave products (for short dt)
+depthprune = false; % option to remove bins below altimeter reading... set to false in deep water
 
 dt=30; %timestep to average over in seconds
 num=floor(512/dt); % number of new bursts per normal burst (512 s)
@@ -35,7 +36,7 @@ maxdriftspd = 2.5;
 parentdir = '/Volumes/NORSE/CoastalFronts_Pilot_Apr2022/';  % change to suit data
 cd(parentdir)
 
-SW_list=dir('SWIFT*07Apr2022'); % list of SWIFT directories to reprocess
+SW_list=dir('SWIFT*'); % list of SWIFT directories to reprocess
 
 for sn=1:length(SW_list);
     disp(['SWIFT ' num2str(sn) ' of ' num2str(length(SW_list))])
@@ -582,11 +583,13 @@ for sn=1:length(SW_list);
                 gyro=nanmedian(gyro_raw);
                 
                 % remove points below seabed
+                if depthprune
                 east( z>(depth-dz) ) = NaN;
                 north( z>(depth-dz) ) = NaN;
                 wbar( z>(depth-dz) ) = NaN;
                 wvar( z>(depth-dz) ) = NaN;
-                
+                else
+                end              
                 
                 
                 rawVel=rawVelHR_original(SIGh_s:SIGh_e,:);
@@ -753,7 +756,7 @@ for sn=1:length(SW_list);
     clear SWIFT
     SWIFT=SWIFT_highres;
     save([SW_list(sn).name '_highres_dt' num2str(dt) 's.mat'],'SWIFT')
-    clearvars -except SW_list parentdir num dt fullprocess applyvelreference maxsalinity minsalinity mincor percentdry maxdriftspd rmwaves
+    clearvars -except SW_list parentdir num dt fullprocess applyvelreference maxsalinity minsalinity mincor percentdry maxdriftspd rmwaves depthprune
     cd ..
     
     
