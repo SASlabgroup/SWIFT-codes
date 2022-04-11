@@ -18,7 +18,7 @@ clear all; close all
 tic
 
 parentdir = pwd;
-readraw = true; % reading the binaries doubles the run time
+readraw = false; % reading the binaries doubles the run time
 makesmoothwHR = false; % make (and save) a smoothed, but not averaged w
 plotflag = true;
 altimetertrim = true;
@@ -104,7 +104,7 @@ for di = 1:length(dirlist),
                 inertial = find(f>1);
                 tkepsd = wpsd;
                 compwpsd = mean( tkepsd(inertial) .* ( 2*3.14* f(inertial)).^(5/3) )./ 8;
-                advect = ( var(urot(:,HRbin)) + var(vrot(:,HRbin)) + var(wdespiked(:,HRbin)) ).^.5; % body rotations AND self advection
+                advect = ( var(urot(:,HRbin)) + var(vrot(:,HRbin)) + var(wdespiked(:,HRbin)) ).^.5; % rot.  AND self advection
                 
                 if advect>0 & compwpsd > 0
                     epsilon_spec(1,HRbin) = ( compwpsd .* advect.^(-2/3) ).^(3/2);
@@ -125,7 +125,8 @@ for di = 1:length(dirlist),
                         xlabel('Frequency [Hz]')
                         ylabel('TKE [m^2/s^2/Hz]')
                         title('Signature HR Spectra at each range bin, with buoy motion (black)')
-                        cb=colorbar('peer',gca,'EastOutside','YTickLabel',linspace(min(z),max(z),5),'Ytick',[0:.25:1],'ydir','reverse');
+                        cb=colorbar('peer',gca,'EastOutside','YTickLabel',... 
+                            linspace(min(z),max(z),5),'Ytick',[0:.25:1],'ydir','reverse');
                         cb.Label.String = 'z [m]';
                         print('-dpng',[filelist(fi).name(1:end-4) '_burstHRspectra.png'])
                         
@@ -293,7 +294,8 @@ for di = 1:length(dirlist),
             
             %% match time to SWIFT structure and replace values
             
-            time=datenum(filelist(fi).name(13:21))+datenum(0,0,0,str2num(filelist(fi).name(23:24)),(str2num(filelist(fi).name(26:27))-1)*12,0);
+            time=datenum(filelist(fi).name(13:21))+datenum(0,0,0,str2num(filelist(fi).name(23:24)),...
+                (str2num(filelist(fi).name(26:27))-1)*12,0);
             [tdiff tindex] = min(abs([SWIFT.time]-time));
             bad(tindex) = false;
             
@@ -301,7 +303,8 @@ for di = 1:length(dirlist),
                 SWIFT(tindex).signature.HRprofile.wbar = HRwbar;
                 SWIFT(tindex).signature.HRprofile.wvar = HRwvar;
                 SWIFT(tindex).signature.HRprofile.z = z;
-                SWIFT(tindex).signature.HRprofile.tkedissipationrate_onboard = SWIFT(tindex).signature.HRprofile.tkedissipationrate;
+                SWIFT(tindex).signature.HRprofile.tkedissipationrate_onboard = ... 
+                    SWIFT(tindex).signature.HRprofile.tkedissipationrate;
                 SWIFT(tindex).signature.HRprofile.tkedissipationrate_strfcn = epsilon;
                 SWIFT(tindex).signature.HRprofile.tkedissipationrate_spectral = epsilon_spec;
                 SWIFT(tindex).signature.profile.wbar = avgwbar;
@@ -334,7 +337,8 @@ for di = 1:length(dirlist),
 %                 print('-dpng',[filelist(fi).name(1:end-4) '_verticalvelocities.png'])
                 
                 figure(9), clf
-                semilogx(SWIFT(tindex).signature.HRprofile.tkedissipationrate_onboard,SWIFT(tindex).signature.HRprofile.z,'k-'), hold on
+                semilogx(SWIFT(tindex).signature.HRprofile.tkedissipationrate_onboard,... 
+                    SWIFT(tindex).signature.HRprofile.z,'k-'), hold on
                 semilogx(epsilon,z,'rx'), hold on
                 semilogx(epsilon_spec,z,'bo'), hold on
                 legend('onboard','str func','spectral','Location','NorthEastOutside')
