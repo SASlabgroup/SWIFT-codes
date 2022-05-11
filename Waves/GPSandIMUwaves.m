@@ -79,7 +79,7 @@ maxf = .5;       % frequency cutoff for telemetry Hz
 if isempty(az),  % check for accelerations
     az = zeros(size(u));
     azdummy = 1;
-elseif abs( mean(az) - 1 ) > 0.1, % check that mean of vertical acceleration is close to 1 g (upside down IMU in SWIFT hull)
+elseif abs( abs(mean(az)) - 1 ) > 0.1, % check that mean of vertical acceleration is close to +/-1 g (upside down IMU in SWIFT hull)
     az = zeros(size(u));
     azdummy = 1;
 else
@@ -291,8 +291,10 @@ check = Ezz ./ (Eyy + Exx);
 
 %% Scalar energy spectra (a0)
 
-E = Exx + Eyy;
+E = Exx + Eyy; % use GPS for scalar spectra
+%E = Ezz; % use acceleration for scalar spectra
 
+% hybrid spectra
 %E = zeros(1,length(f));
 %if azdummy ==1,
 %    E = Exx + Eyy;
@@ -302,19 +304,11 @@ E = Exx + Eyy;
 %E(f<=fchange) = Ezz(f<=fchange); % use heave acceleratiosn for scalar energy of swell
 %end
 
-% testing bits
-%E = nanmean([Ezz' (Exx+Eyy)'],2)';
-%E = Eyy+Exx; % pure GPS version (for testing)
-%E( check > maxEratio | check < minEratio ) = 0; 
-%figure, loglog(f,check)
-%clf, loglog(f,UU+VV,'g',f,Exx+Eyy,'b',f,AZAZ.*9.8^2,'m',f,Ezz,'r'),legend('UU+VV','XX+YY','AZAZ','ZZ') % for testing
-%loglog(f,abs(Cxz),f,abs(Cyz))
-%drawnow
 
 %% wave stats
 fwaves = f>0.04 & f<1; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
 
-E( ~fwaves ) = 0;
+%E( ~fwaves ) = 0;
 
 % significant wave height
 Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
@@ -403,10 +397,10 @@ end
 
 
 % quality control
-if Tp>20,   
-     Hs = 9999;
-     Tp = 9999; 
-     Dp = 9999; 
-else 
-end
+% if Tp>20,   
+%      Hs = 9999;
+%      Tp = 9999; 
+%      Dp = 9999; 
+% else 
+% end
 

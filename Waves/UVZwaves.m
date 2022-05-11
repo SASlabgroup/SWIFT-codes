@@ -4,7 +4,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = UVZwaves(u,v,z,fs)
 %   to estimate wave height, period, direction, directional moments and
 %   check factor
 %
-% Inputs are displacements east [m/s], north [m/s], up [m], and sampling rate [Hz]
+% Inputs are velocities east [m/s], north [m/s], and heave [m], and sampling rate [Hz]
 %
 % For v3 SWIFTs, this assumes that post-processing of the IMU data using
 % "rawdiplacements.m" has been completed.
@@ -22,7 +22,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = UVZwaves(u,v,z,fs)
 %
 % Outputs can be supressed, in order, full usage is as follows:
 %
-%   [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = XYZwaves(x,y,z,fs) 
+%   [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = UVZwaves(u,v,z,fs) 
 
 % J. Thomson, derived from PUVspectra.m (9/2003)
 %             6/2016, adapted from GPSandIMUwaves.m
@@ -56,19 +56,19 @@ z = detrend(z);
 % initialize
 ufiltered = u;
 vfiltered = v;
-%zfiltered = z;
+zfiltered = z;
 
 alpha = RC / (RC + 1./fs); 
 
 for ui = 2:length(u),
     ufiltered(ui) = alpha * ufiltered(ui-1) + alpha * ( u(ui) - u(ui-1) );
     vfiltered(ui) = alpha * vfiltered(ui-1) + alpha * ( v(ui) - v(ui-1) );
-    %zfiltered(ui) = alpha * zfiltered(ui-1) + alpha * ( z(ui) - z(ui-1) );
+    zfiltered(ui) = alpha * zfiltered(ui-1) + alpha * ( z(ui) - z(ui-1) );
 end
 
 u = ufiltered;
 v = vfiltered;  
-%z = zfiltered;
+z = zfiltered;
 
 %% break into windows (use 75 percent overlap)
 w = round(fs * wsecs);  % window length in data points
@@ -206,7 +206,7 @@ E = Ezz;
 
 fwaves = f>0.050 & f<1; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
 
-E( ~fwaves ) = 0;
+%E( ~fwaves ) = 0;
 
 % significant wave height
 Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
@@ -289,11 +289,11 @@ end
 % quality control, with or without check factor 
 %   (should only test for check = unity if in deep water!)
 %if Tp>20 | nanmedian(check(f>.05)) > 5  |  Hs < 0.1, 
-if Tp>20  |  Hs < 0.1, 
-    %disp('Bad spectral shape or low signal to noise')
-     Hs = NaN;
-     Tp = NaN; 
-     Dp = NaN; 
-else 
-end
+% if Tp>20  |  Hs < 0.1, 
+%     %disp('Bad spectral shape or low signal to noise')
+%      Hs = NaN;
+%      Tp = NaN; 
+%      Dp = NaN; 
+% else 
+% end
 
