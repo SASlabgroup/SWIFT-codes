@@ -6,7 +6,7 @@
 
 clear all,
 
-useAHRStoolbox = false; % binary flag to use Navigation toolbox for AHRS (required toolbox, Matlab 2019 and later)
+useAHRStoolbox = true; % binary flag to use Navigation toolbox for AHRS (required toolbox, Matlab 2019 and later)
 readraw = false;  % binary flag to force re-read of raw txt data (otherwise use converted mat file)
 
 %%% GPS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -188,27 +188,27 @@ for ii = 1:length(IMUflist)
             Ezz = Ezz ./ ( (2*pi*fzz).^4);
             Hs_simple = 4 * sqrt( nansum( Ezz( fzz > 0.05 & fzz < 0.5 ) ) * (fzz(3)-fzz(2)));
             
-            %%  post-processing with Matlab navigation toolbox
-            
-            if useAHRStoolbox,
+         
+            if useAHRStoolbox, %%  post-processing with Matlab navigation toolbox %%%%%%%%%%%%
                 
                 ENU = microSWIFT_AHRSfilter( IMU );
+                save([IMUflist(ii).name(1:end-4) '_ENU.mat'],'ENU*','useAHRStoolbox')
                 
                 [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = XYZwaves(ENU.xyz(:,1), ENU.xyz(:,2), ENU.xyz(:,3), IMUsamplingrate) ;
-                
-                %% onboard processing with custom code (beta)
-                
-            else
+                                
+            else  %% onboard processing with custom code (beta) %%%%%%%%%%%%%%%%%%%%%
                 mxo = 60; myo = 60; mzo = 120; % magnetometer offsets
-                Wd = .5;  % weighting in complimentary filter, 0 to 1
-                [x, y, z, roll, pitch, yaw, heading] = ... 
-                    IMUtoXYZ(IMU.acc(:,1), IMU.acc(:,2), IMU.acc(:,3), IMU.gyro(:,1), IMU.gyro(:,2), ... 
-                        IMU.gyro(:,3), IMU.mag(:,1), IMU.mag(:,2), IMU.mag(:,3), mxo, myo, mzo, Wd, IMUsamplingrate);
+                Wd = 0.0;  % weighting in complimentary filter, 0 to 1
+                [x, y, z, roll, pitch, yaw, heading] = ...
+                    IMUtoXYZ(IMU.acc(:,1), IMU.acc(:,2), IMU.acc(:,3), IMU.gyro(:,1), IMU.gyro(:,2), ...
+                    IMU.gyro(:,3), IMU.mag(:,1), IMU.mag(:,2), IMU.mag(:,3), mxo, myo, mzo, Wd, IMUsamplingrate);
                 [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = XYZwaves(x, y, z, IMUsamplingrate) ;
                 clear ENU
                 ENU.xyz(:,1) = x;
                 ENU.xyz(:,2) = y;
                 ENU.xyz(:,3) = z;
+                ENU.time = IMU.time;
+                save([IMUflist(ii).name(1:end-4) '_ENU.mat'],'ENU*','useAHRStoolbox')
             end
             
             %% store results in SWIFT structure
@@ -250,14 +250,14 @@ for ii = 1:length(IMUflist)
 end
 
 if useAHRStoolbox
-    save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_results_simple'],'GPSresults','IMUresults');
+    save([IMUflist(1).name(1:13) '_' IMUflist(1).name(19:27) '_XYZresults_simple'],'GPSresults','IMUresults');
 else
-    save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_results_AHRS'],'GPSresults','IMUresults');
+    save([IMUflist(1).name(1:13) '_' IMUflist(1).name(19:27) '_XYZresults_AHRS'],'GPSresults','IMUresults');
 end
 
 %% summary plot
 
-skip = 0; % bursts to skip (beginning) 
+skip = 0; % bursts to skip (beginning)
 crop = 0; % bursts to skip (end)
 
 index = 0; % cummulative index for raw heave
@@ -284,6 +284,114 @@ if useAHRStoolbox
 else
     print('-dpng',[IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_map_spectra_simpleheave.png']);
 end
+
+%% combine GPS and IMU raw data to post-process together
+% this is not very robust yet... will fail if there are not same number of
+% GPS and IMU files (for same bursts)
+
+if length(GPSflist) == length(IMUflist)
+    
+    for ii = 1:length(GPSflist)
+        
+        disp(['GPS and IMU merge ' num2str(ii) ' of ' num2str(length(GPSflist))])
+        
+        load([GPSflist(ii).name(1:end-4) '.mat']);
+        
+        %%%%%%%%  use vertical accelerations %%%%%%%%%%%%%%%%%%%%
+        load([IMUflist(ii).name(1:end-4) '.mat']);
+        
+        faketime = linspace(min(IMU.time),max(IMU.time),length(IMU.time));
+        u = interp1(GPS.time(1:length(GPS.u)),GPS.u,faketime);
+        v = interp1(GPS.time(1:length(GPS.v)),GPS.v,faketime);
+        az = IMU.acc(:,3);
+        u( isnan(u) ) = 0; % nans from interp
+        v( isnan(v) ) = 0; % nans from interp
+        trim = find( az == 0);
+        u( trim ) = [];
+        v( trim ) = [];
+        az( trim ) = [];
+        faketime( trim ) = [];
+        
+        figure(20),
+        plot(faketime,u,faketime,v,faketime,az)
+        datetick
+        legend('u','v','az')
+        print('-dpng',[ [IMUflist(gi).name(1:end-4)] '_UVaz.png'])
+             
+        [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = GPSandIMUwaves(u, v, -az./9.8, [], [], IMUsamplingrate); % az units must be g
+        
+        % store results in SWIFT structure
+        GPSandIMUresults(ii).sigwaveheight = Hs;
+        GPSandIMUresults(ii).peakwaveperiod = Tp;
+        GPSandIMUresults(ii).peakwavedirT = Dp;
+        GPSandIMUresults(ii).wavespectra.energy = E;
+        GPSandIMUresults(ii).wavespectra.freq = f;
+        GPSandIMUresults(ii).wavespectra.a1 = a1;
+        GPSandIMUresults(ii).wavespectra.b1 = b1;
+        GPSandIMUresults(ii).wavespectra.a2 = a2;
+        GPSandIMUresults(ii).wavespectra.b2 = b2;
+        GPSandIMUresults(ii).wavespectra.check = check;
+        GPSandIMUresults(ii).x = ENU.xyz(:,1); % raw wave displacements
+        GPSandIMUresults(ii).y = ENU.xyz(:,2); % raw wave displacements
+        GPSandIMUresults(ii).z = ENU.xyz(:,3); % raw wave displacements
+        GPSandIMUresults(ii).time = median(ENU.time(:)); %datenum(IMU.clock((round(end/2))));
+        GPSandIMUresults(ii).ID =  [IMUflist(ii).name(11:13)];
+        
+        
+        %%%%%%%%  use heave estimates %%%%%%%%%%%%%%%%%%%%
+        load([IMUflist(ii).name(1:end-4) '_ENU.mat']);
+        
+        faketime = linspace(min(ENU.time),max(ENU.time),length(ENU.time));
+        u = interp1(GPS.time(1:length(GPS.u)),GPS.u,faketime);
+        v = interp1(GPS.time(1:length(GPS.v)),GPS.v,faketime);
+        z = ENU.xyz(:,3);
+        u( isnan(u) ) = 0; % nans from interp
+        v( isnan(v) ) = 0; % nans from interp
+        trim = find( z == 0);
+        u( trim ) = [];
+        v( trim ) = [];
+        z( trim ) = [];
+        faketime( trim ) = [];
+        z = RCfilter(z, RC, IMUsamplingrate);
+        
+        figure(21),
+        plot(faketime,u,faketime,v,faketime,z)
+        datetick
+        legend('u','v','z')
+        print('-dpng',[ [IMUflist(gi).name(1:end-4)] '_UVZ.png'])
+             
+        [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = UVZwaves(u,v,z, IMUsamplingrate);
+        
+        % store results in SWIFT structure
+        UVZresults(ii).sigwaveheight = Hs;
+        UVZresults(ii).peakwaveperiod = Tp;
+        UVZresults(ii).peakwavedirT = Dp;
+        UVZresults(ii).wavespectra.energy = E;
+        UVZresults(ii).wavespectra.freq = f;
+        UVZresults(ii).wavespectra.a1 = a1;
+        UVZresults(ii).wavespectra.b1 = b1;
+        UVZresults(ii).wavespectra.a2 = a2;
+        UVZresults(ii).wavespectra.b2 = b2;
+        UVZresults(ii).wavespectra.check = check;
+        UVZresults(ii).x = ENU.xyz(:,1); % raw wave displacements
+        UVZresults(ii).y = ENU.xyz(:,2); % raw wave displacements
+        UVZresults(ii).z = ENU.xyz(:,3); % raw wave displacements
+        UVZresults(ii).time = median(ENU.time(:)); %datenum(IMU.clock((round(end/2))));
+        UVZresults(ii).ID =  [IMUflist(ii).name(11:13)];
+        
+    end
+    
+save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_GPSandIMUresults'],'GPSandIMUresults');
+
+if useAHRStoolbox
+    save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_UVZresults_simple'],'UVZresults');
+else
+    save([IMUflist(end).name(1:13) '_' IMUflist(end).name(19:27) '_UVZresults_AHRS'],'UVZresults');
+end
+
+else
+end
+
 
 %% EMBEDDED RC FILTER function (high pass filter) %%
 
