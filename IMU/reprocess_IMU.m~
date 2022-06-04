@@ -19,7 +19,6 @@ parentdir = pwd;  % change this to be the parent directory of all raw raw data (
 %% choose a filter
 %filter = str2cell('RC');
 filter = str2cell('elliptic');
-dB = 10;
 
 %% load existing SWIFT structure created during concatSWIFTv3_processed, replace only the new wave results
 cd(parentdir);
@@ -92,7 +91,6 @@ for di = 1:length(dirlist),
             z_gps = GPS.Geodetic_Pos.H_above_MSL(end-2047:end); 
             fs_gps = 1000./median(diff(GPS.UTC.mSec));
             if strcmp( cellstr( filter ), 'elliptic')  % eliptic filter option
-                [B,A] = ellip(3, .5, dB, 0.05/(fs_gps/2), 'high'); % original is ellip(3, .5, 20, 0.05/(fs/2), 'high');
                 u = filtfilt(B, A, double(u));
                 v = filtfilt(B, A, double(v));
                 z_gps = filtfilt(B, A, double(z_gps));
