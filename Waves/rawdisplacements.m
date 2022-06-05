@@ -16,7 +16,7 @@ function [x,y,z, hs ] = rawdisplacements(AHRS,varargin);
 %   June 2022, add option for eliptic or RC filter (varargin)
 
 RC = 4; % time constant (with factore 2 pi) in RC filter
-dB = 10; % a minimum stopband attenuation in elliptic fiklter
+dB = 10; % minimum stopband attenuation in elliptic fiklter
 
 dt = median(diff(AHRS.Timestamp_sec));  % should be 0.04 s
 if isnan(dt), dt = 600 ./ length(AHRS.Accel); else end
