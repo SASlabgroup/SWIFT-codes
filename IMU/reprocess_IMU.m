@@ -20,8 +20,9 @@ saverawdisplacements = false; % logical flag to increase speed by not saving the
 
 %% choose a prefilter
 %prefilter = str2cell('no')
-prefilter = str2cell('RC'), RC = 3.5;
-%prefilter = str2cell('elliptic'),  dB = 30; % note that dB is set seperately within rawdisplacements.m
+%prefilter = str2cell('RC'), RC = 3.5;
+prefilter = str2cell('elliptic'),  dB = 5; % lower is strong filter??
+    %note that dB is set seperately (again) within rawdisplacements.m
 
 %% load existing SWIFT structure created during concatSWIFTv3_processed, replace only the new wave results
 % save time by screening the existing structure for bad bursts (out of water, etc)

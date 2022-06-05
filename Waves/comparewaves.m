@@ -256,7 +256,7 @@ if isfield(SWIFT1(1),'wavespectra') & isfield(SWIFT2(1),'wavespectra'),
         good = ~isnan(SWIFT2(matchedindex(si)).wavespectra.freq) & ~isinf(SWIFT2(matchedindex(si)).wavespectra.freq) & ...
             SWIFT2(matchedindex(si)).wavespectra.energy > 0;
         if sum(good) > 3,
-            e2 = interp1( SWIFT2(matchedindex(si)).wavespectra.freq(good), SWIFT2(matchedindex(si)).wavespectra.energy(good), f);%,'linear',NaN);
+            e2 = interp1( SWIFT2(matchedindex(si)).wavespectra.freq(good), SWIFT2(matchedindex(si)).wavespectra.energy(good), f, 'linear',0);
         else
             e2 = NaN(size(e1));
         end
