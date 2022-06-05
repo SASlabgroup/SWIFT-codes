@@ -175,9 +175,9 @@ spread2 = sqrt( abs( 0.5 - 0.5 .* ( a2.*cos(2.*dir2) + b2.*cos(2.*dir2) )  ));
 %% bulk parameters
 E = Ezz;
 
-fwaves = f>0.04 & f<maxf; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
+fwaves = f>0.05 & f<maxf; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
 
-%E( ~fwaves ) = 0;
+E( ~fwaves ) = 0;
 
 % significant wave height
 Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);

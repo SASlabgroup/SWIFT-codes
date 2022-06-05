@@ -305,7 +305,7 @@ drawnow
 %% wave stats
 fwaves = f>0.05 & f<1; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
 
-%E( ~fwaves ) = 0;
+E( ~fwaves ) = 0;
 
 % significant wave height
 Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);

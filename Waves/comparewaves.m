@@ -49,12 +49,10 @@ for si = 1:length([SWIFT1.time]),
         dir1 = - 180 ./ 3.14 * dir1;  % switch from rad to deg, and CCW to CW (negate)
         dir1 = dir1 + 90;  % rotate from eastward = 0 to northward  = 0
         dir1( dir1 < 0 ) = dir1( dir1 < 0 ) + 360;  % take NW quadrant from negative to 270-360 range
-        %if isfield(SWIFT1(si).wavespectra,dir), % if a CDIP buoy in a SWIFT structure, flip the dirs
-            westdirs = dir1 > 180;
-            eastdirs = dir1 < 180;
-            dir1( westdirs ) = dir1 ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
-            dir1( eastdirs ) = dir1 ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
-        %end
+        westdirs = dir1 > 180;
+        eastdirs = dir1 < 180;
+        dir1( westdirs ) = dir1 ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
+        dir1( eastdirs ) = dir1 ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
         SWIFT1(si).energydir = dir1(feindex);
     else
         SWIFT1(si).energyperiod = NaN;
@@ -72,12 +70,10 @@ for si = 1:length([SWIFT1.time]),
             dir1 = - 180 ./ 3.14 * dir1;  % switch from rad to deg, and CCW to CW (negate)
             dir1 = dir1 + 90;  % rotate from eastward = 0 to northward  = 0
             dir1( dir1 < 0 ) = dir1( dir1 < 0 ) + 360;  % take NW quadrant from negative to 270-360 range
-            %if isfield(SWIFT2(match).wavespectra,dir), % if a CDIP buoy in a SWIFT structure, flip the dirs
-            %    westdirs = dir1 > 180;
-            %    eastdirs = dir1 < 180;
-            %    dir1( westdirs ) = dir1 ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
-            %    dir1( eastdirs ) = dir1 ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
-            %end
+            westdirs = dir1 > 180;
+            eastdirs = dir1 < 180;
+            dir1( westdirs ) = dir1 ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
+            dir1( eastdirs ) = dir1 ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
             SWIFT2(match).energydir = dir1(feindex);
         else
             SWIFT2(match).energyperiod = NaN;
@@ -171,7 +167,7 @@ plot([SWIFT2(matchedindex).energyperiod],[SWIFT1.energyperiod],'g.'), hold on
 set(gca,'fontsize',12,'fontweight','demi')
 title('Wave period')
 xlabel('[s]'),ylabel('[s]')
-axis square
+axis square, axis([0 20 0 20])
 text(1, 18, '(b)','interpreter','none','fontsize',12,'fontweight','demi')
 
 
@@ -212,6 +208,7 @@ set(gca,'fontsize',14,'fontweight','demi')
 datetick('x','ddmmm')
 set(gca,'XTickLabel',[])
 ylabel('T_p [s]')
+set(gca,'YLim',[0 20])
 text(min([SWIFT1.time]), ceil(max([SWIFT2(matchedindex).peakwaveperiod])) -1, '(b)','interpreter','none','fontsize',12,'fontweight','demi')
 
 subplot(4,1,3)
@@ -220,6 +217,7 @@ set(gca,'fontsize',14,'fontweight','demi')
 datetick('x','ddmmm')
 set(gca,'XTickLabel',[])
 ylabel('T_e [s]')
+set(gca,'YLim',[0 20])
 text(min([SWIFT1.time]), ceil(max([SWIFT2(matchedindex).peakwaveperiod])) -1, '(b)','interpreter','none','fontsize',12,'fontweight','demi')
 
 
