@@ -319,8 +319,8 @@ fe = sum( f(fwaves).*E(fwaves) )./sum( E(fwaves) );
 Ta = 1./fe;
 
 % peak period
-[~ , fpindex] = max(UU+VV); % can use velocity (picks out more distint peak)
-%[~ , fpindex] = max(E);
+%[~ , fpindex] = max(UU+VV); % can use velocity (picks out more distint peak)
+[~ , fpindex] = max(E);
 Tp = 1./f(fpindex);
 
 
