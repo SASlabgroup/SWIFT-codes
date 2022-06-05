@@ -167,7 +167,7 @@ subplot(1,3,2)
 plot([0 18],[0 18],'--','color',[.5 .5 .5]), hold on
 plot([SWIFT2(matchedindex).peakwaveperiod],[SWIFT1.peakwaveperiod],'k.'), hold on
 plot([SWIFT2(matchedindex).energyperiod],[SWIFT1.energyperiod],'g.'), hold on
-legend('1:1','T_p','T_e','location','northwest')
+%legend('1:1','T_p','T_e','location','northwest')
 set(gca,'fontsize',12,'fontweight','demi')
 title('Wave period')
 xlabel('[s]'),ylabel('[s]')
@@ -179,7 +179,7 @@ subplot(1,3,3)
 plot([0 360],[0 360],'--','color',[.5 .5 .5]), hold on
 plot([SWIFT2(matchedindex).peakwavedirT],[SWIFT1.peakwavedirT],'k.'), hold on
 plot([SWIFT2(matchedindex).energydir],[SWIFT1.energydir],'g.'), hold on
-legend('1:1','D_p','D_e','location','northwest')
+%legend('1:1','D_p','D_e','location','northwest')
 set(gca,'fontsize',12,'fontweight','demi')
 title('Wave direction')
 xlabel('[deg]'),ylabel('[deg]')
@@ -195,7 +195,7 @@ savefig('scatter.fig')
 %% timeseries plot
 figure(2), clf
 
-subplot(3,1,1)
+subplot(4,1,1)
 plot([SWIFT1.time],[SWIFT1.sigwaveheight],'b.',[SWIFT2(matchedindex).time],[SWIFT2(matchedindex).sigwaveheight],'r.','markersize',12)
 set(gca,'fontsize',14,'fontweight','demi')
 datetick('x','ddmmm')
@@ -206,7 +206,7 @@ title(wd,'interpreter','none')
 text(min([SWIFT1.time]), ceil(max([SWIFT2(matchedindex).sigwaveheight])) -1, '(a)','interpreter','none','fontsize',12,'fontweight','demi')
 
 
-subplot(3,1,2)
+subplot(4,1,2)
 plot([SWIFT1.time],[SWIFT1.peakwaveperiod],'b.',[SWIFT2(matchedindex).time],[SWIFT2(matchedindex).peakwaveperiod],'r.','markersize',12)
 set(gca,'fontsize',14,'fontweight','demi')
 datetick('x','ddmmm')
@@ -214,8 +214,16 @@ set(gca,'XTickLabel',[])
 ylabel('T_p [s]')
 text(min([SWIFT1.time]), ceil(max([SWIFT2(matchedindex).peakwaveperiod])) -1, '(b)','interpreter','none','fontsize',12,'fontweight','demi')
 
+subplot(4,1,3)
+plot([SWIFT1.time],[SWIFT1.energyperiod],'b.',[SWIFT2(matchedindex).time],[SWIFT2(matchedindex).energyperiod],'r.','markersize',12)
+set(gca,'fontsize',14,'fontweight','demi')
+datetick('x','ddmmm')
+set(gca,'XTickLabel',[])
+ylabel('T_e [s]')
+text(min([SWIFT1.time]), ceil(max([SWIFT2(matchedindex).peakwaveperiod])) -1, '(b)','interpreter','none','fontsize',12,'fontweight','demi')
 
-subplot(3,1,3)
+
+subplot(4,1,4)
 plot([SWIFT1.time],[SWIFT1.peakwavedirT],'b.',[SWIFT2(matchedindex).time],[SWIFT2(matchedindex).peakwavedirT],'r.','markersize',12)
 set(gca,'fontsize',14,'fontweight','demi')
 datetick('x','ddmmm')

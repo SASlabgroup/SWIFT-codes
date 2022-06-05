@@ -213,22 +213,22 @@ spread = 180 ./ 3.14 .* spread1;
 Dp = dir(fpindex); % dominant (peak) direction, use peak f
 
 
-%% screen for bad direction estimate,     
+%% screen for bad direction estimate, commented-out Jun 2022   
 
-inds = fpindex + [-1:1]; % pick neighboring bands
-if all(inds>0) & max(inds) <= length(dir), 
-    
-  dirnoise = std( dir(inds) );
-
-  if dirnoise > 45 ,
-      Dp = 9999;
-  else
-      Dp = Dp;
-  end
-  
-else
-    Dp =9999;
-end
+% inds = fpindex + [-1:1]; % pick neighboring bands
+% if all(inds>0) & max(inds) <= length(dir), 
+%     
+%   dirnoise = std( dir(inds) );
+% 
+%   if dirnoise > 45 ,
+%       Dp = 9999;
+%   else
+%       Dp = Dp;
+%   end
+%   
+% else
+%     Dp =9999;
+% end
 
 
 %% prune high frequency results
