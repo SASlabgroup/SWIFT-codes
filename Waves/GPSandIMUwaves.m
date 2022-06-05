@@ -42,7 +42,7 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = GPSandIMUwaves(u,v,az,pit
 %                           changes spectra parameters to report higher f
 %                               while keeping same # (=42) of frequencies
 %               12/2014, v5, fix directions by using cospectra of az and u v
-%                           (rather than quadspectrum, which is only appropriate for displacements                           directional estimate when not upright
+%                           (rather than quadspectrum, which is only appropriate for displacements                           
 %               12/2015, v6, remove the low-freq cutoff for spectra, but keep it for bulk stats
 %
 %               10/2017, v7, change the RC filter parameter to 3.5, after

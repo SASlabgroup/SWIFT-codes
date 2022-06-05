@@ -51,11 +51,11 @@ counter = 0;
 
 for ai = 1:length(SWIFT),
     
-    SWIFT(ai).wavespectra.energy( SWIFT(ai).wavespectra.energy==9999 ) = 0;
-    SWIFT(ai).wavespectra.a1( SWIFT(ai).wavespectra.a1==9999 ) = 0;
-    SWIFT(ai).wavespectra.a2( SWIFT(ai).wavespectra.a2==9999 ) = 0;
-    SWIFT(ai).wavespectra.b1( SWIFT(ai).wavespectra.b1==9999 ) = 0;
-    SWIFT(ai).wavespectra.b2( SWIFT(ai).wavespectra.b2==9999 ) = 0;
+    SWIFT(ai).wavespectra.energy( SWIFT(ai).wavespectra.energy==9999 | isnan(SWIFT(ai).wavespectra.energy) ) = 0;
+    SWIFT(ai).wavespectra.a1( SWIFT(ai).wavespectra.a1==9999 | isnan(SWIFT(ai).wavespectra.a1) ) = 0;
+    SWIFT(ai).wavespectra.a2( SWIFT(ai).wavespectra.a2==9999 | isnan(SWIFT(ai).wavespectra.a2) ) = 0;
+    SWIFT(ai).wavespectra.b1( SWIFT(ai).wavespectra.b1==9999 | isnan(SWIFT(ai).wavespectra.b1) ) = 0;
+    SWIFT(ai).wavespectra.b2( SWIFT(ai).wavespectra.b2==9999 | isnan(SWIFT(ai).wavespectra.b2) ) = 0;
 
     
     if SWIFT(ai).sigwaveheight > 0 & SWIFT(ai).sigwaveheight < 10 & all(~isnan(SWIFT(ai).wavespectra.a1)),

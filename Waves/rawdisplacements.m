@@ -40,7 +40,7 @@ if strcmp( cellstr( varargin{1} ), 'elliptic') % eliptic filter
     fay = filtfilt(B, A, double(ay(~isnan(ay))));
     faz = filtfilt(B, A, double(az(~isnan(az))));
     
-elseif strcmp( cellstr( varargin{1} ), 'RC')  || isempty(varargin) % RC filter
+elseif strcmp( cellstr( varargin{1} ), 'RC')  % RC filter
     alpha = RC / (RC + 1./fs);
     fax(1) = ax(1); fay(1)=ay(1); faz(1)=az(1);
     for ui = 2:length(ax),
@@ -49,6 +49,9 @@ elseif strcmp( cellstr( varargin{1} ), 'RC')  || isempty(varargin) % RC filter
         faz(ui) = alpha * faz(ui-1) + alpha * ( az(ui) - az(ui-1) );
     end
 else
+    fax=ax;
+    fay=ay;
+    faz=az;
 end
 
 u = cumtrapz(fax)*dt; % m/s, preferred over GPS.NED_Vel.Velocity_NED(:,3);
@@ -65,7 +68,7 @@ if strcmp( cellstr( varargin{1} ), 'elliptic')  % eliptic filter
     fv = filtfilt(B, A, double(v));
     fw = filtfilt(B, A, double(w));
     
-elseif strcmp( cellstr( varargin{1} ), 'RC')  || isempty(varargin)  % RC filter
+elseif strcmp( cellstr( varargin{1} ), 'RC')   % RC filter
     alpha = RC / (RC + 1./fs);
     fu(1) = u(1); fv(1)=v(1); fw(1)=w(1);
     for ui = 2:length(ax),
@@ -74,6 +77,9 @@ elseif strcmp( cellstr( varargin{1} ), 'RC')  || isempty(varargin)  % RC filter
         fw(ui) = alpha * fw(ui-1) + alpha * ( w(ui) - w(ui-1) );
     end
 else
+    fu = u;
+    fv = v;
+    fw = w;
 end
 
 x = cumtrapz(fu)*dt; % m
