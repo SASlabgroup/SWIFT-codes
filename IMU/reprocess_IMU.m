@@ -116,9 +116,7 @@ for di = 1:length(dirlist),
             
             %% prepares GPS and IMU data for reprocessing
             
-            % interpolate the 25 Hz IMU accelerations onto the 4 GPS data
-            forinterp = ~isnan(AHRS.Accel(:,3)) & AHRS.GPS_Time.TimeOfWeek > 1e5;
-            az = interp1( AHRS.GPS_Time.TimeOfWeek(forinterp), AHRS.Accel(forinterp,3), GPS.Time.TimeOfWeek(end-2047:end) );
+            az = interp1( AHRS.GPS_Time.TimeOfWeek(:), AHRS.Accel(:,3), GPS.Time.TimeOfWeek(end-2047:end) );
             indices = 1:2048;
             az = interp1( indices(~isnan(az) ) , az(~isnan(az)), indices,'linear',nanmean(az))';
             u = GPS.NED_Vel.Velocity_NED(end-2047:end,2);
