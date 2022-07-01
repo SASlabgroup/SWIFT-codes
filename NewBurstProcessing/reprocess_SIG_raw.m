@@ -102,8 +102,13 @@ for di = 1:length(dirlist),
                 SWIFT(tindex(fi)).signature.profile.north_raw=avg.VelocityData(:,:,2);
                 SWIFT(tindex(fi)).signature.profile.up_raw=avg.VelocityData(:,:,3);
                 SWIFT(tindex(fi)).signature.profile.rawAmp=avg.AmplitudeData;
-                SWIFT(tindex(fi)).signature.profile.depth_raw=avg.AltimeterDistance;
-                SWIFT(tindex(fi)).signature.profile.altimeter_quality=avg.AltimeterQuality;
+                if isfield(avg,'AltimeterDistance')
+                    SWIFT(tindex(fi)).signature.profile.depth_raw=avg.AltimeterDistance;
+                    SWIFT(tindex(fi)).signature.profile.altimeter_quality=avg.AltimeterQuality;
+                else
+                    SWIFT(tindex(fi)).signature.profile.depth_raw=NaN;
+                    SWIFT(tindex(fi)).signature.profile.altimeter_quality=NaN;
+                end
                 SWIFT(tindex(fi)).signature.profile.gyro_raw = avg.AHRS_GyroZ;
                 
                 % velocity reference

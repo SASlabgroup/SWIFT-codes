@@ -25,7 +25,7 @@ fixspectra = false; % binary flag to redact low freq wave spectra
 
 minwaveheight = 0; % minimum wave height in data screening
 
-minsalinity = 25; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 20; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 1.5;  % m/s, for screening when buoy on deck of boat
 
@@ -220,7 +220,7 @@ battery = battery(tinds);
 % always available or included
 % (so simpler to just calculate it from differencing positions)
 
-if length(SWIFT) > 3,
+if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
     
     time = [SWIFT.time];%[time tinds ] = sort(time);
     lat = [SWIFT.lat]; %lat = lat(tinds);
@@ -256,7 +256,7 @@ if length(SWIFT) > 3,
     %         battery( length(SWIFT) ) = [];
     %     end
     
-else
+elseif length(SWIFT) <= 3 %&& ~isfield(SWIFT,'driftspd')
     for si = 1:length(SWIFT),
         SWIFT(si).driftspd = NaN;
         SWIFT(si).driftdirT = NaN;

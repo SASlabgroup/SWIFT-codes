@@ -219,7 +219,7 @@ for di = 1:length(dirlist),
             figure(4), clf
             subplot(1,4,1)
             plot( squeeze( nanmean(avg.AmplitudeData) ), avg.z ,'linewidth',1.5), hold on
-            plot(0, avg.AltimeterDistance,'kx')            
+            if isfield(avg,'AltimeterDistance'), plot(0, avg.AltimeterDistance,'kx'), end            
             xlabel('Amp [-]')
             ylabel('z [m]')
             set(gca,'ydir','reverse')
@@ -227,7 +227,7 @@ for di = 1:length(dirlist),
             
             subplot(1,4,2)
             plot( squeeze( nanmean(avg.CorrelationData) ), avg.z ,'linewidth',1.5), hold on
-            plot(0, avg.AltimeterDistance,'kx')            
+            if isfield(avg,'AltimeterDistance'), plot(0, avg.AltimeterDistance,'kx'), end            
             xlabel('Corr [%]')
             ylabel('z [m]')
             set(gca,'ydir','reverse')
@@ -236,7 +236,7 @@ for di = 1:length(dirlist),
             
             subplot(1,4,3)
             plot( squeeze( nanmean(avg.VelocityData(:,:,1:2)) ), avg.z ,'linewidth',1.5), hold on
-            plot(0, avg.AltimeterDistance,'kx')            
+            if isfield(avg,'AltimeterDistance'), plot(0, avg.AltimeterDistance,'kx'), end            
             xlabel('u,v [m/s]')
             ylabel('z [m]')
             set(gca,'ydir','reverse')
@@ -244,7 +244,7 @@ for di = 1:length(dirlist),
             
             subplot(1,4,4)
             plot( squeeze( nanmean(avg.VelocityData(:,:,3:4)) ), avg.z ,'linewidth',1.5), hold on
-            plot(0, avg.AltimeterDistance,'kx')            
+            if isfield(avg,'AltimeterDistance'), plot(0, avg.AltimeterDistance,'kx'), end            
             xlabel('w [m/s]')
             ylabel('z [m]')
             set(gca,'ydir','reverse')

@@ -177,8 +177,7 @@ bad = false(size(SWIFT));
 for si=1:length(SWIFT)
     
     
-    
-    if isempty(SWIFT(si).u),
+    if isfield(SWIFT(si),'u') && isempty(SWIFT(si).u)
         bad(si) = true;
     else
     end
@@ -191,8 +190,14 @@ SWIFT(bad) = [];
 
 % plotSWIFT(SWIFT)
 
-[Etheta theta f dir1 spread1 spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, 0);
+if ~isempty(SWIFT)
 
+    [Etheta theta f dir1 spread1 spread2 spread2alt ] = SWIFTdirectionalspectra(SWIFT, 0);
+else
+    Etheta = NaN;
+    theta = NaN;
+    f = NaN;
+end
 
 %% save a big file with raw displacements and dir spectra
 
@@ -200,11 +205,13 @@ save([ wd '_reprocessed.mat'],'SWIFT','Etheta','theta','f')
 
 %% save a small file with stats only
 
-SWIFT = rmfield(SWIFT,'x');
-SWIFT = rmfield(SWIFT,'y');
-SWIFT = rmfield(SWIFT,'z');
-SWIFT = rmfield(SWIFT,'u');
-SWIFT = rmfield(SWIFT,'v');
-SWIFT = rmfield(SWIFT,'rawtime');
+if isfield(SWIFT,'x')
+    SWIFT = rmfield(SWIFT,'x');
+    SWIFT = rmfield(SWIFT,'y');
+    SWIFT = rmfield(SWIFT,'z');
+    SWIFT = rmfield(SWIFT,'u');
+    SWIFT = rmfield(SWIFT,'v');
+    SWIFT = rmfield(SWIFT,'rawtime');
+end
 
 save([ wd '_reprocessedSBG_statsonly.mat'],'SWIFT')

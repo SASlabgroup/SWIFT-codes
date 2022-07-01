@@ -72,7 +72,7 @@ for di = 1:length(dirlist),
 
         %% make sure there is data to work with
         if ~isempty(tindex) & length(alltime)>secondsofdata*5 & length(sbgData.ShipMotion.heave)>secondsofdata*5 & ... 
-                length(sbgData.GpsPos.lat)>secondsofdata*5 & length(sbgData.GpsVel.vel_e)>secondsofdata*5
+                length(sbgData.GpsPos.lat)>secondsofdata*5 & length()
 
             %% despike data and make convenience variables
             t = alltime(end-secondsofdata*5+1:end);
@@ -110,7 +110,7 @@ for di = 1:length(dirlist),
                 datetick, grid, ylabel('lon')
                 subplot(4,1,4)
                 plot(t,u,'r.', t,v,'g.')
-                datetick, grid, ylabel('[m/s]'), legend('u','v')
+                datetick, grid, ylabel('[m/s]'), legend('u, v')
                 print('-dpng',[filelist(fi).name(1:end-4) '_raw_trimmed.png'])
             end
 
@@ -211,8 +211,7 @@ for di = 1:length(dirlist),
         else
             % ignoreif insufficient raw data
             disp('not enough raw data')
-            SWIFT(tindex).u = [];
-            SWIFT(tindex).v = [];
+            %SWIFT(tindex) = [];
         end
     end
 

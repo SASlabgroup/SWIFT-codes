@@ -259,7 +259,7 @@ spread2 = sqrt( abs( 0.5 - 0.5 .* ( a2.*cos(2.*dir2) + b2.*cos(2.*dir2) )  ));
 
 %% screen for presence/absence of vertical data
 if zdummy ==1,
-    Ezz(:) = 0;
+    Ezz(:) = 9999;
     a1(:) = 9999;
     b1(:) = 9999;
     dir1(:) = 9999;
@@ -371,7 +371,6 @@ end
 
 %% prune high frequency results
 E( f > maxf ) = [];
-Ezz( f > maxf ) = [];
 dir( f > maxf ) = [];
 spread( f > maxf ) = [];
 a1( f > maxf ) = [];
