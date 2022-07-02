@@ -116,4 +116,4 @@ else
     alltime = NaN;
 end
 
-time = median(alltime);
+time = alltime;

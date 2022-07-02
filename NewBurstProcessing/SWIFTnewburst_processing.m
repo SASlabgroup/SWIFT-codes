@@ -33,7 +33,7 @@ percentdry = .1; % maximum precent dry to allow when retaining a new burst, incr
 mincor = 0; % for QC when reprocessing turbulence data
 maxdriftspd = 2.5;
 
-parentdir = '/Volumes/CoastFront/Main_Jun2022/SWIFTs/';  % change to suit data
+parentdir = '~/Desktop/Main_Jun2022/SWIFTs/';  % change to suit data
 cd(parentdir)
 
 SW_list=dir('SWIFT29*'); % list of SWIFT directories to reprocess

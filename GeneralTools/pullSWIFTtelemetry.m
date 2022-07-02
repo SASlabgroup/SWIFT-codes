@@ -106,7 +106,9 @@ end
 %% combine the resulting mat files in the top level directory and make map plots
 eval(['!cp *SWIFT*/*SWIFT*start*.mat ./'])
 tempfig = mapSWIFT('watertemp');
-salinityfig = mapSWIFT('salinity');
+if isfield(SWIFT,'salinity')
+    salinityfig = mapSWIFT('salinity');
+end
 wavefig = mapSWIFT('sigwaveheight');
 
 clc,
