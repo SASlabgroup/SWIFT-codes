@@ -12,9 +12,8 @@
 %                       apply a reference velocity (drift) to Signature profiles
 %                       include Signature backscatter in new burst ensembles
 %                       use dissipation_simple
-%
-% left to do:
-%   ** need to add met data... and maybe wave spectra? ***
+%               7/2022  add option for Airmar GPS positions instead of SBG or IMU
+%                       did not (yet) include met, but could easily now
 %
 clear; close all
 
@@ -37,7 +36,7 @@ maxdriftspd = 2.5;
 parentdir = '~/Desktop/Main_Jun2022/SWIFTs/';  % change to suit data
 cd(parentdir)
 
-SW_list=dir('SWIFT26_27Jun*'); % list of SWIFT directories to reprocess
+SW_list=dir('SWIFT*02Jul2022'); % list of SWIFT directories to reprocess
 
 for sn=1:length(SW_list);
     disp(['SWIFT ' num2str(sn) ' of ' num2str(length(SW_list))])
@@ -747,9 +746,12 @@ for sn=1:length(SW_list);
     ylabel('z [m]'), xlabel('speed [m/s]')
     print('-dpng',[SW_list(sn).name '_highres_dt' num2str(dt) 's_signatureprofiles.png'])
     
-    %% QC for max drift
+    %% QC for max drift and salinity limits
     toofast = find([SWIFT.driftspd]>maxdriftspd);
     SWIFT_highres(toofast) = [];
+    badsalt = find( isnan([SWIFT_highres.salinity]) | [SWIFT_highres.salinity] < minsalinity  |  [SWIFT_highres.salinity]>maxsalinity );
+    SWIFT_highres(badsalt) = [];
+
     
     %% option to remove waves
     if rmwaves, 

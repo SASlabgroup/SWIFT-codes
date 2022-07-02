@@ -106,8 +106,8 @@ for di = 1:length(dirlist),
                     SWIFT(tindex(fi)).signature.profile.depth_raw=avg.AltimeterDistance;
                     SWIFT(tindex(fi)).signature.profile.altimeter_quality=avg.AltimeterQuality;
                 else
-                    SWIFT(tindex(fi)).signature.profile.depth_raw=NaN;
-                    SWIFT(tindex(fi)).signature.profile.altimeter_quality=NaN;
+                    SWIFT(tindex(fi)).signature.profile.depth_raw=NaN(size(avg.time));
+                    SWIFT(tindex(fi)).signature.profile.altimeter_quality=NaN(size(avg.time));
                 end
                 SWIFT(tindex(fi)).signature.profile.gyro_raw = avg.AHRS_GyroZ;
                 
