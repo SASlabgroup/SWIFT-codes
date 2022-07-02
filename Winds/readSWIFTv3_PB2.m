@@ -57,7 +57,11 @@ if length(tline)>6 & linenum > 1000, % skip boot-up
             thislat = str2num(latstring(1:2)) + str2num(latstring(3:9))./60; % decimal degrees
             if length(thislat)==1 , lat(ggalength) = thislat; else lat(ggalength) = NaN; end
             lonstring = char(gpsdata{3+1}); % string
-            thislon = - ( str2num(lonstring(1:3)) + str2num(lonstring(4:10))./60 ); % decimal degress, negative assumes western hemisphere
+            if length(lonstring)>=10, 
+                thislon = - ( str2num(lonstring(1:3)) + str2num(lonstring(4:10))./60 ); % decimal degress, negative assumes western hemisphere
+            else 
+                thislon = NaN;
+            end
             if length(thislon)==1 , lon(ggalength) = thislon; else lon(ggalength) = NaN; end
             positionlinenum(ggalength) = linenum;
         else
@@ -107,13 +111,25 @@ if zdalength>1, % valid data indicated by a time string
     [timelinenum ui ] = unique(timelinenum);
     gpstime = gpstime(ui);
 
-    alltime = interp1(timelinenum,gpstime,[1:linenum],'linear','extrap');
+    time = interp1(timelinenum,gpstime,positionlinenum,'linear','extrap');
 
-    save([filename(1:end-4) '.mat']);
+    save([filename(1:end-4) '.mat'],'time', 'rawwindspd', 'rawwinddir', 'rawairtemp', 'rawairpres', 'lat', 'lon', 'sog', 'cog', 'pitch', 'roll');
 
 else
     disp('no valid timestamps (ZDA string)')
-    alltime = NaN;
+
+    time = NaN;
+    rawwindspd = NaN; 
+    rawwinddir = NaN;
+    rawairtemp = NaN;
+    rawairpres = NaN;
+    lat = NaN;
+    lon = NaN;
+    sog = NaN;
+    cog = NaN;
+    pitch = NaN;
+    roll = NaN;
+    
 end
 
-time = alltime;
+

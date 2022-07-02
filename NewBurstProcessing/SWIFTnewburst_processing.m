@@ -19,6 +19,7 @@
 clear; close all
 
 fullprocess = true; % option to force concatSWIFT_offloadedSDcard, reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
+useairmarpositions = true; % option to use Airmar (PB2) GPS data instead of SBG or IMU
 applyvelreference = true; % apply drift correction to signature velocity data
 rmwaves = true; % remove wave products (for short dt)
 depthprune = false; % option to remove bins below altimeter reading... set to false in deep water
@@ -27,7 +28,7 @@ dt=30; %timestep to average over in seconds
 num=floor(512/dt); % number of new bursts per normal burst (512 s)
 
 maxsalinity = 35; % for QC
-minsalinity = 25; % for QC
+minsalinity = 15; % for QC
 percentdry = .1; % maximum precent dry to allow when retaining a new burst, increase to keep more
     % also relax the QC in compileSWIFT_SBDtelemetry to keep more partial bursts
 mincor = 0; % for QC when reprocessing turbulence data
@@ -36,7 +37,7 @@ maxdriftspd = 2.5;
 parentdir = '~/Desktop/Main_Jun2022/SWIFTs/';  % change to suit data
 cd(parentdir)
 
-SW_list=dir('SWIFT29*'); % list of SWIFT directories to reprocess
+SW_list=dir('SWIFT26_27Jun*'); % list of SWIFT directories to reprocess
 
 for sn=1:length(SW_list);
     disp(['SWIFT ' num2str(sn) ' of ' num2str(length(SW_list))])
@@ -46,7 +47,11 @@ for sn=1:length(SW_list);
     if fullprocess==true | isempty(dir([name '_reprocessed.mat'])),
         save temp
         %concatSWIFT_offloadedSDcard, reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
-        reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
+        if useairmarpositions
+            reprocess_SIG_raw, reprocess_PB2_raw, reprocess_ACS_raw
+        else
+            reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
+        end
         clear all
         load temp
     end
@@ -757,7 +762,8 @@ for sn=1:length(SW_list);
     clear SWIFT
     SWIFT=SWIFT_highres;
     save([SW_list(sn).name '_highres_dt' num2str(dt) 's.mat'],'SWIFT')
-    clearvars -except SW_list parentdir num dt fullprocess applyvelreference maxsalinity minsalinity mincor percentdry maxdriftspd rmwaves depthprune
+    clearvars -except SW_list parentdir num dt fullprocess applyvelreference maxsalinity minsalinity mincor percentdry maxdriftspd rmwaves depthprune useairmarpositions
+
     cd ..
     
     
