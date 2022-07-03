@@ -276,8 +276,8 @@ if length([SWIFT.time]) > 1,
 else
 end
 
-% quality control drift speeds too fast (prob on deck) with new drift spd
-toofast = [SWIFT.driftspd] > maxdriftspd;
+% quality control drift speeds too fast (prob on deck) with new
+[SWIFT.driftspd] > maxdriftspd
 SWIFT( toofast ) =[];
 battery( toofast ) = [];
 

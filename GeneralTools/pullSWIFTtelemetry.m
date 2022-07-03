@@ -2,7 +2,7 @@ function [ allbatterylevels lasttime lastlat lastlon] = pullSWIFTtelemetry( IDs,
 % pull and compile sbd files from swiftserver for multiple SWIFTs
 % use for quasi-realtime situtational awareness during a mission / project
 %
-%   [ allbatterylevels lasttime lastlat lastlon ] = pullSWIFTtelemetry( IDs, starttime, endtime );
+%   [ voltage lasttime lastlat lastlon ] = pullSWIFTtelemetry( IDs, starttime, endtime );
 %
 %   where inputs at strings arrays of two-digit SWIFT IDs (e.g., ['16';'17';'18';]
 %   startime string (e.g., '2018-09-12T22:00:00')
@@ -105,11 +105,15 @@ end
 
 %% combine the resulting mat files in the top level directory and make map plots
 eval(['!cp *SWIFT*/*SWIFT*start*.mat ./'])
-tempfig = mapSWIFT('watertemp');
+if isfield(SWIFT,'watertemp')
+    tempfig = mapSWIFT('watertemp');
+end
 if isfield(SWIFT,'salinity')
     salinityfig = mapSWIFT('salinity');
 end
-wavefig = mapSWIFT('sigwaveheight');
+if isfield(SWIFT,'sigwaveheight')
+    wavefig = mapSWIFT('sigwaveheight');
+end
 
 clc,
 spaces(1:size(IDs,1)) = ' ';
