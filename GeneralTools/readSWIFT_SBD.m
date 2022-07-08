@@ -57,6 +57,9 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %   J. Thomson 9/2021   fix parsing of Airmar PB200 positions (again)
 %                       * note ambiquity of E-W (+/-) longitudes persists,
 %                       so assume W (-)
+%
+%   J. Thomson 7/2022   add radiometer (CT15) payload type (14)
+%
 
 recip = true; % binary flag to change wave direction to FROM
 
@@ -346,6 +349,13 @@ while 1
     elseif type == 13 & size > 0, % SeaOwl
         disp('reading SeaOWl results')
         SWIFT.FDOM = fread(fid,1,'float');
+        
+    elseif type == 14 & size > 0, % CT15 radiometer
+        disp('reading CT15 Radiometer results')
+        SWIFT.radiometertemp1mean = fread(fid,1,'float');
+        SWIFT.radiometertemp1std = fread(fid,1,'float');
+        SWIFT.radiometertemp2mean = fread(fid,1,'float');
+        SWIFT.radiometertemp2std = fread(fid,1,'float');
         
     elseif type == 50 & size > 0, % microSWIFT, size should be 1228 bytes
         disp('reading microSWIFT')
