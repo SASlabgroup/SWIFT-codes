@@ -72,8 +72,8 @@ for si = 1:length([SWIFT1.time]),
             dir1( dir1 < 0 ) = dir1( dir1 < 0 ) + 360;  % take NW quadrant from negative to 270-360 range
             westdirs = dir1 > 180;
             eastdirs = dir1 < 180;
-            dir1( westdirs ) = dir1 ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
-            dir1( eastdirs ) = dir1 ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
+            %dir1( westdirs ) = dir1 ( westdirs ) - 180; % take reciprocal such wave direction is FROM, not TOWARDS
+            %dir1( eastdirs ) = dir1 ( eastdirs ) + 180; % take reciprocal such wave direction is FROM, not TOWARDS
             SWIFT2(match).energydir = dir1(feindex);
         else
             SWIFT2(match).energyperiod = NaN;
