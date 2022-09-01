@@ -14,10 +14,12 @@ function [ allbatterylevels lasttime lastlat lastlon] = pullSWIFTtelemetry( IDs,
 %
 %   J. Thomson, 9/2018
 %           5/2021 make compatible with microSWIFTs (three digit IDs)
+%           8/2022 make compatible with Winddows PCs
 
 global battery
 
 options = weboptions('Timeout', 60);
+pcflag = ispc; % binary flag to determine if a Windows PC (use different commands for copy, unzip)
 
 
 if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
@@ -64,14 +66,19 @@ for si=1:size(IDs,1),
     
     out = websave(['SWIFT' IDs(si,:) '.zip'],[baseurl buoy  '&start=' starttime '&end=' endtime '&format=zip'],options)
     
-    eval(['!unzip SWIFT' IDs(si,:) '.zip']);
+    if pcflag
+        zipfile = ['SWIFT' IDs(si,:) '.zip'];
+        unzipstatus = system( ['compact \u "' zipfile '" /i /Q'] )
+    else
+        eval(['!unzip SWIFT' IDs(si,:) '.zip']);
+    end
     expanded = dir(['*SWIFT ' IDs(si,:) '*']);
     if length(expanded)==1 && expanded(1).isdir == true,
         cd(expanded(1).name)
         
         % run compile SBD, which calls readSWIFT_SBD for each file
         % use a temp file work around the clear all in compile
-        save temp si IDs starttime endtime options allbatterylevels lasttime lastlon lastlat SWIFTtype
+        save temp si IDs starttime endtime options allbatterylevels lasttime lastlon lastlat SWIFTtype pcflag
         compileSWIFT_SBDservertelemetry
         load temp
         wd = pwd;
@@ -104,7 +111,11 @@ for si=1:size(IDs,1),
 end
 
 %% combine the resulting mat files in the top level directory and make map plots
-eval(['!cp *SWIFT*/*SWIFT*start*.mat ./'])
+if pcflag
+    copystatus = system(['copy *SWIFT*\*SWIFT*start*.mat .\'])
+else
+    eval(['!cp *SWIFT*/*SWIFT*start*.mat ./'])
+end
 if isfield(SWIFT,'watertemp')
     tempfig = mapSWIFT('watertemp');
 end

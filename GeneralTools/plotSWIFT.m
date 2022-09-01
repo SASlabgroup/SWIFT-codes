@@ -33,10 +33,14 @@ if isempty(SWIFT)
     return;
 end
 
-% Define working directory (used to save figures)
-wd = pwd;
-wdi = find(wd == '/',1,'last');
-wd = wd((wdi+1):length(wd));
+% use ID or working directory to name figure output
+if isfield(SWIFT(1),'ID')
+    wd = SWIFT(1).ID;
+else
+    wd = pwd;
+    wdi = find(wd == '/',1,'last');
+    wd = wd((wdi+1):length(wd));
+end
 
 % Save existing fontsize and fontweight, then set them globally 
 % (so changes are applied to all figures called within the function)
