@@ -150,8 +150,8 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     end
     
     if numCT == 3
-        valuearray = {'x','r','none';
-          '+','g','none';
+        valuearray = {'x','b','none';
+          '+','c','none';
           '.','k','none'};
     elseif numCT == 1
         valuearray = {'x','b','none'};
