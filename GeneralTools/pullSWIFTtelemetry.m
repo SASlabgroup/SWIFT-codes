@@ -68,7 +68,7 @@ for si=1:size(IDs,1),
     
     if pcflag
         zipfile = ['SWIFT' IDs(si,:) '.zip'];
-        unzipstatus = system( ['compact \u "' zipfile '" /i /Q'] )
+        unzip(zipfile)
     else
         eval(['!unzip SWIFT' IDs(si,:) '.zip']);
     end
