@@ -16,7 +16,7 @@ wd = wd( lastslash : end );
 
 % initialize movie
 fast = false;  % fast means no printed timestamps
-vidObj = VideoWriter([wd '_video' com '.avi']);
+vidObj = VideoWriter([wd '_video' com ],'MPEG-4');
 open(vidObj);
 
 cd([ com '/Raw/' ]);
