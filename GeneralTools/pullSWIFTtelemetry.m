@@ -116,13 +116,14 @@ if pcflag
 else
     eval(['!cp *SWIFT*/*SWIFT*start*.mat ./'])
 end
-if isfield(SWIFT,'watertemp')
+
+if isfield(SWIFT,'watertemp') && ~isempty(SWIFT)
     tempfig = mapSWIFT('watertemp');
 end
-if isfield(SWIFT,'salinity')
+if isfield(SWIFT,'salinity') && ~isempty(SWIFT)
     salinityfig = mapSWIFT('salinity');
 end
-if isfield(SWIFT,'sigwaveheight')
+if isfield(SWIFT,'sigwaveheight') && ~isempty(SWIFT)
     wavefig = mapSWIFT('sigwaveheight');
 end
 
