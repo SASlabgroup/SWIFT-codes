@@ -127,7 +127,7 @@ if isfield(SWIFT,'sigwaveheight') && ~isempty(SWIFT)
     wavefig = mapSWIFT('sigwaveheight');
 end
 
-clc,
+%clc,
 spaces(1:size(IDs,1)) = ' ';
 commas(1:size(IDs,1)) = ',';
 Vs(1:size(IDs,1)) = 'V';

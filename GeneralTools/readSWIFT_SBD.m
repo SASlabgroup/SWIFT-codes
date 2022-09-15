@@ -71,7 +71,7 @@ PBlon = NaN;
 
 fid = fopen(fname); % open file for reading
 BatteryVoltage = NaN; % placeholder
-SWIFTversion = []; % placeholder
+SWIFTversion = NaN; % placeholder
 
 %% SWIFT id flag from file name
 % note that all telemetry files from server start with 5 char 'buoy-'
@@ -222,12 +222,14 @@ while 1
         SWIFT.salinity(CTcounter + 1) = fread(fid,1,'float'); %
         CTcounter = CTcounter + 1;
         
-        if CTcounter == 1 %add field for CT depths (temp and sal), meters
-            SWIFT.CTdepth(1) = .18;
-        elseif CTcounter == 2
-            SWIFT.CTdepth(2) = .66;
-        elseif CTcounter == 3
-            SWIFT.CTdepth(3) = 1.22;
+        if port==7
+           SWIFT.CTdepth(CTcounter) =.18;
+        elseif port==8 && SWIFTversion == 3
+            SWIFT.CTdepth(CTcounter) = .66;
+        elseif port==8 && SWIFTversion == 4
+            SWIFT.CTdepth(CTcounter) = .2;
+        elseif port==9
+            SWIFT.CTdepth(CTcounter) = 1.22;
         end
         
         
@@ -477,18 +479,16 @@ if isfield(SWIFT,'windspectra'),
 else
 end
 
-%% fix CTdepth field if 1 or 2 values
+%% sort CTdepth field 
 if isfield(SWIFT,'CTdepth')
-    if length(SWIFT.CTdepth) == 1
-        if SWIFTversion == 3 %v3, uses IMU waves
-            SWIFT.CTdepth = .66;
-        elseif SWIFTversion == 4 %v4, uses SBG waves
-            SWIFT.CTdepth = .18;
-        else
-            SWIFT.CTdepth = nan;
+    if length(SWIFT.CTdepth) > 1
+        for si=1:length(SWIFT)
+            [~, sorti] = sort(SWIFT(si).CTdepth); 
+            SWIFT(si).watertemp = SWIFT(si).watertemp(sorti);
+            SWIFT(si).salinity= SWIFT(si).salinity(sorti);
+            SWIFT(si).CTdepth = SWIFT(si).CTdepth(sorti);
         end
-    elseif length(SWIFT.CTdepth) == 2
-        SWIFT.CTdepth = [0.66; 1.22;]; % salty SWIFT with uppermost CT removed
+    else
     end
 end
 
