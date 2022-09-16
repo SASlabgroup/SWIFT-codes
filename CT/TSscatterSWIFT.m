@@ -52,16 +52,13 @@ for fi = 1:length(flist),
             s1 = scatter(Sarray(:,1),Tarray(:,1),[],color,'s','fill'); hold on
             s2 = scatter(Sarray(:,2),Tarray(:,2),[],color,'o','fill');
             s3 = scatter(Sarray(:,3),Tarray(:,3),[],color,'d','fill');
-            
+            CTlabel(1,:) = [ num2str( SWIFT(1).CTdepth(1),2 ) ' m'];
+            CTlabel(2,:) = [ num2str( SWIFT(1).CTdepth(2),2 ) ' m'];
+            CTlabel(3,:) = [ num2str( SWIFT(1).CTdepth(3),3 ) ' m'];
         end
         
     end
     
-end
-
-if multdepths, 
-    legend([s1 s2 s3],'0.1 m','0.5 m','1.2 m','location','northwest')
-else
 end
 
 %axis([ 25 31 -2 4])
@@ -91,6 +88,13 @@ if seawaterflag == true,
 else
 end
 
+if multdepths && ~seawaterflag
+    legend([s1 s2 s3],CTlabel,'location','northwest')
+elseif multdepths && seawaterflag
+    legend([s1 s2 s3],CTlabel,'location','northwest')
+    %legend([s1 s2 s3],'0.1 m','0.5 m','1.2 m','freezing','isopyncnals','location','northwest')
+else
+end
 
 shg
 print('-dpng',[wd  '_TSscatter_' colorfield '.png'])

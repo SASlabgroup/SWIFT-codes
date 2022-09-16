@@ -214,6 +214,16 @@ battery(badburst) = [];
 SWIFT = SWIFT(tinds);
 battery = battery(tinds);
 
+%% look for outliers of position
+[cleanlon cloni] = filloutliers([SWIFT.lon],'linear');
+[cleanlat clati] = filloutliers([SWIFT.lat],'linear');
+if cloni == clati, 
+    for ci = find(cloni)
+        SWIFT(ci).lon = cleanlon(ci);
+        SWIFT(ci).lat = cleanlat(ci);
+    end
+    disp([num2str(sum(cloni)) ' positions filled that were outliers'])
+end
 
 %% calc drift (note that wind slip, which is 1%, is not removed)
 % drift speed is included from the Airmar results, 
@@ -235,14 +245,14 @@ if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
     direction = -180 ./ 3.14 .* atan2(dydt,dxdt); % cartesian direction [deg]
     direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
     direction( direction<0) = direction( direction<0 ) + 360; %make quadrant II 270->360 instead of -90->0
-    
+
     for si = 1:length(SWIFT),
         if si == 1 | si == length(SWIFT),
             SWIFT(si).driftspd = NaN;
             SWIFT(si).driftdirT = NaN;
         else
-            SWIFT(si).driftspd = speed(si);%speed(tinds(ai));
-            SWIFT(si).driftdirT = direction(si);%dir(tinds(ai));
+            SWIFT(si).driftspd = speed(si);
+            SWIFT(si).driftdirT = direction(si);
         end
     end
     
