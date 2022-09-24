@@ -230,6 +230,8 @@ while 1
             SWIFT.CTdepth(CTcounter) = .2;
         elseif port==9
             SWIFT.CTdepth(CTcounter) = 1.22;
+        else
+            SWIFT.CTdepth(CTcounter) = 0.66;
         end
         
         

@@ -63,7 +63,7 @@ if isfield(SWIFT,'windspd') && any(~isnan([SWIFT.windspd])),
     ax(1) = subplot(n,1,1);
     plot( [SWIFT.time],[SWIFT.windspd],'bx','linewidth',2)
     datetick;
-    ylabel('Wind [m/s]')
+    ylabel('Wind [m/s]'), grid
     set(gca,'Ylim',[0 20])% ceil(max([SWIFT.windspd]))] )
 end %if
 
@@ -71,7 +71,7 @@ if isfield(SWIFT,'sigwaveheight')
     ax(2) = subplot(n,1,2);
     plot( [SWIFT.time],[SWIFT.sigwaveheight],'g+','linewidth',2)
     datetick;
-    ylabel('Wave H_s [m]')
+    ylabel('Wave H_s [m]'), grid
     set(gca,'Ylim',[0 inf])%ceil(max([SWIFT.sigwaveheight]))] )
 end %if
 
@@ -80,7 +80,7 @@ if isfield(SWIFT,'peakwaveperiod')
     plot( [SWIFT.time],[SWIFT.peakwaveperiod],'g+','linewidth',2)
     datetick;
     ylabel('Wave T_p [s]')
-    set(gca,'Ylim',[0 20])
+    set(gca,'Ylim',[0 20]), grid
 end %if 
 
 if isfield(SWIFT,'peakwavedirT')
@@ -89,14 +89,14 @@ if isfield(SWIFT,'peakwavedirT')
     datetick;
     ylabel('directions [^\circ T]')
     set(gca,'Ylim',[0 360])
-    set(gca,'YTick',[0 180 360])
+    set(gca,'YTick',[0 180 360]), grid
 end %if
 
 if isfield(SWIFT,'winddirT') && length([SWIFT.winddirT]) == length([SWIFT.time])
     ax(4) = subplot(n,1,4);
     plot([SWIFT.time],[SWIFT.winddirT],'bx','linewidth',2), hold on
     datetick;
-    ylabel('directions [^\circ T]')
+    ylabel('directions [^\circ T]'), grid
     set(gca,'Ylim',[0 360])
     set(gca,'YTick',[0 180 360])
     %legend('Wind','Waves');
@@ -136,7 +136,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     namearray =  {'Marker';'Color';'Linestyle'}; 
     if isfield(SWIFT,'CTdepth')
         for cti = 1:numCT
-            legendlabs{cti,1} = [num2str(SWIFT(1).CTdepth(cti),3) ' m'];
+            legendlabs{cti,1} = [num2str(SWIFT(end).CTdepth(cti),3) ' m'];
         end
     elseif numCT == 3  & ~isfield(SWIFT,'CTdepth')
         disp('CTdepth field not found: using default SWIFT depths')
@@ -189,7 +189,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     datetick;
     set(h,namearray,valuearray) 
     if exist('legendlabs'); legend(legendlabs,'Location','NortheastOutside'); end%if
-    ylabel('watertemp [C]')
+    ylabel('watertemp [C]'), grid on
     %set(gca,'Ylim',[-2 30])
 end
 
@@ -200,7 +200,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     datetick;
     set(h,namearray,valuearray) 
     if exist('legendlabs'); legend(legendlabs,'Location','NortheastOutside'); end%if
-    ylabel('salinity [PSU]')
+    ylabel('salinity [PSU]'), grid on
     %set(gca,'Ylim',[0 36])
 end
 
