@@ -60,6 +60,8 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %
 %   J. Thomson 7/2022   add radiometer (CT15) payload type (14)
 %
+%   J. Thomson, 9/2022  add compact microSWIFT payload type (52), credit Jake Davis
+%
 
 recip = true; % binary flag to change wave direction to FROM
 
@@ -427,6 +429,31 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
+    elseif type == 52 & size > 0, % microSWIFT, size should be 327 bytes
+        disp('reading microSWIFT (compact)')
+
+        SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
+        SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
+        SWIFT.peakwavedirT       = half.typecast(fread(fid, 1,'*uint16')).double; % dominant wave direction
+        SWIFT.wavespectra.energy = half.typecast(fread(fid,42,'*uint16')).double; % spectral energy density of sea surface elevation
+        fmin                     = half.typecast(fread(fid, 1,'*uint16')).double; 
+        fmax                     = half.typecast(fread(fid, 1,'*uint16')).double; 
+        fstep                    = (fmax - fmin) / (length(SWIFT.wavespectra.energy)- 1);
+        SWIFT.wavespectra.freq   = fmin:fstep:fmax; % frequency
+        SWIFT.wavespectra.a1     = double(fread(fid,42,'*int8'))/100; % spectral moment
+        SWIFT.wavespectra.b1     = double(fread(fid,42,'*int8'))/100; % spectral moment
+        SWIFT.wavespectra.a2     = double(fread(fid,42,'*int8'))/100; % spectral moment
+        SWIFT.wavespectra.b2     = double(fread(fid,42,'*int8'))/100; % spectral moment
+        SWIFT.wavespectra.check  = double(fread(fid,42,'*uint8'))/10; % spectral check factor (should be unity)
+        SWIFT.lat                = fread(fid, 1,'float'); % Latitude
+        SWIFT.lon                = fread(fid, 1,'float'); % Longitude
+        SWIFT.watertemp          = half.typecast(fread(fid, 1,'*uint16')).double; % water temp
+        SWIFT.salinity           = half.typecast(fread(fid, 1,'*uint16')).double; % salinity
+        BatteryVoltage           = half.typecast(fread(fid, 1,'*uint16')).double; % battery level
+        epochTime                = fread(fid, 1,'float'); % epoch time
+        asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
+        SWIFT.time               = datenum(asDatetime); % time at end of burst
+
     else
         
     end
