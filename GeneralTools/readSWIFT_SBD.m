@@ -449,6 +449,7 @@ while 1
         SWIFT.lon                = fread(fid, 1,'float'); % Longitude
         SWIFT.watertemp          = half.typecast(fread(fid, 1,'*uint16')).double; % water temp
         SWIFT.salinity           = half.typecast(fread(fid, 1,'*uint16')).double; % salinity
+        SWIFT.CTdepth            = 0.5; % meters
         BatteryVoltage           = half.typecast(fread(fid, 1,'*uint16')).double; % battery level
         epochTime                = fread(fid, 1,'float'); % epoch time
         asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');

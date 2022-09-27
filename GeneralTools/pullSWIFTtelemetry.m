@@ -112,9 +112,9 @@ end
 
 %% combine the resulting mat files in the top level directory and make map plots
 if pcflag
-    copystatus = system(['copy *SWIFT*\*SWIFT*start*.mat .\'])
+    copystatus = system(['copy *SWIFT*\*SWIFT*telemetry.mat .\'])
 else
-    eval(['!cp *SWIFT*/*SWIFT*start*.mat ./'])
+    eval(['!cp *SWIFT*/*SWIFT*telemetry.mat ./'])
 end
 
 if isfield(SWIFT,'watertemp') && ~isempty(SWIFT)
