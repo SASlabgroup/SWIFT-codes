@@ -3,8 +3,14 @@ function SWIFT2NC(SWIFT_in,filename)
 
 % creates a netCDF file using existing SWIFT structure and writes it into 'filename'
 % (must include .nc)
-
+%
+% [] = SWIFT2NC(SWIFT_in,filename);
+%
 % skip substructures that are not supported yet:
+%
+% original written by Lucia Hosekova, Oct 2019
+%   updated by J. Thomson, Sep 2022
+%
 
 SWIFT=SWIFT_in
 if isfield(SWIFT,'wavehistogram')
@@ -16,7 +22,7 @@ end
 
 ncid=netcdf.create(filename,'CLOBBER');
 t_dim=netcdf.defDim(ncid,'time', length(SWIFT));
-full_names=fieldnames(SWIFT);
+full_names=fieldnames(SWIFT)
 
 if isfield(SWIFT,'wavespectra') && length(SWIFT(1).wavespectra.freq)>0
     f_dim = netcdf.defDim(ncid,'freq', length(SWIFT(1).wavespectra.freq));
@@ -44,7 +50,7 @@ end
 
 
 
-j=1
+j=1;
 for i=1:length(full_names);
     if ~strcmp(full_names{i},'ID') && ~strcmp(full_names{i},'date')
         if strcmp(full_names{i},'signature')
@@ -65,7 +71,7 @@ for i=1:length(full_names);
         j = j+1;
     end
 end
-
+names
 
 %% creating netcdf variables 
 
@@ -116,6 +122,7 @@ for i=1:length(names)
 end
 
 netcdf.endDef(ncid);
+
 %% filling them with values
 
 for i=1:length(names)
