@@ -46,10 +46,10 @@ for fi = 1:length(flist),
             elseif min( getfield(SWIFT(si),colorfield) ) ~= 0,
                 color(si) = min( getfield(SWIFT(si),colorfield) ); % use max incase of multiple values (i.e., 3 CTs)
             else
-                color(si) = NaN;
+                color(si) = 0;
             end
             if ~newmap,
-                cindex = round((color(si)-cscale(1))./(cscale(2)-cscale(1))*64);
+                cindex = round((color(si)-cscale(1))./(cscale(2)-cscale(1))*64)
                 if ~isnan(cindex) && cindex>0 && cindex<65,
                     plot([SWIFT(si).lon],[SWIFT(si).lat],'.','markersize',12,'color',cmap(cindex,:)); hold on % version with bathy
                 end
@@ -57,7 +57,7 @@ for fi = 1:length(flist),
         end
             
         if newmap
-            h = scatter([SWIFT.lon],[SWIFT.lat],60,color,'filled'); % version with no bathy          
+            h = scatter([SWIFT.lon],[SWIFT.lat],60,color','filled'); % version with no bathy          
             hold on
             u = [SWIFT.driftspd] .* sind([SWIFT.driftdirT]);
             v = [SWIFT.driftspd] .* cosd([SWIFT.driftdirT]);

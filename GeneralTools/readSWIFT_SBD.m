@@ -439,7 +439,7 @@ while 1
         fmin                     = half.typecast(fread(fid, 1,'*uint16')).double; 
         fmax                     = half.typecast(fread(fid, 1,'*uint16')).double; 
         fstep                    = (fmax - fmin) / (length(SWIFT.wavespectra.energy)- 1);
-        SWIFT.wavespectra.freq   = fmin:fstep:fmax; % frequency
+        SWIFT.wavespectra.freq   = [fmin:fstep:fmax]'; % frequency
         SWIFT.wavespectra.a1     = double(fread(fid,42,'*int8'))/100; % spectral moment
         SWIFT.wavespectra.b1     = double(fread(fid,42,'*int8'))/100; % spectral moment
         SWIFT.wavespectra.a2     = double(fread(fid,42,'*int8'))/100; % spectral moment

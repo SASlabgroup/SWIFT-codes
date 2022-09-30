@@ -6,7 +6,7 @@
 
 %% loop thru and find means, then adjust to shared mean
 
-numCT = length(SWIFT(1).salinity);  % number of CT sensors (1,2, or 3)
+numCT = length(SWIFT(1).salinity) % number of CT sensors (1,2, or 3)
 
 clear salinity
 
@@ -14,13 +14,13 @@ for si=1:length(SWIFT)
     salinity(si,:) = SWIFT(si).salinity(:); 
 end
 
-smean = nanmedian(salinity);
+smean = nanmedian(salinity)
 
-%offsets = [1.15 0.3 0]; % steady offsets (for SWIFT 16 during play 4)
+%offsets = [-0.2 0.0]; % steady offsets 
 %offsets = [1.3 0.3 0]; % steady offsets (for SWIFT 17 during play 4)
 %offsets = [NaN 0.18 0]; % steady offsets (for SWIFT 15 during play 4)
 %offsets = [0.18 0]; % steady offsets (for SWIFT 12 during play 4)
-offsets = median(smean)-smean; % consistent mean
+offsets = nanmedian(smean)-smean; % consistent mean
 %offsets = max(smean)-smean; % consistent max
 
 for si=1:length(SWIFT)
