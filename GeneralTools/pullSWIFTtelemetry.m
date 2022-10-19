@@ -115,7 +115,7 @@ if pcflag
     slist = dir('buoy*');
     for si=1:length(slist)
         fname = dir([ slist(si).name '\*telemetry.mat' ]);
-        copystatus = system(['copy ' slist(si).name '\' fname ' .\'])
+        copystatus = system(['copy ' slist(si).name '\' fname.name ' .\'])
     end
 else
     eval(['!cp *SWIFT*/*SWIFT*telemetry.mat ./'])
