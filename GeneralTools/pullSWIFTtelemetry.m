@@ -97,7 +97,12 @@ for si=1:size(IDs,1),
             lastlon(si) = NaN;
         end
         
-        % keep going to next SWIFT
+        % copy the compiled results to the parent dir, then keep going to next SWIFT
+        if pcflag
+            copystatus = copyfile('*telemetry.mat','..\')
+        else
+            copystatus = copyfile('*telemetry.mat','../')
+        end
         cd('../')
         
     else
@@ -111,15 +116,7 @@ for si=1:size(IDs,1),
 end
 
 %% combine the resulting mat files in the top level directory and make map plots
-if pcflag
-    slist = dir('buoy*');
-    for si=1:length(slist)
-        fname = dir([ slist(si).name '\*telemetry.mat' ]);
-        copystatus = system(['copy ' slist(si).name '\' fname.name ' .\'])
-    end
-else
-    eval(['!cp *SWIFT*/*SWIFT*telemetry.mat ./'])
-end
+
 
 if isfield(SWIFT,'watertemp') && ~isempty(SWIFT)
     tempfig = mapSWIFT('watertemp');
