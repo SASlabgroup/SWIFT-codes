@@ -112,7 +112,11 @@ end
 
 %% combine the resulting mat files in the top level directory and make map plots
 if pcflag
-    copystatus = system(['copy *SWIFT*\*SWIFT*telemetry.mat .\'])
+    slist = dir('buoy*');
+    for si=1:length(slist)
+        fname = dir([ slist(si).name '\*telemetry.mat' ]);
+        copystatus = system(['copy ' slist(si).name '\' fname ' .\'])
+    end
 else
     eval(['!cp *SWIFT*/*SWIFT*telemetry.mat ./'])
 end

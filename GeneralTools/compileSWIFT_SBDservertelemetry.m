@@ -26,7 +26,7 @@ micro = false;
 
 minwaveheight = 0; % minimum wave height in data screening
 
-minsalinity = 20; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 3;  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
 
