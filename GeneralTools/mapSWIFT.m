@@ -15,6 +15,7 @@ function h = mapSWIFT(colorfield,varargin);
 % J. Thomson, 9/2018
 
 newmap = false;
+makequiver = false;
 
 if isempty(varargin)
     figure, clf
@@ -59,9 +60,12 @@ for fi = 1:length(flist),
         if newmap
             h = scatter([SWIFT.lon],[SWIFT.lat],60,color','filled'); % version with no bathy          
             hold on
-            u = [SWIFT.driftspd] .* sind([SWIFT.driftdirT]);
-            v = [SWIFT.driftspd] .* cosd([SWIFT.driftdirT]);
-            quiver([SWIFT.lon],[SWIFT.lat],u,v,.5,'k-');
+            if makequiver
+                u = [SWIFT.driftspd] .* sind([SWIFT.driftdirT]);
+                v = [SWIFT.driftspd] .* cosd([SWIFT.driftdirT]);
+                quiver([SWIFT.lon],[SWIFT.lat],u,v,.5,'k-');
+            else
+            end
         end
         
         else,
