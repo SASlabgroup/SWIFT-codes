@@ -43,6 +43,8 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs)
 %
 %#codegen
 
+testing = false;
+
 %% tunable parameters
 
 % low frequency noise ratio tolerance (not applied as of Nov 2018)
@@ -293,14 +295,6 @@ E = Exx + Eyy;
 %E(f<=fchange) = Ezz(f<=fchange); % use heave acceleratiosn for scalar energy of swell
 %end
 
-% testing bits
-%E = nanmean([Ezz' (Exx+Eyy)'],2)';
-%E = Eyy+Exx; % pure GPS version (for testing)
-%E( check > maxEratio | check < minEratio ) = 0; 
-%figure, loglog(f,check)
-%clf, loglog(f,UU+VV,'g',f,Exx+Eyy,'b',f,Ezz,'r'),legend('UU+VV','XX+YY','ZZ') % for testing
-%loglog(f,abs(Cxz),f,abs(Cyz))
-drawnow
 
 %% wave stats
 fwaves = f>0.05 & f<1; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
@@ -371,6 +365,9 @@ end
 
 %% prune high frequency results
 E( f > maxf ) = [];
+Exx( f > maxf ) = [];
+Eyy( f > maxf ) = [];
+Ezz( f > maxf ) = [];
 dir( f > maxf ) = [];
 spread( f > maxf ) = [];
 a1( f > maxf ) = [];
@@ -403,6 +400,26 @@ if Tp>20,
      Tp = 9999; 
      Dp = 9999; 
 else 
+end
+
+%% testing bits
+
+if testing
+
+    figure(1), clf
+    subplot(2,1,1)
+    loglog(f,Exx+Eyy, f, Ezz )
+    set(gca,'YLim',[1e-3 2e2])
+    legend('E=(UU+VV)/f^2','E=ZZ')
+    ylabel('Energy [m^2/Hz]')
+    title(['Hs = ' num2str(Hs,2) ', Tp = ' num2str(Tp,2) ', Dp = ' num2str(Dp,3)])
+    subplot(2,1,2)
+    semilogx(f,a1, f,b1, f,a2,  f,b2)
+    set(gca,'YLim',[-1 1])
+    legend('a1','b1','a2','b2')
+    xlabel('frequency [Hz]')
+    drawnow
+
 end
 
 
