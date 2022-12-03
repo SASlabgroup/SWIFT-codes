@@ -22,13 +22,14 @@ cd(parentdir);
 wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
+telemfile = dir('SWIFT*telemetry.mat');
 
 if ~isempty(dir([wd '_reprocessedSIG.mat'])) & readfromconcat~=1,
     SIGrep = true;
     load([wd '_reprocessedSIG.mat'])
 else
     SIGrep = false;
-    load([wd '.mat'])
+    load(telemfile.name,'SWIFT')
 end
 
 cd('SBG/Raw/') % v4.0
@@ -98,7 +99,7 @@ for di = 1:length(dirlist),
             %% plot raw heave
             if plotflag %& length(alltime)==length(sbgData.ShipMotion.heave)
                 %plot(alltime,sbgData.ShipMotion.heave,'k'), hold on
-                figure(1), clf
+                %figure(1), clf
                 subplot(4,1,1)
                 plot(t,z,'b.')
                 datetick, grid, ylabel('Sea surface elevation [m]')
@@ -134,7 +135,7 @@ for di = 1:length(dirlist),
             % interp to the original freq bands
             if interpf
                 E = interp1(newf,newE,f);
-                altE = interp1(altf,altE,f);
+                if length(altE) > 1 , altE = interp1(altf,altE,f); else altE = NaN(size(f)); end
                 a1 = interp1(newf,newa1,f);
                 b1 = interp1(newf,newb1,f);
                 a2 = interp1(newf,newa2,f);
