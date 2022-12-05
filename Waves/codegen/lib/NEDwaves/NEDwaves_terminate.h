@@ -1,23 +1,35 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// NEDwaves_terminate.h
-//
-// Code generation for function 'NEDwaves_terminate'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: NEDwaves_terminate.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef NEDWAVES_TERMINATE_H
 #define NEDWAVES_TERMINATE_H
 
-// Include files
+/* Include Files */
 #include "rtwtypes.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-extern void NEDwaves_terminate();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Function Declarations */
+extern void NEDwaves_terminate(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
-// End of code generation (NEDwaves_terminate.h)
+/*
+ * File trailer for NEDwaves_terminate.h
+ *
+ * [EOF]
+ */

@@ -1,31 +1,38 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// minOrMax.h
-//
-// Code generation for function 'minOrMax'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: minOrMax.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef MINORMAX_H
 #define MINORMAX_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-namespace coder {
-namespace internal {
-void maximum(const ::coder::array<double, 2U> &x, double *ex, int *idx);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void minimum(const ::coder::array<double, 2U> &x, double *ex, int *idx);
+/* Function Declarations */
+void maximum(const emxArray_real_T *x, double *ex, int *idx);
 
-} // namespace internal
-} // namespace coder
+void minimum(const emxArray_real_T *x, double *ex, int *idx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
-// End of code generation (minOrMax.h)
+/*
+ * File trailer for minOrMax.h
+ *
+ * [EOF]
+ */

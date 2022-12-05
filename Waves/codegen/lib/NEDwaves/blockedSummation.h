@@ -1,27 +1,36 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// blockedSummation.h
-//
-// Code generation for function 'blockedSummation'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: blockedSummation.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef BLOCKEDSUMMATION_H
 #define BLOCKEDSUMMATION_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-namespace coder {
-float blockedSummation(const ::coder::array<float, 1U> &x, int vlen);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/* Function Declarations */
+float blockedSummation(const emxArray_real32_T *x, int vlen);
+
+#ifdef __cplusplus
 }
+#endif
 
 #endif
-// End of code generation (blockedSummation.h)
+/*
+ * File trailer for blockedSummation.h
+ *
+ * [EOF]
+ */

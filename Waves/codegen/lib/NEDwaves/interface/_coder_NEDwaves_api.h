@@ -1,48 +1,87 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// _coder_NEDwaves_api.h
-//
-// Code generation for function 'NEDwaves'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: _coder_NEDwaves_api.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef _CODER_NEDWAVES_API_H
 #define _CODER_NEDWAVES_API_H
 
-// Include files
-#include "coder_array_mex.h"
+/* Include Files */
 #include "emlrt.h"
 #include "tmwtypes.h"
-#include <algorithm>
-#include <cstring>
+#include <string.h>
 
-// Variable Declarations
+/* Type Definitions */
+#ifndef struct_emxArray_real32_T
+#define struct_emxArray_real32_T
+struct emxArray_real32_T {
+  real32_T *data;
+  int32_T *size;
+  int32_T allocatedSize;
+  int32_T numDimensions;
+  boolean_T canFreeData;
+};
+#endif /* struct_emxArray_real32_T */
+#ifndef typedef_emxArray_real32_T
+#define typedef_emxArray_real32_T
+typedef struct emxArray_real32_T emxArray_real32_T;
+#endif /* typedef_emxArray_real32_T */
+
+#ifndef struct_emxArray_real_T
+#define struct_emxArray_real_T
+struct emxArray_real_T {
+  real_T *data;
+  int32_T *size;
+  int32_T allocatedSize;
+  int32_T numDimensions;
+  boolean_T canFreeData;
+};
+#endif /* struct_emxArray_real_T */
+#ifndef typedef_emxArray_real_T
+#define typedef_emxArray_real_T
+typedef struct emxArray_real_T emxArray_real_T;
+#endif /* typedef_emxArray_real_T */
+
+/* Variable Declarations */
 extern emlrtCTX emlrtRootTLSGlobal;
 extern emlrtContext emlrtContextGlobal;
 
-// Function Declarations
-void NEDwaves(coder::array<real32_T, 1U> *north,
-              coder::array<real32_T, 1U> *east,
-              coder::array<real32_T, 1U> *down, real_T fs, real_T *Hs,
-              real_T *Tp, real_T *Dp, coder::array<real_T, 2U> *E,
-              coder::array<real_T, 2U> *f, coder::array<real_T, 2U> *a1,
-              coder::array<real_T, 2U> *b1, coder::array<real_T, 2U> *a2,
-              coder::array<real_T, 2U> *b2, coder::array<real_T, 2U> *check);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Function Declarations */
+void NEDwaves(emxArray_real32_T *north, emxArray_real32_T *east,
+              emxArray_real32_T *down, real_T fs, real_T *Hs, real_T *Tp,
+              real_T *Dp, emxArray_real_T *E, emxArray_real_T *f,
+              emxArray_real_T *a1, emxArray_real_T *b1, emxArray_real_T *a2,
+              emxArray_real_T *b2, emxArray_real_T *check);
 
 void NEDwaves_api(const mxArray *const prhs[4], int32_T nlhs,
                   const mxArray *plhs[10]);
 
-void NEDwaves_atexit();
+void NEDwaves_atexit(void);
 
-void NEDwaves_initialize();
+void NEDwaves_initialize(void);
 
-void NEDwaves_terminate();
+void NEDwaves_terminate(void);
 
-void NEDwaves_xil_shutdown();
+void NEDwaves_xil_shutdown(void);
 
-void NEDwaves_xil_terminate();
+void NEDwaves_xil_terminate(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
-// End of code generation (_coder_NEDwaves_api.h)
+/*
+ * File trailer for _coder_NEDwaves_api.h
+ *
+ * [EOF]
+ */

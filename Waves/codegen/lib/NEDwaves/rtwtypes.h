@@ -1,17 +1,17 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// rtwtypes.h
-//
-// Code generation for function 'NEDwaves'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: rtwtypes.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef RTWTYPES_H
 #define RTWTYPES_H
 
-// Include files
+/* Include Files */
 
 #ifndef __cplusplus
 #include <stdbool.h>
@@ -23,12 +23,12 @@ extern "C" {
 
 /*=======================================================================*
  * Target hardware information
- *   Device type: Generic->Unspecified (assume 32-bit Generic)
+ *   Device type: ARM Compatible->ARM Cortex
  *   Number of bits:     char:   8    short:   16    int:  32
  *                       long:  32
  *                       native word size:  32
- *   Byte ordering: Unspecified
- *   Signed integer division rounds to: Undefined
+ *   Byte ordering: LittleEndian
+ *   Signed integer division rounds to: Zero
  *   Shift right on a signed integer as arithmetic shift: on
  *=======================================================================*/
 
@@ -64,6 +64,7 @@ typedef char_T byte_T;
 /*===========================================================================*
  * Complex number type definitions                                           *
  *===========================================================================*/
+#define CREAL_T
 typedef struct {
   real32_T re;
   real32_T im;
@@ -115,18 +116,18 @@ typedef struct {
  *   uint8_T, uint16_T, uint32_T  - unsigned 8, 16, or 32 bit integers   *
  *=======================================================================*/
 
-static const int8_T MAX_int8_T = 127;
-static const int8_T MIN_int8_T = -128;
-static const uint8_T MAX_uint8_T = 255U;
-static const uint8_T MIN_uint8_T = 0;
-static const int16_T MAX_int16_T = 32767;
-static const int16_T MIN_int16_T = -32768;
-static const uint16_T MAX_uint16_T = 65535U;
-static const uint16_T MIN_uint16_T = 0;
-static const int32_T MAX_int32_T = 2147483647;
-static const int32_T MIN_int32_T = -2147483647 - 1;
-static const uint32_T MAX_uint32_T = 0xFFFFFFFFU;
-static const uint32_T MIN_uint32_T = 0;
+#define MAX_int8_T ((int8_T)(127))
+#define MIN_int8_T ((int8_T)(-128))
+#define MAX_uint8_T ((uint8_T)(255))
+#define MIN_uint8_T ((uint8_T)(0))
+#define MAX_int16_T ((int16_T)(32767))
+#define MIN_int16_T ((int16_T)(-32768))
+#define MAX_uint16_T ((uint16_T)(65535))
+#define MIN_uint16_T ((uint16_T)(0))
+#define MAX_int32_T ((int32_T)(2147483647))
+#define MIN_int32_T ((int32_T)(-2147483647 - 1))
+#define MAX_uint32_T ((uint32_T)(0xFFFFFFFFU))
+#define MIN_uint32_T ((uint32_T)(0))
 
 /* Logical type definitions */
 #if (!defined(__cplusplus)) && (!defined(__true_false_are_keywords)) &&        \
@@ -143,4 +144,8 @@ static const uint32_T MIN_uint32_T = 0;
 }
 #endif
 #endif
-// End of code generation (rtwtypes.h)
+/*
+ * File trailer for rtwtypes.h
+ *
+ * [EOF]
+ */

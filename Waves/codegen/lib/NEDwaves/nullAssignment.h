@@ -1,38 +1,42 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// nullAssignment.h
-//
-// Code generation for function 'nullAssignment'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: nullAssignment.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef NULLASSIGNMENT_H
 #define NULLASSIGNMENT_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-namespace coder {
-namespace internal {
-void b_nullAssignment(::coder::array<double, 2U> &x,
-                      const ::coder::array<bool, 2U> &idx);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void c_nullAssignment(::coder::array<creal_T, 2U> &x,
-                      const ::coder::array<bool, 2U> &idx);
+/* Function Declarations */
+void b_nullAssignment(emxArray_creal_T *x);
 
-void nullAssignment(::coder::array<creal_T, 2U> &x,
-                    const ::coder::array<int, 2U> &idx);
+void c_nullAssignment(emxArray_real_T *x, const emxArray_boolean_T *idx);
 
-void nullAssignment(::coder::array<creal_T, 2U> &x);
+void d_nullAssignment(emxArray_creal_T *x, const emxArray_boolean_T *idx);
 
-} // namespace internal
-} // namespace coder
+void nullAssignment(emxArray_creal_T *x, const emxArray_int32_T *idx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
-// End of code generation (nullAssignment.h)
+/*
+ * File trailer for nullAssignment.h
+ *
+ * [EOF]
+ */

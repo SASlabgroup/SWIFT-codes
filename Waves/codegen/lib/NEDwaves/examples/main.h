@@ -1,15 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// main.h
-//
-// Code generation for function 'main'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: main.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 /*************************************************************************/
-/* This automatically generated example C++ main file shows how to call  */
+/* This automatically generated example C main file shows how to call    */
 /* entry-point functions that MATLAB Coder generated. You must customize */
 /* this file for your application. Do not modify this file directly.     */
 /* Instead, make a copy of this file, modify it, and integrate it into   */
@@ -36,13 +36,25 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-// Include files
+/* Include Files */
 #include "rtwtypes.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Function Declarations */
 extern int main(int argc, char **argv);
 
+#ifdef __cplusplus
+}
 #endif
-// End of code generation (main.h)
+
+#endif
+/*
+ * File trailer for main.h
+ *
+ * [EOF]
+ */

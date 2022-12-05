@@ -1,27 +1,36 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// var.h
-//
-// Code generation for function 'var'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: var.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef VAR_H
 #define VAR_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-namespace coder {
-void var(const ::coder::array<double, 2U> &x, ::coder::array<double, 2U> &y);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/* Function Declarations */
+void var(const emxArray_real_T *x, emxArray_real_T *y);
+
+#ifdef __cplusplus
 }
+#endif
 
 #endif
-// End of code generation (var.h)
+/*
+ * File trailer for var.h
+ *
+ * [EOF]
+ */

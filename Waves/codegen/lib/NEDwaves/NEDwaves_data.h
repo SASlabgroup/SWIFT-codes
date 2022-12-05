@@ -1,25 +1,24 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// NEDwaves_data.h
-//
-// Code generation for function 'NEDwaves_data'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: NEDwaves_data.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef NEDWAVES_DATA_H
 #define NEDWAVES_DATA_H
 
-// Include files
+/* Include Files */
 #include "rtwtypes.h"
-#include "omp.h"
-#include <cstddef>
-#include <cstdlib>
-
-// Variable Declarations
-extern omp_nest_lock_t NEDwaves_nestLockGlobal;
-extern bool isInitialized_NEDwaves;
+#include <stddef.h>
+#include <stdlib.h>
 
 #endif
-// End of code generation (NEDwaves_data.h)
+/*
+ * File trailer for NEDwaves_data.h
+ *
+ * [EOF]
+ */

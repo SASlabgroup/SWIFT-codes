@@ -1,30 +1,38 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// detrend.h
-//
-// Code generation for function 'detrend'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: detrend.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef DETREND_H
 #define DETREND_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-namespace coder {
-void detrend(::coder::array<float, 1U> &x);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void detrend(const ::coder::array<double, 1U> &x,
-             ::coder::array<double, 1U> &y);
+/* Function Declarations */
+void b_detrend(emxArray_real32_T *x);
 
-} // namespace coder
+void detrend(const emxArray_real_T *x, emxArray_real_T *y);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
-// End of code generation (detrend.h)
+/*
+ * File trailer for detrend.h
+ *
+ * [EOF]
+ */

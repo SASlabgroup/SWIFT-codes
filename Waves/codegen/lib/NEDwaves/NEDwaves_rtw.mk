@@ -2,8 +2,8 @@
 ## Makefile generated for component 'NEDwaves'. 
 ## 
 ## Makefile     : NEDwaves_rtw.mk
-## Generated on : Fri Dec 02 23:00:12 2022
-## Final product: ./NEDwaves.a
+## Generated on : Mon Dec 05 10:01:06 2022
+## Final product: ./NEDwaves.lib
 ## Product type : static-library
 ## 
 ###########################################################################
@@ -15,6 +15,8 @@
 # Macro Descriptions:
 # PRODUCT_NAME            Name of the system to build
 # MAKEFILE                Name of this makefile
+# COMPILER_COMMAND_FILE   Compiler command listing model reference header paths
+# CMD_FILE                Command file
 # MODELLIB                Static library target
 
 PRODUCT_NAME              = NEDwaves
@@ -23,21 +25,23 @@ MATLAB_ROOT               = /Applications/MATLAB_R2022a.app
 MATLAB_BIN                = /Applications/MATLAB_R2022a.app/bin
 MATLAB_ARCH_BIN           = $(MATLAB_BIN)/maci64
 START_DIR                 = /Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves
-TGT_FCN_LIB               = ISO_C++11
+TGT_FCN_LIB               = ISO_C
 SOLVER_OBJ                = 
 CLASSIC_INTERFACE         = 0
 MODEL_HAS_DYNAMICALLY_LOADED_SFCNS = 
 RELATIVE_PATH_TO_ANCHOR   = ../../..
-C_STANDARD_OPTS           = -fno-common -fexceptions
-CPP_STANDARD_OPTS         = -std=c++14 -fno-common -fexceptions
-MODELLIB                  = NEDwaves.a
+COMPILER_COMMAND_FILE     = NEDwaves_rtw_comp.rsp
+CMD_FILE                  = NEDwaves_rtw.rsp
+C_STANDARD_OPTS           = 
+CPP_STANDARD_OPTS         = 
+MODELLIB                  = NEDwaves.lib
 
 ###########################################################################
 ## TOOLCHAIN SPECIFICATIONS
 ###########################################################################
 
-# Toolchain Name:          Clang v3.1 | gmake (64-bit Mac)
-# Supported Version(s):    3.1
+# Toolchain Name:          GNU Tools for ARM Embedded Processors
+# Supported Version(s):    
 # ToolchainInfo Version:   2022a
 # Specification Revision:  1.0
 # 
@@ -45,45 +49,70 @@ MODELLIB                  = NEDwaves.a
 # Macros assumed to be defined elsewhere
 #-------------------------------------------
 
-# C_STANDARD_OPTS
-# CPP_STANDARD_OPTS
+# TARGET_LOAD_CMD_ARGS
+# TARGET_LOAD_CMD
+# MW_GNU_ARM_TOOLS_PATH
+# FDATASECTIONS_FLG
 
 #-----------
 # MACROS
 #-----------
 
-ARCHS             = x86_64
-XCODE_SDK_VER     = $(shell perl $(MATLAB_ROOT)/rtw/c/tools/macsdkver.pl)
-XCODE_SDK         = MacOSX$(XCODE_SDK_VER).sdk
-XCODE_DEVEL_DIR   = $(shell xcode-select -print-path)
-XCODE_SDK_ROOT    = $(XCODE_DEVEL_DIR)/Platforms/MacOSX.platform/Developer/SDKs/$(XCODE_SDK)
+LIBGCC                    = ${shell $(MW_GNU_ARM_TOOLS_PATH)/arm-none-eabi-gcc ${CFLAGS} -print-libgcc-file-name}
+LIBC                      = ${shell $(MW_GNU_ARM_TOOLS_PATH)/arm-none-eabi-gcc ${CFLAGS} -print-file-name=libc.a}
+LIBM                      = ${shell $(MW_GNU_ARM_TOOLS_PATH)/arm-none-eabi-gcc ${CFLAGS} -print-file-name=libm.a}
+PRODUCT_NAME_WITHOUT_EXTN = $(basename $(PRODUCT))
+PRODUCT_BIN               = $(PRODUCT_NAME_WITHOUT_EXTN).bin
+PRODUCT_HEX               = $(PRODUCT_NAME_WITHOUT_EXTN).hex
+CPFLAGS                   = -O binary
 
 TOOLCHAIN_SRCS = 
 TOOLCHAIN_INCS = 
-TOOLCHAIN_LIBS = 
+TOOLCHAIN_LIBS = -lm
 
 #------------------------
 # BUILD TOOL COMMANDS
 #------------------------
 
-# C Compiler: Clang C Compiler
-CC = xcrun clang
+# Assembler: GNU ARM Assembler
+AS_PATH = $(MW_GNU_ARM_TOOLS_PATH)
+AS = "$(AS_PATH)/arm-none-eabi-gcc"
 
-# Linker: Clang Linker
-LD = xcrun clang++
+# C Compiler: GNU ARM C Compiler
+CC_PATH = $(MW_GNU_ARM_TOOLS_PATH)
+CC = "$(CC_PATH)/arm-none-eabi-gcc"
 
-# C++ Compiler: Clang C++ Compiler
-CPP = xcrun clang++
+# Linker: GNU ARM Linker
+LD_PATH = $(MW_GNU_ARM_TOOLS_PATH)
+LD = "$(LD_PATH)/arm-none-eabi-g++"
 
-# C++ Linker: Clang C++ Linker
-CPP_LD = xcrun clang++
+# C++ Compiler: GNU ARM C++ Compiler
+CPP_PATH = $(MW_GNU_ARM_TOOLS_PATH)
+CPP = "$(CPP_PATH)/arm-none-eabi-g++"
 
-# Archiver: Clang Archiver
-AR = xcrun ar
+# C++ Linker: GNU ARM C++ Linker
+CPP_LD_PATH = $(MW_GNU_ARM_TOOLS_PATH)
+CPP_LD = "$(CPP_LD_PATH)/arm-none-eabi-g++"
+
+# Archiver: GNU ARM Archiver
+AR_PATH = $(MW_GNU_ARM_TOOLS_PATH)
+AR = "$(AR_PATH)/arm-none-eabi-ar"
 
 # MEX Tool: MEX Tool
 MEX_PATH = $(MATLAB_ARCH_BIN)
 MEX = "$(MEX_PATH)/mex"
+
+# Binary Converter: Binary Converter
+OBJCOPYPATH = $(MW_GNU_ARM_TOOLS_PATH)
+OBJCOPY = "$(OBJCOPYPATH)/arm-none-eabi-objcopy"
+
+# Hex Converter: Hex Converter
+OBJCOPYPATH = $(MW_GNU_ARM_TOOLS_PATH)
+OBJCOPY = "$(OBJCOPYPATH)/arm-none-eabi-objcopy"
+
+# Executable Size: Executable Size
+EXESIZEPATH = $(MW_GNU_ARM_TOOLS_PATH)
+EXESIZE = "$(EXESIZEPATH)/arm-none-eabi-size"
 
 # Download: Download
 DOWNLOAD =
@@ -100,6 +129,8 @@ MAKE = "$(MAKE_PATH)/gmake"
 # Directives/Utilities
 #-------------------------
 
+ASDEBUG             = -g
+AS_OUTPUT_FLAG      = -o
 CDEBUG              = -g
 C_OUTPUT_FLAG       = -o
 LDDEBUG             = -g
@@ -111,7 +142,7 @@ OUTPUT_FLAG         = -o
 ARDEBUG             =
 STATICLIB_OUTPUT_FLAG =
 MEX_DEBUG           = -g
-RM                  = @rm -f
+RM                  = @del /f/q
 ECHO                = @echo
 MV                  = @mv
 RUN                 =
@@ -121,23 +152,42 @@ RUN                 =
 #--------------------------------------
 
 ARFLAGS              = ruvs
-CFLAGS               = -c -isysroot $(XCODE_SDK_ROOT) -arch $(ARCHS) $(C_STANDARD_OPTS) -mmacosx-version-min=10.15 \
+ASFLAGS              = -MMD -MP -MF"$(@:%.o=%.dep)" -MT"$@"  \
+                       -Wall \
+                       -x assembler-with-cpp \
+                       $(ASFLAGS_ADDITIONAL) \
+                       $(DEFINES) \
+                       $(INCLUDES) \
+                       -c
+OBJCOPYFLAGS_BIN     = -O binary $(PRODUCT) $(PRODUCT_BIN)
+CFLAGS               = $(FDATASECTIONS_FLG) \
+                       -Wall \
+                       -MMD -MP -MF"$(@:%.o=%.dep)" -MT"$@"  \
+                       -c \
                        -O3
-CPPFLAGS             = -c -isysroot $(XCODE_SDK_ROOT) -arch $(ARCHS) $(CPP_STANDARD_OPTS) -mmacosx-version-min=10.15 \
+CPPFLAGS             = -std=gnu++14 \
+                       -fno-rtti \
+                       -fno-exceptions \
+                       $(FDATASECTIONS_FLG) \
+                       -Wall \
+                       -MMD -MP -MF"$(@:%.o=%.dep)" -MT"$@"  \
+                       -c \
                        -O3
-CPP_LDFLAGS          = -arch $(ARCHS) -isysroot $(XCODE_SDK_ROOT) -Wl,-rpath,@executable_path -Wl,-rpath,@executable_path/$(RELATIVE_PATH_TO_ANCHOR)
-CPP_SHAREDLIB_LDFLAGS  = -dynamiclib -install_name @rpath/$(notdir $(PRODUCT)) -isysroot $(XCODE_SDK_ROOT) \
-                         -Wl,$(LD_NAMESPACE) $(LD_UNDEFS)
+CPP_LDFLAGS          = -Wl,--gc-sections \
+                       -Wl,-Map="$(PRODUCT_NAME).map"
+CPP_SHAREDLIB_LDFLAGS  =
 DOWNLOAD_FLAGS       =
+EXESIZE_FLAGS        = $(PRODUCT)
 EXECUTE_FLAGS        =
-LDFLAGS              = -arch $(ARCHS) -isysroot $(XCODE_SDK_ROOT) -Wl,-rpath,@executable_path -Wl,-rpath,@executable_path/$(RELATIVE_PATH_TO_ANCHOR)
+OBJCOPYFLAGS_HEX     = -O ihex $(PRODUCT) $(PRODUCT_HEX)
+LDFLAGS              = -Wl,--gc-sections \
+                       -Wl,-Map="$(PRODUCT_NAME).map"
 MEX_CPPFLAGS         =
 MEX_CPPLDFLAGS       =
 MEX_CFLAGS           =
 MEX_LDFLAGS          =
 MAKE_FLAGS           = -f $(MAKEFILE)
-SHAREDLIB_LDFLAGS    = -dynamiclib -install_name @rpath/$(notdir $(PRODUCT)) -isysroot $(XCODE_SDK_ROOT) \
-                       -Wl,$(LD_NAMESPACE) $(LD_UNDEFS)
+SHAREDLIB_LDFLAGS    =
 
 
 
@@ -145,7 +195,7 @@ SHAREDLIB_LDFLAGS    = -dynamiclib -install_name @rpath/$(notdir $(PRODUCT)) -is
 ## OUTPUT INFO
 ###########################################################################
 
-PRODUCT = ./NEDwaves.a
+PRODUCT = ./NEDwaves.lib
 PRODUCT_TYPE = "static-library"
 BUILD_TYPE = "Static Library"
 
@@ -153,7 +203,7 @@ BUILD_TYPE = "Static Library"
 ## INCLUDE PATHS
 ###########################################################################
 
-INCLUDES_BUILDINFO = -I$(START_DIR)/codegen/lib/NEDwaves -I$(START_DIR) -I$(MATLAB_ROOT)/extern/include
+INCLUDES_BUILDINFO = 
 
 INCLUDES = $(INCLUDES_BUILDINFO)
 
@@ -161,16 +211,18 @@ INCLUDES = $(INCLUDES_BUILDINFO)
 ## DEFINES
 ###########################################################################
 
+DEFINES_ = -D__MW_TARGET_USE_HARDWARE_RESOURCES_H__
 DEFINES_CUSTOM = 
+DEFINES_SKIPFORSIL = -DNULL=0 -D__NO_SYSTEM_INIT -DARM_MATH_CM3=1 -DEXIT_FAILURE=1 -DEXTMODE_DISABLEPRINTF -DEXTMODE_DISABLETESTING -DEXTMODE_DISABLE_ARGS_PROCESSING=1 -DSTACK_SIZE=20000
 DEFINES_STANDARD = -DMODEL=NEDwaves
 
-DEFINES = $(DEFINES_CUSTOM) $(DEFINES_STANDARD)
+DEFINES = $(DEFINES_) $(DEFINES_CUSTOM) $(DEFINES_SKIPFORSIL) $(DEFINES_STANDARD)
 
 ###########################################################################
 ## SOURCE FILES
 ###########################################################################
 
-SRCS = $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_data.cpp $(START_DIR)/codegen/lib/NEDwaves/rt_nonfinite.cpp $(START_DIR)/codegen/lib/NEDwaves/rtGetNaN.cpp $(START_DIR)/codegen/lib/NEDwaves/rtGetInf.cpp $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_initialize.cpp $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_terminate.cpp $(START_DIR)/codegen/lib/NEDwaves/NEDwaves.cpp $(START_DIR)/codegen/lib/NEDwaves/qrsolve.cpp $(START_DIR)/codegen/lib/NEDwaves/xnrm2.cpp $(START_DIR)/codegen/lib/NEDwaves/std.cpp $(START_DIR)/codegen/lib/NEDwaves/blockedSummation.cpp $(START_DIR)/codegen/lib/NEDwaves/detrend.cpp $(START_DIR)/codegen/lib/NEDwaves/var.cpp $(START_DIR)/codegen/lib/NEDwaves/fft.cpp $(START_DIR)/codegen/lib/NEDwaves/mean.cpp $(START_DIR)/codegen/lib/NEDwaves/sum.cpp $(START_DIR)/codegen/lib/NEDwaves/minOrMax.cpp $(START_DIR)/codegen/lib/NEDwaves/nullAssignment.cpp $(START_DIR)/codegen/lib/NEDwaves/div.cpp $(START_DIR)/codegen/lib/NEDwaves/FFTImplementationCallback.cpp
+SRCS = $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_data.c $(START_DIR)/codegen/lib/NEDwaves/rt_nonfinite.c $(START_DIR)/codegen/lib/NEDwaves/rtGetNaN.c $(START_DIR)/codegen/lib/NEDwaves/rtGetInf.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_initialize.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_terminate.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves.c $(START_DIR)/codegen/lib/NEDwaves/qrsolve.c $(START_DIR)/codegen/lib/NEDwaves/xnrm2.c $(START_DIR)/codegen/lib/NEDwaves/std.c $(START_DIR)/codegen/lib/NEDwaves/blockedSummation.c $(START_DIR)/codegen/lib/NEDwaves/detrend.c $(START_DIR)/codegen/lib/NEDwaves/var.c $(START_DIR)/codegen/lib/NEDwaves/fft.c $(START_DIR)/codegen/lib/NEDwaves/FFTImplementationCallback.c $(START_DIR)/codegen/lib/NEDwaves/mean.c $(START_DIR)/codegen/lib/NEDwaves/sum.c $(START_DIR)/codegen/lib/NEDwaves/minOrMax.c $(START_DIR)/codegen/lib/NEDwaves/nullAssignment.c $(START_DIR)/codegen/lib/NEDwaves/div.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxutil.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxAPI.c
 
 ALL_SRCS = $(SRCS)
 
@@ -178,7 +230,7 @@ ALL_SRCS = $(SRCS)
 ## OBJECTS
 ###########################################################################
 
-OBJS = NEDwaves_data.o rt_nonfinite.o rtGetNaN.o rtGetInf.o NEDwaves_initialize.o NEDwaves_terminate.o NEDwaves.o qrsolve.o xnrm2.o std.o blockedSummation.o detrend.o var.o fft.o mean.o sum.o minOrMax.o nullAssignment.o div.o FFTImplementationCallback.o
+OBJS = NEDwaves_data.o rt_nonfinite.o rtGetNaN.o rtGetInf.o NEDwaves_initialize.o NEDwaves_terminate.o NEDwaves.o qrsolve.o xnrm2.o std.o blockedSummation.o detrend.o var.o fft.o FFTImplementationCallback.o mean.o sum.o minOrMax.o nullAssignment.o div.o NEDwaves_emxutil.o NEDwaves_emxAPI.o
 
 ALL_OBJS = $(OBJS)
 
@@ -198,7 +250,7 @@ LIBS =
 ## SYSTEM LIBRARIES
 ###########################################################################
 
-SYSTEM_LIBS =  -L"$(MATLAB_ROOT)/sys/os/maci64" -lm -lstdc++ -liomp5
+SYSTEM_LIBS = 
 
 ###########################################################################
 ## ADDITIONAL TOOLCHAIN FLAGS
@@ -208,64 +260,96 @@ SYSTEM_LIBS =  -L"$(MATLAB_ROOT)/sys/os/maci64" -lm -lstdc++ -liomp5
 # C Compiler
 #---------------
 
-CFLAGS_OPTS = -Xpreprocessor -fopenmp -I/Applications/MATLAB_R2022a.app/toolbox/eml/externalDependency/omp/maci64/include -DOpenMP_omp_LIBRARY=/Applications/MATLAB_R2022a.app/sys/os/maci64/libiomp5.dylib
-CFLAGS_BASIC = $(DEFINES) $(INCLUDES)
+CFLAGS_SKIPFORSIL = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork
+CFLAGS_BASIC = $(DEFINES) $(INCLUDES) @$(COMPILER_COMMAND_FILE)
 
-CFLAGS += $(CFLAGS_OPTS) $(CFLAGS_BASIC)
+CFLAGS += $(CFLAGS_SKIPFORSIL) $(CFLAGS_BASIC)
 
 #-----------------
 # C++ Compiler
 #-----------------
 
-CPPFLAGS_OPTS = -Xpreprocessor -fopenmp -I/Applications/MATLAB_R2022a.app/toolbox/eml/externalDependency/omp/maci64/include -DOpenMP_omp_LIBRARY=/Applications/MATLAB_R2022a.app/sys/os/maci64/libiomp5.dylib
-CPPFLAGS_BASIC = $(DEFINES) $(INCLUDES)
+CPPFLAGS_SKIPFORSIL = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork
+CPPFLAGS_BASIC = $(DEFINES) $(INCLUDES) @$(COMPILER_COMMAND_FILE)
 
-CPPFLAGS += $(CPPFLAGS_OPTS) $(CPPFLAGS_BASIC)
+CPPFLAGS += $(CPPFLAGS_SKIPFORSIL) $(CPPFLAGS_BASIC)
 
 #---------------
 # C++ Linker
 #---------------
 
-CPP_LDFLAGS_ = -Wl,-rpath,$(MATLAB_ROOT)/sys/os/$(ARCH)/  
+CPP_LDFLAGS_SKIPFORSIL = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork -nostartfiles --specs=nano.specs --specs=nosys.specs -T "/Users/jthomson/Dropbox/Mac/Documents/MATLAB/SupportPackages/R2022a/toolbox/target/supportpackages/arm_cortex_m/src/arm_cortex_m3_qemu_gcc.ld"
 
-CPP_LDFLAGS += $(CPP_LDFLAGS_)
+CPP_LDFLAGS += $(CPP_LDFLAGS_SKIPFORSIL)
 
 #------------------------------
 # C++ Shared Library Linker
 #------------------------------
 
-CPP_SHAREDLIB_LDFLAGS_ = -Wl,-rpath,$(MATLAB_ROOT)/sys/os/$(ARCH)/  
+CPP_SHAREDLIB_LDFLAGS_SKIPFORSIL = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork -nostartfiles --specs=nano.specs --specs=nosys.specs -T "/Users/jthomson/Dropbox/Mac/Documents/MATLAB/SupportPackages/R2022a/toolbox/target/supportpackages/arm_cortex_m/src/arm_cortex_m3_qemu_gcc.ld"
 
-CPP_SHAREDLIB_LDFLAGS += $(CPP_SHAREDLIB_LDFLAGS_)
+CPP_SHAREDLIB_LDFLAGS += $(CPP_SHAREDLIB_LDFLAGS_SKIPFORSIL)
 
 #-----------
 # Linker
 #-----------
 
-LDFLAGS_ = -Wl,-rpath,$(MATLAB_ROOT)/sys/os/$(ARCH)/  
+LDFLAGS_SKIPFORSIL = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork -nostartfiles --specs=nano.specs --specs=nosys.specs -T "/Users/jthomson/Dropbox/Mac/Documents/MATLAB/SupportPackages/R2022a/toolbox/target/supportpackages/arm_cortex_m/src/arm_cortex_m3_qemu_gcc.ld"
 
-LDFLAGS += $(LDFLAGS_)
+LDFLAGS += $(LDFLAGS_SKIPFORSIL)
+
+#---------------------
+# MEX C++ Compiler
+#---------------------
+
+MEX_CPP_Compiler_BASIC =  @$(COMPILER_COMMAND_FILE)
+
+MEX_CPPFLAGS += $(MEX_CPP_Compiler_BASIC)
+
+#-----------------
+# MEX Compiler
+#-----------------
+
+MEX_Compiler_BASIC =  @$(COMPILER_COMMAND_FILE)
+
+MEX_CFLAGS += $(MEX_Compiler_BASIC)
 
 #--------------------------
 # Shared Library Linker
 #--------------------------
 
-SHAREDLIB_LDFLAGS_ = -Wl,-rpath,$(MATLAB_ROOT)/sys/os/$(ARCH)/  
+SHAREDLIB_LDFLAGS_SKIPFORSIL = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork -nostartfiles --specs=nano.specs --specs=nosys.specs -T "/Users/jthomson/Dropbox/Mac/Documents/MATLAB/SupportPackages/R2022a/toolbox/target/supportpackages/arm_cortex_m/src/arm_cortex_m3_qemu_gcc.ld"
 
-SHAREDLIB_LDFLAGS += $(SHAREDLIB_LDFLAGS_)
+SHAREDLIB_LDFLAGS += $(SHAREDLIB_LDFLAGS_SKIPFORSIL)
 
 ###########################################################################
 ## INLINED COMMANDS
 ###########################################################################
 
+
+ALL_DEPS:=$(patsubst %.o,%.dep,$(ALL_OBJS))
+all:
+
+ifndef DISABLE_GCC_FUNCTION_DATA_SECTIONS
+FDATASECTIONS_FLG := -ffunction-sections -fdata-sections
+endif
+
+
+
+-include codertarget_assembly_flags.mk
+-include ../codertarget_assembly_flags.mk
+-include ../../codertarget_assembly_flags.mk
+-include $(ALL_DEPS)
+
+
 ###########################################################################
 ## PHONY TARGETS
 ###########################################################################
 
-.PHONY : all build clean info prebuild download execute
+.PHONY : all build clean info prebuild postbuild download execute
 
 
-all : build
+all : build postbuild
 	@echo "### Successfully generated all binary outputs."
 
 
@@ -275,7 +359,10 @@ build : prebuild $(PRODUCT)
 prebuild : 
 
 
-download : $(PRODUCT)
+postbuild : $(PRODUCT)
+
+
+download : postbuild
 
 
 execute : download
@@ -291,7 +378,7 @@ execute : download
 
 $(PRODUCT) : $(OBJS) $(PREBUILT_OBJS)
 	@echo "### Creating static library "$(PRODUCT)" ..."
-	$(AR) $(ARFLAGS)  $(PRODUCT) $(OBJS)
+	$(AR) $(ARFLAGS)  $(PRODUCT) @$(CMD_FILE)
 	@echo "### Created: $(PRODUCT)"
 
 
@@ -307,7 +394,27 @@ $(PRODUCT) : $(OBJS) $(PREBUILT_OBJS)
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
+%.o : %.s
+	$(AS) $(ASFLAGS) -o "$@" "$<"
+
+
+%.o : %.S
+	$(AS) $(ASFLAGS) -o "$@" "$<"
+
+
 %.o : %.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : %.cc
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : %.C
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : %.cxx
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -315,7 +422,27 @@ $(PRODUCT) : $(OBJS) $(PREBUILT_OBJS)
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
+%.o : $(RELATIVE_PATH_TO_ANCHOR)/%.s
+	$(AS) $(ASFLAGS) -o "$@" "$<"
+
+
+%.o : $(RELATIVE_PATH_TO_ANCHOR)/%.S
+	$(AS) $(ASFLAGS) -o "$@" "$<"
+
+
 %.o : $(RELATIVE_PATH_TO_ANCHOR)/%.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : $(RELATIVE_PATH_TO_ANCHOR)/%.cc
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : $(RELATIVE_PATH_TO_ANCHOR)/%.C
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : $(RELATIVE_PATH_TO_ANCHOR)/%.cxx
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -323,7 +450,27 @@ $(PRODUCT) : $(OBJS) $(PREBUILT_OBJS)
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
+%.o : $(START_DIR)/codegen/lib/NEDwaves/%.s
+	$(AS) $(ASFLAGS) -o "$@" "$<"
+
+
+%.o : $(START_DIR)/codegen/lib/NEDwaves/%.S
+	$(AS) $(ASFLAGS) -o "$@" "$<"
+
+
 %.o : $(START_DIR)/codegen/lib/NEDwaves/%.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : $(START_DIR)/codegen/lib/NEDwaves/%.cc
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : $(START_DIR)/codegen/lib/NEDwaves/%.C
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+%.o : $(START_DIR)/codegen/lib/NEDwaves/%.cxx
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -331,95 +478,123 @@ $(PRODUCT) : $(OBJS) $(PREBUILT_OBJS)
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
+%.o : $(START_DIR)/%.s
+	$(AS) $(ASFLAGS) -o "$@" "$<"
+
+
+%.o : $(START_DIR)/%.S
+	$(AS) $(ASFLAGS) -o "$@" "$<"
+
+
 %.o : $(START_DIR)/%.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-NEDwaves_data.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_data.cpp
+%.o : $(START_DIR)/%.cc
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-rt_nonfinite.o : $(START_DIR)/codegen/lib/NEDwaves/rt_nonfinite.cpp
+%.o : $(START_DIR)/%.C
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-rtGetNaN.o : $(START_DIR)/codegen/lib/NEDwaves/rtGetNaN.cpp
+%.o : $(START_DIR)/%.cxx
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-rtGetInf.o : $(START_DIR)/codegen/lib/NEDwaves/rtGetInf.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+NEDwaves_data.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_data.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-NEDwaves_initialize.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_initialize.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+rt_nonfinite.o : $(START_DIR)/codegen/lib/NEDwaves/rt_nonfinite.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-NEDwaves_terminate.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_terminate.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+rtGetNaN.o : $(START_DIR)/codegen/lib/NEDwaves/rtGetNaN.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-NEDwaves.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+rtGetInf.o : $(START_DIR)/codegen/lib/NEDwaves/rtGetInf.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-qrsolve.o : $(START_DIR)/codegen/lib/NEDwaves/qrsolve.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+NEDwaves_initialize.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_initialize.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-xnrm2.o : $(START_DIR)/codegen/lib/NEDwaves/xnrm2.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+NEDwaves_terminate.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_terminate.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-std.o : $(START_DIR)/codegen/lib/NEDwaves/std.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+NEDwaves.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-blockedSummation.o : $(START_DIR)/codegen/lib/NEDwaves/blockedSummation.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+qrsolve.o : $(START_DIR)/codegen/lib/NEDwaves/qrsolve.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-detrend.o : $(START_DIR)/codegen/lib/NEDwaves/detrend.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+xnrm2.o : $(START_DIR)/codegen/lib/NEDwaves/xnrm2.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-var.o : $(START_DIR)/codegen/lib/NEDwaves/var.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+std.o : $(START_DIR)/codegen/lib/NEDwaves/std.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-fft.o : $(START_DIR)/codegen/lib/NEDwaves/fft.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+blockedSummation.o : $(START_DIR)/codegen/lib/NEDwaves/blockedSummation.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-mean.o : $(START_DIR)/codegen/lib/NEDwaves/mean.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+detrend.o : $(START_DIR)/codegen/lib/NEDwaves/detrend.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-sum.o : $(START_DIR)/codegen/lib/NEDwaves/sum.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+var.o : $(START_DIR)/codegen/lib/NEDwaves/var.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-minOrMax.o : $(START_DIR)/codegen/lib/NEDwaves/minOrMax.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+fft.o : $(START_DIR)/codegen/lib/NEDwaves/fft.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-nullAssignment.o : $(START_DIR)/codegen/lib/NEDwaves/nullAssignment.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+FFTImplementationCallback.o : $(START_DIR)/codegen/lib/NEDwaves/FFTImplementationCallback.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-div.o : $(START_DIR)/codegen/lib/NEDwaves/div.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+mean.o : $(START_DIR)/codegen/lib/NEDwaves/mean.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-FFTImplementationCallback.o : $(START_DIR)/codegen/lib/NEDwaves/FFTImplementationCallback.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+sum.o : $(START_DIR)/codegen/lib/NEDwaves/sum.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+minOrMax.o : $(START_DIR)/codegen/lib/NEDwaves/minOrMax.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+nullAssignment.o : $(START_DIR)/codegen/lib/NEDwaves/nullAssignment.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+div.o : $(START_DIR)/codegen/lib/NEDwaves/div.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+NEDwaves_emxutil.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxutil.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+NEDwaves_emxAPI.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxAPI.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
 ###########################################################################
 ## DEPENDENCIES
 ###########################################################################
 
-$(ALL_OBJS) : rtw_proj.tmw $(MAKEFILE)
+$(ALL_OBJS) : rtw_proj.tmw $(COMPILER_COMMAND_FILE) $(MAKEFILE)
 
 
 ###########################################################################
@@ -438,6 +613,7 @@ info :
 	@echo "### MODELREF_LIBS = $(MODELREF_LIBS)"
 	@echo "### SYSTEM_LIBS = $(SYSTEM_LIBS)"
 	@echo "### TOOLCHAIN_LIBS = $(TOOLCHAIN_LIBS)"
+	@echo "### ASFLAGS = $(ASFLAGS)"
 	@echo "### CFLAGS = $(CFLAGS)"
 	@echo "### LDFLAGS = $(LDFLAGS)"
 	@echo "### SHAREDLIB_LDFLAGS = $(SHAREDLIB_LDFLAGS)"
@@ -449,6 +625,9 @@ info :
 	@echo "### MEX_CPPFLAGS = $(MEX_CPPFLAGS)"
 	@echo "### MEX_LDFLAGS = $(MEX_LDFLAGS)"
 	@echo "### MEX_CPPLDFLAGS = $(MEX_CPPLDFLAGS)"
+	@echo "### OBJCOPYFLAGS_BIN = $(OBJCOPYFLAGS_BIN)"
+	@echo "### OBJCOPYFLAGS_HEX = $(OBJCOPYFLAGS_HEX)"
+	@echo "### EXESIZE_FLAGS = $(EXESIZE_FLAGS)"
 	@echo "### DOWNLOAD_FLAGS = $(DOWNLOAD_FLAGS)"
 	@echo "### EXECUTE_FLAGS = $(EXECUTE_FLAGS)"
 	@echo "### MAKE_FLAGS = $(MAKE_FLAGS)"
@@ -458,6 +637,7 @@ clean :
 	$(ECHO) "### Deleting all derived files..."
 	$(RM) $(PRODUCT)
 	$(RM) $(ALL_OBJS)
+	$(RM) *.dep
 	$(ECHO) "### Deleted all derived files."
 
 

@@ -1,63 +1,45 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// FFTImplementationCallback.h
-//
-// Code generation for function 'FFTImplementationCallback'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: FFTImplementationCallback.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef FFTIMPLEMENTATIONCALLBACK_H
 #define FFTIMPLEMENTATIONCALLBACK_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Type Definitions
-namespace coder {
-namespace internal {
-namespace fft {
-class FFTImplementationCallback {
-public:
-  static void r2br_r2dit_trig(const ::coder::array<double, 2U> &x,
-                              int n1_unsigned,
-                              const ::coder::array<double, 2U> &costab,
-                              const ::coder::array<double, 2U> &sintab,
-                              ::coder::array<creal_T, 2U> &y);
-  static void dobluesteinfft(const ::coder::array<double, 2U> &x, int n2blue,
-                             int nfft, const ::coder::array<double, 2U> &costab,
-                             const ::coder::array<double, 2U> &sintab,
-                             const ::coder::array<double, 2U> &sintabinv,
-                             ::coder::array<creal_T, 2U> &y);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-protected:
-  static void r2br_r2dit_trig_impl(const ::coder::array<creal_T, 1U> &x,
-                                   int unsigned_nRows,
-                                   const ::coder::array<double, 2U> &costab,
-                                   const ::coder::array<double, 2U> &sintab,
-                                   ::coder::array<creal_T, 1U> &y);
-  static void doHalfLengthRadix2(const ::coder::array<double, 2U> &x,
-                                 int xoffInit, ::coder::array<creal_T, 1U> &y,
-                                 int unsigned_nRows,
-                                 const ::coder::array<double, 2U> &costab,
-                                 const ::coder::array<double, 2U> &sintab);
-  static void
-  doHalfLengthBluestein(const ::coder::array<double, 2U> &x, int xoffInit,
-                        ::coder::array<creal_T, 1U> &y, int nrowsx, int nRows,
-                        int nfft, const ::coder::array<creal_T, 1U> &wwc,
-                        const ::coder::array<double, 2U> &costab,
-                        const ::coder::array<double, 2U> &sintab,
-                        const ::coder::array<double, 2U> &costabinv,
-                        const ::coder::array<double, 2U> &sintabinv);
-};
+/* Function Declarations */
+void c_FFTImplementationCallback_doH(const emxArray_real_T *x, int xoffInit,
+                                     emxArray_creal_T *y, int unsigned_nRows,
+                                     const emxArray_real_T *costab,
+                                     const emxArray_real_T *sintab);
 
-} // namespace fft
-} // namespace internal
-} // namespace coder
+void c_FFTImplementationCallback_dob(const emxArray_real_T *x, int n2blue,
+                                     int nfft, const emxArray_real_T *costab,
+                                     const emxArray_real_T *sintab,
+                                     const emxArray_real_T *sintabinv,
+                                     emxArray_creal_T *y);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
-// End of code generation (FFTImplementationCallback.h)
+/*
+ * File trailer for FFTImplementationCallback.h
+ *
+ * [EOF]
+ */

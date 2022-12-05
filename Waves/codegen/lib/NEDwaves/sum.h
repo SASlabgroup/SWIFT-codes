@@ -1,27 +1,36 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// sum.h
-//
-// Code generation for function 'sum'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: sum.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef SUM_H
 #define SUM_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-namespace coder {
-double sum(const ::coder::array<double, 2U> &x);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/* Function Declarations */
+double sum(const emxArray_real_T *x);
+
+#ifdef __cplusplus
 }
+#endif
 
 #endif
-// End of code generation (sum.h)
+/*
+ * File trailer for sum.h
+ *
+ * [EOF]
+ */

@@ -1,30 +1,37 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// qrsolve.h
-//
-// Code generation for function 'qrsolve'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: qrsolve.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef QRSOLVE_H
 #define QRSOLVE_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-namespace coder {
-namespace internal {
-void qrsolve(const ::coder::array<float, 2U> &A,
-             const ::coder::array<float, 1U> &B, float Y[2], int *rankA);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/* Function Declarations */
+void qrsolve(const emxArray_real32_T *A, const emxArray_real32_T *B, float Y[2],
+             int *rankA);
+
+#ifdef __cplusplus
 }
-} // namespace coder
+#endif
 
 #endif
-// End of code generation (qrsolve.h)
+/*
+ * File trailer for qrsolve.h
+ *
+ * [EOF]
+ */

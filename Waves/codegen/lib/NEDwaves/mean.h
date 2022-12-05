@@ -1,29 +1,38 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-//
-// mean.h
-//
-// Code generation for function 'mean'
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ * File: mean.h
+ *
+ * MATLAB Coder version            : 5.4
+ * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ */
 
 #ifndef MEAN_H
 #define MEAN_H
 
-// Include files
+/* Include Files */
+#include "NEDwaves_types.h"
 #include "rtwtypes.h"
-#include "coder_array.h"
-#include <cstddef>
-#include <cstdlib>
+#include <stddef.h>
+#include <stdlib.h>
 
-// Function Declarations
-namespace coder {
-void mean(const ::coder::array<double, 2U> &x, ::coder::array<double, 2U> &y);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void mean(const ::coder::array<creal_T, 2U> &x, ::coder::array<creal_T, 2U> &y);
+/* Function Declarations */
+void b_mean(const emxArray_creal_T *x, emxArray_creal_T *y);
 
-} // namespace coder
+void mean(const emxArray_real_T *x, emxArray_real_T *y);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
-// End of code generation (mean.h)
+/*
+ * File trailer for mean.h
+ *
+ * [EOF]
+ */
