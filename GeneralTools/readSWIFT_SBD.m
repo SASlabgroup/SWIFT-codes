@@ -143,6 +143,8 @@ while 1
             else
                 PBlat = NaN;
             end
+        else
+            PBlat = NaN;
         end
         PBlon = num2str(fread(fid,1,'float'));  % longitude
         if length(PBlon)>5,
@@ -153,6 +155,8 @@ while 1
             else
                 PBlon = NaN;
             end
+        else
+            PBlon = NaN;
         end
         PByear = num2str(fread(fid,1,'uint32')); % year
         PBMonth = num2str(fread(fid,1,'uint32')); % month
@@ -168,8 +172,13 @@ while 1
         elseif isempty(dec) & length(PBhhmmss)==3, hour = 0;, mm = str2num(PBhhmmss(1));,
         else hour = 0; mm = 0;
         end
-        SWIFT.time = datenum( str2num(PByear), str2num(PBMonth), str2num(PBDay), hour, mm, 0);
-        SWIFT.date = [PBDay PBMonth PByear];
+        if any(isnan([PBlat PBlon])) | PByear=='0'
+            SWIFT.time = NaN;
+            SWIFT.date = NaN;
+        else
+            SWIFT.time = datenum( str2num(PByear), str2num(PBMonth), str2num(PBDay), hour, mm, 0);
+            SWIFT.date = [PBDay PBMonth PByear];
+        end
         SWIFT.airtemp = fread(fid,1,'float');
         SWIFT.airtempstddev = fread(fid,1,'float');
         SWIFT.airpres = fread(fid,1,'float');
