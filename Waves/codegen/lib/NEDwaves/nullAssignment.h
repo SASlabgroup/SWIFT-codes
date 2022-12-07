@@ -5,7 +5,7 @@
  * File: nullAssignment.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ * C/C++ source code generated on  : 07-Dec-2022 08:45:24
  */
 
 #ifndef NULLASSIGNMENT_H
@@ -22,13 +22,13 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void b_nullAssignment(emxArray_creal_T *x);
+void b_nullAssignment(emxArray_creal32_T *x);
 
 void c_nullAssignment(emxArray_real_T *x, const emxArray_boolean_T *idx);
 
 void d_nullAssignment(emxArray_creal_T *x, const emxArray_boolean_T *idx);
 
-void nullAssignment(emxArray_creal_T *x, const emxArray_int32_T *idx);
+void nullAssignment(emxArray_creal32_T *x, const emxArray_int32_T *idx);
 
 #ifdef __cplusplus
 }

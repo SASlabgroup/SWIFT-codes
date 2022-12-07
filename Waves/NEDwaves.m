@@ -1,4 +1,4 @@
-function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check] = NEDwaves(north, east, down, fs) 
+function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves(north, east, down, fs) 
 
 % matlab function to process GPS velocity components north, east, down
 %   to estimate wave height, period, direction, and spectral moments
@@ -18,8 +18,11 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check] = NEDwaves(north, east, down
 %
 % Usage is as follows:
 %
-%   [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs); 
+%   [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs); 
 %
+% note that outputs are slightly different than other wave codes
+% b/c this matches the half-float precision format of telemetry type 52
+% and only uses frequency limits, not full f array
 %
 % J. Thomson,  12/2022 (modified from GPSwaves)
 %
@@ -65,18 +68,25 @@ if pts >= 2*wsecs & fs>=1 & sum(bad)<100 & sum(bad)<100,  % minimum length and q
     
 %% high-pass RC filter, 
 
-%initialize and rename the variables (match original GPSwaves usage)
-u = east; 
-v = north; 
-w = down; 
-
 alpha = RC / (RC + 1./fs); 
 
-for ui = 2:length(w),
-   u(ui) = alpha * u(ui-1) + alpha * ( east(ui) - east(ui-1) );
-   v(ui) = alpha * v(ui-1) + alpha * ( north(ui) - north(ui-1) );
-   w(ui) = alpha * w(ui-1) + alpha * ( down(ui) - down(ui-1) );
+filtereddata = east; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( east(ui) - east(ui-1) );
 end
+east = filtereddata;
+
+filtereddata = north; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( north(ui) - north(ui-1) );
+end
+north = filtereddata;
+
+filtereddata = down; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( down(ui) - down(ui-1) );
+end
+down = filtereddata;
 
 
 %% break into windows (use 75 percent overlap)
@@ -86,15 +96,15 @@ if rem(win,2)~=0, win = win-1; else end  % make win an even number
 windows = floor( 4*(pts/win - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
 dof = 2*windows*merge; % degrees of freedom
 
-% loop to create a matrix of time series, where COLUMN = WINDOw 
+% loop to create a matrix of time series, where COLUMN = WINDOW 
 uwindow = zeros(win,windows);
 vwindow = zeros(win,windows);
 wwindow = zeros(win,windows);
 
 for q=1:windows, 
-	uwindow(:,q) = u(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
-	vwindow(:,q) = v(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
-  	wwindow(:,q) = w(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
+	uwindow(:,q) = east(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
+	vwindow(:,q) = north(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
+  	wwindow(:,q) = down(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
 end
 
 %% detrend individual windows (full series already detrended)
@@ -130,9 +140,9 @@ wwindow = (ones(win,1)*factw).* wwindow;
 % note convention for lower case as time-domain and upper case as freq domain
 
 % calculate Fourier coefs
-Uwindow = fft(uwindow);
-Vwindow = fft(vwindow);
-Wwindow = fft(wwindow);
+Uwindow = single(fft(uwindow));
+Vwindow = single(fft(vwindow));
+Wwindow = single(fft(wwindow));
 % second half of fft is redundant, so throw it out
 Uwindow( (win/2+1):win, : ) = [];
 Vwindow( (win/2+1):win, : ) = [];
@@ -287,6 +297,20 @@ if Tp>20,
      Dp = 9999; 
 else 
 end
+
+%% format for microSWIFT telemetry output (payload type 52)
+Hs = half(Hs);
+Tp = half(Tp);
+Dp = half(Dp);
+E = half(E);
+fmin = half(min(f));
+fmax = half(max(f));
+a1 = int8(a1*100);
+b1 = int8(b1*100);
+a2 = int8(a2*100);
+b2 = int8(b2*100);
+check = uint8(check*10);
+
 
 %% testing bits
 

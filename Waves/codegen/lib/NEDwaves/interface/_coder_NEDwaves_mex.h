@@ -5,7 +5,7 @@
  * File: _coder_NEDwaves_mex.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ * C/C++ source code generated on  : 07-Dec-2022 08:45:24
  */
 
 #ifndef _CODER_NEDWAVES_MEX_H
@@ -26,7 +26,7 @@ MEXFUNCTION_LINKAGE void mexFunction(int32_T nlhs, mxArray *plhs[],
 
 emlrtCTX mexFunctionCreateRootTLS(void);
 
-void unsafe_NEDwaves_mexFunction(int32_T nlhs, mxArray *plhs[10], int32_T nrhs,
+void unsafe_NEDwaves_mexFunction(int32_T nlhs, mxArray *plhs[11], int32_T nrhs,
                                  const mxArray *prhs[4]);
 
 #ifdef __cplusplus

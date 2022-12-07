@@ -5,7 +5,7 @@
  * File: NEDwaves.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ * C/C++ source code generated on  : 07-Dec-2022 08:45:24
  */
 
 #ifndef NEDWAVES_H
@@ -13,6 +13,7 @@
 
 /* Include Files */
 #include "NEDwaves_types.h"
+#include "rtwhalf.h"
 #include "rtwtypes.h"
 #include <stddef.h>
 #include <stdlib.h>
@@ -23,11 +24,11 @@ extern "C" {
 
 /* Function Declarations */
 extern void NEDwaves(emxArray_real32_T *north, emxArray_real32_T *east,
-                     emxArray_real32_T *down, double fs, double *Hs, double *Tp,
-                     double *Dp, emxArray_real_T *E, emxArray_real_T *f,
-                     emxArray_real_T *a1, emxArray_real_T *b1,
-                     emxArray_real_T *a2, emxArray_real_T *b2,
-                     emxArray_real_T *check);
+                     emxArray_real32_T *down, double fs, real16_T *Hs,
+                     real16_T *Tp, real16_T *Dp, emxArray_real16_T *E,
+                     real16_T *b_fmin, real16_T *b_fmax, emxArray_int8_T *a1,
+                     emxArray_int8_T *b1, emxArray_int8_T *a2,
+                     emxArray_int8_T *b2, emxArray_uint8_T *check);
 
 #ifdef __cplusplus
 }

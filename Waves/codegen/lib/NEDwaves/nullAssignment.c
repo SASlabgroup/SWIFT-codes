@@ -5,7 +5,7 @@
  * File: nullAssignment.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ * C/C++ source code generated on  : 07-Dec-2022 08:45:24
  */
 
 /* Include Files */
@@ -16,12 +16,12 @@
 
 /* Function Definitions */
 /*
- * Arguments    : emxArray_creal_T *x
+ * Arguments    : emxArray_creal32_T *x
  * Return Type  : void
  */
-void b_nullAssignment(emxArray_creal_T *x)
+void b_nullAssignment(emxArray_creal32_T *x)
 {
-  creal_T *x_data;
+  creal32_T *x_data;
   int i;
   int j;
   int ncolx;
@@ -50,7 +50,7 @@ void b_nullAssignment(emxArray_creal_T *x)
   nrows = x->size[0] * x->size[1];
   x->size[0] = nrowx;
   x->size[1] = ncolx + 1;
-  emxEnsureCapacity_creal_T(x, nrows);
+  emxEnsureCapacity_creal32_T(x, nrows);
 }
 
 /*
@@ -132,14 +132,14 @@ void d_nullAssignment(emxArray_creal_T *x, const emxArray_boolean_T *idx)
 }
 
 /*
- * Arguments    : emxArray_creal_T *x
+ * Arguments    : emxArray_creal32_T *x
  *                const emxArray_int32_T *idx
  * Return Type  : void
  */
-void nullAssignment(emxArray_creal_T *x, const emxArray_int32_T *idx)
+void nullAssignment(emxArray_creal32_T *x, const emxArray_int32_T *idx)
 {
   emxArray_boolean_T *b;
-  creal_T *x_data;
+  creal32_T *x_data;
   const int *idx_data;
   int b_i;
   int i;
@@ -207,7 +207,7 @@ void nullAssignment(emxArray_creal_T *x, const emxArray_int32_T *idx)
   i = x->size[0] * x->size[1];
   x->size[0] = b_i;
   x->size[1] = nrows + 1;
-  emxEnsureCapacity_creal_T(x, i);
+  emxEnsureCapacity_creal32_T(x, i);
 }
 
 /*

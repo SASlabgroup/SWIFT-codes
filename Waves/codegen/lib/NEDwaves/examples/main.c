@@ -5,7 +5,7 @@
  * File: main.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ * C/C++ source code generated on  : 07-Dec-2022 08:45:24
  */
 
 /*************************************************************************/
@@ -40,6 +40,7 @@
 #include "NEDwaves_terminate.h"
 #include "NEDwaves_types.h"
 #include "rt_nonfinite.h"
+#include "rtwhalf.h"
 
 /* Function Declarations */
 static emxArray_real32_T *argInit_Unboundedx1_real32_T(void);
@@ -98,26 +99,26 @@ static double argInit_real_T(void)
  */
 static void main_NEDwaves(void)
 {
+  emxArray_int8_T *a1;
+  emxArray_int8_T *a2;
+  emxArray_int8_T *b1;
+  emxArray_int8_T *b2;
+  emxArray_real16_T *E;
   emxArray_real32_T *down;
   emxArray_real32_T *east;
   emxArray_real32_T *north;
-  emxArray_real_T *E;
-  emxArray_real_T *a1;
-  emxArray_real_T *a2;
-  emxArray_real_T *b1;
-  emxArray_real_T *b2;
-  emxArray_real_T *check;
-  emxArray_real_T *f;
-  double Dp;
-  double Hs;
-  double Tp;
-  emxInitArray_real_T(&E, 2);
-  emxInitArray_real_T(&f, 2);
-  emxInitArray_real_T(&a1, 2);
-  emxInitArray_real_T(&b1, 2);
-  emxInitArray_real_T(&a2, 2);
-  emxInitArray_real_T(&b2, 2);
-  emxInitArray_real_T(&check, 2);
+  emxArray_uint8_T *check;
+  real16_T Dp;
+  real16_T Hs;
+  real16_T Tp;
+  real16_T b_fmax;
+  real16_T b_fmin;
+  emxInitArray_real16_T(&E, 2);
+  emxInitArray_int8_T(&a1, 2);
+  emxInitArray_int8_T(&b1, 2);
+  emxInitArray_int8_T(&a2, 2);
+  emxInitArray_int8_T(&b2, 2);
+  emxInitArray_uint8_T(&check, 2);
   /* Initialize function 'NEDwaves' input arguments. */
   /* Initialize function input argument 'north'. */
   north = argInit_Unboundedx1_real32_T();
@@ -126,15 +127,14 @@ static void main_NEDwaves(void)
   /* Initialize function input argument 'down'. */
   down = argInit_Unboundedx1_real32_T();
   /* Call the entry-point 'NEDwaves'. */
-  NEDwaves(north, east, down, argInit_real_T(), &Hs, &Tp, &Dp, E, f, a1, b1, a2,
-           b2, check);
-  emxDestroyArray_real_T(check);
-  emxDestroyArray_real_T(b2);
-  emxDestroyArray_real_T(a2);
-  emxDestroyArray_real_T(b1);
-  emxDestroyArray_real_T(a1);
-  emxDestroyArray_real_T(f);
-  emxDestroyArray_real_T(E);
+  NEDwaves(north, east, down, argInit_real_T(), &Hs, &Tp, &Dp, E, &b_fmin,
+           &b_fmax, a1, b1, a2, b2, check);
+  emxDestroyArray_uint8_T(check);
+  emxDestroyArray_int8_T(b2);
+  emxDestroyArray_int8_T(a2);
+  emxDestroyArray_int8_T(b1);
+  emxDestroyArray_int8_T(a1);
+  emxDestroyArray_real16_T(E);
   emxDestroyArray_real32_T(down);
   emxDestroyArray_real32_T(east);
   emxDestroyArray_real32_T(north);

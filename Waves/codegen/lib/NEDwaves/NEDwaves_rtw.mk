@@ -2,7 +2,7 @@
 ## Makefile generated for component 'NEDwaves'. 
 ## 
 ## Makefile     : NEDwaves_rtw.mk
-## Generated on : Mon Dec 05 10:01:06 2022
+## Generated on : Wed Dec 07 08:45:54 2022
 ## Final product: ./NEDwaves.lib
 ## Product type : static-library
 ## 
@@ -222,7 +222,7 @@ DEFINES = $(DEFINES_) $(DEFINES_CUSTOM) $(DEFINES_SKIPFORSIL) $(DEFINES_STANDARD
 ## SOURCE FILES
 ###########################################################################
 
-SRCS = $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_data.c $(START_DIR)/codegen/lib/NEDwaves/rt_nonfinite.c $(START_DIR)/codegen/lib/NEDwaves/rtGetNaN.c $(START_DIR)/codegen/lib/NEDwaves/rtGetInf.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_initialize.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_terminate.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves.c $(START_DIR)/codegen/lib/NEDwaves/qrsolve.c $(START_DIR)/codegen/lib/NEDwaves/xnrm2.c $(START_DIR)/codegen/lib/NEDwaves/std.c $(START_DIR)/codegen/lib/NEDwaves/blockedSummation.c $(START_DIR)/codegen/lib/NEDwaves/detrend.c $(START_DIR)/codegen/lib/NEDwaves/var.c $(START_DIR)/codegen/lib/NEDwaves/fft.c $(START_DIR)/codegen/lib/NEDwaves/FFTImplementationCallback.c $(START_DIR)/codegen/lib/NEDwaves/mean.c $(START_DIR)/codegen/lib/NEDwaves/sum.c $(START_DIR)/codegen/lib/NEDwaves/minOrMax.c $(START_DIR)/codegen/lib/NEDwaves/nullAssignment.c $(START_DIR)/codegen/lib/NEDwaves/div.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxutil.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxAPI.c
+SRCS = $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_data.c $(START_DIR)/codegen/lib/NEDwaves/rt_nonfinite.c $(START_DIR)/codegen/lib/NEDwaves/rtGetNaN.c $(START_DIR)/codegen/lib/NEDwaves/rtGetInf.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_initialize.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_terminate.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves.c $(START_DIR)/codegen/lib/NEDwaves/qrsolve.c $(START_DIR)/codegen/lib/NEDwaves/xnrm2.c $(START_DIR)/codegen/lib/NEDwaves/std.c $(START_DIR)/codegen/lib/NEDwaves/blockedSummation.c $(START_DIR)/codegen/lib/NEDwaves/detrend.c $(START_DIR)/codegen/lib/NEDwaves/var.c $(START_DIR)/codegen/lib/NEDwaves/fft.c $(START_DIR)/codegen/lib/NEDwaves/FFTImplementationCallback.c $(START_DIR)/codegen/lib/NEDwaves/mean.c $(START_DIR)/codegen/lib/NEDwaves/sum.c $(START_DIR)/codegen/lib/NEDwaves/minOrMax.c $(START_DIR)/codegen/lib/NEDwaves/nullAssignment.c $(START_DIR)/codegen/lib/NEDwaves/div.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxutil.c $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxAPI.c $(START_DIR)/codegen/lib/NEDwaves/rtwhalf.c
 
 ALL_SRCS = $(SRCS)
 
@@ -230,7 +230,7 @@ ALL_SRCS = $(SRCS)
 ## OBJECTS
 ###########################################################################
 
-OBJS = NEDwaves_data.o rt_nonfinite.o rtGetNaN.o rtGetInf.o NEDwaves_initialize.o NEDwaves_terminate.o NEDwaves.o qrsolve.o xnrm2.o std.o blockedSummation.o detrend.o var.o fft.o FFTImplementationCallback.o mean.o sum.o minOrMax.o nullAssignment.o div.o NEDwaves_emxutil.o NEDwaves_emxAPI.o
+OBJS = NEDwaves_data.o rt_nonfinite.o rtGetNaN.o rtGetInf.o NEDwaves_initialize.o NEDwaves_terminate.o NEDwaves.o qrsolve.o xnrm2.o std.o blockedSummation.o detrend.o var.o fft.o FFTImplementationCallback.o mean.o sum.o minOrMax.o nullAssignment.o div.o NEDwaves_emxutil.o NEDwaves_emxAPI.o rtwhalf.o
 
 ALL_OBJS = $(OBJS)
 
@@ -587,6 +587,10 @@ NEDwaves_emxutil.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxutil.c
 
 
 NEDwaves_emxAPI.o : $(START_DIR)/codegen/lib/NEDwaves/NEDwaves_emxAPI.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+rtwhalf.o : $(START_DIR)/codegen/lib/NEDwaves/rtwhalf.c
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 

@@ -5,7 +5,7 @@
  * File: _coder_NEDwaves_mex.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 05-Dec-2022 10:00:34
+ * C/C++ source code generated on  : 07-Dec-2022 08:45:24
  */
 
 /* Include Files */
@@ -45,12 +45,12 @@ emlrtCTX mexFunctionCreateRootTLS(void)
 
 /*
  * Arguments    : int32_T nlhs
- *                mxArray *plhs[10]
+ *                mxArray *plhs[11]
  *                int32_T nrhs
  *                const mxArray *prhs[4]
  * Return Type  : void
  */
-void unsafe_NEDwaves_mexFunction(int32_T nlhs, mxArray *plhs[10], int32_T nrhs,
+void unsafe_NEDwaves_mexFunction(int32_T nlhs, mxArray *plhs[11], int32_T nrhs,
                                  const mxArray *prhs[4])
 {
   emlrtStack st = {
@@ -58,7 +58,7 @@ void unsafe_NEDwaves_mexFunction(int32_T nlhs, mxArray *plhs[10], int32_T nrhs,
       NULL, /* tls */
       NULL  /* prev */
   };
-  const mxArray *outputs[10];
+  const mxArray *outputs[11];
   int32_T b_nlhs;
   st.tls = emlrtRootTLSGlobal;
   /* Check for proper number of arguments. */
@@ -66,7 +66,7 @@ void unsafe_NEDwaves_mexFunction(int32_T nlhs, mxArray *plhs[10], int32_T nrhs,
     emlrtErrMsgIdAndTxt(&st, "EMLRT:runTime:WrongNumberOfInputs", 5, 12, 4, 4,
                         8, "NEDwaves");
   }
-  if (nlhs > 10) {
+  if (nlhs > 11) {
     emlrtErrMsgIdAndTxt(&st, "EMLRT:runTime:TooManyOutputArguments", 3, 4, 8,
                         "NEDwaves");
   }
