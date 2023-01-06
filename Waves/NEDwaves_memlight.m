@@ -161,7 +161,7 @@ Te = 1./fe;
 Tp = 1./f(fpindex);
 
 if Tp > 18, % if reasonable peak not found, use centroid
-    Tp = Te;
+    Tp = double(Te);
     fpindex = feindex;
 end
 
