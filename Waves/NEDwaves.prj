@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.coder" plugin-version="R2021a">
-  <configuration build-checksum="3096451422" file="/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves.prj" location="/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves" name="NEDwaves" preferred-package-location="/Users/jthomson/Downloads/NEDwaves_testcases" preferred-package-type="package.type.zip.flat" target="target.unifiedcoder" target-name="MATLAB Coder">
+  <configuration build-checksum="3096451422" file="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/NEDwaves.prj" location="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves" name="NEDwaves" preferred-package-location="/Users/jthomson/Downloads/NEDwaves_testcases" preferred-package-type="package.type.zip.flat" target="target.unifiedcoder" target-name="MATLAB Coder">
     <profile key="profile.mex">
       <param.BuiltInstrumentedMex />
       <param.RanInstrumentedMex>false</param.RanInstrumentedMex>
@@ -8,17 +8,11 @@
       <param.BuildFolder>option.BuildFolder.Project</param.BuildFolder>
       <param.SpecifiedBuildFolder />
       <param.SearchPaths />
-      <var.SimdQueryHardwareVendor>Generic</var.SimdQueryHardwareVendor>
-      <var.SimdQueryHardwareType>MATLAB Host Computer</var.SimdQueryHardwareType>
-      <param.InstructionSetExtensionsAvailableInUI>false</param.InstructionSetExtensionsAvailableInUI>
-      <param.InstructionSetExtensions>None</param.InstructionSetExtensions>
       <param.ResponsivenessChecks>true</param.ResponsivenessChecks>
       <param.ExtrinsicCalls>true</param.ExtrinsicCalls>
       <param.IntegrityChecks>true</param.IntegrityChecks>
       <param.SaturateOnIntegerOverflow>true</param.SaturateOnIntegerOverflow>
       <param.EnableAutoParallelization>false</param.EnableAutoParallelization>
-      <param.NumberOfCpuThreads>0</param.NumberOfCpuThreads>
-      <param.OptimizeReductions>false</param.OptimizeReductions>
       <param.GlobalDataSyncMethod>option.GlobalDataSyncMethod.SyncAlways</param.GlobalDataSyncMethod>
       <param.EnableVariableSizing>true</param.EnableVariableSizing>
       <param.DynamicMemoryAllocation>option.DynamicMemoryAllocation.Threshold</param.DynamicMemoryAllocation>
@@ -39,7 +33,6 @@
       <param.Verbosity>option.Verbosity.Info</param.Verbosity>
       <param.ReportPotentialDifferences>false</param.ReportPotentialDifferences>
       <param.GenerateReport>true</param.GenerateReport>
-      <param.HighlightImplicitExpansionIssues>true</param.HighlightImplicitExpansionIssues>
       <param.LaunchReport>false</param.LaunchReport>
       <param.ReportInfoVarName />
       <param.DefaultTestFile />
@@ -75,12 +68,11 @@
       <param.ConstantInputs>option.ConstantInputs.CheckValues</param.ConstantInputs>
       <param.EnableCRICodeCoverage>true</param.EnableCRICodeCoverage>
       <param.EnableAutoParallelizationReporting>true</param.EnableAutoParallelizationReporting>
-      <param.CacheDynamicArrayDataPointer>true</param.CacheDynamicArrayDataPointer>
       <param.EnableJIT>false</param.EnableJIT>
       <param.EnableJITSilentBailOut />
       <param.CheckForIssuesJIT>true</param.CheckForIssuesJIT>
       <param.EnableGitSupport>false</param.EnableGitSupport>
-      <param.EnableAutoCommit>true</param.EnableAutoCommit>
+      <param.EnableAutoCommit>false</param.EnableAutoCommit>
       <param.RepositoryStyle>option.RepositoryStyle.Auto</param.RepositoryStyle>
       <unset>
         <param.BuiltInstrumentedMex />
@@ -90,17 +82,11 @@
         <param.BuildFolder />
         <param.SpecifiedBuildFolder />
         <param.SearchPaths />
-        <var.SimdQueryHardwareVendor />
-        <var.SimdQueryHardwareType />
-        <param.InstructionSetExtensionsAvailableInUI />
-        <param.InstructionSetExtensions />
         <param.ResponsivenessChecks />
         <param.ExtrinsicCalls />
         <param.IntegrityChecks />
         <param.SaturateOnIntegerOverflow />
         <param.EnableAutoParallelization />
-        <param.NumberOfCpuThreads />
-        <param.OptimizeReductions />
         <param.GlobalDataSyncMethod />
         <param.EnableVariableSizing />
         <param.DynamicMemoryAllocation />
@@ -121,7 +107,6 @@
         <param.Verbosity />
         <param.ReportPotentialDifferences />
         <param.GenerateReport />
-        <param.HighlightImplicitExpansionIssues />
         <param.LaunchReport />
         <param.ReportInfoVarName />
         <param.DefaultTestFile />
@@ -157,7 +142,6 @@
         <param.ConstantInputs />
         <param.EnableCRICodeCoverage />
         <param.EnableAutoParallelizationReporting />
-        <param.CacheDynamicArrayDataPointer />
         <param.EnableJIT />
         <param.EnableJITSilentBailOut />
         <param.CheckForIssuesJIT />
@@ -172,17 +156,11 @@
       <param.BuildFolder>option.BuildFolder.Project</param.BuildFolder>
       <param.SpecifiedBuildFolder />
       <param.SearchPaths />
-      <var.SimdQueryHardwareVendor>ARM Compatible</var.SimdQueryHardwareVendor>
-      <var.SimdQueryHardwareType>ARM Cortex</var.SimdQueryHardwareType>
-      <param.InstructionSetExtensionsAvailableInUI>false</param.InstructionSetExtensionsAvailableInUI>
-      <param.InstructionSetExtensions>None</param.InstructionSetExtensions>
       <param.SaturateOnIntegerOverflow>true</param.SaturateOnIntegerOverflow>
       <param.PurelyIntegerCode>false</param.PurelyIntegerCode>
       <param.SupportNonFinite>true</param.SupportNonFinite>
       <param.LoopUnrollThreshold>5</param.LoopUnrollThreshold>
       <param.EnableAutoParallelization>false</param.EnableAutoParallelization>
-      <param.NumberOfCpuThreads>0</param.NumberOfCpuThreads>
-      <param.OptimizeReductions>false</param.OptimizeReductions>
       <param.EnableVariableSizing>true</param.EnableVariableSizing>
       <param.DynamicMemoryAllocation>option.DynamicMemoryAllocation.Threshold</param.DynamicMemoryAllocation>
       <param.DynamicMemoryAllocationThreshold>65536</param.DynamicMemoryAllocationThreshold>
@@ -193,7 +171,6 @@
       <param.EliminateSingleDimensions>false</param.EliminateSingleDimensions>
       <param.StackUsageMax>20000</param.StackUsageMax>
       <param.MultiInstanceCode>false</param.MultiInstanceCode>
-      <param.PreserveUnusedStructFields>false</param.PreserveUnusedStructFields>
       <param.FilePartitionMethod>option.FilePartitionMethod.MapMFileToCFile</param.FilePartitionMethod>
       <param.GenerateComments>true</param.GenerateComments>
       <param.CommentStyle>option.CommentStyle.Auto</param.CommentStyle>
@@ -245,7 +222,6 @@
       <param.GenerateCodeMetricsReport>false</param.GenerateCodeMetricsReport>
       <param.GenerateCodeReplacementReport>false</param.GenerateCodeReplacementReport>
       <param.HighlightPotentialDataTypeIssues>false</param.HighlightPotentialDataTypeIssues>
-      <param.HighlightImplicitExpansionIssues>true</param.HighlightImplicitExpansionIssues>
       <param.LaunchReport>false</param.LaunchReport>
       <param.ReportInfoVarName />
       <param.SILDebugging>false</param.SILDebugging>
@@ -253,7 +229,6 @@
       <param.SILPILSyncGlobalData>true</param.SILPILSyncGlobalData>
       <param.CodeExecutionProfiling>false</param.CodeExecutionProfiling>
       <param.CodeProfilingInstrumentation>false</param.CodeProfilingInstrumentation>
-      <param.CodeStackProfiling>false</param.CodeStackProfiling>
       <param.DefaultTestFile />
       <param.MergeInstrumentationResults>false</param.MergeInstrumentationResults>
       <param.RanPilSilVerification>false</param.RanPilSilVerification>
@@ -271,11 +246,11 @@
       <param.CodeReplacementLibrary>None</param.CodeReplacementLibrary>
       <param.DeprecatedCRLFlag>false</param.DeprecatedCRLFlag>
       <param.SameHardware>true</param.SameHardware>
-      <param.Toolchain>GNU Tools for ARM Embedded Processors</param.Toolchain>
+      <param.Toolchain>Automatically locate an installed toolchain</param.Toolchain>
       <param.BuildConfiguration>Faster Runs</param.BuildConfiguration>
       <param.CustomToolchainOptions />
       <var.ToolchainSettingsVisible>true</var.ToolchainSettingsVisible>
-      <param.target.Data>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;ctdata&gt;&lt;configuredHardware&gt;&lt;hardware version="1.0"&gt;&lt;name&gt;ARM Cortex-M3 (QEMU)&lt;/name&gt;&lt;customValues&gt;&lt;entries key="CPUClockRate" value="160" dataType="STRING"/&gt;&lt;entries key="UseCoderTarget" value="true" dataType="BOOLEAN"/&gt;&lt;/customValues&gt;&lt;/hardware&gt;&lt;/configuredHardware&gt;&lt;/ctdata&gt;</param.target.Data>
+      <param.target.Data>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;ctdata&gt;&lt;configuredHardware&gt;&lt;hardware&gt;&lt;name&gt;ARM Cortex-M3 (QEMU)&lt;/name&gt;&lt;customValues&gt;&lt;entries key="CPUClockRate" value="160" dataType="STRING"/&gt;&lt;entries key="UseCoderTarget" value="true" dataType="BOOLEAN"/&gt;&lt;/customValues&gt;&lt;/hardware&gt;&lt;/configuredHardware&gt;&lt;/ctdata&gt;</param.target.Data>
       <param.target.ActiveType>option.target.TargetType.Target</param.target.ActiveType>
       <param.target.ActiveTarget>ARM Cortex-M3 (QEMU)</param.target.ActiveTarget>
       <param.HardwareVendor.Production>ARM Compatible</param.HardwareVendor.Production>
@@ -354,13 +329,11 @@
       <param.CustomFFTCallback />
       <param.CustomBLASCallback />
       <param.EnableAutoParallelizationReporting>true</param.EnableAutoParallelizationReporting>
-      <param.CacheDynamicArrayDataPointer>true</param.CacheDynamicArrayDataPointer>
       <param.GenerateDefaultInSwitch>false</param.GenerateDefaultInSwitch>
       <param.EnableTraceability>true</param.EnableTraceability>
-      <param.SILPILVerbosity>option.SILPILVerbosity.off</param.SILPILVerbosity>
-      <param.UseECoderFeatures>true</param.UseECoderFeatures>
+      <param.UseECoderFeatures>false</param.UseECoderFeatures>
       <param.EnableGitSupport>false</param.EnableGitSupport>
-      <param.EnableAutoCommit>true</param.EnableAutoCommit>
+      <param.EnableAutoCommit>false</param.EnableAutoCommit>
       <param.RepositoryStyle>option.RepositoryStyle.Auto</param.RepositoryStyle>
       <param.psCustomPrjState>false</param.psCustomPrjState>
       <param.psCustomProjectFile />
@@ -376,15 +349,11 @@
         <param.BuildFolder />
         <param.SpecifiedBuildFolder />
         <param.SearchPaths />
-        <param.InstructionSetExtensionsAvailableInUI />
-        <param.InstructionSetExtensions />
         <param.SaturateOnIntegerOverflow />
         <param.PurelyIntegerCode />
         <param.SupportNonFinite />
         <param.LoopUnrollThreshold />
         <param.EnableAutoParallelization />
-        <param.NumberOfCpuThreads />
-        <param.OptimizeReductions />
         <param.EnableVariableSizing />
         <param.DynamicMemoryAllocation />
         <param.DynamicMemoryAllocationThreshold />
@@ -394,7 +363,6 @@
         <param.PreserveArrayDimensions />
         <param.EliminateSingleDimensions />
         <param.MultiInstanceCode />
-        <param.PreserveUnusedStructFields />
         <param.FilePartitionMethod />
         <param.GenerateComments />
         <param.CommentStyle />
@@ -446,7 +414,6 @@
         <param.GenerateCodeMetricsReport />
         <param.GenerateCodeReplacementReport />
         <param.HighlightPotentialDataTypeIssues />
-        <param.HighlightImplicitExpansionIssues />
         <param.LaunchReport />
         <param.ReportInfoVarName />
         <param.SILDebugging />
@@ -454,7 +421,6 @@
         <param.SILPILSyncGlobalData />
         <param.CodeExecutionProfiling />
         <param.CodeProfilingInstrumentation />
-        <param.CodeStackProfiling />
         <param.DefaultTestFile />
         <param.MergeInstrumentationResults />
         <param.RanPilSilVerification />
@@ -472,6 +438,7 @@
         <param.CodeReplacementLibrary />
         <param.DeprecatedCRLFlag />
         <param.SameHardware />
+        <param.Toolchain />
         <param.BuildConfiguration />
         <param.CustomToolchainOptions />
         <var.ToolchainSettingsVisible />
@@ -538,10 +505,8 @@
         <param.CustomFFTCallback />
         <param.CustomBLASCallback />
         <param.EnableAutoParallelizationReporting />
-        <param.CacheDynamicArrayDataPointer />
         <param.GenerateDefaultInSwitch />
         <param.EnableTraceability />
-        <param.SILPILVerbosity />
         <param.UseECoderFeatures />
         <param.EnableGitSupport />
         <param.EnableAutoCommit />
@@ -556,19 +521,365 @@
         <param.psOutputFolder />
       </unset>
     </profile>
+    <profile key="profile.hdl">
+      <param.hdl.Workflow />
+      <param.hdl.TargetLanguage />
+      <param.hdl.TargetPlatform />
+      <param.hdl.SynthesisTool />
+      <param.hdl.InputFrequency />
+      <param.hdl.TargetFrequency />
+      <param.hdl.IPCoreName />
+      <param.hdl.IPCoreVersion />
+      <param.hdl.AdditionalIPFiles />
+      <param.hdl.ExecutionMode />
+      <param.hdl.SynthesisToolChipFamily />
+      <param.hdl.SynthesisToolDeviceName />
+      <param.hdl.SynthesisToolPackageName />
+      <param.hdl.SynthesisToolSpeedValue />
+      <param.hdl.TargetInterface />
+      <param.hdl.CheckConformance />
+      <param.hdl.LaunchConformanceReport />
+      <param.hdl.GenerateEDAScripts />
+      <param.hdl.GenerateHDLCode />
+      <param.hdl.AdditionalSynthesisProjectFiles />
+      <param.hdl.CriticalPathSource />
+      <param.hdl.EmbeddedSystemTool />
+      <param.hdl.EmbeddedSystemProjectFolder />
+      <param.hdl.BitstreamBuildMode />
+      <param.hdl.ReferenceDesign />
+      <param.hdl.ReferenceDesignPath />
+      <param.hdl.LegacyDefaultTestFile />
+      <param.WorkingFolder>option.WorkingFolder.Project</param.WorkingFolder>
+      <param.SpecifiedWorkingFolder />
+      <param.BuildFolder>option.BuildFolder.Project</param.BuildFolder>
+      <param.SpecifiedBuildFolder />
+      <param.SearchPaths />
+      <param.hdl.MapPersistentVarsToRAM />
+      <param.hdl.RAMThreshold />
+      <param.hdl.MapPipelineDelaysToRAM />
+      <param.hdl.RAMVariableNames />
+      <param.hdl.RegisterInputs />
+      <param.hdl.RegisterOutputs />
+      <param.hdl.DistributedPipelining />
+      <param.hdl.DistributedPipeliningPriority />
+      <param.hdl.PreserveDesignDelays />
+      <param.hdl.InputPipeline />
+      <param.hdl.OutputPipeline />
+      <param.hdl.PipelineVariables />
+      <param.hdl.ResourceSharing />
+      <param.hdl.ConstantMultiplierOptimization />
+      <param.hdl.LoopOptimization />
+      <param.hdl.AggressiveDataflowConversion />
+      <param.GenerateComments>true</param.GenerateComments>
+      <param.MATLABSourceComments>false</param.MATLABSourceComments>
+      <param.hdl.VHDLFileExt />
+      <param.hdl.VerilogFileExt />
+      <param.hdl.DateComment />
+      <param.hdl.UserComment />
+      <param.hdl.ModulePrefix />
+      <param.hdl.PackagePostfix />
+      <param.hdl.EntityConflictPostfix />
+      <param.hdl.ReservedWordPostfix />
+      <param.hdl.ClockProcessPostfix />
+      <param.hdl.ComplexRealPostfix />
+      <param.hdl.ComplexImagPostfix />
+      <param.hdl.PipelinePostfix />
+      <param.hdl.EnablePrefix />
+      <param.hdl.InlineConfigurations />
+      <param.hdl.UseRisingEdge />
+      <param.hdl.UseMatrixTypesInHDL />
+      <param.hdl.HDLCompileFilePostfix />
+      <param.hdl.HDLCompileInit />
+      <param.hdl.HDLCompileVHDLCmd />
+      <param.hdl.HDLCompileVerilogCmd />
+      <param.hdl.HDLCompileTerm />
+      <param.hdl.HDLSimFilePostfix />
+      <param.hdl.HDLSimInit />
+      <param.hdl.HDLSimCmd />
+      <param.hdl.HDLSimViewWaveCmd />
+      <param.hdl.HDLSimTerm />
+      <param.hdl.HDLSynthTool />
+      <var.hasSynthesisToolScript />
+      <var.toolSpecificEDAScript />
+      <param.hdl.HDLSynthFilePostfix />
+      <param.hdl.HDLSynthInit />
+      <param.hdl.HDLSynthCmd />
+      <param.hdl.HDLSynthTerm />
+      <param.hdl.HDLLintTool />
+      <var.LintToolScript />
+      <var.hasHDLLintTool />
+      <param.hdl.HDLLintInit />
+      <param.hdl.HDLLintCmd />
+      <param.hdl.HDLLintTerm />
+      <param.hdl.ResetType />
+      <param.hdl.ResetAssertedLevel />
+      <param.hdl.ResetInputPort />
+      <param.hdl.ClockInputPort />
+      <param.hdl.ClockEdge />
+      <param.hdl.ClockEnableInputPort />
+      <param.hdl.Oversampling />
+      <param.hdl.EnableRate />
+      <param.hdl.InputType />
+      <param.hdl.OutputType />
+      <param.hdl.ClockEnableOutputPort />
+      <param.hdl.ScalarizePorts />
+      <param.hdl.HDLCodingStandard />
+      <var.HDLCodingStandard_FilterPassingRules_enable />
+      <var.HDLCodingStandard_DetectDuplicateNamesCheck_enable />
+      <var.HDLCodingStandard_HDLKeywords_enable />
+      <var.HDLCodingStandard_ModuleInstanceEntityNameLength_enable />
+      <var.HDLCodingStandard_ModuleInstanceEntityNameLength_min />
+      <var.HDLCodingStandard_ModuleInstanceEntityNameLength_max />
+      <var.HDLCodingStandard_SignalPortParamNameLength_enable />
+      <var.HDLCodingStandard_SignalPortParamNameLength_min />
+      <var.HDLCodingStandard_SignalPortParamNameLength_max />
+      <var.HDLCodingStandard_MinimizeVariableUsage_enable />
+      <var.HDLCodingStandard_InitialStatements_enable />
+      <var.HDLCodingStandard_IfElseChain_enable />
+      <var.HDLCodingStandard_IfElseChain_length />
+      <var.HDLCodingStandard_IfElseNesting_enable />
+      <var.HDLCodingStandard_IfElseNesting_depth />
+      <var.HDLCodingStandard_MultiplierBitWidth_enable />
+      <var.HDLCodingStandard_MultiplierBitWidth_width />
+      <var.HDLCodingStandard_NonIntegerTypes_enable />
+      <var.HDLCodingStandard_LineLength_enable />
+      <var.HDLCodingStandard_LineLength_length />
+      <param.hdl.GenerateCosimTestBench />
+      <param.hdl.CosimLogOutputs />
+      <param.hdl.CosimTool />
+      <param.hdl.CosimRunMode />
+      <param.hdl.SimulateCosimTestBench />
+      <param.hdl.CosimClockHighTime />
+      <param.hdl.CosimClockLowTime />
+      <param.hdl.CosimHoldTime />
+      <param.hdl.CosimClockEnableDelay />
+      <param.hdl.CosimResetLength />
+      <param.hdl.GenerateFILTestBench />
+      <param.hdl.FILLogOutputs />
+      <param.hdl.FILBoardName />
+      <param.hdl.FILConnection />
+      <param.hdl.FILBoardIPAddress />
+      <param.hdl.FILBoardMACAddress />
+      <param.hdl.FILAdditionalFiles />
+      <param.hdl.SimulateFILTestBench />
+      <var.hasTestBench />
+      <param.hdl.GenerateHDLTestBench />
+      <param.hdl.SimulateGeneratedCode />
+      <param.hdl.SimulationTool />
+      <param.hdl.TestBenchPostfix />
+      <param.hdl.ForceClock />
+      <param.hdl.ClockHighTime />
+      <param.hdl.ClockLowTime />
+      <param.hdl.HoldTime />
+      <param.hdl.ForceClockEnable />
+      <param.hdl.TestBenchClockEnableDelay />
+      <param.hdl.ForceReset />
+      <param.hdl.ResetLength />
+      <param.hdl.HoldInputDataBetweenSamples />
+      <param.hdl.InputDataInterval />
+      <param.hdl.InitializeTestBenchInputs />
+      <param.hdl.MultifileTestBench />
+      <param.hdl.TestBenchDataPostfix />
+      <param.hdl.TestReferencePostfix />
+      <param.hdl.UseFileIOInTestBench />
+      <param.hdl.IgnoreDataChecking />
+      <param.hdl.SimulationIterationLimit />
+      <param.hdl.UseFiAccelForTestBench />
+      <param.hdl.hdlVariables />
+      <param.hdl.hdlComputedVariables />
+      <param.hdl.InitializeBlockRAM />
+      <param.hdl.RAMArchitecture />
+      <param.hdl.PartitionFunctions />
+      <param.hdl.InstantiateFunctions />
+      <param.hdl.GenerateMLFcnBlock />
+      <param.hdl.GenerateXSGBlock />
+      <unset>
+        <param.hdl.Workflow />
+        <param.hdl.TargetLanguage />
+        <param.hdl.TargetPlatform />
+        <param.hdl.SynthesisTool />
+        <param.hdl.InputFrequency />
+        <param.hdl.TargetFrequency />
+        <param.hdl.IPCoreName />
+        <param.hdl.IPCoreVersion />
+        <param.hdl.AdditionalIPFiles />
+        <param.hdl.ExecutionMode />
+        <param.hdl.SynthesisToolChipFamily />
+        <param.hdl.SynthesisToolDeviceName />
+        <param.hdl.SynthesisToolPackageName />
+        <param.hdl.SynthesisToolSpeedValue />
+        <param.hdl.TargetInterface />
+        <param.hdl.CheckConformance />
+        <param.hdl.LaunchConformanceReport />
+        <param.hdl.GenerateEDAScripts />
+        <param.hdl.GenerateHDLCode />
+        <param.hdl.AdditionalSynthesisProjectFiles />
+        <param.hdl.CriticalPathSource />
+        <param.hdl.EmbeddedSystemTool />
+        <param.hdl.EmbeddedSystemProjectFolder />
+        <param.hdl.BitstreamBuildMode />
+        <param.hdl.ReferenceDesign />
+        <param.hdl.ReferenceDesignPath />
+        <param.hdl.LegacyDefaultTestFile />
+        <param.WorkingFolder />
+        <param.SpecifiedWorkingFolder />
+        <param.BuildFolder />
+        <param.SpecifiedBuildFolder />
+        <param.SearchPaths />
+        <param.hdl.MapPersistentVarsToRAM />
+        <param.hdl.RAMThreshold />
+        <param.hdl.MapPipelineDelaysToRAM />
+        <param.hdl.RAMVariableNames />
+        <param.hdl.RegisterInputs />
+        <param.hdl.RegisterOutputs />
+        <param.hdl.DistributedPipelining />
+        <param.hdl.DistributedPipeliningPriority />
+        <param.hdl.PreserveDesignDelays />
+        <param.hdl.InputPipeline />
+        <param.hdl.OutputPipeline />
+        <param.hdl.PipelineVariables />
+        <param.hdl.ResourceSharing />
+        <param.hdl.ConstantMultiplierOptimization />
+        <param.hdl.LoopOptimization />
+        <param.hdl.AggressiveDataflowConversion />
+        <param.GenerateComments />
+        <param.MATLABSourceComments />
+        <param.hdl.VHDLFileExt />
+        <param.hdl.VerilogFileExt />
+        <param.hdl.DateComment />
+        <param.hdl.UserComment />
+        <param.hdl.ModulePrefix />
+        <param.hdl.PackagePostfix />
+        <param.hdl.EntityConflictPostfix />
+        <param.hdl.ReservedWordPostfix />
+        <param.hdl.ClockProcessPostfix />
+        <param.hdl.ComplexRealPostfix />
+        <param.hdl.ComplexImagPostfix />
+        <param.hdl.PipelinePostfix />
+        <param.hdl.EnablePrefix />
+        <param.hdl.InlineConfigurations />
+        <param.hdl.UseRisingEdge />
+        <param.hdl.UseMatrixTypesInHDL />
+        <param.hdl.HDLCompileFilePostfix />
+        <param.hdl.HDLCompileInit />
+        <param.hdl.HDLCompileVHDLCmd />
+        <param.hdl.HDLCompileVerilogCmd />
+        <param.hdl.HDLCompileTerm />
+        <param.hdl.HDLSimFilePostfix />
+        <param.hdl.HDLSimInit />
+        <param.hdl.HDLSimCmd />
+        <param.hdl.HDLSimViewWaveCmd />
+        <param.hdl.HDLSimTerm />
+        <param.hdl.HDLSynthTool />
+        <var.hasSynthesisToolScript />
+        <var.toolSpecificEDAScript />
+        <param.hdl.HDLSynthFilePostfix />
+        <param.hdl.HDLSynthInit />
+        <param.hdl.HDLSynthCmd />
+        <param.hdl.HDLSynthTerm />
+        <param.hdl.HDLLintTool />
+        <var.LintToolScript />
+        <var.hasHDLLintTool />
+        <param.hdl.HDLLintInit />
+        <param.hdl.HDLLintCmd />
+        <param.hdl.HDLLintTerm />
+        <param.hdl.ResetType />
+        <param.hdl.ResetAssertedLevel />
+        <param.hdl.ResetInputPort />
+        <param.hdl.ClockInputPort />
+        <param.hdl.ClockEdge />
+        <param.hdl.ClockEnableInputPort />
+        <param.hdl.Oversampling />
+        <param.hdl.EnableRate />
+        <param.hdl.InputType />
+        <param.hdl.OutputType />
+        <param.hdl.ClockEnableOutputPort />
+        <param.hdl.ScalarizePorts />
+        <param.hdl.HDLCodingStandard />
+        <var.HDLCodingStandard_FilterPassingRules_enable />
+        <var.HDLCodingStandard_DetectDuplicateNamesCheck_enable />
+        <var.HDLCodingStandard_HDLKeywords_enable />
+        <var.HDLCodingStandard_ModuleInstanceEntityNameLength_enable />
+        <var.HDLCodingStandard_ModuleInstanceEntityNameLength_min />
+        <var.HDLCodingStandard_ModuleInstanceEntityNameLength_max />
+        <var.HDLCodingStandard_SignalPortParamNameLength_enable />
+        <var.HDLCodingStandard_SignalPortParamNameLength_min />
+        <var.HDLCodingStandard_SignalPortParamNameLength_max />
+        <var.HDLCodingStandard_MinimizeVariableUsage_enable />
+        <var.HDLCodingStandard_InitialStatements_enable />
+        <var.HDLCodingStandard_IfElseChain_enable />
+        <var.HDLCodingStandard_IfElseChain_length />
+        <var.HDLCodingStandard_IfElseNesting_enable />
+        <var.HDLCodingStandard_IfElseNesting_depth />
+        <var.HDLCodingStandard_MultiplierBitWidth_enable />
+        <var.HDLCodingStandard_MultiplierBitWidth_width />
+        <var.HDLCodingStandard_NonIntegerTypes_enable />
+        <var.HDLCodingStandard_LineLength_enable />
+        <var.HDLCodingStandard_LineLength_length />
+        <param.hdl.GenerateCosimTestBench />
+        <param.hdl.CosimLogOutputs />
+        <param.hdl.CosimTool />
+        <param.hdl.CosimRunMode />
+        <param.hdl.SimulateCosimTestBench />
+        <param.hdl.CosimClockHighTime />
+        <param.hdl.CosimClockLowTime />
+        <param.hdl.CosimHoldTime />
+        <param.hdl.CosimClockEnableDelay />
+        <param.hdl.CosimResetLength />
+        <param.hdl.GenerateFILTestBench />
+        <param.hdl.FILLogOutputs />
+        <param.hdl.FILBoardName />
+        <param.hdl.FILConnection />
+        <param.hdl.FILBoardIPAddress />
+        <param.hdl.FILBoardMACAddress />
+        <param.hdl.FILAdditionalFiles />
+        <param.hdl.SimulateFILTestBench />
+        <var.hasTestBench />
+        <param.hdl.GenerateHDLTestBench />
+        <param.hdl.SimulateGeneratedCode />
+        <param.hdl.SimulationTool />
+        <param.hdl.TestBenchPostfix />
+        <param.hdl.ForceClock />
+        <param.hdl.ClockHighTime />
+        <param.hdl.ClockLowTime />
+        <param.hdl.HoldTime />
+        <param.hdl.ForceClockEnable />
+        <param.hdl.TestBenchClockEnableDelay />
+        <param.hdl.ForceReset />
+        <param.hdl.ResetLength />
+        <param.hdl.HoldInputDataBetweenSamples />
+        <param.hdl.InputDataInterval />
+        <param.hdl.InitializeTestBenchInputs />
+        <param.hdl.MultifileTestBench />
+        <param.hdl.TestBenchDataPostfix />
+        <param.hdl.TestReferencePostfix />
+        <param.hdl.UseFileIOInTestBench />
+        <param.hdl.IgnoreDataChecking />
+        <param.hdl.SimulationIterationLimit />
+        <param.hdl.UseFiAccelForTestBench />
+        <param.hdl.hdlVariables />
+        <param.hdl.hdlComputedVariables />
+        <param.hdl.InitializeBlockRAM />
+        <param.hdl.RAMArchitecture />
+        <param.hdl.PartitionFunctions />
+        <param.hdl.InstantiateFunctions />
+        <param.hdl.GenerateMLFcnBlock />
+        <param.hdl.GenerateXSGBlock />
+      </unset>
+    </profile>
     <param.objective>option.objective.c</param.objective>
-    <param.WorkflowStep>workflowSummary</param.WorkflowStep>
+    <param.WorkflowStep>generateCode</param.WorkflowStep>
     <param.TestSnippets>
       <item>[ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs);
 [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs);
 [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs);
-[ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs);</item>
+[ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves_memlight(north,east,down,fs);</item>
     </param.TestSnippets>
     <param.ExternalFcnMajority>column</param.ExternalFcnMajority>
     <param.UseGlobals>option.UseGlobals.No</param.UseGlobals>
-    <param.outputfile>${PROJECT_ROOT}/codegen/lib/NEDwaves/NEDwaves.a</param.outputfile>
+    <param.outputfile>${PROJECT_ROOT}/codegen/lib/NEDwaves_memlight/NEDwaves_memlight.a</param.outputfile>
     <param.version>R2012a</param.version>
-    <param.HasECoderFeatures>true</param.HasECoderFeatures>
+    <param.HasECoderFeatures>false</param.HasECoderFeatures>
     <param.HasGpuCoder>false</param.HasGpuCoder>
     <var.HasNeuralNetworkToolbox>false</var.HasNeuralNetworkToolbox>
     <param.mex.mainhtml />
@@ -588,15 +899,14 @@
     <var.redirectedInputTypeData />
     <var.DismissScreener>true</var.DismissScreener>
     <param.unifiedParamStorage />
-    <param.hdlParamStorage />
-    <var.gc.lastOutputRoot>codegen/lib/NEDwaves</var.gc.lastOutputRoot>
+    <var.gc.lastOutputRoot />
     <var.gc.lastOutputType>C_CODE</var.gc.lastOutputType>
-    <var.gc.preBuildChecksum>3233304859</var.gc.preBuildChecksum>
+    <var.gc.preBuildChecksum>2419239193</var.gc.preBuildChecksum>
     <var.cfi.lastOutputRoot />
     <var.cfi.preBuildChecksum />
     <var.outdatedOnRestore>false</var.outdatedOnRestore>
-    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;784196718&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
-    <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
+    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/NEDwaves_memlight.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;4049523295&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
+    <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/NEDwaves_memlight.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
     <param.forceMexBuild>false</param.forceMexBuild>
     <param.NoDefaultJIT>false</param.NoDefaultJIT>
     <param.configImportActive>false</param.configImportActive>
@@ -604,21 +914,15 @@
     <var.notGpuCoder>true</var.notGpuCoder>
     <var.boundToGui>true</var.boundToGui>
     <var.isConfigDialog>false</var.isConfigDialog>
-    <var.ecoderEnabled>true</var.ecoderEnabled>
-    <param.AlwaysGenerateTypedefGuards>false</param.AlwaysGenerateTypedefGuards>
-    <param.RemoveDuplicateFunctionsAndTypes>true</param.RemoveDuplicateFunctionsAndTypes>
-    <param.EnableStructExplosion>true</param.EnableStructExplosion>
-    <param.ForceANSIC>false</param.ForceANSIC>
-    <param.NumCompileJobs>1</param.NumCompileJobs>
-    <param.mex.outputfile>NEDwaves_mex</param.mex.outputfile>
-    <param.grt.outputfile>NEDwaves</param.grt.outputfile>
+    <var.ecoderEnabled>false</var.ecoderEnabled>
+    <param.mex.outputfile>NEDwaves_memlight_mex</param.mex.outputfile>
+    <param.grt.outputfile>NEDwaves_memlight</param.grt.outputfile>
     <param.artifact>option.target.artifact.lib</param.artifact>
-    <param.outputfile>${PROJECT_ROOT}/codegen/lib/NEDwaves/NEDwaves.a</param.outputfile>
+    <param.outputfile>${PROJECT_ROOT}/codegen/lib/NEDwaves_memlight/NEDwaves_memlight.a</param.outputfile>
     <param.CppNamespace />
     <param.CppPackagesToNamespaces>true</param.CppPackagesToNamespaces>
     <param.CppNamespaceForMathworksCode>coder</param.CppNamespaceForMathworksCode>
     <param.CppPreserveClasses>true</param.CppPreserveClasses>
-    <param.CppGenerateEnumClass>true</param.CppGenerateEnumClass>
     <param.gpu.Enabled>false</param.gpu.Enabled>
     <param.gpu.SelectCudaDevice>-1</param.gpu.SelectCudaDevice>
     <param.gpu.ComputeCapability />
@@ -634,16 +938,10 @@
     <param.gpu.EnableCUBLAS>false</param.gpu.EnableCUBLAS>
     <param.gpu.EnableCUSOLVER>false</param.gpu.EnableCUSOLVER>
     <param.gpu.EnableCUFFT>false</param.gpu.EnableCUFFT>
-    <param.gpu.EnableMemoryManager>false</param.gpu.EnableMemoryManager>
-    <param.gpu.BlockAlignment>256</param.gpu.BlockAlignment>
-    <param.gpu.FreeMode />
-    <param.gpu.MinPoolSize>8</param.gpu.MinPoolSize>
-    <param.gpu.MaxPoolSize>2048</param.gpu.MaxPoolSize>
     <var.checkIssuesGpu>false</var.checkIssuesGpu>
     <var.hasGpu>false</var.hasGpu>
     <var.isDeepLearningForMatlabCoderEnabled>true</var.isDeepLearningForMatlabCoderEnabled>
     <param.deeplearning.EnableDeepLearning>false</param.deeplearning.EnableDeepLearning>
-    <param.deeplearning.DeepLearningCustomCallback />
     <param.deeplearning.TargetLib>option.deeplearning.targetlibrary.none</param.deeplearning.TargetLib>
     <var.cfiTargetLibSuppression>false</var.cfiTargetLibSuppression>
     <var.hasMatlabDeepLearningSupportPackage>true</var.hasMatlabDeepLearningSupportPackage>
@@ -658,11 +956,9 @@
     <param.arm-compute.ArmArchitecture>option.arm-compute.architecture.unspecified</param.arm-compute.ArmArchitecture>
     <param.arm-compute.DataType>option.arm-compute.datatype.fp32</param.arm-compute.DataType>
     <param.arm-compute.CalibrationResultFile />
-    <param.cmsis-nn.DataType>option.arm-compute.datatype.int8</param.cmsis-nn.DataType>
-    <param.cmsis-nn.CalibrationResultFile />
     <param.TargetLang>option.TargetLang.C</param.TargetLang>
     <param.EnableAutoExtrinsicCalls>true</param.EnableAutoExtrinsicCalls>
-    <param.EnableImplicitExpansion>true</param.EnableImplicitExpansion>
+    <param.EnableImplicitExpansion>false</param.EnableImplicitExpansion>
     <param.UsePreconditions>false</param.UsePreconditions>
     <param.FeatureFlags />
     <param.FixedPointMode>option.FixedPointMode.None</param.FixedPointMode>
@@ -732,7 +1028,7 @@
       <param.FixedPointEnabled />
       <var.redirectedInputTypeData />
       <param.unifiedParamStorage />
-      <param.hdlParamStorage />
+      <var.gc.lastOutputRoot />
       <var.cfi.lastOutputRoot />
       <var.cfi.preBuildChecksum />
       <var.outdatedOnRestore />
@@ -743,18 +1039,12 @@
       <var.notGpuCoder />
       <var.isConfigDialog />
       <var.ecoderEnabled />
-      <param.AlwaysGenerateTypedefGuards />
-      <param.RemoveDuplicateFunctionsAndTypes />
-      <param.EnableStructExplosion />
-      <param.ForceANSIC />
-      <param.NumCompileJobs />
       <param.mex.outputfile />
       <param.grt.outputfile />
       <param.CppNamespace />
       <param.CppPackagesToNamespaces />
       <param.CppNamespaceForMathworksCode />
       <param.CppPreserveClasses />
-      <param.CppGenerateEnumClass />
       <param.gpu.Enabled />
       <param.gpu.SelectCudaDevice />
       <param.gpu.ComputeCapability />
@@ -770,16 +1060,10 @@
       <param.gpu.EnableCUBLAS />
       <param.gpu.EnableCUSOLVER />
       <param.gpu.EnableCUFFT />
-      <param.gpu.EnableMemoryManager />
-      <param.gpu.BlockAlignment />
-      <param.gpu.FreeMode />
-      <param.gpu.MinPoolSize />
-      <param.gpu.MaxPoolSize />
       <var.checkIssuesGpu />
       <var.hasGpu />
       <var.isDeepLearningForMatlabCoderEnabled />
       <param.deeplearning.EnableDeepLearning />
-      <param.deeplearning.DeepLearningCustomCallback />
       <param.deeplearning.TargetLib />
       <var.cfiTargetLibSuppression />
       <var.hasMatlabDeepLearningSupportPackage />
@@ -794,8 +1078,6 @@
       <param.arm-compute.ArmArchitecture />
       <param.arm-compute.DataType />
       <param.arm-compute.CalibrationResultFile />
-      <param.cmsis-nn.DataType />
-      <param.cmsis-nn.CalibrationResultFile />
       <param.TargetLang />
       <param.EnableAutoExtrinsicCalls />
       <param.EnableImplicitExpansion />
@@ -845,28 +1127,36 @@
       <param.FixedPointUseDesignRanges />
     </unset>
     <fileset.entrypoints>
-      <file custom-data-expanded="false" value="${PROJECT_ROOT}/NEDwaves.m">
-        <Marker>1670038981367</Marker>
+      <file custom-data-expanded="false" value="${PROJECT_ROOT}/NEDwaves_memlight.m">
+        <Marker>1673030540537</Marker>
       </file>
     </fileset.entrypoints>
     <fileset.testbench />
     <fileset.inputtypes>
-      <file custom-data-expanded="false" value="${PROJECT_ROOT}/NEDwaves.m">
-        <Inputs fileName="NEDwaves.m" functionName="NEDwaves">
+      <file custom-data-expanded="false" value="${PROJECT_ROOT}/NEDwaves_memlight.m">
+        <Inputs fileName="NEDwaves_memlight.m" functionName="NEDwaves_memlight">
           <Input Name="north" typeId="0" />
-          <Input Name="east" typeId="0" />
+          <Input Name="east" typeId="1" />
           <Input Name="down" typeId="0" />
-          <Input Name="fs" typeId="1" />
+          <Input Name="fs" typeId="2" />
           <idpTable>
             <type typeId="0">
               <Class>single</Class>
-              <Size>:inf x 1</Size>
+              <Size>1 x :inf</Size>
               <Value />
               <InitialValue />
               <UserDefined>true</UserDefined>
               <Complex>false</Complex>
             </type>
             <type typeId="1">
+              <Class>single</Class>
+              <Size>1 x :inf</Size>
+              <Value />
+              <InitialValue />
+              <UserDefined>true</UserDefined>
+              <Complex>false</Complex>
+            </type>
+            <type typeId="2">
               <Class>double</Class>
               <Size>1 x 1</Size>
               <Value />
@@ -880,24 +1170,18 @@
       </file>
     </fileset.inputtypes>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}/codegen/lib/NEDwaves" name="NEDwaves.a" optional="false">/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/codegen/lib/NEDwaves/NEDwaves.a</file>
+      <file location="${PROJECT_ROOT}/codegen/lib/NEDwaves_memlight" name="NEDwaves_memlight.a" optional="false">/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/codegen/lib/NEDwaves_memlight/NEDwaves_memlight.a</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>/Applications/MATLAB_R2022a.app</root>
+      <root>/Applications/MATLAB_R2021a.app</root>
       <toolboxes>
         <toolbox name="matlabcoder" />
-        <toolbox name="embeddedcoder" />
       </toolboxes>
       <toolbox>
         <matlabcoder>
           <enabled>true</enabled>
         </matlabcoder>
-      </toolbox>
-      <toolbox>
-        <embeddedcoder>
-          <enabled>true</enabled>
-        </embeddedcoder>
       </toolbox>
     </matlab>
     <platform>
@@ -909,7 +1193,7 @@
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>12.6</osver>
+      <osver>10.16</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>maci64</arch>

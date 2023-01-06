@@ -28,7 +28,7 @@ function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves(north, e
 %
 %#codegen
 
-testing = false;
+testing = true;
 
 %% tunable parameters
     
@@ -314,22 +314,22 @@ check = uint8(check*10);
 
 %% testing bits
 
-% if testing
-% 
-%     figure(1), clf
-%     subplot(2,1,1)
-%     loglog(f,( UU + VV) ./ ( (2*pi*f).^2 ), f, ( WW ) ./ ( (2*pi*f).^2 ) )
-%     set(gca,'YLim',[1e-3 2e2])
-%     legend('E=(UU+VV)/f^2','E=WW/f^2')
-%     ylabel('Energy [m^2/Hz]')
-%     title(['Hs = ' num2str(Hs,2) ', Tp = ' num2str(Tp,2) ', Dp = ' num2str(Dp,3)])
-%     subplot(2,1,2)
-%     semilogx(f,a1, f,b1, f,a2,  f,b2)
-%     set(gca,'YLim',[-1 1])
-%     legend('a1','b1','a2','b2')
-%     xlabel('frequency [Hz]')
-%     drawnow
-% 
-% end
+if testing
+
+    figure(1), clf
+    subplot(2,1,1)
+    loglog(f,( UU + VV) ./ ( (2*pi*f).^2 ), f, ( WW ) ./ ( (2*pi*f).^2 ) )
+    set(gca,'YLim',[1e-3 2e2])
+    legend('E=(UU+VV)/f^2','E=WW/f^2')
+    ylabel('Energy [m^2/Hz]')
+    title(['Hs = ' num2str(Hs,2) ', Tp = ' num2str(Tp,2) ', Dp = ' num2str(Dp,3)])
+    subplot(2,1,2)
+    semilogx(f,double(a1)./100, f,double(b1)./100, f,double(a2)./100,  f,double(b2)./100)
+    set(gca,'YLim',[-1 1])
+    legend('a1','b1','a2','b2')
+    xlabel('frequency [Hz]')
+    drawnow
+
+end
 
 
