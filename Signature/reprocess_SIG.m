@@ -1,7 +1,6 @@
 %% Reprocess SWIFT v4 signature velocities from burst data
-
-%   Loops through burst MAT files for a given SWIFT deployment
-%       (assumes readSIG_raw.m has already been run)
+%   Loops through burst MAT or DAT files for a given SWIFT deployment,
+%   reprocessing signature data
 
 %   QC/Process Steps:
 %     HR Processing:
@@ -19,7 +18,7 @@
 %   Replace values in the SWIFT data structure of results (from onboard
 %   processing)
 
-% J. Thomson, Sept 2017 (modified from AQH reprocessing)
+%      J. Thomson, Sept 2017 (modified from AQH reprocessing)
 %       7/2018, fix bug in the burst time stamp applied 4/2019, apply
 %       altimeter results to trim profiles
 %               and plot echograms, with vertical velocities
@@ -71,23 +70,27 @@
 %           3. Remove amplitude thresholds -- amp has arbitrary bias. Amp
 %                   still used in fish detection, b/c that is based on distribution
 %                   of amplitude values in a burst.
+%       Feb 2023 (K. Zeiden)
+%           1. Re-added readSWIFTv4_SIG w/option to read-in raw burst files
 
 %% User Defined Inputs
 
 % Directory with existing SWIFT structures (e.g. from telemetry)
 swiftstructdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\v4';
-% Directory with signature burst files (either .dat or .mat, see toggle 'readraw')
+% Directory with signature burst mat files 
 burstmatdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\Raw\SIG\';% 'S:\LC-DRI\';
+% Directory with signature burst dat files 
+burstdatdir = 'S:\LC-DRI\';
 % Directory to save updated/new SWIFT structure (see toggle 'savenewSWIFT')
 savestructdir = [swiftstructdir '\reprocessSIG\'];
-% Directory to save figures (will create folder for each mission if doesn't
-% already exist)
+% Directory to save figures (will create folder for each mission if doesn't already exist)
 savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\SWIFT_Processing\SIG\Raw\';
 
 % Plotting/Saving Toggles
 plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
 saveplots = false; % save generated plots
+readraw = false;% read raw binary files
 trimalt = false; % trim data based on altimeter
 saveSWIFT = false;% overwrites original structure with new SWIFT data
 saveSIG = false; %save burst averaged sig data separately
@@ -116,28 +119,42 @@ clear SWIFT SIG
 
 for iswift = 1:nswift
     
-    %Load pre-existing mission mat file with SWIFT structure
-    SNprocess = swifts{iswift};
-    structfile = dir([swiftstructdir '\' swifts{iswift} '*.mat']);
+    SNprocess = swifts{iswift}; 
+    disp(['********** Reprocessing ' SNprocess ' **********'])
+    
+    %Load pre-existing mission mat file with SWIFT structure 
+    structfile = dir([swiftstructdir '\' SNprocess '*.mat']);
     if length(structfile) > 1
         structfile = structfile(contains({structfile.name},'SIG'));
     end 
     load(structfile.name)
-    
-    %Create SIG structure and run through burst files
+    % Create SIG structure
     SIG = struct;
-    disp(['********** Reprocessing ' SNprocess ' **********'])
-    bfiles = dir([burstmatdir SNprocess '\SIG\Raw\*\*.mat']);
-    if isempty(bfiles)
-        disp('   No burst mat files found...')
-        continue
+    
+    if readraw
+        bfiles = dir([burstdatdir SNprocess '\SIG\Raw\*\*.dat']);
+        if isempty(bfiles)
+            disp('   No burst dat files found...')
+%             continue
+        end
+    else
+        bfiles = dir([burstmatdir SNprocess '\SIG\Raw\*\*.mat']);
+        if isempty(bfiles)
+            disp('   No burst mat files found...')
+%             continue
+        end
     end
     nburst = length(bfiles);
     
         for iburst = 1:nburst
             
             % Load burst mat file
+            if readraw
+                cd(bfiles(iburst).folder)
+                [burst,avg,battery,echo] = readSWIFTv4_SIG(bfiles(iburst).name);
+            else
             load(bfiles(iburst).name)
+            end
 
             % Burst time stamp
             day = bfiles(iburst).name(13:21);
