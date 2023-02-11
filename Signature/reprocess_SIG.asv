@@ -78,9 +78,9 @@
 % Directory with existing SWIFT structures (e.g. from telemetry)
 swiftstructdir = './';
 % Directory with signature burst mat files 
-burstmatdir = './';% 
+burstmatdir = './SIG/raw';% 
 % Directory with signature burst dat files 
-burstdatdir = './';
+burstdatdir = './SIG/raw';
 % Directory to save updated/new SWIFT structure (see toggle 'savenewSWIFT')
 savestructdir = [ swiftstructdir ];
 % Directory to save figures (will create folder for each mission if doesn't already exist)
@@ -90,7 +90,7 @@ savefigdir = './';
 plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
 saveplots = false; % save generated plots
-readraw = true;% read raw binary files
+readraw = false;% read raw binary files
 trimalt = false; % trim data based on altimeter
 saveSWIFT = false;% overwrites original structure with new SWIFT data
 saveSIG = false; %save burst averaged sig data separately
@@ -109,7 +109,7 @@ QCfish = true;% detects fish from highly skewed amplitude distributions in a dep
 
 %Populate list of V4 SWIFT missions to re-process (signature data)
 cd(burstmatdir)
-swifts = dir('SWIFT*');
+swifts = dir('SWIFT24_04Apr*');
 swifts = {swifts.name};
 nswift = length(swifts);
 
@@ -123,22 +123,22 @@ for iswift = 1:nswift
     disp(['********** Reprocessing ' SNprocess ' **********'])
     
     %Load pre-existing mission mat file with SWIFT structure 
-    structfile = dir([swiftstructdir  SNprocess ]);
+    structfile = dir([swiftstructdir '\' SNprocess '*.mat']);
     if length(structfile) > 1
-    %    structfile = structfile(contains({structfile.name},'SIG')); %?
+        structfile = structfile(contains({structfile.name},'SIG'));
     end 
     load(structfile.name)
     % Create SIG structure
     SIG = struct;
     
     if readraw
-        bfiles = dir([burstdatdir '/SIG/Raw/*/*.dat']);
+        bfiles = dir([burstdatdir SNprocess '\SIG\Raw\*\*.dat']);
         if isempty(bfiles)
             disp('   No burst dat files found...')
 %             continue
         end
     else
-        bfiles = dir([burstmatdir  '/SIG/Raw/*/*.mat']);
+        bfiles = dir([burstmatdir SNprocess '\SIG\Raw\*\*.mat']);
         if isempty(bfiles)
             disp('   No burst mat files found...')
 %             continue
