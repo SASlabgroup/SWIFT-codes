@@ -14,7 +14,7 @@ parentdir = pwd;  % change this to be the parent directory of all raw raw data (
 
 readfromconcat = 0; % force starting with original onboard results
 useGPSpositions = false; % option instead of GPS velocities for alt spectra
-secondsofdata = 230;  % seconds of raw data to process (from the end of each burst, not beginning), must be more than 1536/5 = 307.2
+secondsofdata = 330;  % seconds of raw data to process (from the end of each burst, not beginning), must be more than 1536/5 = 307.2
 interpf = true; % binary flag to interp to original (onboard) frequency bands
 
 %% load existing SWIFT structure created during concatSWIFT_processed, replace only the new wave results
@@ -193,6 +193,7 @@ for di = 1:length(dirlist),
 
             % remove bulk result if wave processing fails (9999 error code)
             if newHs == 9999,
+                disp('wave processing gave 9999')
                 SWIFT(tindex).sigwaveheight = NaN;
                 SWIFT(tindex).peakwaveperiod = NaN;
                 SWIFT(tindex).peakwaveperiod = NaN;
