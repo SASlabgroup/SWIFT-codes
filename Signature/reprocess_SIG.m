@@ -131,58 +131,38 @@ clear SWIFT SIG
 
 for iswift = 1:nswift
     
-    SNprocess = swifts{iswift}; 
+SNprocess = swifts{iswift}; 
     disp(['********** Reprocessing ' SNprocess ' **********'])
     
     % Create SIG structure
     SIG = struct;
     
     % Load pre-existing mission mat file with SWIFT structure 
-    structfile = dir([swiftstructdir  SNprocess ])
+    structfile = dir([swiftstructdir  SNprocess '*.mat']);
     if length(structfile) > 1
-%        structfile = structfile(contains({structfile.name},'SIG'));
+        structfile = structfile(contains({structfile.name},'SIG'));
     end 
     load(structfile.name)
     
     % Populate list of burst files
     if readraw
-        bfiles = dir([burstdatdir '/SIG/Raw/*/*.dat']);
-        if isempty(bfiles)
-            disp('   No burst dat files found...')
-%             continue
+        if ispc
+        bfiles = dir([burstdatdir SNprocess '\SIG\Raw\*\*.dat']);
+        else
+           bfiles = dir([burstdatdir SNprocess '/SIG/Raw/*/*.dat']);
         end
     else
-        bfiles = dir([burstmatdir  '/SIG/Raw/*/*.mat']);
-        if isempty(bfiles)
-            disp('   No burst mat files found...')
-%             continue
+        if ispc
+        bfiles = dir([burstmatdir SNprocess '\SIG\Raw\*\*.mat']);
+        else
+           bfiles = dir([burstmatdir SNprocess '/SIG/Raw/*/*.mat']);
         end
     end
+    if isempty(bfiles)
+        disp('   No burst mat files found...')
+        continue
+    end
     nburst = length(bfiles);
-    
-% KRISTIN - PC
-%     %Load pre-existing mission mat file with SWIFT structure 
-%     structfile = dir([swiftstructdir '\' SNprocess '*.mat']);
-%     if length(structfile) > 1
-%         structfile = structfile(contains({structfile.name},'SIG'));
-%     end 
-%     load(structfile.name)
-%
-%     % Populate list of burst files
-%     if readraw
-%         bfiles = dir([burstdatdir SNprocess '\SIG\Raw\*\*.dat']);
-%         if isempty(bfiles)
-%             disp('   No burst dat files found...')
-% %             continue
-%         end
-%     else
-%         bfiles = dir([burstmatdir SNprocess '\SIG\Raw\*\*.mat']);
-%         if isempty(bfiles)
-%             disp('   No burst mat files found...')
-% %             continue
-%         end
-%     end
-%     nburst = length(bfiles);
     
         for iburst = 1:nburst
             
