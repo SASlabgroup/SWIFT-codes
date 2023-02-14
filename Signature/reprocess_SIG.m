@@ -86,6 +86,18 @@ savestructdir = [ swiftstructdir ];
 % Directory to save figures (will create folder for each mission if doesn't already exist)
 savefigdir = './';
 
+% % KRISTIN - PC
+% % Directory with existing SWIFT structures (e.g. from telemetry)
+% swiftstructdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\v4';
+% % Directory with signature burst mat files 
+% burstmatdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\Raw\SIG\';% 'S:\LC-DRI\';
+% % Directory with signature burst dat files 
+% burstdatdir = 'S:\LC-DRI\';
+% % Directory to save updated/new SWIFT structure (see toggle 'savenewSWIFT')
+% savestructdir = [swiftstructdir '\reprocessSIG\'];
+% % Directory to save figures (will create folder for each mission if doesn't already exist)
+% savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\SWIFT_Processing\SIG\Raw\';
+
 % Plotting/Saving Toggles
 plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
@@ -122,15 +134,17 @@ for iswift = 1:nswift
     SNprocess = swifts{iswift}; 
     disp(['********** Reprocessing ' SNprocess ' **********'])
     
-    %Load pre-existing mission mat file with SWIFT structure 
-    structfile = dir([swiftstructdir  SNprocess ]);
-    if length(structfile) > 1
-    %    structfile = structfile(contains({structfile.name},'SIG')); %?
-    end 
-    load(structfile.name)
     % Create SIG structure
     SIG = struct;
     
+    % Load pre-existing mission mat file with SWIFT structure 
+    structfile = dir([swiftstructdir  SNprocess ]);
+    if length(structfile) > 1
+        structfile = structfile(contains({structfile.name},'SIG'));
+    end 
+    load(structfile.name)
+    
+    % Populate list of burst files
     if readraw
         bfiles = dir([burstdatdir '/SIG/Raw/*/*.dat']);
         if isempty(bfiles)
@@ -145,6 +159,30 @@ for iswift = 1:nswift
         end
     end
     nburst = length(bfiles);
+    
+% KRISTIN - PC
+%     %Load pre-existing mission mat file with SWIFT structure 
+%     structfile = dir([swiftstructdir '\' SNprocess '*.mat']);
+%     if length(structfile) > 1
+%         structfile = structfile(contains({structfile.name},'SIG'));
+%     end 
+%     load(structfile.name)
+%
+%     % Populate list of burst files
+%     if readraw
+%         bfiles = dir([burstdatdir SNprocess '\SIG\Raw\*\*.dat']);
+%         if isempty(bfiles)
+%             disp('   No burst dat files found...')
+% %             continue
+%         end
+%     else
+%         bfiles = dir([burstmatdir SNprocess '\SIG\Raw\*\*.mat']);
+%         if isempty(bfiles)
+%             disp('   No burst mat files found...')
+% %             continue
+%         end
+%     end
+%     nburst = length(bfiles);
     
         for iburst = 1:nburst
             
@@ -472,18 +510,29 @@ for iswift = 1:nswift
             end
             
 %%%%%%%%%%%% Dissipation Estimates %%%%%%
-
-            if sum(badping)/nping > 0.9
-                disp('Bad burst, skipping dissipation...')
+            
+            % Sampling rate and window size
+            fs = 1/dt; nwin = 64;
+            if nwin > nping
+                nwin = nping;
+            end
+            
+            % Skip dissipation estimates if out-of-water or bad burst
+            if sum(badping)/nping > 0.9 || outofwater
+                disp('   Skipping dissipation...')
                 eps_struct0 = NaN(size(hrw));
                 eps_structHP = NaN(size(hrw));
                 eps_structEOF = NaN(size(hrw));
+                eps_spectral = NaN(size(hrw));
                 mspe0 = NaN(size(hrw));
                 mspeHP = NaN(size(hrw));
                 mspeEOF = NaN(size(hrw));
                 slope0 = NaN(size(hrw));
                 slopeHP = NaN(size(hrw));
                 slopeEOF = NaN(size(hrw));
+                wpsd = NaN(nbin,2*nwin+1);
+                bobpsd = NaN(1,2*nwin+1);
+                f = NaN(1,2*nwin+1);
             else
 
                 %EOF High-pass
@@ -519,10 +568,6 @@ for iswift = 1:nswift
                 slopeEOF = qualEOF.slope;
 
                 % Spectral dissipation (self-advected turbulence: Tennekes '75)
-                fs = 1/dt; nwin = 64;
-                if nwin > nping
-                    nwin = nping;
-                end
                 if isfield(burst,'AHRS_GyroX')
                     hrurot =((deg2rad(burst.AHRS_GyroX))'*hrz)';
                     hrvrot =((deg2rad(burst.AHRS_GyroY))'*hrz)';
