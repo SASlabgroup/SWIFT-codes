@@ -1,4 +1,4 @@
-function [ burst  avg  battery  echo] = readSWIFTv4_SIG(filename)
+function [ burst,  avg,  battery,  echo] = readSWIFTv4_SIG(filename)
 % read binary Nortek Signature files recorded onboard SWIFT v4
 % input is string of filename with extension
 % output is structures with burst and avg data, plus average battery voltage
@@ -22,14 +22,15 @@ function [ burst  avg  battery  echo] = readSWIFTv4_SIG(filename)
 %               3/2021 include microseconds in timestamps
 %
 
-battery = NaN;
+BatteryVoltage = NaN;
 
 fid = fopen( filename );
 
-% initialize structures
+% initialize output
 burst = [];
 avg = [];
 echo = [];
+battery = [];
 
 % initialize counters
 ensemblecount_burst = 0;
@@ -588,7 +589,10 @@ end % done reading the whole file
 
 % close out and save (if not already done when reading past file length
 fclose (fid);
-battery = mean(BatteryVoltage) ./ 10;  % was in 0.1 V, so divide by 10
-save([filename(1:end-4) '.mat'],'burst','avg','battery','echo')
+
+if ~isempty(burst)
+    battery = mean(BatteryVoltage) ./ 10;  % was in 0.1 V, so divide by 10
+    save([filename(1:end-4) '.mat'],'burst','avg','battery','echo')
+end
 
 

@@ -76,7 +76,7 @@
 %% User Defined Inputs
 
 % Directory with existing SWIFT structures (e.g. from telemetry)
-swiftstructdir = './';
+swiftstructdir = [pwd '/'];
 % Directory with signature burst mat files 
 burstmatdir = './';% 
 % Directory with signature burst dat files 
@@ -102,10 +102,10 @@ savefigdir = './';
 plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
 saveplots = false; % save generated plots
-readraw = true;% read raw binary files
+readraw = false;% read raw binary files
 trimalt = false; % trim data based on altimeter
-saveSWIFT = false;% overwrites original structure with new SWIFT data
-saveSIG = false; %save burst averaged sig data separately
+saveSWIFT = true;% overwrites original structure with new SWIFT data
+saveSIG = true; %save burst averaged sig data separately
 
 % User defined processing parameters
 xcdrdepth = 0.2; % depth of transducer [m]
@@ -121,8 +121,8 @@ QCfish = true;% detects fish from highly skewed amplitude distributions in a dep
 
 %Populate list of V4 SWIFT missions to re-process (signature data)
 cd(burstmatdir)
-swifts = dir('SWIFT*');
-swifts = {swifts.name};
+swifts = dir('SWIFT*.mat');
+swifts = {swifts(1).name} %{swifts.name} % only do the first one if running in a mission directory for single SWIFT
 nswift = length(swifts);
 
 %% Loop through SWIFT missions
@@ -138,9 +138,9 @@ for iswift = 1:nswift
     SIG = struct;
     
     % Load pre-existing mission mat file with SWIFT structure 
-    structfile = dir([swiftstructdir  SNprocess ]);
+    structfile = dir([swiftstructdir  SNprocess ])
     if length(structfile) > 1
-        structfile = structfile(contains({structfile.name},'SIG'));
+%        structfile = structfile(contains({structfile.name},'SIG'));
     end 
     load(structfile.name)
     
@@ -191,7 +191,8 @@ for iswift = 1:nswift
                 cd(bfiles(iburst).folder)
                 [burst,avg,battery,echo] = readSWIFTv4_SIG(bfiles(iburst).name);
             else
-            load(bfiles(iburst).name)
+                cd(bfiles(iburst).folder)
+                load(bfiles(iburst).name)
             end
 
             % Burst time stamp
@@ -859,7 +860,7 @@ for iswift = 1:nswift
         subplot(4,3,1)
         imagesc(time,avgz,avgu);caxis([-0.5 0.5]);
         hold on;plot(xlim,max(hrz)*[1 1],'k')
-        ylabel('Depth (m)');cmocean('balance');title('U')
+        ylabel('Depth (m)');title('U'); cmocean('balance');
         c = colorbar;c.Label.String = 'ms^{-1}';
         set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
         subplot(4,3,4)
@@ -871,7 +872,7 @@ for iswift = 1:nswift
         subplot(4,3,7)
         imagesc(time,avgz,avgv);caxis([-0.5 0.5]);
         hold on;plot(xlim,max(hrz)*[1 1],'k')
-        ylabel('Depth (m)');cmocean('balance');title('V')
+        ylabel('Depth (m)');title('V'); cmocean('balance');
         c = colorbar;c.Label.String = 'ms^{-1}';
         set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
         subplot(4,3,10)
@@ -884,7 +885,7 @@ for iswift = 1:nswift
         subplot(4,3,2)
         imagesc(time,avgz,avgw);caxis([-0.05 0.05]);
         hold on;plot(xlim,max(hrz)*[1 1],'k')
-        cmocean('balance');cmocean('balance');ylabel('Depth (m)');title('W')
+        ylabel('Depth (m)');title('W'); cmocean('balance');
         c = colorbar;c.Label.String = 'ms^{-1}';
         set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
         subplot(4,3,5)
@@ -895,7 +896,7 @@ for iswift = 1:nswift
         set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
         subplot(4,3,8)
         imagesc(time,hrz,hrw);caxis([-0.05 0.05])
-        ylabel('Depth (m)');cmocean('balance');title('W_{HR}')
+        ylabel('Depth (m)');title('W_{HR}'); cmocean('balance');
         c = colorbar;c.Label.String = 'ms^{-1}';
         set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
         subplot(4,3,11)
@@ -960,17 +961,19 @@ for iswift = 1:nswift
 	%%%%%% Save SWIFT Structure %%%%%%%%
     if saveSWIFT
         if strcmp(structfile.name(end-6:end-4),'SBG')
-            save([savestructdir SNprocess '_reprocessedSIGandSBG.mat'],'SWIFT')
+            save([savestructdir SNprocess(1:end-4) '_reprocessedSIGandSBG.mat'],'SWIFT')
         else
-            save([savestructdir SNprocess '_reprocessedSIG.mat'],'SWIFT')
+            save([savestructdir SNprocess(1:end-4) '_reprocessedSIG.mat'],'SWIFT')
         end
     end
     
     %%%%%% Save SIG Structure %%%%%%%%
     if saveSIG
-       save([savestructdir SNprocess '_burstavgSIG.mat'],'SIG')
+       save([savestructdir SNprocess(1:end-4) '_burstavgSIG.mat'],'SIG')
     end
     
  % End mission loop
 end
 % clear all
+
+cd(savestructdir)
