@@ -138,8 +138,8 @@ SNprocess = swifts{iswift};
     SIG = struct;
     
     % Load pre-existing mission mat file with SWIFT structure 
-    structfile = dir([swiftstructdir  SNprocess '*.mat']);
-    if length(structfile) > 1
+    structfile = dir([swiftstructdir  SNprocess ]);
+    if length(structfile) > 1 & length( contains({structfile.name},'SIG') ) > 0
         structfile = structfile(contains({structfile.name},'SIG'));
     end 
     load(structfile.name)
@@ -147,15 +147,15 @@ SNprocess = swifts{iswift};
     % Populate list of burst files
     if readraw
         if ispc
-        bfiles = dir([burstdatdir SNprocess '\SIG\Raw\*\*.dat']);
+            bfiles = dir([swiftstructdir '\SIG\Raw\*\*.dat']);
         else
-           bfiles = dir([burstdatdir SNprocess '/SIG/Raw/*/*.dat']);
+           bfiles = dir([swiftstructdir '/SIG/Raw/*/*.dat']);
         end
     else
         if ispc
-        bfiles = dir([burstmatdir SNprocess '\SIG\Raw\*\*.mat']);
+            bfiles = dir([swiftstructdir '\SIG\Raw\*\*.mat']);
         else
-           bfiles = dir([burstmatdir SNprocess '/SIG/Raw/*/*.mat']);
+           bfiles = dir([swiftstructdir '/SIG/Raw/*/*.mat']);
         end
     end
     if isempty(bfiles)
