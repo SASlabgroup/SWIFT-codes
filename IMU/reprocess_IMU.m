@@ -19,8 +19,8 @@ tic
 saverawdisplacements = false; % logical flag to increase speed by not saving the raw displacements.
 
 %% choose a prefilter
-%prefilter = str2cell('no')
-prefilter = str2cell('RC'), RC = 3.5;
+prefilter = {'no'}; %prefilter = str2cell('no')
+%prefilter = str2cell('RC'), RC = 3.5;
 %prefilter = str2cell('elliptic'),  dB = 5; % lower is strong filter??
     %note that dB is set seperately (again) within rawdisplacements.m
 
@@ -31,7 +31,7 @@ wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
-load(['SWIFT18_telemetry.mat']) % loads the standard structure from onboard processing (named for the workding dir 'wd')
+load(['SWIFT21_telemetry.mat']) % loads the standard structure from onboard processing (named for the workding dir 'wd')
 %save([wd '_onboardprocessing.mat']) % saves onboard results (for posteriety)
 IMUresults = SWIFT;  % make copy to use in populating with GPS results
 GPSandIMUresults = SWIFT;  % make copy to use in populating with GPS results

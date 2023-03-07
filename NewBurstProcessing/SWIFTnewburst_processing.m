@@ -17,13 +17,13 @@
 %
 clear; close all
 
-fullprocess = true; % option to force concatSWIFT_offloadedSDcard, reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
-useairmarpositions = true; % option to use Airmar (PB2) GPS data instead of SBG or IMU
+fullprocess = false; % option to force concatSWIFT_offloadedSDcard, reprocess_SIG_raw, reprocess_SBG_raw, reprocess_ACS_raw
+useairmarpositions = false; % option to use Airmar (PB2) GPS data instead of SBG or IMU
 applyvelreference = true; % apply drift correction to signature velocity data
 rmwaves = true; % remove wave products (for short dt)
 depthprune = false; % option to remove bins below altimeter reading... set to false in deep water
 
-dt=30; %timestep to average over in seconds
+dt=120; %timestep to average over in seconds
 num=floor(512/dt); % number of new bursts per normal burst (512 s)
 
 maxsalinity = 35; % for QC
@@ -33,10 +33,10 @@ percentdry = .1; % maximum precent dry to allow when retaining a new burst, incr
 mincor = 0; % for QC when reprocessing turbulence data
 maxdriftspd = 2.5;
 
-parentdir = '~/Desktop/Main_Jun2022/SWIFTs/';  % change to suit data
+parentdir = '/Users/jthomson/Desktop/NRLdrfit_Aug2022/';  % change to suit data
 cd(parentdir)
 
-SW_list=dir('SWIFT29*02Jul2022'); % list of SWIFT directories to reprocess
+SW_list=dir('SWIFT*'); % list of SWIFT directories to reprocess
 
 for sn=1:length(SW_list);
     disp(['SWIFT ' num2str(sn) ' of ' num2str(length(SW_list))])
