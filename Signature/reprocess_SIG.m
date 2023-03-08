@@ -815,8 +815,6 @@ for iswift = [9:11 13:nswift]
             close gcf
         end
     end
-
-    end
             
 	%%%%%% Save SWIFT Structure %%%%%%%%
     if saveSWIFT && ~isempty(fieldnames(SWIFT))
