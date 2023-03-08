@@ -101,13 +101,13 @@ savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\Signature';
 
 %Data Load/Save Toggles
 readraw = false;% read raw binary files
-saveSWIFT = true;% save updated SWIFT structure
-saveSIG = true; %save detailed sig data in separate SIG structure
+saveSWIFT = false;% save updated SWIFT structure
+saveSIG = false; %save detailed sig data in separate SIG structure
 
 % Plotting Toggles
 plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
-saveplots = true; % save generated plots
+saveplots = false; % save generated plots
 
 % User defined QC parameters
 xcdrdepth = 0.2; % depth of transducer [m]
@@ -133,7 +133,7 @@ nswift = length(swifts);
 % For each mission, loop through burst files and process the data
 clear SWIFT SIG
 
-for iswift = [9:11 13:nswift]
+for iswift = 17
     
     SNprocess = swifts{iswift}; 
     disp(['********** Reprocessing ' SNprocess ' **********'])
