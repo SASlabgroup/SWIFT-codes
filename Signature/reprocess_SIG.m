@@ -90,13 +90,14 @@
 % KRISTIN - PC
 % Directory with existing SWIFT structures (e.g. from telemetry)
 swiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\v4\';
+% swiftdir = 'S:\LC-DRI\';
 % Directory with signature burst files 
-burstdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\Raw\SIG\';% 'S:\LC-DRI\';
+burstdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\Raw\SIG\';
+% burstdir = 'S:\LC-DRI\';
 % Directory to save updated/new SWIFT structure (see toggle 'saveSWIFT')
-savedir = [swiftdir 'reprocessSIG\'];
+savedir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\v4\reprocessSIG\';
 % Directory to save figures (will create folder for each mission if doesn't already exist)
-% savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\SWIFT_Processing\SIG\Raw\';
-savefigdir = 'C:\Users\kfitz\OneDrive\Desktop\SIGfigs\';
+savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\Signature';
 
 %Data Load/Save Toggles
 readraw = false;% read raw binary files
@@ -104,7 +105,7 @@ saveSWIFT = true;% save updated SWIFT structure
 saveSIG = true; %save detailed sig data in separate SIG structure
 
 % Plotting Toggles
-plotburst = true; % generate plots for each burst
+plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
 saveplots = true; % save generated plots
 
@@ -124,7 +125,7 @@ QCalt = false; % trim data based on altimeter
 
 %Populate list of SWIFT missions to re-process
 cd(burstdir)
-swifts = dir('SWIFT*2017');
+swifts = dir('SWIFT2*2017');
 swifts = {swifts.name};
 nswift = length(swifts);
 
@@ -132,7 +133,7 @@ nswift = length(swifts);
 % For each mission, loop through burst files and process the data
 clear SWIFT SIG
 
-for iswift = 5:nswift
+for iswift = [9:11 13:nswift]
     
     SNprocess = swifts{iswift}; 
     disp(['********** Reprocessing ' SNprocess ' **********'])
@@ -141,7 +142,7 @@ for iswift = 5:nswift
    SIG = struct;
     
     % Load pre-existing mission mat file with SWIFT structure 
-    structfile = dir([swiftdir  SNprocess '*.mat']);
+    structfile = dir([swiftdir  SNprocess '\' SNprocess '.mat']);
     if length(structfile) > 1
         structfile = structfile(contains({structfile.name},'SIG'));
     end 
@@ -149,7 +150,7 @@ for iswift = 5:nswift
         disp('No SWIFT structure found...')
         SWIFT = struct;
     else
-    load(structfile.name)
+    load([structfile.folder '\' structfile.name])
     end
     
     % Populate list of burst files
@@ -165,7 +166,7 @@ for iswift = 5:nswift
     end
     bfiles = dir([burstdir SNprocess fpath ftype]);
     if isempty(bfiles)
-        disp('   No burst mat files found, skipping SWIFT...')
+        disp('   No burst files found, skipping SWIFT...')
         continue
     end
     nburst = length(bfiles);
@@ -176,9 +177,15 @@ for iswift = 5:nswift
             % Load burst file
             if readraw
                  cd(bfiles(iburst).folder)
-                [burst,avg,battery,echo] = readSWIFTv4_SIG(bfiles(iburst).name);
+                [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder '\' bfiles(iburst).name]);
             else
-            load(bfiles(iburst).name)
+            load([bfiles(iburst).folder '\' bfiles(iburst).name])
+            end
+            
+            % Skip burst if empty
+            if isempty(avg)
+                disp('Failed to read, skipping burst...')
+                continue
             end
 
             % Burst time stamp
@@ -506,8 +513,8 @@ for iswift = 5:nswift
                 nwin = nping;
             end
             
-            % Skip dissipation estimates if out-of-water or bad burst
-            if sum(badping)/nping > 0.9 || outofwater || smallfile
+            % Skip dissipation estimates if bad-file
+            if smallfile  ||  sum(badping)/nping == 1
                 disp('   Skipping dissipation...')
                 eps_struct0 = NaN(size(hrw));
                 eps_structHP = NaN(size(hrw));
@@ -690,10 +697,13 @@ for iswift = 5:nswift
                 if tdiff > 1/(24*10) %must be within 6 min (half a burst)
                     disp('   NO time index match...')
                     timematch = false;
-                else
+                elseif tdiff < 1/(24*10)
                     timematch = true;
                     disp(['   Burst time: ' datestr(btime)])
                     disp(['   SWIFT time: ' datestr(SWIFT(tindex).time)])
+                elseif isempty(tdiff)
+                    disp('   NO time index match...')
+                    timematch = false;
                 end
 
                 if  timematch && ~outofwater && ~smallfile
@@ -795,6 +805,7 @@ for iswift = 5:nswift
     if plotmission
         time = [SIG.time];
         oow = [SIG.outofwater];
+        smallfile = [SIG.smallfile];
         avgz = SIG(1).profile.z;
         hrz = SIG(1).HRprofile.z;
         avgu = NaN(length(avgz),length(time));
@@ -813,10 +824,7 @@ for iswift = 5:nswift
         eps_struct0 = hrw;
         struct_slope = hrw;
         eps_spectral = hrw;
-        pitch = NaN(1,length(time));
-        roll = NaN(1,length(time));
         pitchvar = NaN(1,length(time));
-        rollvar = NaN(1,length(time));
         for it = 1:length(time)
             %Broadband
             avgu(:,it) = SIG(it).profile.u;
@@ -835,24 +843,22 @@ for iswift = 5:nswift
             eps_struct(:,it) = SIG(it).HRprofile.eps_structEOF;
             eps_struct0(:,it) = SIG(it).HRprofile.eps_struct0;
             eps_spectral(:,it) = SIG(it).HRprofile.eps_spectral;
-            pitch(it) = SIG(it).QC.pitch;
-            roll(it) = SIG(it).QC.roll;
             pitchvar(it) = SIG(it).QC.pitchvar;
-            rollvar(it) = SIG(it).QC.rollvar;            
         end
-        if sum(oow) < length(time)
-            avgu(:,oow) = [];
-            avgv(:,oow) = [];
-            avguerr(:,oow) = [];
-            avgverr(:,oow) = [];
-            avgw(:,oow) = [];
-            avgwerr(:,oow) = [];
-            hrw(:,oow) = [];
-            hrwvar(:,oow) = [];
-            eps_spectral(:,oow) = [];
-            eps_struct(:,oow) = [];
-            pitch(oow) = [];roll(oow) = [];pitchvar(oow) = [];rollvar(oow) = [];
-            time(oow) = [];
+        if sum(oow | smallfile) < length(time)
+            avgu(:,oow | smallfile) = [];
+            avgv(:,oow | smallfile) = [];
+            avguerr(:,oow | smallfile) = [];
+            avgverr(:,oow | smallfile) = [];
+            avgw(:,oow | smallfile) = [];
+            avgwerr(:,oow | smallfile) = [];
+            hrw(:,oow | smallfile) = [];
+            hrwvar(:,oow | smallfile) = [];
+            eps_spectral(:,oow | smallfile) = [];
+            eps_struct(:,oow | smallfile) = [];
+            eps_struct0(:,oow | smallfile) = [];
+            pitchvar(oow | smallfile) = [];
+            time(oow | smallfile) = [];
             clear b
             figure('color','w','Name',SNprocess)
             MP = get(0,'monitorposition');
@@ -863,91 +869,84 @@ for iswift = 5:nswift
             hold on;plot(xlim,max(hrz)*[1 1],'k')
             ylabel('Depth (m)');cmocean('balance');title('U')
             c = colorbar;c.Label.String = 'ms^{-1}';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             subplot(4,3,4)
             imagesc(time,avgz,avguerr);caxis([0.005 0.015]);
             hold on;plot(xlim,max(hrz)*[1 1],'k')
             ylabel('Depth (m)');title('\sigma_U')
             c = colorbar;c.Label.String = 'ms^{-1}';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             subplot(4,3,7)
             imagesc(time,avgz,avgv);caxis([-0.5 0.5]);
             hold on;plot(xlim,max(hrz)*[1 1],'k')
             ylabel('Depth (m)');cmocean('balance');title('V')
             c = colorbar;c.Label.String = 'ms^{-1}';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             subplot(4,3,10)
             imagesc(time,avgz,avgverr);caxis([0.005 0.015]);
             hold on;plot(xlim,max(hrz)*[1 1],'k')
             ylabel('Depth (m)');title('\sigma_V')
             c = colorbar;c.Label.String = 'ms^{-1}';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             %Vertical Velocity
             subplot(4,3,2)
             imagesc(time,avgz,avgw);caxis([-0.05 0.05]);
             hold on;plot(xlim,max(hrz)*[1 1],'k')
             cmocean('balance');cmocean('balance');ylabel('Depth (m)');title('W')
             c = colorbar;c.Label.String = 'ms^{-1}';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             subplot(4,3,5)
             imagesc(time,avgz,avgwerr);caxis([0.005 0.015]);
             hold on;plot(xlim,max(hrz)*[1 1],'k')
             ylabel('Depth (m)');title('\sigma_W')
             c = colorbar;c.Label.String = 'ms^{-1}';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             subplot(4,3,8)
             imagesc(time,hrz,hrw);caxis([-0.05 0.05])
             ylabel('Depth (m)');cmocean('balance');title('W_{HR}')
             c = colorbar;c.Label.String = 'ms^{-1}';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             subplot(4,3,11)
             imagesc(time,hrz,hrwvar);caxis([0.001 0.005]);
             ylabel('Depth (m)');title('\sigma_W_{HR}')
             c = colorbar;c.Label.String = 'ms^{-1}';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             %Dissipation
             subplot(4,3,3)
             imagesc(time,hrz,log10(eps_struct));caxis([-7.5 -4.5]);
             ylabel('Depth (m)');title('Structure \epsilon (Ar^{2/3})')
             c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             subplot(4,3,6)
             imagesc(time,hrz,log10(eps_struct0));caxis([-7.5 -4.5]);
             ylabel('Depth (m)');title('Structure \epsilon (Ar^{2/3} + Br^2)')
             c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             subplot(4,3,9)
             imagesc(time,hrz,log10(eps_spectral));caxis([-5 -2]);
             ylabel('Depth (m)');title('Spectral \epsilon')
             c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
-            set(gca,'XTick',min(time):1/24:time(end));datetick('x','HH:MM','KeepLimits','KeepTicks')
-            ax1 = gca;
+            xlim([min(time) max(time)])
+            datetick('x','KeepLimits')
             %Pitch + Roll
             subplot(4,3,12)
-            yyaxis left
-            plot(time,pitch,'-r','LineWidth',2);
-            hold on
-            plot(time,roll,'-b','LineWidth',2);
-            ylim([-3 3])
-            xlim([min(time) max(time)])
-            plot(xlim,[0 0],':k')
-            ylabel('\phi/\psi (^{\circ})')
-            set(gca,'YColor','k')
-            yyaxis right
             b(1) = bar(time,sqrt(pitchvar));
-            hold on
-            b(2) = bar(time,sqrt(rollvar));
             b(1).FaceColor = 'r';
-            b(2).FaceColor = 'b';
-            ylim([0 10])
+            set(b,'EdgeColor',rgb('grey'))
+            ylabel('\sigma_{\phi} (^{\circ})');title('Pitch Variance')
+            c = colorbar;c.Visible = 'off';
             xlim([min(time) max(time)])
-            set(b,'FaceAlpha',0.25,'EdgeColor',rgb('grey'))
-            set(gca,'YColor',rgb('grey'))
-            set(gca,'XTick',min(time):1/24:time(end));
-            ylabel('\sigma_{\phi/\psi} (^{\circ})');title('Pitch/Roll')
-            datetick('x','HH:MM','KeepLimits','KeepTicks')
-            ax2 = gca;
-            ax2.Position([3 4]) = ax1.Position([3 4]);
+            datetick('x','KeepLimits')
             if saveplots
                 %Create mission folder if doesn't already exist
                 if ~isfolder([savefigdir SNprocess])
