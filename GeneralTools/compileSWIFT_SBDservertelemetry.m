@@ -237,7 +237,7 @@ if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
     lat = [SWIFT.lat]; %lat = lat(tinds);
     lon = [SWIFT.lon]; %lon = lon(tinds);
     dlondt = gradient(lon,time); % deg per day
-    dxdt = deg2km(dlondt,6371*cosd(mean(lat))) .* 1000 ./ ( 24*3600 ); % m/s
+    dxdt = deg2km(dlondt,6371*cosd(nanmean(lat))) .* 1000 ./ ( 24*3600 ); % m/s
     dlatdt = gradient(lat,time); % deg per day
     dydt = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
     dxdt(isinf(dxdt)) = NaN;
