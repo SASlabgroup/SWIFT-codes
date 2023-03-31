@@ -16,11 +16,11 @@
 clear all; close all
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 tic
-saverawdisplacements = false; % logical flag to increase speed by not saving the raw displacements.
+saverawdisplacements = true; % logical flag to increase speed by not saving the raw displacements.
 
 %% choose a prefilter
-prefilter = {'no'}; %prefilter = str2cell('no')
-%prefilter = str2cell('RC'), RC = 3.5;
+%prefilter = {'no'}; %prefilter = str2cell('no')
+prefilter = str2cell('RC'), RC = 3.5;
 %prefilter = str2cell('elliptic'),  dB = 5; % lower is strong filter??
     %note that dB is set seperately (again) within rawdisplacements.m
 
@@ -31,7 +31,7 @@ wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
-load(['SWIFT21_telemetry.mat']) % loads the standard structure from onboard processing (named for the workding dir 'wd')
+load(['SWIFT18_telemetry.mat']) % loads the standard structure from onboard processing (named for the workding dir 'wd')
 %save([wd '_onboardprocessing.mat']) % saves onboard results (for posteriety)
 IMUresults = SWIFT;  % make copy to use in populating with GPS results
 GPSandIMUresults = SWIFT;  % make copy to use in populating with GPS results
@@ -77,7 +77,7 @@ for di = 1:length(dirlist),
                     dt = 600 ./ length(AHRS.Accel);
                 else
                 end
-                fs_ahrs = 1/dt; % should be 25 Hz
+                fs_ahrs = 1/dt % should be 25 Hz
                 fs_gps = 1000./median(diff(GPS.UTC.mSec)); % should be 4 Hz
                 f_original = SWIFT(tindex).wavespectra.freq;  % original frequency bands from onboard processing
                 
