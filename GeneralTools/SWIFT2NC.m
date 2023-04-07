@@ -1,16 +1,16 @@
 function SWIFT2NC(SWIFT_in,filename)
-
+%
 % creates a netCDF file using existing SWIFT structure and writes it into 'filename'
 % (must include .nc)
-
-%added 'swiftnum' to denote the number of the SWIFT, as sensors were
-%located at different depths for v3 and v4 SWIFTs
-
-% skip substructures that are not supported yet:
-
+%
+%   >> SWIFT2NC(SWIFT, filename)
+%
+% Use SIWFT ID to determine v3 or v4 (sensors at different depths) 
+% and skip substructures that are not supported yet
+%
 % original by L. Hosekova in 2020
-% Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
-% Feb 2023 by J. Thomson for SASSIE and general use
+%   Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
+%   Feb 2023 by J. Thomson for SASSIE and general use
 
 swiftnum = str2num( SWIFT_in(1).ID );
 
@@ -20,8 +20,8 @@ if isfield(SWIFT,'wavehistogram')
     SWIFT=rmfield(SWIFT,'wavehistogram');
 end
 
-SWIFT=rmfield(SWIFT,'CTdepth');
-SWIFT=rmfield(SWIFT,'metheight');
+%SWIFT=rmfield(SWIFT,'CTdepth');
+%SWIFT=rmfield(SWIFT,'metheight');
 
 if isfield(SWIFT,'salinity') && length(SWIFT(1).salinity)>1
     for si=1:length(SWIFT)
@@ -63,8 +63,8 @@ end
 
 
 
-j=1
-for i=1:length(full_names);
+j=1;
+for i=1:length(full_names), 
     if ~strcmp(full_names{i},'ID') && ~strcmp(full_names{i},'date')
         if strcmp(full_names{i},'signature')
             for t=1:length(SWIFT)
@@ -78,7 +78,7 @@ for i=1:length(full_names);
         elseif strcmp(full_names{i},'time')
             S.time= [SWIFT.time]-datenum(1970,1,1,0,0,0);
         else
-            eval(strcat('S.',full_names{i},'=[SWIFT.',full_names{i},']'));
+            eval(strcat('S.',full_names{i},'=[SWIFT.',full_names{i},']')); % errors here if check factor in some but not all
         end
         names{j} = full_names{i};
         j = j+1;
@@ -463,7 +463,7 @@ for i=1:length(names)
                     ncwriteatt(filename,'tkedissipationrateHR','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                     ncwriteatt(filename,'tkedissipationrateHR','instrument','Nortek Signature 1000 ADCP with AHRS')
-                    ncwriteatt(filename,'tkedissipationrateHR','comments','Initial examination of these data suggest that these data are questionable as calculated dissipation rates do not decrease with depth. Use with caution.')
+                    ncwriteatt(filename,'tkedissipationrateHR','comments','Use with caution.  Check with Jim')
                 end
             end
             if strcmp(zHR_names(j),'east')
