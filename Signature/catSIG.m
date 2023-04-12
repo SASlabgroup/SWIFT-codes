@@ -5,8 +5,7 @@ plotsig = true;
 QCsig = true;
 
 sig.time = [SIG.time];
-sig.avgz = SIG(1).profile.z;
-sig.hrz = SIG(1).HRprofile.z;
+sig.avgz = SIG(round(end/2)).profile.z';
 sig.avgu = NaN(length(sig.avgz),length(sig.time));
 sig.avgv = sig.avgu;
 sig.avgw = sig.avgu;
@@ -15,6 +14,7 @@ sig.avgamp = sig.avgu;
 sig.avguerr = sig.avgu;
 sig.avgverr = sig.avgu;
 sig.avgwerr = sig.avgu;     
+sig.hrz = SIG(round(end/2)).HRprofile.z;
 sig.hrw = NaN(length(sig.hrz),length(sig.time));
 sig.hrwvar = sig.hrw;
 sig.hrcorr = sig.hrw;
@@ -45,22 +45,27 @@ for it = 1:length(sig.time)
 end
 
 %QC
-oow = [SIG.outofwater];
-smallfile = [SIG.smallfile];
-if QCsig && sum(oow | smallfile) < length(sig.time)
-    sig.avgu(:,oow | smallfile) = [];
-    sig.avgv(:,oow | smallfile) = [];
-    sig.avguerr(:,oow | smallfile) = [];
-    sig.avgverr(:,oow | smallfile) = [];
-    sig.avgw(:,oow | smallfile) = [];
-    sig.avgwerr(:,oow | smallfile) = [];
-    sig.hrw(:,oow | smallfile) = [];
-    sig.hrwvar(:,oow | smallfile) = [];
-    sig.eps_spectral(:,oow | smallfile) = [];
-    sig.eps_struct(:,oow | smallfile) = [];
-    sig.struct_slope(:,oow | smallfile) = [];
-    sig.pitchvar(oow | smallfile) = [];
-    sig.time(oow | smallfile) = [];
+badburst = [SIG.outofwater] | [SIG.smallfile] | [SIG.badcorr] | [SIG.badamp] | [SIG.badvel];
+if QCsig && sum(badburst) < length(sig.time)
+    sig.avgu(:,badburst) = [];
+    sig.avgv(:,badburst) = [];
+    sig.avguerr(:,badburst) = [];
+    sig.avgverr(:,badburst) = [];
+    sig.avgw(:,badburst) = [];
+    sig.avgwerr(:,badburst) = [];
+    sig.avgcorr(:,badburst) = [];
+    sig.avgamp(:,badburst) = [];
+    sig.hrw(:,badburst) = [];
+    sig.hrwvar(:,badburst) = [];
+    sig.eps_spectral(:,badburst) = [];
+    sig.eps_struct(:,badburst) = [];
+    sig.struct_slope(:,badburst) = [];
+    sig.pitchvar(badburst) = [];
+    sig.hrcorr(:,badburst) = [];
+    sig.hramp(:,badburst) = [];
+    sig.time(badburst) = [];
+else
+    sig.badburst = badburst;
 end
 
 % Plot        
