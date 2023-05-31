@@ -89,9 +89,9 @@ end
 
 
 %%
-payloadtype = fread(fid,1,'uint8=>char');
+firstchar = fread(fid,1,'uint8=>char');
 
-if payloadtype < '6', % v3.3 (2015) and up (com # based)
+if firstchar < '6', % v3.3 (2015) and up (com # based)
     disp('Not Version v3.3 (2015) or above.  Use older read-in code.')
     return
 end
