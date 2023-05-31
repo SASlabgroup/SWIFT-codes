@@ -88,8 +88,15 @@ else
 end
 
 
-%%
-firstchar = fread(fid,1,'uint8=>char');
+%% begin reading file
+% Note that the actual email attachment from the Iridium system has an
+% ASCII header " <packet-type (0 or 1)>,<id (0 - 99)>,<start byte>,<total bytes>: "
+% that preceeds the binary payload unpacked by this function
+% that binary head is used by the swiftserver to detect and concat
+% multi-part messages (i.e., more than 340 bytes) 
+% the server prunes that header and makes an sbd file that starts with '7'
+
+firstchar = fread(fid,1,'uint8=>char');  % should be 7 for valid sbd file
 
 if firstchar < '6', % v3.3 (2015) and up (com # based)
     disp('Not Version v3.3 (2015) or above.  Use older read-in code.')
