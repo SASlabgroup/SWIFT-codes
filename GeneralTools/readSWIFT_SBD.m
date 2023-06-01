@@ -62,6 +62,9 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %
 %   J. Thomson, 9/2022  add compact microSWIFT payload type (52), credit Jake Davis
 %
+%   J. Thomson, 6/2023  use com port field in microSWIFT payload type (52) 
+%                       to report number of raw GPS velocities replaced before processing 
+%
 
 recip = true; % binary flag to change wave direction to FROM
 
@@ -447,7 +450,7 @@ while 1
         
     elseif type == 52 & size > 0, % microSWIFT, size should be 327 bytes
         disp('reading microSWIFT (compact)')
-
+        SWIFT.replacedrawvalues = port; % microSWIFTs do not give com port, so we are using a diagnostic for raw data QC (and replacement)
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
         SWIFT.peakwavedirT       = half.typecast(fread(fid, 1,'*uint16')).double; % dominant wave direction
