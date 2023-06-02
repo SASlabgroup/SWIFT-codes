@@ -685,5 +685,12 @@ end
 
 SWIFT = orderfields(SWIFT);
 
-save([ fname '.mat'])
+if ~isempty([SWIFT.time])
+    save([ fname '.mat'])
+else
+    disp(['Time empty, no data read.  Check (' fname ') for error messages.'])
+    SWIFT.time = NaN;
+    BatteryVoltage = 9999; % use as error indicator
+end
+
 

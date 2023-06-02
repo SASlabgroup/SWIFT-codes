@@ -22,7 +22,7 @@ clear all,
 
 plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
-micro = false; 
+micro = false; % initialize flag for microSWIFT, which flips to true if detected
 
 minwaveheight = 0; % minimum wave height in data screening
 
@@ -47,6 +47,10 @@ for ai = 1:length(flist),
     badburst(ai) = false;  % intialize bad burst flag
     
     [ oneSWIFT voltage ]= readSWIFT_SBD( flist(ai).name , 0);
+    
+    if voltage==9999 % error flag from SBD message
+        badburst(ai) = true; 
+    end
     
     if isempty(voltage),
         battery(ai) = NaN;
@@ -129,7 +133,7 @@ for ai = 1:length(flist),
     lengthofnames(ai) = length(onenames);
     
     % if first sbd, set the structure fields as the standard
-    if ai == 1,
+    if ai == 1 && voltage~=9999 
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(SWIFT));
         
@@ -149,7 +153,7 @@ for ai = 1:length(flist),
         disp(allnames)
         
         % if fewer paylaods, skip that burst
-    elseif ai > 1 && length(onenames) < length(allnames),
+    elseif ai > 1 && length(onenames) < length(allnames) || voltage==9999
         disp('=================================')
         disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
         SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
