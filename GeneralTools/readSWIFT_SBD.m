@@ -103,7 +103,7 @@ firstchar = fread(fid,1,'uint8=>char');  % should be 7 for valid sbd file
 
 if firstchar < '6', % v3.3 (2015) and up (com # based)
     disp('Not Version v3.3 (2015) or above.  Use older read-in code.')
-    return
+    SWIFT.time = [];
 end
 
 %skip = fread(fid,1,'uint8')
