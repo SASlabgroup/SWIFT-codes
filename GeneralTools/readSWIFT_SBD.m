@@ -67,6 +67,7 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %
 
 recip = true; % binary flag to change wave direction to FROM
+errorfile = false; % initialize
 
 SWIFT.time = [];
 SWIFT.lat = [];
@@ -101,9 +102,10 @@ end
 
 firstchar = fread(fid,1,'uint8=>char');  % should be 7 for valid sbd file
 
-if firstchar < '6', % v3.3 (2015) and up (com # based)
+if firstchar ~= '7' % v3.3 (2015) and up (com # based)
     disp('Not Version v3.3 (2015) or above.  Use older read-in code.')
     SWIFT.time = [];
+    errorfile = true;
 end
 
 %skip = fread(fid,1,'uint8')
@@ -685,10 +687,12 @@ end
 
 SWIFT = orderfields(SWIFT);
 
-if ~isempty([SWIFT.time])
+if ~isempty([SWIFT.time]) && ~errorfile
     save([ fname '.mat'])
-else
+elseif isempty([SWIFT.time]) || errorfile
     disp(['Time empty, no data read.  Check (' fname ') for error messages.'])
+    clear SWIFT
+    SWIFT.lat = []; SWIFT.lon =[];
     SWIFT.time = NaN;
     BatteryVoltage = 9999; % use as error indicator
 end
