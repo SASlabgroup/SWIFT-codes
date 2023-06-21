@@ -311,13 +311,14 @@ if length([SWIFT.time]) > 1,
     end
 end
 
-%% sort the microSWIFT processing
+%% sort the microSWIFT onboard processing, using the battery voltage as a flag 
+% only applies to v1 microSWIFTs from 2022
+
 IMU = find(battery==0);
 GPS = find(battery==1);
 
-%% sort the microSWIFT processing
-IMU = find(battery==0);  SWIFT_IMU = SWIFT(IMU);
-GPS = find(battery==1);  SWIFT_GPS = SWIFT(GPS);
+if ~isempty(IMU), SWIFT_IMU = SWIFT(IMU); end
+if ~isempty(GPS), SWIFT_GPS = SWIFT(GPS); end
 
 
 %% save
