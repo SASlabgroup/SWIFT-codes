@@ -102,13 +102,7 @@ end
 
 firstchar = fread(fid,1,'uint8=>char');  % should be 7 for valid sbd file
 
-if firstchar ~= '7' % v3.3 (2015) and up (com # based)
-    disp('Not Version v3.3 (2015) or above.  Use older read-in code.')
-    SWIFT.time = [];
-    errorfile = true;
-end
-
-%skip = fread(fid,1,'uint8')
+if firstchar == '7' 
 
 %%
 CTcounter = 0; % count the number of CT sensors in the file
@@ -487,6 +481,14 @@ while 1
     end
     
 end
+
+else % file either pre-2015 or is an error message (not data)
+    disp('Error message SBD or this SBD is not Version v3.3 (2015) or above.  Use older read-in code.')
+    SWIFT.time = [];
+    errorfile = true;
+end
+
+
 fclose(fid);
 
 %% apply backup positions from Airmar PB200, if needed
