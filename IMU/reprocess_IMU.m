@@ -31,7 +31,8 @@ wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
-load(['SWIFT18_telemetry.mat']) % loads the standard structure from onboard processing (named for the workding dir 'wd')
+telemetryfile = dir('*SWIFT*.mat');
+load(telemetryfile(1).name) % loads the standard structure from onboard processing (named for the workding dir 'wd')
 %save([wd '_onboardprocessing.mat']) % saves onboard results (for posteriety)
 IMUresults = SWIFT;  % make copy to use in populating with GPS results
 GPSandIMUresults = SWIFT;  % make copy to use in populating with GPS results
