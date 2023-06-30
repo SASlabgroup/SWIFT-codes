@@ -2,7 +2,7 @@
 ## Makefile generated for component 'NEDwaves_memlight'. 
 ## 
 ## Makefile     : NEDwaves_memlight_rtw.mk
-## Generated on : Fri Jan 06 10:47:14 2023
+## Generated on : Fri Jun 30 08:54:27 2023
 ## Final product: ./NEDwaves_memlight.a
 ## Product type : static-library
 ## 
@@ -172,7 +172,7 @@ DEFINES = $(DEFINES_) $(DEFINES_CUSTOM) $(DEFINES_SKIPFORSIL) $(DEFINES_STANDARD
 ## SOURCE FILES
 ###########################################################################
 
-SRCS = $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_data.c $(START_DIR)/codegen/lib/NEDwaves_memlight/rt_nonfinite.c $(START_DIR)/codegen/lib/NEDwaves_memlight/rtGetNaN.c $(START_DIR)/codegen/lib/NEDwaves_memlight/rtGetInf.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_initialize.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_terminate.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight.c $(START_DIR)/codegen/lib/NEDwaves_memlight/mean.c $(START_DIR)/codegen/lib/NEDwaves_memlight/var.c $(START_DIR)/codegen/lib/NEDwaves_memlight/fft.c $(START_DIR)/codegen/lib/NEDwaves_memlight/FFTImplementationCallback.c $(START_DIR)/codegen/lib/NEDwaves_memlight/interp1.c $(START_DIR)/codegen/lib/NEDwaves_memlight/bsearch.c $(START_DIR)/codegen/lib/NEDwaves_memlight/nullAssignment.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_emxutil.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_emxAPI.c $(START_DIR)/codegen/lib/NEDwaves_memlight/rtwhalf.c
+SRCS = $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_data.c $(START_DIR)/codegen/lib/NEDwaves_memlight/rt_nonfinite.c $(START_DIR)/codegen/lib/NEDwaves_memlight/rtGetNaN.c $(START_DIR)/codegen/lib/NEDwaves_memlight/rtGetInf.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_initialize.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_terminate.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight.c $(START_DIR)/codegen/lib/NEDwaves_memlight/linspace.c $(START_DIR)/codegen/lib/NEDwaves_memlight/combineVectorElements.c $(START_DIR)/codegen/lib/NEDwaves_memlight/var.c $(START_DIR)/codegen/lib/NEDwaves_memlight/fft.c $(START_DIR)/codegen/lib/NEDwaves_memlight/FFTImplementationCallback.c $(START_DIR)/codegen/lib/NEDwaves_memlight/interp1.c $(START_DIR)/codegen/lib/NEDwaves_memlight/minOrMax.c $(START_DIR)/codegen/lib/NEDwaves_memlight/nullAssignment.c $(START_DIR)/codegen/lib/NEDwaves_memlight/div.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_emxutil.c $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlight_emxAPI.c $(START_DIR)/codegen/lib/NEDwaves_memlight/rtwhalf.c
 
 ALL_SRCS = $(SRCS)
 
@@ -180,7 +180,7 @@ ALL_SRCS = $(SRCS)
 ## OBJECTS
 ###########################################################################
 
-OBJS = NEDwaves_memlight_data.o rt_nonfinite.o rtGetNaN.o rtGetInf.o NEDwaves_memlight_initialize.o NEDwaves_memlight_terminate.o NEDwaves_memlight.o mean.o var.o fft.o FFTImplementationCallback.o interp1.o bsearch.o nullAssignment.o NEDwaves_memlight_emxutil.o NEDwaves_memlight_emxAPI.o rtwhalf.o
+OBJS = NEDwaves_memlight_data.o rt_nonfinite.o rtGetNaN.o rtGetInf.o NEDwaves_memlight_initialize.o NEDwaves_memlight_terminate.o NEDwaves_memlight.o linspace.o combineVectorElements.o var.o fft.o FFTImplementationCallback.o interp1.o minOrMax.o nullAssignment.o div.o NEDwaves_memlight_emxutil.o NEDwaves_memlight_emxAPI.o rtwhalf.o
 
 ALL_OBJS = $(OBJS)
 
@@ -200,7 +200,7 @@ LIBS =
 ## SYSTEM LIBRARIES
 ###########################################################################
 
-SYSTEM_LIBS =  -lm
+SYSTEM_LIBS =  -L"$(MATLAB_ROOT)/sys/os/maci64" -lm -liomp5
 
 ###########################################################################
 ## ADDITIONAL TOOLCHAIN FLAGS
@@ -210,17 +210,51 @@ SYSTEM_LIBS =  -lm
 # C Compiler
 #---------------
 
+CFLAGS_OPTS = -Xpreprocessor -fopenmp -I/Applications/MATLAB_R2022a.app/toolbox/eml/externalDependency/omp/maci64/include -DOpenMP_omp_LIBRARY=/Applications/MATLAB_R2022a.app/sys/os/maci64/libiomp5.dylib
 CFLAGS_BASIC = $(DEFINES) $(INCLUDES)
 
-CFLAGS += $(CFLAGS_BASIC)
+CFLAGS += $(CFLAGS_OPTS) $(CFLAGS_BASIC)
 
 #-----------------
 # C++ Compiler
 #-----------------
 
+CPPFLAGS_OPTS = -Xpreprocessor -fopenmp -I/Applications/MATLAB_R2022a.app/toolbox/eml/externalDependency/omp/maci64/include -DOpenMP_omp_LIBRARY=/Applications/MATLAB_R2022a.app/sys/os/maci64/libiomp5.dylib
 CPPFLAGS_BASIC = $(DEFINES) $(INCLUDES)
 
-CPPFLAGS += $(CPPFLAGS_BASIC)
+CPPFLAGS += $(CPPFLAGS_OPTS) $(CPPFLAGS_BASIC)
+
+#---------------
+# C++ Linker
+#---------------
+
+CPP_LDFLAGS_ = -Wl,-rpath,$(MATLAB_ROOT)/sys/os/$(ARCH)/  
+
+CPP_LDFLAGS += $(CPP_LDFLAGS_)
+
+#------------------------------
+# C++ Shared Library Linker
+#------------------------------
+
+CPP_SHAREDLIB_LDFLAGS_ = -Wl,-rpath,$(MATLAB_ROOT)/sys/os/$(ARCH)/  
+
+CPP_SHAREDLIB_LDFLAGS += $(CPP_SHAREDLIB_LDFLAGS_)
+
+#-----------
+# Linker
+#-----------
+
+LDFLAGS_ = -Wl,-rpath,$(MATLAB_ROOT)/sys/os/$(ARCH)/  
+
+LDFLAGS += $(LDFLAGS_)
+
+#--------------------------
+# Shared Library Linker
+#--------------------------
+
+SHAREDLIB_LDFLAGS_ = -Wl,-rpath,$(MATLAB_ROOT)/sys/os/$(ARCH)/  
+
+SHAREDLIB_LDFLAGS += $(SHAREDLIB_LDFLAGS_)
 
 ###########################################################################
 ## INLINED COMMANDS
@@ -331,7 +365,11 @@ NEDwaves_memlight.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/NEDwaves_memlig
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-mean.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/mean.c
+linspace.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/linspace.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+combineVectorElements.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/combineVectorElements.c
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
@@ -351,11 +389,15 @@ interp1.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/interp1.c
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
-bsearch.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/bsearch.c
+minOrMax.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/minOrMax.c
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 
 nullAssignment.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/nullAssignment.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+div.o : $(START_DIR)/codegen/lib/NEDwaves_memlight/div.c
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 

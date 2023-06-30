@@ -5,12 +5,14 @@
  * File: NEDwaves_memlight_terminate.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 30-Jun-2023 08:54:06
  */
 
 /* Include Files */
 #include "NEDwaves_memlight_terminate.h"
+#include "NEDwaves_memlight_data.h"
 #include "rt_nonfinite.h"
+#include "omp.h"
 
 /* Function Definitions */
 /*
@@ -19,6 +21,8 @@
  */
 void NEDwaves_memlight_terminate(void)
 {
+  omp_destroy_nest_lock(&NEDwaves_memlight_nestLockGlobal);
+  isInitialized_NEDwaves_memlight = false;
 }
 
 /*

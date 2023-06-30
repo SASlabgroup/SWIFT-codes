@@ -5,7 +5,7 @@
  * File: NEDwaves_memlight_emxutil.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 30-Jun-2023 08:54:06
  */
 
 /* Include Files */
@@ -392,20 +392,21 @@ void emxInit_real32_T(emxArray_real32_T **pEmxArray, int numDimensions)
 
 /*
  * Arguments    : emxArray_real_T **pEmxArray
+ *                int numDimensions
  * Return Type  : void
  */
-void emxInit_real_T(emxArray_real_T **pEmxArray)
+void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions)
 {
   emxArray_real_T *emxArray;
   int i;
   *pEmxArray = (emxArray_real_T *)malloc(sizeof(emxArray_real_T));
   emxArray = *pEmxArray;
   emxArray->data = (double *)NULL;
-  emxArray->numDimensions = 2;
-  emxArray->size = (int *)malloc(sizeof(int) * 2U);
+  emxArray->numDimensions = numDimensions;
+  emxArray->size = (int *)malloc(sizeof(int) * numDimensions);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < numDimensions; i++) {
     emxArray->size[i] = 0;
   }
 }

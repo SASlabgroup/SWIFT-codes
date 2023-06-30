@@ -27,6 +27,8 @@ function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves_memlight
 % J. Thomson,  12/2022 (modified from GPSwaves)
 %              1/2023 memory light version... removes filtering, windowing,etc
 %                       assumes input data is clean and ready
+%              6/2023 attempt to put windowing back in, 
+%                   abandon convention that upper cases is in frequency domain
 %
 %#codegen
 
@@ -34,90 +36,151 @@ function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves_memlight
 
 %% parameters 
 
-%testing = true;
-
 pts = length(east);  % length of the input data (should be 2^N for efficiency)
-fmin = 0.01; % min frequecny for final output, Hz
-fmax = 0.5; % max frequecny for final output, Hz
-nf = 42; % number of frequency bands in final result
+%fmin = 0.01; % min frequecny for final output, Hz
+%fmax = 0.5; % max frequecny for final output, Hz
+%nf = 42; % number of frequency bands in final result
 
+RC = 3; % time constant [s] for high-pass filter (pass T < 2 pi * RC)
+wsecs = 256;   % window length in seconds, should make 2^N samples is fs is even
+merge = 3;      % freq bands to merge, must be odd?
+maxf = .5;       % frequency cutoff for telemetry Hz
+
+wpts = round(fs * wsecs); % window length in data points
+if rem(wpts,2)~=0, 
+    wpts = wpts-1; 
+end  % make wpts an even number
+windows = floor( 4*(pts/wpts - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
+%dof = 2*windows*merge; % degrees of freedom
+
+%% frequency resolution 
+Nyquist = fs / 2;     % highest spectral frequency 
+f1 = 1./(wpts./fs);    % frequency resolution 
+rawf = linspace(f1, Nyquist, round(wpts/2)); % raw frequency bands
+n = (wpts/2) / merge;                         % number of f bands after merging
+bandwidth = Nyquist/n ;                    % freq (Hz) bandwitdh after merging
+% find middle of each merged freq band, ONLY WORKS WHEN MERGING ODD NUMBER OF BANDS!
+f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ; 
+
+%% initialize spectral ouput, which will accumulate as windows are processed
+% length will only be 42 is wsecs = 256, merge = 3, maxf = 0.5 (params above)
+UU = single( zeros(1,42) );
+VV = single( zeros(1,42) );
+WW = single( zeros(1,42) );
+UV = single( 1i*zeros(1,42) );
+UW = single( 1i*zeros(1,42) );
+VW = single( 1i*zeros(1,42) );
+
+%% loop thru windows, accumulating spectral results
+
+for q=1:windows
+    u = east(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  );  
+	v = north(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  );  
+  	w = down(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  ); 
 
 %% remove the mean
 
-north = north - mean(north);
-east = east - mean(east);
-down = down - mean(down);
+u = u - mean(u);
+v = v - mean(v);
+w = w - mean(w);
 
+
+%% high-pass RC filter, 
+
+alpha = RC / (RC + 1./fs); 
+
+filtereddata = u; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( u(ui) - u(ui-1) );
+end
+u = filtereddata;
+
+filtereddata = v; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( v(ui) - v(ui-1) );
+end
+v = filtereddata;
+
+filtereddata = w; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( w(ui) - w(ui-1) );
+end
+w = filtereddata;
 
 %% taper and rescale (to preserve variance)
 
 % get original variance of each 
-northvar = var(north);
-eastvar = var(east);
-downvar = var(down);
+uvar = var(u);
+vvar = var(v);
+wvar = var(w);
 % define the taper
-taper = sin ( (1:pts) * pi/pts ); 
+taper = sin ( (1:wpts) * pi/wpts ); 
 % apply the taper
-north = north .* taper;
-east = east .* taper;
-down = down .* taper;
+u = u .* taper;
+v = v .* taper;
+w = w .* taper;
 % then rescale to regain the same original variance
-north = north * sqrt( northvar ./ var(north) );
-east = east * sqrt( eastvar ./ var(east) );
-down = down * sqrt( downvar ./ var(down) );
+u = u * sqrt( uvar ./ var(u) );
+v = v * sqrt( vvar ./ var(v) );
+w = w * sqrt( wvar ./ var(w) );
 
 
-%% FFT, note convention for lower case as time-domain and upper case as freq domain
+%% FFT
 
 % calculate Fourier coefs (complex values, double sided)
-U = single(fft(east));
-V = single(fft(north));
-W = single(fft(down));
+u = single(fft(u));
+v = single(fft(v));
+w = single(fft(w));
 
 % second half of Matlab's FFT is redundant, so throw it out
-U( round(pts/2+1):pts ) = [];
-V( round(pts/2+1):pts ) = [];
-W( round(pts/2+1):pts ) = [];
+u( round(wpts/2+1):wpts ) = [];
+v( round(wpts/2+1):wpts ) = [];
+w( round(wpts/2+1):wpts ) = [];
 
 % throw out the mean (first coef) and add a zero (to make it the right length)  
-U(1)=[]; V(1)=[]; W(1)=[]; 
-U(round(pts/2))=0; V(round(pts/2))=0; W(round(pts/2))=0; 
+u(1)=[]; 
+v(1)=[]; 
+w(1)=[]; 
+u(round(wpts/2))=0; 
+v(round(wpts/2))=0; 
+w(round(wpts/2))=0; 
 
-% determine the frequency vector
-Nyquist = fs / 2;     % highest spectral frequency 
-f1 = 1./(pts./fs);    % frequency resolution 
-allf = linspace(f1, Nyquist, round(pts/2)); 
+% merge frequency bands (moved up to top of code)
+% Nyquist = fs / 2;     % highest spectral frequency 
+% f1 = 1./(wpts./fs);    % frequency resolution 
+% rawf = linspace(f1, Nyquist, round(wpts/2)); % raw frequency bands
+% n = (wpts/2) / merge;                         % number of f bands after merging
+% bandwidth = Nyquist/n ;                    % freq (Hz) bandwitdh after merging
+% % find middle of each freq band, ONLY WORKS WHEN MERGING ODD NUMBER OF BANDS!
+% f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ; 
+u = interp1( rawf, u, f);
+v = interp1( rawf, v, f);
+w = interp1( rawf, w, f);
 
-% remove high frequency tail (to save memory)
-U( allf > 1.1*fmax ) = [];
-V( allf > 1.1*fmax ) = [];
-W( allf > 1.1*fmax ) = [];
-allf( allf > 1.1*fmax ) = [];
+% remove the high frequency tail (to save memory)
+u( f > maxf ) = [];
+v( f > maxf ) = [];
+w( f > maxf ) = [];
+f( f > maxf ) = [];
 
-% option to interp before... prob better to wait 
-% f = linspace(fmin, fmax,nf);
-% U = interp1(allf, U, f); 
-% V = interp1(allf, V, f); 
-% W = interp1(allf, W, f); 
+% accumulate POWER SPECTRAL DENSITY (auto-spectra) from this window
+UU = UU + ( real ( u .* conj(u) ) / (round(wpts/2) * fs ) );
+VV = VV + ( real ( v .* conj(v) ) / (round(wpts/2) * fs ) );
+WW = WW + ( real ( w .* conj(w) ) / (round(wpts/2) * fs ) );
+% accumulate CROSS-SPECTRAL DENSITY from this window
+UV = UV + ( ( u .* conj(v) ) / (round(wpts/2) * fs ) );
+UW = UW + ( ( u .* conj(w) ) / (round(wpts/2) * fs ) );
+VW = VW + ( ( v .* conj(w) ) / (round(wpts/2) * fs ) );
 
-% POWER SPECTRAL DENSITY (auto-spectra)
-UU = real ( U .* conj(U) ) / (round(pts/2) * fs  );
-VV = real ( V .* conj(V) ) / (round(pts/2) * fs  );
-WW = real ( W .* conj(W) ) / (round(pts/2) * fs  );
-% CROSS-SPECTRAL DENSITY 
-UV = ( U .* conj(V) ) / (round(pts/2) * fs  );
-UW = ( U .* conj(W) ) / (round(pts/2) * fs  );
-VW = ( V .* conj(W) ) / (round(pts/2) * fs  );
+end % close window loop
 
-%% interp onto output frequencies
-
-f = linspace(fmin, fmax, nf);
-UU = interp1(allf, UU, f); 
-VV = interp1(allf, VV, f); 
-WW = interp1(allf, WW, f); 
-UV = interp1(allf, UV, f); 
-UW = interp1(allf, UW, f); 
-VW = interp1(allf, VW, f); 
+%% divide accumulated results by number of windows (effectively an ensemble avg)
+UU = UU ./ windows * merge; 
+VV = VV ./ windows * merge; 
+WW = WW ./ windows * merge; 
+UV = UV ./ windows * merge; 
+UW = UW ./ windows * merge; 
+VW = VW ./ windows * merge; 
 
 
 %% wave spectral moments 
@@ -192,25 +255,5 @@ b2 = int8(b2*100);
 check = uint8(check*10);
 
 
-%% plots during testing
-
-% if testing
-% 
-%     figure(2), clf
-%     subplot(2,1,1)
-%     loglog(f,E,'k:'), hold on
-%     loglog(f,( UU + VV) ./ ( (2*pi*f).^2 ), f, ( WW ) ./ ( (2*pi*f).^2 ) )
-%     set(gca,'YLim',[1e-3 2e2])
-%     legend('E','E=(UU+VV)/f^2','E=WW/f^2')
-%     ylabel('Energy [m^2/Hz]')
-%     title(['Hs = ' num2str(Hs,2) ', Tp = ' num2str(Tp,2) ', Dp = ' num2str(Dp,3)])
-%     subplot(2,1,2)
-%     semilogx(f,double(a1)./100, f,double(b1)./100, f,double(a2)./100,  f,double(b2)./100)
-%     set(gca,'YLim',[-1 1])
-%     legend('a1','b1','a2','b2')
-%     xlabel('frequency [Hz]')
-%     drawnow
-% 
-% end
 
 

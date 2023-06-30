@@ -2,14 +2,14 @@
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
- * File: fft.h
+ * File: minOrMax.h
  *
  * MATLAB Coder version            : 5.4
  * C/C++ source code generated on  : 30-Jun-2023 08:54:06
  */
 
-#ifndef FFT_H
-#define FFT_H
+#ifndef MINORMAX_H
+#define MINORMAX_H
 
 /* Include Files */
 #include "NEDwaves_memlight_types.h"
@@ -22,7 +22,13 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void fft(const emxArray_real32_T *x, emxArray_creal32_T *y);
+double b_maximum(const emxArray_real_T *x);
+
+double b_minimum(const emxArray_real_T *x);
+
+void maximum(const float x[42], float *ex, int *idx);
+
+void minimum(const emxArray_real32_T *x, float *ex, int *idx);
 
 #ifdef __cplusplus
 }
@@ -30,7 +36,7 @@ void fft(const emxArray_real32_T *x, emxArray_creal32_T *y);
 
 #endif
 /*
- * File trailer for fft.h
+ * File trailer for minOrMax.h
  *
  * [EOF]
  */

@@ -28,7 +28,7 @@ function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves(north, e
 %
 %#codegen
 
-testing = true;
+testing = false;
 
 %% tunable parameters
     
