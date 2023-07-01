@@ -129,22 +129,25 @@ for ai = 1:length(flist),
     lat(ai) = oneSWIFT.lat;
     lon(ai) = oneSWIFT.lon;
     
-    onenames = string(fieldnames(oneSWIFT));
+        onenames = string(fieldnames(oneSWIFT));
     lengthofnames(ai) = length(onenames);
     
     % if first sbd, set the structure fields as the standard
     if ai == 1 && voltage~=9999 
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(SWIFT));
-        
+
+    elseif ai == 1 && voltage==9999
+        badburst(ai) = true;
+        allnames = [];
+
         % if payloads match, increment
-    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames),
+    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames)
         SWIFT(ai) = oneSWIFT;
         
         % if additional payloads, favor that new structure (removing other)
-    elseif ai > 1 && length(onenames) > length(allnames),
+    elseif ai > 1 && length(onenames) > length(allnames)
         clear SWIFT
-        SWIFT(ai-1) = oneSWIFT; % place holder, which will be removed when badburst applied
         badburst(ai-1) = true;
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(oneSWIFT)); % reset the prefer field names
@@ -156,7 +159,7 @@ for ai = 1:length(flist),
     elseif ai > 1 && length(onenames) < length(allnames) || voltage==9999
         disp('=================================')
         disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
-        SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
+        SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
         badburst(ai) = true;
     end
     
