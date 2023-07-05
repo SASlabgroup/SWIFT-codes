@@ -109,6 +109,7 @@ for ibin = 1:length(z)
     nfit = sum(ifit);
     if nfit < 3 % Must contain more than 3 points
         continue
+        
     end
     xN = ones(nfit,1);
     x1 = Ri(ifit).^(2/3);

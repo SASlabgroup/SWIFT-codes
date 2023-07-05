@@ -1,7 +1,7 @@
 function sig = catSIG(SIG)
 %Produces summary plot of burst-averaged signature data stored in 'SIG'
 %       also returns concatenated data
-plotsig = true;
+plotsig = false;
 QCsig = true;
 
 sig.time = [SIG.time];
@@ -69,35 +69,39 @@ else
 end
 
 % Plot        
-if plotsig
+if plotsig && length(sig.time)>1
 clear b
 figure('color','w')
 MP = get(0,'monitorposition');
 set(gcf,'outerposition',MP(1,:).*[1 1 1 1]);
 % East-North Velocity
 subplot(4,3,1)
-imagesc(sig.time,sig.avgz,sig.avgu);caxis([-0.5 0.5]);
+pcolor(sig.time,-sig.avgz,sig.avgu);shading flat
+caxis([-0.5 0.5]);
 hold on;plot(xlim,max(sig.hrz)*[1 1],'k')
 ylabel('Depth (m)');cmocean('balance');title('U')
 c = colorbar;c.Label.String = 'ms^{-1}';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,4)
-imagesc(sig.time,sig.avgz,sig.avguerr);caxis([0.005 0.015]);
+pcolor(sig.time,-sig.avgz,sig.avguerr);shading flat
+caxis([0 0.03]);
 hold on;plot(xlim,max(sig.hrz)*[1 1],'k')
 ylabel('Depth (m)');title('\sigma_U')
 c = colorbar;c.Label.String = 'ms^{-1}';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,7)
-imagesc(sig.time,sig.avgz,sig.avgv);caxis([-0.5 0.5]);
+pcolor(sig.time,-sig.avgz,sig.avgv);shading flat
+caxis([-0.25 0.25]);
 hold on;plot(xlim,max(sig.hrz)*[1 1],'k')
 ylabel('Depth (m)');cmocean('balance');title('V')
 c = colorbar;c.Label.String = 'ms^{-1}';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,10)
-imagesc(sig.time,sig.avgz,sig.avgverr);caxis([0.005 0.015]);
+pcolor(sig.time,-sig.avgz,sig.avgverr);shading flat
+caxis([0 0.01]);
 hold on;plot(xlim,max(sig.hrz)*[1 1],'k')
 ylabel('Depth (m)');title('\sigma_V')
 c = colorbar;c.Label.String = 'ms^{-1}';
@@ -105,47 +109,54 @@ xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 %Vertical Velocity
 subplot(4,3,2)
-imagesc(sig.time,sig.avgz,sig.avgw);caxis([-0.05 0.05]);
+pcolor(sig.time,-sig.avgz,sig.avgw);shading flat
+caxis([-0.05 0.05]);
 hold on;plot(xlim,max(sig.hrz)*[1 1],'k')
 cmocean('balance');cmocean('balance');ylabel('Depth (m)');title('W')
 c = colorbar;c.Label.String = 'ms^{-1}';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,5)
-imagesc(sig.time,sig.avgz,sig.avgwerr);caxis([0.005 0.015]);
+pcolor(sig.time,-sig.avgz,sig.avgwerr);shading flat
+caxis([0 0.03]);
 hold on;plot(xlim,max(sig.hrz)*[1 1],'k')
 ylabel('Depth (m)');title('\sigma_W')
 c = colorbar;c.Label.String = 'ms^{-1}';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,8)
-imagesc(sig.time,sig.hrz,sig.hrw);caxis([-0.05 0.05])
+pcolor(sig.time,-sig.hrz,sig.hrw);shading flat
+caxis([-0.05 0.05])
 ylabel('Depth (m)');cmocean('balance');title('W_{HR}')
 c = colorbar;c.Label.String = 'ms^{-1}';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,11)
-imagesc(sig.time,sig.hrz,sig.hrwvar);caxis([0.001 0.005]);
+pcolor(sig.time,-sig.hrz,sig.hrwvar);shading flat
+caxis([0 0.03]);
 ylabel('Depth (m)');title('\sigma_W_{HR}')
 c = colorbar;c.Label.String = 'ms^{-1}';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 %Dissipation
 subplot(4,3,3)
-imagesc(sig.time,sig.hrz,log10(sig.eps_struct));caxis([-7.5 -4.5]);
+pcolor(sig.time,-sig.hrz,log10(sig.eps_struct));shading flat
+caxis([-7.5 -4.5]);
 ylabel('Depth (m)');title('SF \epsilon')
 c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,6)
-imagesc(sig.time,sig.hrz,sig.struct_slope);caxis([0 2*2/3]);
+pcolor(sig.time,-sig.hrz,sig.struct_slope);shading flat
+caxis([0 2*2/3]);
 ylabel('Depth (m)');title('SF Slope')
 c = colorbar;c.Label.String = 'D \propto r^n';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 cmocean('curl')
 subplot(4,3,9)
-imagesc(sig.time,sig.hrz,log10(sig.eps_spectral));caxis([-5 -2]);
+pcolor(sig.time,-sig.hrz,log10(sig.eps_spectral));shading flat
+caxis([-5 -2]);
 ylabel('Depth (m)');title('Spectral \epsilon')
 c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
 xlim([min(sig.time) max(sig.time)])
@@ -158,9 +169,8 @@ set(b,'EdgeColor',rgb('grey'))
 ylabel('\sigma_{\phi} (^{\circ})');title('Pitch Variance')
 c = colorbar;c.Visible = 'off';
 xlim([min(sig.time) max(sig.time)])
-ylim([0 20])
+ylim([0 mean(sqrt(sig.pitchvar),'omitnan') + 2*std(sqrt(sig.pitchvar),'omitnan')])
 datetick('x','KeepLimits')
-
 end
 
 end
