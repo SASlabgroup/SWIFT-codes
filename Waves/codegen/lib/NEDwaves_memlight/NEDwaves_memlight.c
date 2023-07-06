@@ -5,14 +5,12 @@
  * File: NEDwaves_memlight.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 30-Jun-2023 08:54:06
+ * C/C++ source code generated on  : 06-Jul-2023 15:08:49
  */
 
 /* Include Files */
 #include "NEDwaves_memlight.h"
-#include "NEDwaves_memlight_data.h"
 #include "NEDwaves_memlight_emxutil.h"
-#include "NEDwaves_memlight_initialize.h"
 #include "NEDwaves_memlight_types.h"
 #include "combineVectorElements.h"
 #include "div.h"
@@ -420,9 +418,6 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   int *r2;
   int *r4;
   bool *b_f_data;
-  if (!isInitialized_NEDwaves_memlight) {
-    NEDwaves_memlight_initialize();
-  }
   down_data = down->data;
   east_data = east->data;
   north_data = north->data;

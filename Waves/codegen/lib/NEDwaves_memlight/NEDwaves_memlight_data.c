@@ -5,17 +5,12 @@
  * File: NEDwaves_memlight_data.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 30-Jun-2023 08:54:06
+ * C/C++ source code generated on  : 06-Jul-2023 15:08:49
  */
 
 /* Include Files */
 #include "NEDwaves_memlight_data.h"
 #include "rt_nonfinite.h"
-
-/* Variable Definitions */
-omp_nest_lock_t NEDwaves_memlight_nestLockGlobal;
-
-bool isInitialized_NEDwaves_memlight = false;
 
 /*
  * File trailer for NEDwaves_memlight_data.c
