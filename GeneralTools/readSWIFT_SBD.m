@@ -446,7 +446,8 @@ while 1
         
     elseif type == 52 & size > 0, % microSWIFT, size should be 327 bytes
         disp('reading microSWIFT (compact)')
-        SWIFT.replacedrawvalues = port; % microSWIFTs do not give com port, so we are using a diagnostic for raw data QC (and replacement)
+        replacedrawvalues = port*10 % microSWIFTs do not give com port, so we are using a diagnostic for raw data QC (and replacement)
+        SWIFT.replacedrawvalues = replacedrawvalues;
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
         SWIFT.peakwavedirT       = half.typecast(fread(fid, 1,'*uint16')).double; % dominant wave direction
