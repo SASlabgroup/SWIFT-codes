@@ -96,24 +96,22 @@
 
 % KRISTIN - PC
 % Directory with existing SWIFT structures (e.g. from telemetry)
-swiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\v4\Original\';
-% swiftdir = 'S:\LC-DRI\';
+swiftdir = 'S:\LC-DRI\';
 % Directory with signature burst files 
-burstdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\Raw\SIG\';
-% burstdir = 'S:\LC-DRI\';
+burstdir = 'S:\LC-DRI\';
 % Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
-saveswiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\v4\reprocessSIG\';
-savesigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\v4\reprocessSIG\SIG\';
+saveswiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\V4\neof5\reprocessSIG\';
+savesigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\V4\neof5\reprocessSIG\SIG\';
 % Directory to save figures (will create folder for each mission if doesn't already exist)
 savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\Signature';
 
 %Data Load/Save Toggles
 readraw = false;% read raw binary files
-saveSWIFT = false;% save updated SWIFT structure
-saveSIG = false; %save detailed sig data in separate SIG structure
+saveSWIFT = true;% save updated SWIFT structure
+saveSIG = true; %save detailed sig data in separate SIG structure
 
 % Plotting Toggles
-plotburst = true; % generate plots for each burst
+plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
 saveplots = false; % save generated plots
 
@@ -125,6 +123,7 @@ mincorr = 40; % burst-avg correlation minimum
 maxamp = 150; % burst-avg amplitude maximum
 maxuerr = 0.05; % ms^{-1}, burst-avg velocity error for first broadband beam maximum
 pbadmax = 80; % maximum percent 'bad' amp/corr/err values per bin or ping allowed
+nsumeof = 5;% Number of lowest-mode EOFs to remove from turbulent velocity
 
 % Broadband QC Toggles
 QCcorr = false;% (NOT recommended) standard, QC removes any data below 'mincorr'
@@ -135,7 +134,7 @@ QCalt = false; % trim data based on altimeter
 
 %Populate list of SWIFT missions to re-process
 cd(burstdir)
-swifts = dir('SWIFT2*2017');
+swifts = dir('SWIFT*');
 swifts = {swifts.name};
 nswift = length(swifts);
 
@@ -143,18 +142,19 @@ nswift = length(swifts);
 % For each mission, loop through burst files and process the data
 clear SWIFT SIG
 
-for iswift = 21
+for iswift = [41 42]
 
     SNprocess = swifts{iswift}; 
     disp(['********** Reprocessing ' SNprocess ' **********'])
 
     % Create SIG structure for detailed signature data results
     SIG = struct;
+    isig = 1;
 
     % Load pre-existing mission mat file with SWIFT structure 
-    structfile = dir([swiftdir SNprocess '*.mat']);
+    structfile = dir([swiftdir SNprocess '\' SNprocess(1:6) '*.mat']);
     if length(structfile) > 1
-    structfile = structfile(contains({structfile.name},'reprocessedSIG'));
+    structfile = structfile(contains({structfile.name},'reprocessedSBG.mat'));
     end 
     if isempty(structfile)
     disp('No SWIFT structure found...')
@@ -184,11 +184,19 @@ for iswift = 21
     nburst = length(bfiles);
     
     % Loop through and process burst files
-    for iburst = 3:5
+    for iburst = 1:nburst
+        
+        % Burst time stamp
+        day = bfiles(iburst).name(13:21);
+        hour = bfiles(iburst).name(23:24);
+        mint = bfiles(iburst).name(26:27);
+        btime = datenum(day)+datenum(0,0,0,str2double(hour),(str2double(mint)-1)*12,0);
+        bname = bfiles(iburst).name(1:end-4);
+        disp(['Burst ' num2str(iburst) ' : ' bname])
 
         % Load burst file
         if readraw
-             cd(bfiles(iburst).folder)
+%              cd(bfiles(iburst).folder)
             [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder '\' bfiles(iburst).name]);
         else
         load([bfiles(iburst).folder '\' bfiles(iburst).name])
@@ -199,14 +207,6 @@ for iswift = 21
             disp('Failed to read, skipping burst...')
             continue
         end
-
-        % Burst time stamp
-        day = bfiles(iburst).name(13:21);
-        hour = bfiles(iburst).name(23:24);
-        mint = bfiles(iburst).name(26:27);
-        btime = datenum(day)+datenum(0,0,0,str2double(hour),(str2double(mint)-1)*12,0);
-        bname = bfiles(iburst).name(1:end-4);
-        disp(['Burst ' num2str(iburst) ' : ' bname])
 
         % Broadband Data
         avgtime = avg.time;
@@ -450,194 +450,73 @@ for iswift = 21
         wamp = squeeze(mean(avgamp(:,:,4)));
 
         %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
-
-        % HR Data
-        hrtime = burst.time;
-        hrcorr = burst.CorrelationData';
-        hramp = burst.AmplitudeData';
-        hrvel = -burst.VelocityData';
-
-        % N pings + N z-bins 
-        [nbin,nping] = size(hrvel);
-        dz = burst.CellSize;
-        bz = burst.Blanking;
-        hrz = xcdrdepth + bz + dz*(1:nbin);
-        dt = range(hrtime)./nping*24*3600;
-
-        % Find spikes w/phase-shift threshold (Shcherbina 2018)
-        Vr = mean(burst.SoundSpeed,'omitnan').^2./(4*10^6*5.5);% m/s
-        nfilt = round(1/dz);% 1 m
-        [wclean,ispike] = despikeSIG(hrvel,nfilt,Vr/2,'interp');
-
-        % Spatial High-pass and flag bad pings w/too high variance
-        nsm = round(2/dz); % 1 m
-        wphp = wclean - smooth_mat(wclean',hann(nsm))';           
-        badping = sum(ispike)./nbin > 0.5 | std(wphp,[],'omitnan') > 0.01;
-
-        % QC & Calculate Mean Velocity + SE
-        hrw = nanmean(wclean,2);
-        hrwerr = nanstd(wclean,[],2)./sqrt(nping);
-
-        % Plot beam data and QC info
-        if plotburst
-            clear c
-            figure('color','w','Name',[bname '_hr_data'])
-            set(gcf,'outerposition',MP(1,:).*[1 1 1 1]);
-            subplot(4,1,1)
-            imagesc(hramp)
-            caxis([50 160]); cmocean('amp')
-            title('HR Data');
-            ylabel('Bin #')
-            c = colorbar;c.Label.String = 'A (dB)';
-            subplot(4,1,2)
-            imagesc(hrcorr)
-            caxis([mincorr-5 100]);cmocean('amp')
-            ylabel('Bin #')
-            c = colorbar;c.Label.String = 'C (%)';
-            subplot(4,1,3)
-            imagesc(hrvel)
-            caxis([-0.5 0.5]);cmocean('balance');
-            ylabel('Bin #')
-            c = colorbar;c.Label.String = 'U_r(m/s)';
-            subplot(4,1,4)
-            imagesc(ispike)
-            caxis([0 2]);colormap(gca,[rgb('white'); rgb('black')])
-            ylabel('Bin #')
-            c = colorbar;c.Ticks = [0.5 1.5];
-            c.TickLabels = {'Good','Spike'};
-            xlabel('Ping #')
-            drawnow
-            if saveplots
-                figname = [savefigdir SNprocess '\' get(gcf,'Name')];
-                print(figname,'-dpng')
-                close gcf
-            end
-        end
-
-        %%%%%% Dissipation Estimates %%%%%%
-
-        % Sampling rate and window size
-        fs = 1/dt; nwin = 64;
-        if nwin > nping
-            nwin = nping;
-        end
-
-        % Skip dissipation estimates if bad-burst
-        if badburst  ||  sum(badping)/nping == 1
-            disp('   Skipping dissipation...')
-            eps_struct0 = NaN(size(hrw));
-            eps_structHP = NaN(size(hrw));
-            eps_structEOF = NaN(size(hrw));
-            eps_spectral = NaN(size(hrw));
-            mspe0 = NaN(size(hrw));
-            mspeHP = NaN(size(hrw));
-            mspeEOF = NaN(size(hrw));
-            slope0 = NaN(size(hrw));
-            slopeHP = NaN(size(hrw));
-            slopeEOF = NaN(size(hrw));
-            wpsd = NaN(nbin,2*nwin+1);
-            bobpsd = NaN(1,2*nwin+1);
-            f = NaN(1,2*nwin+1);
+        if length(size(burst.VelocityData))>2
+            badburst = 1;
+            disp('Bad HR Data...')
+            hrw = NaN(size(SIG(end).HRprofile.w));
+            hrwerr = NaN(size(SIG(end).HRprofile.w));
+            hrz = SIG(end).HRprofile.z;
+            eps_struct0 = NaN(size(SIG(end).HRprofile.eps_struct0));
+            eps_structHP = NaN(size(SIG(end).HRprofile.eps_struct0));
+            eps_structEOF = NaN(size(SIG(end).HRprofile.eps_struct0));
+            eps_spectral = NaN(size(SIG(end).HRprofile.eps_struct0));
         else
 
-            %EOF High-pass
-            nsumeof = 3;
-            eof_amp = NaN(nping,nbin);
-            [eofs,eof_amp(~badping,:),~,~] = eof(wclean(:,~badping)');
-            for ieof = 1:nbin
-                eof_amp(:,ieof) = interp1(find(~badping),eof_amp(~badping,ieof),1:nping);
-            end
-            wpeof = eofs(:,nsumeof+1:end)*(eof_amp(:,nsumeof+1:end)');
+            % HR Data
+            hrtime = burst.time;
+            hrcorr = burst.CorrelationData';
+            hramp = burst.AmplitudeData';
+            hrvel = -burst.VelocityData';
 
-            %Structure Function Dissipation
-            rmin = dz;
-            rmax = 4*dz;
-            nzfit = 1;
-            w = wclean;
-            wp1 = wpeof;
-            wp2 = wphp;
-            ibad = repmat(badping,nbin,1) | ispike;
-            w(ibad) = NaN;
-            wp1(ibad) = NaN;
-            wp2(ibad) = NaN;
-            warning('off','all')
-            [eps_struct0,~,~,qual0] = SFdissipation(w,hrz,rmin,2*rmax,nzfit,'cubic','mean');
-            [eps_structEOF,~,~,qualEOF] = SFdissipation(wp1,hrz,rmin,rmax,nzfit,'linear','mean');
-            [eps_structHP,~,~,qualHP] = SFdissipation(wp2,hrz,rmin,rmax,nzfit,'linear','mean');
-            warning('on','all')
-            mspe0 = qual0.mspe;
-            mspeHP = qualHP.mspe;
-            mspeEOF = qualEOF.mspe;
-            slope0 = qual0.slope;
-            slopeHP = qualHP.slope;
-            slopeEOF = qualEOF.slope;
+            % N pings + N z-bins 
+            [nbin,nping] = size(hrvel);
+            dz = burst.CellSize;
+            bz = burst.Blanking;
+            hrz = xcdrdepth + bz + dz*(1:nbin);
+            dt = range(hrtime)./nping*24*3600;
 
-            % Spectral dissipation (self-advected turbulence: Tennekes '75)
-            if isfield(burst,'AHRS_GyroX')
-                hrurot =((deg2rad(burst.AHRS_GyroX))'*hrz)';
-                hrvrot =((deg2rad(burst.AHRS_GyroY))'*hrz)';
-                else
-                    hrurot = zeros(size(hrvel));
-                    hrvrot = zeros(size(hrvel));
-            end
-            uadvect = sqrt(var(hrurot,[],2,'omitnan')...
-                            + var(hrvrot,[],2,'omitnan') ...
-                             + var(wclean,[],2,'omitnan'));
-            [eps_spectral,wpsd] = PSDdissipation(wclean,uadvect,nwin,fs);
+            % Find spikes w/phase-shift threshold (Shcherbina 2018)
+            Vr = mean(burst.SoundSpeed,'omitnan').^2./(4*10^6*5.5);% m/s
+            nfilt = round(1/dz);% 1 m
+            [wclean,ispike] = despikeSIG(hrvel,nfilt,Vr/2,'interp');
 
-            % Motion spectra (bobbing)
-            [bobpsd,f] = pwelch(detrend(gradient(burst.Pressure,dt)),nwin,[],[],fs);
+            % Spatial High-pass and flag bad pings w/too high variance
+            nsm = round(2/dz); % 1 m
+            wphp = wclean - smooth_mat(wclean',hann(nsm))';           
+            badping = sum(ispike)./nbin > 0.5 | std(wphp,[],'omitnan') > 0.01;
 
+            % QC & Calculate Mean Velocity + SE
+            hrw = nanmean(wclean,2);
+            hrwerr = nanstd(wclean,[],2)./sqrt(nping);
+
+            % Plot beam data and QC info
             if plotburst
-                clear b s
-                figure('color','w','Name',[bname '_wspectra_eps'])
+                clear c
+                figure('color','w','Name',[bname '_hr_data'])
                 set(gcf,'outerposition',MP(1,:).*[1 1 1 1]);
-                subplot(1,4,[1 2])
-                cmap = colormap;
-                for ibin = 1:nbin
-                    cind = round(size(cmap,1)*ibin/nbin);
-                    l1 = loglog(f,wpsd(ibin,:),'color',cmap(cind,:),'LineWidth',1.5);
-                    hold on
-                end
-                l2 = loglog(f,bobpsd,'LineWidth',2,'color',rgb('grey'));
-                l3 = loglog(f(f>1),...
-                    8*(mean(uadvect).^(2/3)).*((10^(-5)).^(2/3)).*(2*pi*f(f>1)).^(-5/3),...
-                    '-k','LineWidth',2);
-                xlabel('Frequency [Hz]')
-                ylabel('TKE [m^2/s^2/Hz]')
-                title('HR Spectra')
-                c = colorbar;
-                c.Label.String = 'Bin #';
-                c.TickLabels = num2str(round(c.Ticks'.*nbin));
-                legend([l1 l2 l3],'S_{w}','S_{bob}','\epsilon = 10^{-5}m^2s^{-3}','Location','northwest')
-                ylim(10.^[-6 0.8])
-                xlim([10^-0.5 max(f)])
-                subplot(1,4,3)
-                b(1) = errorbar(hrw,hrz,hrwerr,'horizontal');
-                hold on
-                b(2) = errorbar(avgw,avgz,avgwerr,'horizontal');
-                set(b,'LineWidth',2)
-                plot([0 0],[0 20],'k--')
-                xlabel('w [m/s]');
-                title('Velocity')
-                set(gca,'Ydir','reverse')
-                legend(b,'HR','Broadband','Location','southeast')
-                ylim([0 6])
-                xlim([-0.075 0.075])
-                set(gca,'YAxisLocation','right')
-                subplot(1,4,4)
-                s(1) = semilogx(eps_structEOF,hrz,'r','LineWidth',2);
-                hold on
-                s(2) =  semilogx(eps_structHP,hrz,':r','LineWidth',2);
-                s(3) = semilogx(eps_spectral,hrz,'b','LineWidth',2);
-                s(4) = semilogx(eps_struct0,hrz,'color',rgb('grey'),'LineWidth',2);
-                xlim(10.^([-9 -3]))
-                ylim([0 6])
-                legend(s,'SF','SF (high-pass)','Spectral','SF (modified)','Location','southeast')
-                title('Dissipation')
-                xlabel('\epsilon [W/Kg]'),ylabel('z [m]')
-                set(gca,'Ydir','reverse')
-                set(gca,'YAxisLocation','right')
+                subplot(4,1,1)
+                imagesc(hramp)
+                caxis([50 160]); cmocean('amp')
+                title('HR Data');
+                ylabel('Bin #')
+                c = colorbar;c.Label.String = 'A (dB)';
+                subplot(4,1,2)
+                imagesc(hrcorr)
+                caxis([mincorr-5 100]);cmocean('amp')
+                ylabel('Bin #')
+                c = colorbar;c.Label.String = 'C (%)';
+                subplot(4,1,3)
+                imagesc(hrvel)
+                caxis([-0.5 0.5]);cmocean('balance');
+                ylabel('Bin #')
+                c = colorbar;c.Label.String = 'U_r(m/s)';
+                subplot(4,1,4)
+                imagesc(ispike)
+                caxis([0 2]);colormap(gca,[rgb('white'); rgb('black')])
+                ylabel('Bin #')
+                c = colorbar;c.Ticks = [0.5 1.5];
+                c.TickLabels = {'Good','Spike'};
+                xlabel('Ping #')
                 drawnow
                 if saveplots
                     figname = [savefigdir SNprocess '\' get(gcf,'Name')];
@@ -645,61 +524,194 @@ for iswift = 21
                     close gcf
                 end
             end
+
+            %%%%%% Dissipation Estimates %%%%%%
+
+            % Sampling rate and window size
+            fs = 1/dt; nwin = 64;
+            if nwin > nping
+                nwin = nping;
+            end
+
+            % Skip dissipation estimates if bad-burst
+            if badburst  ||  sum(badping)/nping > 0.90
+                disp('   Skipping dissipation...')
+                eps_struct0 = NaN(size(hrw));
+                eps_structHP = NaN(size(hrw));
+                eps_structEOF = NaN(size(hrw));
+                eps_spectral = NaN(size(hrw));
+                mspe0 = NaN(size(hrw));
+                mspeHP = NaN(size(hrw));
+                mspeEOF = NaN(size(hrw));
+                slope0 = NaN(size(hrw));
+                slopeHP = NaN(size(hrw));
+                slopeEOF = NaN(size(hrw));
+                wpsd = NaN(nbin,2*nwin+1);
+                bobpsd = NaN(1,2*nwin+1);
+                f = NaN(1,2*nwin+1);
+            else
+
+                %EOF High-pass
+                eof_amp = NaN(nping,nbin);
+                [eofs,eof_amp(~badping,:),~,~] = eof(wclean(:,~badping)');
+                for ieof = 1:nbin
+                    eof_amp(:,ieof) = interp1(find(~badping),eof_amp(~badping,ieof),1:nping);
+                end
+                wpeof = eofs(:,nsumeof+1:end)*(eof_amp(:,nsumeof+1:end)');
+
+                %Structure Function Dissipation
+                rmin = dz;
+                rmax = 4*dz;
+                nzfit = 1;
+                w = wclean;
+                wp1 = wpeof;
+                wp2 = wphp;
+                ibad = repmat(badping,nbin,1) | ispike;
+                w(ibad) = NaN;
+                wp1(ibad) = NaN;
+                wp2(ibad) = NaN;
+                warning('off','all')
+                [eps_struct0,~,~,qual0] = SFdissipation(w,hrz,rmin,2*rmax,nzfit,'cubic','mean');
+                [eps_structEOF,~,~,qualEOF] = SFdissipation(wp1,hrz,rmin,rmax,nzfit,'linear','mean');
+                [eps_structHP,~,~,qualHP] = SFdissipation(wp2,hrz,rmin,rmax,nzfit,'linear','mean');
+                warning('on','all')
+                mspe0 = qual0.mspe;
+                mspeHP = qualHP.mspe;
+                mspeEOF = qualEOF.mspe;
+                slope0 = qual0.slope;
+                slopeHP = qualHP.slope;
+                slopeEOF = qualEOF.slope;
+
+                % Spectral dissipation (self-advected turbulence: Tennekes '75)
+                if isfield(burst,'AHRS_GyroX')
+                    hrurot =((deg2rad(burst.AHRS_GyroX))'*hrz)';
+                    hrvrot =((deg2rad(burst.AHRS_GyroY))'*hrz)';
+                    else
+                        hrurot = zeros(size(hrvel));
+                        hrvrot = zeros(size(hrvel));
+                end
+                uadvect = sqrt(var(hrurot,[],2,'omitnan')...
+                                + var(hrvrot,[],2,'omitnan') ...
+                                 + var(wclean,[],2,'omitnan'));
+                [eps_spectral,wpsd] = PSDdissipation(wclean,uadvect,nwin,fs);
+
+                % Motion spectra (bobbing)
+                [bobpsd,f] = pwelch(detrend(gradient(burst.Pressure,dt)),nwin,[],[],fs);
+
+                if plotburst
+                    clear b s
+                    figure('color','w','Name',[bname '_wspectra_eps'])
+                    set(gcf,'outerposition',MP(1,:).*[1 1 1 1]);
+                    subplot(1,4,[1 2])
+                    cmap = colormap;
+                    for ibin = 1:nbin
+                        cind = round(size(cmap,1)*ibin/nbin);
+                        l1 = loglog(f,wpsd(ibin,:),'color',cmap(cind,:),'LineWidth',1.5);
+                        hold on
+                    end
+                    l2 = loglog(f,bobpsd,'LineWidth',2,'color',rgb('grey'));
+                    l3 = loglog(f(f>1),...
+                        8*(mean(uadvect).^(2/3)).*((10^(-5)).^(2/3)).*(2*pi*f(f>1)).^(-5/3),...
+                        '-k','LineWidth',2);
+                    xlabel('Frequency [Hz]')
+                    ylabel('TKE [m^2/s^2/Hz]')
+                    title('HR Spectra')
+                    c = colorbar;
+                    c.Label.String = 'Bin #';
+                    c.TickLabels = num2str(round(c.Ticks'.*nbin));
+                    legend([l1 l2 l3],'S_{w}','S_{bob}','\epsilon = 10^{-5}m^2s^{-3}','Location','northwest')
+                    ylim(10.^[-6 0.8])
+                    xlim([10^-0.5 max(f)])
+                    subplot(1,4,3)
+                    b(1) = errorbar(hrw,hrz,hrwerr,'horizontal');
+                    hold on
+                    b(2) = errorbar(avgw,avgz,avgwerr,'horizontal');
+                    set(b,'LineWidth',2)
+                    plot([0 0],[0 20],'k--')
+                    xlabel('w [m/s]');
+                    title('Velocity')
+                    set(gca,'Ydir','reverse')
+                    legend(b,'HR','Broadband','Location','southeast')
+                    ylim([0 6])
+                    xlim([-0.075 0.075])
+                    set(gca,'YAxisLocation','right')
+                    subplot(1,4,4)
+                    s(1) = semilogx(eps_structEOF,hrz,'r','LineWidth',2);
+                    hold on
+                    s(2) =  semilogx(eps_structHP,hrz,':r','LineWidth',2);
+                    s(3) = semilogx(eps_spectral,hrz,'b','LineWidth',2);
+                    s(4) = semilogx(eps_struct0,hrz,'color',rgb('grey'),'LineWidth',2);
+                    xlim(10.^([-9 -3]))
+                    ylim([0 6])
+                    legend(s,'SF','SF (high-pass)','Spectral','SF (modified)','Location','southeast')
+                    title('Dissipation')
+                    xlabel('\epsilon [W/Kg]'),ylabel('z [m]')
+                    set(gca,'Ydir','reverse')
+                    set(gca,'YAxisLocation','right')
+                    drawnow
+                    if saveplots
+                        figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                        print(figname,'-dpng')
+                        close gcf
+                    end
+                end
+            end
         end
 
         %%%%%%%% Save processed signature data in seperate structure %%%%%%%%
 
         % HR data
-        SIG(iburst).HRprofile.w = hrw;
-        SIG(iburst).HRprofile.werr = hrwerr;
-        SIG(iburst).HRprofile.z = hrz';
-        SIG(iburst).HRprofile.eps_struct0 = eps_struct0';
-        SIG(iburst).HRprofile.eps_structHP = eps_structHP';
-        SIG(iburst).HRprofile.eps_structEOF = eps_structEOF';
-        SIG(iburst).HRprofile.eps_spectral = eps_spectral';
+        SIG(isig).HRprofile.w = hrw;
+        SIG(isig).HRprofile.werr = hrwerr;
+        SIG(isig).HRprofile.z = hrz';
+        SIG(isig).HRprofile.eps_struct0 = eps_struct0';
+        SIG(isig).HRprofile.eps_structHP = eps_structHP';
+        SIG(isig).HRprofile.eps_structEOF = eps_structEOF';
+        SIG(isig).HRprofile.eps_spectral = eps_spectral';
         % Broadband data
-        SIG(iburst).profile.u = avgu;
-        SIG(iburst).profile.v = avgv;
-        SIG(iburst).profile.w = avgw;
-        SIG(iburst).profile.uerr = avguerr;
-        SIG(iburst).profile.verr = avgverr;
-        SIG(iburst).profile.werr = avgwerr;
-        SIG(iburst).profile.z = avgz;
+        SIG(isig).profile.u = avgu;
+        SIG(isig).profile.v = avgv;
+        SIG(isig).profile.w = avgw;
+        SIG(isig).profile.uerr = avguerr;
+        SIG(isig).profile.verr = avgverr;
+        SIG(isig).profile.werr = avgwerr;
+        SIG(isig).profile.z = avgz;
         %Altimeter & Out-of-Water Flag
-        SIG(iburst).altimeter = maxz;
-        SIG(iburst).smallfile = smallfile;
-        SIG(iburst).outofwater = outofwater;
-        SIG(iburst).badamp = badamp;
-        SIG(iburst).badcorr = badcorr;
-        SIG(iburst).badvel = badvel;
+        SIG(isig).altimeter = maxz;
+        SIG(isig).smallfile = smallfile;
+        SIG(isig).outofwater = outofwater;
+        SIG(isig).badamp = badamp;
+        SIG(isig).badcorr = badcorr;
+        SIG(isig).badvel = badvel;
         %Temperaure
-        SIG(iburst).watertemp = nanmean(avgtemp(1:round(end/4)));
+        SIG(isig).watertemp = nanmean(avgtemp(1:round(end/4)));
         %Time
-        SIG(iburst).time = btime;
+        SIG(isig).time = btime;
         %QC Info
-        SIG(iburst).QC.ucorr = ucorr;
-        SIG(iburst).QC.wcorr = vcorr;
-        SIG(iburst).QC.vcorr = wcorr;
-        SIG(iburst).QC.uamp = uamp;
-        SIG(iburst).QC.vamp = vamp;
-        SIG(iburst).QC.wamp = wamp;
-        SIG(iburst).QC.hrcorr = mean(hrcorr,2,'omitnan')';
-        SIG(iburst).QC.hramp = mean(hramp,2,'omitnan')';
-        SIG(iburst).QC.pitch = mean(avg.Pitch,'omitnan');
-        SIG(iburst).QC.roll = mean(avg.Roll,'omitnan');
-        SIG(iburst).QC.head = mean(avg.Heading,'omitnan');
-        SIG(iburst).QC.pitchvar = var(avg.Pitch,'omitnan');
-        SIG(iburst).QC.rollvar = var(avg.Roll,'omitnan');
-        SIG(iburst).QC.headvar = var(unwrap(avg.Heading),'omitnan');
-        SIG(iburst).QC.wpsd = wpsd;
-        SIG(iburst).QC.bobpsd = bobpsd;
-        SIG(iburst).QC.f = f;
-        SIG(iburst).QC.mspe0 = mspe0;
-        SIG(iburst).QC.mspeHP = mspeHP;
-        SIG(iburst).QC.mspeEOF = mspeEOF;
-        SIG(iburst).QC.slope0 = slope0;
-        SIG(iburst).QC.slopeHP = slopeHP;
-        SIG(iburst).QC.slopeEOF = slopeEOF;
+        SIG(isig).QC.ucorr = ucorr;
+        SIG(isig).QC.wcorr = vcorr;
+        SIG(isig).QC.vcorr = wcorr;
+        SIG(isig).QC.uamp = uamp;
+        SIG(isig).QC.vamp = vamp;
+        SIG(isig).QC.wamp = wamp;
+        SIG(isig).QC.hrcorr = mean(hrcorr,2,'omitnan')';
+        SIG(isig).QC.hramp = mean(hramp,2,'omitnan')';
+        SIG(isig).QC.pitch = mean(avg.Pitch,'omitnan');
+        SIG(isig).QC.roll = mean(avg.Roll,'omitnan');
+        SIG(isig).QC.head = mean(avg.Heading,'omitnan');
+        SIG(isig).QC.pitchvar = var(avg.Pitch,'omitnan');
+        SIG(isig).QC.rollvar = var(avg.Roll,'omitnan');
+        SIG(isig).QC.headvar = var(unwrap(avg.Heading),'omitnan');
+        SIG(isig).QC.wpsd = wpsd;
+        SIG(isig).QC.bobpsd = bobpsd;
+        SIG(isig).QC.f = f;
+        SIG(isig).QC.mspe0 = mspe0;
+        SIG(isig).QC.mspeHP = mspeHP;
+        SIG(isig).QC.mspeEOF = mspeEOF;
+        SIG(isig).QC.slope0 = slope0;
+        SIG(isig).QC.slopeHP = slopeHP;
+        SIG(isig).QC.slopeEOF = slopeEOF;
+        isig = isig+1;
 
        %%%%%%%% Match burst time to existing SWIFT fields and replace data %%%%%%%%
 

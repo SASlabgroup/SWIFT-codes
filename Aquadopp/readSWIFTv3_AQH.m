@@ -87,7 +87,7 @@ while (~feof(fid))
     roll(ii) = roll(ii)/10;
     
     [PressureMSB(ii)  count] = fread(fid,1,'uint8','ieee-le');  %Pressure MSB  1 bytes
-    %(Pressure = 65536×PressureMSB + PressureLSW)
+    %(Pressure = 65536Ã—PressureMSB + PressureLSW)
     [status(ii) count] = fread(fid,1,'uint8','ieee-le'); %Status 1 byte
     [PressureLSW(ii)  count] = fread(fid,1,'uint16','ieee-le'); %Pressure LSW 2 bytes
     Pressure(ii) = PressureMSB(ii) + PressureLSW(ii)./4096;
@@ -140,5 +140,3 @@ fclose (fid);
 save([filename(1:end-4) '.mat'])
 
 batteryVoltage = mean(battery)
-
-
