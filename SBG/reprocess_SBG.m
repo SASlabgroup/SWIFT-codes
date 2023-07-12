@@ -15,7 +15,7 @@ parentdir = pwd;  % change this to be the parent directory of all raw raw data (
 readfromconcat = 0; % force starting with original onboard results
 useGPSpositions = false; % option instead of GPS velocities for alt spectra
 secondsofdata = 475;  % seconds of raw data to process (from the end of each burst, not beginning), must be more than 1536/5 = 307.2
-interpf = true; % binary flag to interp to original (onboard) frequency bands
+interpf = false; % binary flag to interp to original (onboard) frequency bands
 
 %% load existing SWIFT structure created during concatSWIFT_processed, replace only the new wave results
 cd(parentdir);
