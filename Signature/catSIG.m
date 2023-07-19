@@ -1,7 +1,7 @@
 function sig = catSIG(SIG)
 %Produces summary plot of burst-averaged signature data stored in 'SIG'
 %       also returns concatenated data
-plotsig = false;
+plotsig = true;
 QCsig = true;
 
 sig.time = [SIG.time];

@@ -118,7 +118,7 @@ saveSIG = true; %save detailed sig data in separate SIG structure
 % Plotting Toggles
 plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
-saveplots = true; % save generated plots
+saveplots = false; % save generated plots
 
 % Signature Config
 xcdrdepth = 0.2; % depth of transducer [m]
@@ -147,7 +147,7 @@ nswift = length(swifts);
 % For each mission, loop through burst files and process the data
 clear SWIFT SIG
 
-for iswift = 1:nswift
+for iswift = 1%:nswifts
 
     SNprocess = swifts{iswift}; 
     disp(['********** Reprocessing ' SNprocess ' **********'])
@@ -380,16 +380,12 @@ for iswift = 1:nswift
             c(4).Ticks = [0.25 1 1.75];c(4).TickLabels = {'Good','Bad C','Fish'};
             c(5).Label.String = 'Bin #';c(5).TickLabels = num2str([c(5).Ticks']*nbin);
             drawnow
-            if saveplots && plotburst 
+            if saveplots
                 % Create mission folder if doesn't already exist
                 if ~isfolder([savefigdir SNprocess])
                     mkdir([savefigdir SNprocess])
                 end
-                if ispc
-                    figname = [savefigdir SNprocess '\' get(gcf,'Name')];
-                else
-                    figname = [savefigdir SNprocess '/' get(gcf,'Name')];
-                end
+                figname = [savefigdir SNprocess '\' get(gcf,'Name')];
                 print(figname,'-dpng')
                 close gcf
             end
@@ -399,26 +395,24 @@ for iswift = 1:nswift
             clear b1 b2 b3 p1 p2 p3
             for ibeam = 1:4
                 subplot(2,3,ibeam)
-                %[b1(ibeam),p1(ibeam)] = boundedline(-avgz,avgu_noqc(:,ibeam),avguerr_noqc(:,ibeam));
-                errorbar(-avgz,avgu_noqc(:,ibeam),avguerr_noqc(:,ibeam));
+                [b1(ibeam),p1(ibeam)] = boundedline(-avgz,avgu_noqc(:,ibeam),avguerr_noqc(:,ibeam));
                 hold on
-                %[b2(ibeam),p2(ibeam)] = boundedline(-avgz,avgu(:,ibeam),avguerr(:,ibeam));
-                errorbar(-avgz,avgu(:,ibeam),avguerr(:,ibeam));
+                [b2(ibeam),p2(ibeam)] = boundedline(-avgz,avgu(:,ibeam),avguerr(:,ibeam));
                 grid
                 xlim([min(-avgz) max(-avgz)])
                 ylim(nanmean(avgu_noqc(:,ibeam))+[-0.1 0.1])
                 plot(xlim,[0 0],'--k')
-                %if ibeam == 1
-                %    legend([b1(ibeam) b2(ibeam)],'No QC','QC','Location','southeast')
-                %end
+                if ibeam == 1
+                    legend([b1(ibeam) b2(ibeam)],'No QC','QC','Location','southeast')
+                end
                 view(gca,[90 -90])
                 title(['Beam ' num2str(ibeam)])
                 ylabel('u_{r} [m/s]');xlabel('z[m]')
             end
-            %set([b1 b2],'LineWidth',2)
-            %set([p1 p2],'FaceAlpha',0.1)
-            %set(p1,'FaceColor',rgb('crimson'));set(b1,'Color',rgb('crimson'));
-            %set(p2,'FaceColor','k');set(b2,'Color','k');
+            set([b1 b2],'LineWidth',2)
+            set([p1 p2],'FaceAlpha',0.1)
+            set(p1,'FaceColor',rgb('crimson'));set(b1,'Color',rgb('crimson'));
+            set(p2,'FaceColor','k');set(b2,'Color','k');
             subplot(2,3,5)
             p1 = plot(squeeze(nanmean(avgamp)),-avgz,'linewidth',1.5);
             hold on
@@ -872,10 +866,10 @@ for iswift = 1:nswift
         set(gcf,'Name',SNprocess)
         if saveplots
             %Create mission folder if doesn't already exist
-%             if ~isfolder([savefigdir SNprocess])
-%                 mkdir([savefigdir SNprocess])
-%             end
-            figname = [savefigdir get(gcf,'Name')];
+            if ~isfolder([savefigdir SNprocess])
+                mkdir([savefigdir SNprocess])
+            end
+            figname = [savefigdir '\' get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
         end
