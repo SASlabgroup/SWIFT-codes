@@ -88,14 +88,14 @@
 % JIM - MAC
 if ~ispc
 % % Directory with existing SWIFT structures (e.g. from telemetry)
-swiftdir = '/Users/jthomson/Desktop/CoastalFronts/Main_Jun2022/SWIFTs/L0/';
+swiftdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/'; % must end in /
 % Directory with signature burst files 
-burstdir = '/Users/jthomson/Desktop/CoastalFronts/Main_Jun2022/SWIFTs/L0/';% 
+burstdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/'; % must end in /
 % Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
-saveswiftdir = '/Users/jthomson/Desktop/CoastalFronts/Main_Jun2022/SWIFTs/L0/NewSigProcessing/';%
-savesigdir = '/Users/jthomson/Desktop/CoastalFronts/Main_Jun2022/SWIFTs/L0/NewSigProcessing/';%
+saveswiftdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
+savesigdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
 % Directory to save figures (will create folder for each mission if doesn't already exist)
-savefigdir = '/Users/jthomson/Desktop/CoastalFronts/Main_Jun2022/SWIFTs/L0/NewSigProcessing/';%;
+savefigdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
 
 % KRISTIN - PC
 else
@@ -111,7 +111,7 @@ savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\Signature';
 end
 
 %Data Load/Save Toggles
-readraw = false;% read raw binary files
+readraw = true;% read raw binary files
 saveSWIFT = true;% save updated SWIFT structure
 saveSIG = true; %save detailed sig data in separate SIG structure
 
@@ -147,7 +147,7 @@ nswift = length(swifts);
 % For each mission, loop through burst files and process the data
 clear SWIFT SIG
 
-for iswift = 1:nswift
+for iswift = 48:nswift
 
     SNprocess = swifts{iswift}; 
     disp(['********** Reprocessing ' SNprocess ' **********'])
@@ -163,7 +163,7 @@ for iswift = 1:nswift
         structfile = dir([swiftdir SNprocess '/' SNprocess(1:6) '*.mat']);
     end
     if length(structfile) > 1
-        structfile = structfile(contains({structfile.name},'reprocessed.mat'));
+        structfile = structfile(contains({structfile.name},'reprocessedSBG.mat'));  % this might vary
     end 
     % Load pre-existing mission mat file with SWIFT structure 
     if isempty(structfile)
@@ -211,7 +211,11 @@ for iswift = 1:nswift
         % Load burst file
         if readraw
 %              cd(bfiles(iburst).folder)
-            [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder '\' bfiles(iburst).name]);
+            if ispc
+                [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder '\' bfiles(iburst).name]);
+            else
+                [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder '/' bfiles(iburst).name]);
+            end
         elseif ispc
             load([bfiles(iburst).folder '\' bfiles(iburst).name])
         else
@@ -441,7 +445,11 @@ for iswift = 1:nswift
             ylabel('z [m]')
             drawnow
             if saveplots
-                figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                if ispc
+                    figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                else
+                    figname = [savefigdir SNprocess '/' get(gcf,'Name')];
+                end
                 print(figname,'-dpng')
                 close gcf
             end
@@ -495,7 +503,7 @@ for iswift = 1:nswift
             dz = burst.CellSize;
             bz = burst.Blanking;
             hrz = xcdrdepth + bz + dz*(1:nbin);
-            dt = range(hrtime)./nping*24*3600;
+            dt = ( max(hrtime) - min(hrtime) ) ./nping*24*3600; %range(hrtime)./nping*24*3600;
 
             % Find spikes w/phase-shift threshold (Shcherbina 2018)
             Vr = mean(burst.SoundSpeed,'omitnan').^2./(4*10^6*5.5);% m/s
@@ -541,7 +549,7 @@ for iswift = 1:nswift
                 xlabel('Ping #')
                 drawnow
                 if saveplots
-                    figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                    figname = [savefigdir SNprocess WRindex get(gcf,'Name')];
                     print(figname,'-dpng')
                     close gcf
                 end
@@ -672,7 +680,11 @@ for iswift = 1:nswift
                     set(gca,'YAxisLocation','right')
                     drawnow
                     if saveplots
-                        figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                        if ispc 
+                            figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                        else
+                            figname = [savefigdir SNprocess '/' get(gcf,'Name')];
+                        end
                         print(figname,'-dpng')
                         close gcf
                     end
@@ -861,7 +873,7 @@ for iswift = 1:nswift
     end
 
     % Sort by time
-    if ~isempty(fieldnames(SWIFT))
+    if ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
     [~,isort] = sort([SWIFT.time]);
     SWIFT = SWIFT(isort);
     end
@@ -882,7 +894,7 @@ for iswift = 1:nswift
     end
             
 	%%%%%% Save SWIFT Structure %%%%%%%%
-    if saveSWIFT && ~isempty(fieldnames(SWIFT))
+    if saveSWIFT && ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
         if strcmp(structfile.name(end-6:end-4),'SBG')
             save([saveswiftdir SNprocess '_reprocessedSIGandSBG.mat'],'SWIFT')
         else

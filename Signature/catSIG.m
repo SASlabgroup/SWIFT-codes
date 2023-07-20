@@ -4,6 +4,7 @@ function sig = catSIG(SIG)
 plotsig = true;
 QCsig = true;
 
+if isfield(SIG,'time')
 sig.time = [SIG.time];
 sig.avgz = SIG(round(end/2)).profile.z';
 sig.avgu = NaN(length(sig.avgz),length(sig.time));
@@ -173,4 +174,6 @@ ylim([0 mean(sqrt(sig.pitchvar),'omitnan') + 2*std(sqrt(sig.pitchvar),'omitnan')
 datetick('x','KeepLimits')
 end
 
+else
+    sig = [];
 end
