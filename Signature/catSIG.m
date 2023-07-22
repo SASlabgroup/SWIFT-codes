@@ -1,8 +1,21 @@
-function sig = catSIG(SIG)
+function sig = catSIG(SIG,varargin)
 %Produces summary plot of burst-averaged signature data stored in 'SIG'
 %       also returns concatenated data
+
 plotsig = false;
-QCsig = true;
+QCsig = false;
+
+if nargin > 1
+    if any(strcmp(varargin,'plot'))
+        plotsig = true;
+    end
+    if any(strcmp(varargin,'qc'))
+        QCsig = true;
+    end
+    if ~(any(strcmp(varargin,'plot') | strcmp(varargin,'qc')))
+        error('Optional inputs must be ''plot'' or ''qc''')
+    end 
+end
 
 sig.time = [SIG.time];
 sig.avgz = SIG(round(end/2)).profile.z';
@@ -14,7 +27,7 @@ sig.avgamp = sig.avgu;
 sig.avguerr = sig.avgu;
 sig.avgverr = sig.avgu;
 sig.avgwerr = sig.avgu;     
-sig.hrz = SIG(round(end/2)).HRprofile.z;
+sig.hrz = SIG(round(end)).HRprofile.z;
 sig.hrw = NaN(length(sig.hrz),length(sig.time));
 sig.hrwvar = sig.hrw;
 sig.hrcorr = sig.hrw;
@@ -34,13 +47,14 @@ for it = 1:length(sig.time)
     sig.avgamp(:,it) = SIG(it).QC.uamp;
     sig.avgcorr(:,it) = SIG(it).QC.ucorr;
     %HR
-    sig.hrw(:,it) = SIG(it).HRprofile.w;
-    sig.hrwvar(:,it) = SIG(it).HRprofile.werr;
-    sig.hrcorr(:,it) = SIG(it).QC.hrcorr;
-    sig.hramp(:,it) = SIG(it).QC.hramp;
-    sig.eps_struct(:,it) = SIG(it).HRprofile.eps_structEOF;
-    sig.struct_slope(:,it) = SIG(it).QC.slopeEOF;
-    sig.eps_spectral(:,it) = SIG(it).HRprofile.eps_spectral;
+    nz = length(SIG(it).HRprofile.w);
+    sig.hrw(1:nz,it) = SIG(it).HRprofile.w;
+    sig.hrwvar(1:nz,it) = SIG(it).HRprofile.werr;
+    sig.hrcorr(1:nz,it) = SIG(it).QC.hrcorr;
+    sig.hramp(1:nz,it) = SIG(it).QC.hramp;
+    sig.eps_struct(1:nz,it) = SIG(it).HRprofile.eps_structEOF;
+    sig.struct_slope(1:nz,it) = SIG(it).QC.slopeEOF;
+    sig.eps_spectral(1:nz,it) = SIG(it).HRprofile.eps_spectral;
     sig.pitchvar(it) = SIG(it).QC.pitchvar;
 end
 

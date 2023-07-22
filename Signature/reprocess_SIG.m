@@ -96,24 +96,24 @@
 
 % KRISTIN - PC
 % Directory with existing SWIFT structures (e.g. from telemetry)
-swiftdir = 'S:\LC-DRI\';
+swiftdir = 'S:\LakeWA\Signature_Testing\PugetSound_07Jul2023\';
 % Directory with signature burst files 
-burstdir = 'S:\LC-DRI\';
+burstdir = 'S:\LakeWA\Signature_Testing\PugetSound_07Jul2023\';
 % Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
-saveswiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\V4\neof5\reprocessSIG\';
-savesigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Data\SWIFT\L2\V4\neof5\reprocessSIG\SIG\';
+saveswiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Data\L2\';
+savesigdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Data\L2\SIG\';
 % Directory to save figures (will create folder for each mission if doesn't already exist)
-savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\Signature';
+savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Figures\';
 
 %Data Load/Save Toggles
 readraw = false;% read raw binary files
-saveSWIFT = true;% save updated SWIFT structure
-saveSIG = true; %save detailed sig data in separate SIG structure
+saveSWIFT = false;% save updated SWIFT structure
+saveSIG = false; %save detailed sig data in separate SIG structure
 
 % Plotting Toggles
-plotburst = false; % generate plots for each burst
-plotmission = true; % generate summary plot for mission
-saveplots = false; % save generated plots
+plotburst = true; % generate plots for each burst
+plotmission = false; % generate summary plot for mission
+saveplots = true; % save generated plots
 
 % Signature Config
 xcdrdepth = 0.2; % depth of transducer [m]
@@ -142,7 +142,7 @@ nswift = length(swifts);
 % For each mission, loop through burst files and process the data
 clear SWIFT SIG
 
-for iswift = [41 42]
+for iswift = 1:nswift
 
     SNprocess = swifts{iswift}; 
     disp(['********** Reprocessing ' SNprocess ' **********'])
@@ -816,25 +816,27 @@ for iswift = [41 42]
     end
         
     % NaN out SWIFT sig fields which were not matched to bursts
-    inan = find(~burstreplaced);
-    if ~isempty(inan)
-        for it = inan'
-            % HR data
-            SWIFT(it).signature.HRprofile = [];
-            SWIFT(it).signature.HRprofile.w = NaN(size(hrw));
-            SWIFT(it).signature.HRprofile.werr = NaN(size(hrw));
-            SWIFT(it).signature.HRprofile.z = hrz;
-            SWIFT(it).signature.HRprofile.tkedissipationrate = NaN(size(eps_structEOF'));
-            SWIFT(it).signature.HRprofile.tkedissipationrate_spectral = NaN(size(eps_spectral));
-            % Broadband data
-            SWIFT(it).signature.profile = [];
-            SWIFT(it).signature.profile.w = NaN(size(avgu));
-            SWIFT(it).signature.profile.east = NaN(size(avgu));
-            SWIFT(it).signature.profile.north = NaN(size(avgu));
-            SWIFT(it).signature.profile.uerr = NaN(size(avgu));
-            SWIFT(it).signature.profile.verr = NaN(size(avgu));
-            SWIFT(it).signature.profile.werr = NaN(size(avgu));
-            SWIFT(it).signature.profile.z = avgz;
+    if ~isempty(fieldnames(SWIFT))
+        inan = find(~burstreplaced);
+        if ~isempty(inan)
+            for it = inan'
+                % HR data
+                SWIFT(it).signature.HRprofile = [];
+                SWIFT(it).signature.HRprofile.w = NaN(size(hrw));
+                SWIFT(it).signature.HRprofile.werr = NaN(size(hrw));
+                SWIFT(it).signature.HRprofile.z = hrz;
+                SWIFT(it).signature.HRprofile.tkedissipationrate = NaN(size(eps_structEOF'));
+                SWIFT(it).signature.HRprofile.tkedissipationrate_spectral = NaN(size(eps_spectral));
+                % Broadband data
+                SWIFT(it).signature.profile = [];
+                SWIFT(it).signature.profile.w = NaN(size(avgu));
+                SWIFT(it).signature.profile.east = NaN(size(avgu));
+                SWIFT(it).signature.profile.north = NaN(size(avgu));
+                SWIFT(it).signature.profile.uerr = NaN(size(avgu));
+                SWIFT(it).signature.profile.verr = NaN(size(avgu));
+                SWIFT(it).signature.profile.werr = NaN(size(avgu));
+                SWIFT(it).signature.profile.z = avgz;
+            end
         end
     end
 
@@ -846,7 +848,7 @@ for iswift = [41 42]
     
     %%%%%% Plot burst Averaged SWIFT Signature Data %%%%%%
     if plotmission
-        catSIG(SIG);
+        catSIG(SIG,'plot');
         set(gcf,'Name',SNprocess)
         if saveplots
             %Create mission folder if doesn't already exist
