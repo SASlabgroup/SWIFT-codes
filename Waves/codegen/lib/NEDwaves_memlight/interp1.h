@@ -5,7 +5,7 @@
  * File: interp1.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 06-Jul-2023 15:08:49
  */
 
 #ifndef INTERP1_H
@@ -22,11 +22,9 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void b_interp1(const emxArray_real_T *varargin_1,
-               const emxArray_creal32_T *varargin_2, creal32_T Vq[42]);
-
 void interp1(const emxArray_real_T *varargin_1,
-             const emxArray_real32_T *varargin_2, float Vq[42]);
+             const emxArray_creal32_T *varargin_2,
+             const emxArray_real_T *varargin_3, emxArray_creal32_T *Vq);
 
 #ifdef __cplusplus
 }

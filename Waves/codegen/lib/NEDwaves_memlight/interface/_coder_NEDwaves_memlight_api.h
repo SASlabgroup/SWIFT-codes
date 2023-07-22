@@ -5,7 +5,7 @@
  * File: _coder_NEDwaves_memlight_api.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 06-Jul-2023 15:08:49
  */
 
 #ifndef _CODER_NEDWAVES_MEMLIGHT_API_H

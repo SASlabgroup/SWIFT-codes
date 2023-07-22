@@ -228,7 +228,7 @@ if isfield(SWIFT,'wavespectra')
         cmap = colormap;
         if isfield(SWIFT,'windspd') && ~isnan(SWIFT(ai).windspd) &&... % check field exists and contains data
             SWIFT(ai).windspd > 0 && SWIFT(ai).windspd < 50            % check data is physical
-            ci = ceil( SWIFT(ai).windspd ./ max([SWIFT.windspd]) * 64 );
+            ci = ceil( SWIFT(ai).windspd ./ max([SWIFT.windspd]) * length(cmap) );
             thiscolor = cmap(ci,:);
         else
             thiscolor = [0 0 0];

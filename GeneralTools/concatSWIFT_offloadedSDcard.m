@@ -50,7 +50,7 @@ burst = refnames(ai).name(26:27);
 
 %AQtype = AQnames(ai).name(11);
 
-payloadtype = '6'; % v3.3 (2015) and up 
+payloadtype = '7'; % v3.3 (2015) and up 
 
 fid = fopen('payload','wb');
 fwrite(fid,payloadtype,'uint8');

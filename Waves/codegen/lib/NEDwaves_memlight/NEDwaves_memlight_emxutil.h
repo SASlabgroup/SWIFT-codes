@@ -5,7 +5,7 @@
  * File: NEDwaves_memlight_emxutil.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 06-Jul-2023 15:08:49
  */
 
 #ifndef NEDWAVES_MEMLIGHT_EMXUTIL_H
@@ -54,7 +54,7 @@ extern void emxInit_int32_T(emxArray_int32_T **pEmxArray, int numDimensions);
 
 extern void emxInit_real32_T(emxArray_real32_T **pEmxArray, int numDimensions);
 
-extern void emxInit_real_T(emxArray_real_T **pEmxArray);
+extern void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions);
 
 #ifdef __cplusplus
 }

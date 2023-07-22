@@ -22,11 +22,11 @@ clear all,
 
 plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
-micro = false; 
+micro = false; % initialize flag for microSWIFT, which flips to true if detected
 
 minwaveheight = 0; % minimum wave height in data screening
 
-minsalinity = 0; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 20; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 5;  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
 
@@ -47,6 +47,10 @@ for ai = 1:length(flist),
     badburst(ai) = false;  % intialize bad burst flag
     
     [ oneSWIFT voltage ]= readSWIFT_SBD( flist(ai).name , 0);
+    
+    if voltage==9999 % error flag from SBD message
+        badburst(ai) = true; 
+    end
     
     if isempty(voltage),
         battery(ai) = NaN;
@@ -125,22 +129,25 @@ for ai = 1:length(flist),
     lat(ai) = oneSWIFT.lat;
     lon(ai) = oneSWIFT.lon;
     
-    onenames = string(fieldnames(oneSWIFT));
+        onenames = string(fieldnames(oneSWIFT));
     lengthofnames(ai) = length(onenames);
     
     % if first sbd, set the structure fields as the standard
-    if ai == 1,
+    if ai == 1 && voltage~=9999 
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(SWIFT));
-        
+
+    elseif ai == 1 && voltage==9999
+        badburst(ai) = true;
+        allnames = [];
+
         % if payloads match, increment
-    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames),
+    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames)
         SWIFT(ai) = oneSWIFT;
         
         % if additional payloads, favor that new structure (removing other)
-    elseif ai > 1 && length(onenames) > length(allnames),
+    elseif ai > 1 && length(onenames) > length(allnames)
         clear SWIFT
-        SWIFT(ai-1) = oneSWIFT; % place holder, which will be removed when badburst applied
         badburst(ai-1) = true;
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(oneSWIFT)); % reset the prefer field names
@@ -149,10 +156,10 @@ for ai = 1:length(flist),
         disp(allnames)
         
         % if fewer paylaods, skip that burst
-    elseif ai > 1 && length(onenames) < length(allnames),
+    elseif ai > 1 && length(onenames) < length(allnames) || voltage==9999
         disp('=================================')
         disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
-        SWIFT(ai) = SWIFT(1); % placeholder, which will be removed when badburst applied
+        SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
         badburst(ai) = true;
     end
     
@@ -237,7 +244,7 @@ if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
     lat = [SWIFT.lat]; %lat = lat(tinds);
     lon = [SWIFT.lon]; %lon = lon(tinds);
     dlondt = gradient(lon,time); % deg per day
-    dxdt = deg2km(dlondt,6371*cosd(mean(lat))) .* 1000 ./ ( 24*3600 ); % m/s
+    dxdt = deg2km(dlondt,6371*cosd(nanmean(lat))) .* 1000 ./ ( 24*3600 ); % m/s
     dlatdt = gradient(lat,time); % deg per day
     dydt = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
     dxdt(isinf(dxdt)) = NaN;
@@ -307,13 +314,14 @@ if length([SWIFT.time]) > 1,
     end
 end
 
-%% sort the microSWIFT processing
+%% sort the microSWIFT onboard processing, using the battery voltage as a flag 
+% only applies to v1 microSWIFTs from 2022
+
 IMU = find(battery==0);
 GPS = find(battery==1);
 
-%% sort the microSWIFT processing
-IMU = find(battery==0);  SWIFT_IMU = SWIFT(IMU);
-GPS = find(battery==1);  SWIFT_GPS = SWIFT(GPS);
+if ~isempty(IMU), SWIFT_IMU = SWIFT(IMU); end
+if ~isempty(GPS), SWIFT_GPS = SWIFT(GPS); end
 
 
 %% save

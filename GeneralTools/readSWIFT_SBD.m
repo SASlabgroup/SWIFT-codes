@@ -62,8 +62,12 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %
 %   J. Thomson, 9/2022  add compact microSWIFT payload type (52), credit Jake Davis
 %
+%   J. Thomson, 6/2023  use com port field in microSWIFT payload type (52) 
+%                       to report number of raw GPS velocities replaced before processing 
+%
 
 recip = true; % binary flag to change wave direction to FROM
+errorfile = false; % initialize
 
 SWIFT.time = [];
 SWIFT.lat = [];
@@ -88,15 +92,17 @@ else
 end
 
 
-%%
-payloadtype = fread(fid,1,'uint8=>char');
+%% begin reading file
+% Note that the actual email attachment from the Iridium system has an
+% ASCII header " <packet-type (0 or 1)>,<id (0 - 99)>,<start byte>,<total bytes>: "
+% that preceeds the binary payload unpacked by this function
+% that binary head is used by the swiftserver to detect and concat
+% multi-part messages (i.e., more than 340 bytes) 
+% the server prunes that header and makes an sbd file that starts with '7'
 
-if payloadtype < '6', % v3.3 (2015) and up (com # based)
-    disp('Not Version v3.3 (2015) or above.  Use older read-in code.')
-    return
-end
+firstchar = fread(fid,1,'uint8=>char');  % should be 7 for valid sbd file
 
-%skip = fread(fid,1,'uint8')
+if firstchar == '7' 
 
 %%
 CTcounter = 0; % count the number of CT sensors in the file
@@ -440,7 +446,8 @@ while 1
         
     elseif type == 52 & size > 0, % microSWIFT, size should be 327 bytes
         disp('reading microSWIFT (compact)')
-
+        replacedrawvalues = port*10 % microSWIFTs do not give com port, so we are using a diagnostic for raw data QC (and replacement)
+        SWIFT.replacedrawvalues = replacedrawvalues;
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
         SWIFT.peakwavedirT       = half.typecast(fread(fid, 1,'*uint16')).double; % dominant wave direction
@@ -475,6 +482,14 @@ while 1
     end
     
 end
+
+else % file either pre-2015 or is an error message (not data)
+    disp('Error message SBD or this SBD is not Version v3.3 (2015) or above.  Use older read-in code.')
+    SWIFT.time = [];
+    errorfile = true;
+end
+
+
 fclose(fid);
 
 %% apply backup positions from Airmar PB200, if needed
@@ -675,5 +690,14 @@ end
 
 SWIFT = orderfields(SWIFT);
 
-save([ fname '.mat'])
+if ~isempty([SWIFT.time]) && ~errorfile
+    save([ fname '.mat'])
+elseif isempty([SWIFT.time]) || errorfile
+    disp(['Time empty, no data read.  Check (' fname ') for error messages.'])
+    clear SWIFT
+    SWIFT.lat = []; SWIFT.lon =[];
+    SWIFT.time = NaN;
+    BatteryVoltage = 9999; % use as error indicator
+end
+
 

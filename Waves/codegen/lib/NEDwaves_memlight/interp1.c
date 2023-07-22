@@ -5,15 +5,13 @@
  * File: interp1.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 06-Jul-2023 15:08:49
  */
 
 /* Include Files */
 #include "interp1.h"
-#include "NEDwaves_memlight_data.h"
 #include "NEDwaves_memlight_emxutil.h"
 #include "NEDwaves_memlight_types.h"
-#include "bsearch.h"
 #include "rt_nonfinite.h"
 #include "rt_nonfinite.h"
 
@@ -21,205 +19,150 @@
 /*
  * Arguments    : const emxArray_real_T *varargin_1
  *                const emxArray_creal32_T *varargin_2
- *                creal32_T Vq[42]
+ *                const emxArray_real_T *varargin_3
+ *                emxArray_creal32_T *Vq
  * Return Type  : void
  */
-void b_interp1(const emxArray_real_T *varargin_1,
-               const emxArray_creal32_T *varargin_2, creal32_T Vq[42])
+void interp1(const emxArray_real_T *varargin_1,
+             const emxArray_creal32_T *varargin_2,
+             const emxArray_real_T *varargin_3, emxArray_creal32_T *Vq)
 {
   emxArray_creal32_T *y;
   emxArray_real_T *x;
   const creal32_T *varargin_2_data;
+  creal32_T *Vq_data;
   creal32_T *y_data;
   const double *varargin_1_data;
+  const double *varargin_3_data;
   double *x_data;
-  int b_j1;
   int k;
+  int low_i;
+  int low_ip1;
   int nd2;
   int nx;
+  bool b;
+  varargin_3_data = varargin_3->data;
   varargin_2_data = varargin_2->data;
   varargin_1_data = varargin_1->data;
   emxInit_creal32_T(&y, 2);
-  k = y->size[0] * y->size[1];
+  low_i = y->size[0] * y->size[1];
   y->size[0] = 1;
   y->size[1] = varargin_2->size[1];
-  emxEnsureCapacity_creal32_T(y, k);
+  emxEnsureCapacity_creal32_T(y, low_i);
   y_data = y->data;
   nd2 = varargin_2->size[1];
-  for (k = 0; k < nd2; k++) {
-    y_data[k] = varargin_2_data[k];
+  for (low_i = 0; low_i < nd2; low_i++) {
+    y_data[low_i] = varargin_2_data[low_i];
   }
-  emxInit_real_T(&x);
-  k = x->size[0] * x->size[1];
+  emxInit_real_T(&x, 2);
+  low_i = x->size[0] * x->size[1];
   x->size[0] = 1;
   x->size[1] = varargin_1->size[1];
-  emxEnsureCapacity_real_T(x, k);
+  emxEnsureCapacity_real_T(x, low_i);
   x_data = x->data;
   nd2 = varargin_1->size[1];
-  for (k = 0; k < nd2; k++) {
-    x_data[k] = varargin_1_data[k];
+  for (low_i = 0; low_i < nd2; low_i++) {
+    x_data[low_i] = varargin_1_data[low_i];
   }
   nx = varargin_1->size[1] - 1;
-  k = 0;
-  int exitg1;
-  do {
-    exitg1 = 0;
-    if (k <= nx) {
-      if (rtIsNaN(varargin_1_data[k])) {
-        exitg1 = 1;
+  low_i = Vq->size[0] * Vq->size[1];
+  Vq->size[0] = 1;
+  Vq->size[1] = varargin_3->size[1];
+  emxEnsureCapacity_creal32_T(Vq, low_i);
+  Vq_data = Vq->data;
+  nd2 = varargin_3->size[1];
+  for (low_i = 0; low_i < nd2; low_i++) {
+    Vq_data[low_i].re = rtNaNF;
+    Vq_data[low_i].im = rtNaNF;
+  }
+  b = (varargin_3->size[1] == 0);
+  if (!b) {
+    k = 0;
+    int exitg1;
+    do {
+      exitg1 = 0;
+      if (k <= nx) {
+        if (rtIsNaN(varargin_1_data[k])) {
+          exitg1 = 1;
+        } else {
+          k++;
+        }
       } else {
-        k++;
-      }
-    } else {
-      double xtmp;
-      float xtmp_im;
-      float xtmp_re;
-      if (varargin_1_data[1] < varargin_1_data[0]) {
-        k = (nx + 1) >> 1;
-        for (b_j1 = 0; b_j1 < k; b_j1++) {
-          xtmp = x_data[b_j1];
-          nd2 = nx - b_j1;
-          x_data[b_j1] = x_data[nd2];
-          x_data[nd2] = xtmp;
+        double xtmp;
+        float xtmp_im;
+        float xtmp_re;
+        if (varargin_1_data[1] < varargin_1_data[0]) {
+          low_i = (nx + 1) >> 1;
+          for (low_ip1 = 0; low_ip1 < low_i; low_ip1++) {
+            xtmp = x_data[low_ip1];
+            nd2 = nx - low_ip1;
+            x_data[low_ip1] = x_data[nd2];
+            x_data[nd2] = xtmp;
+          }
+          nd2 = varargin_2->size[1] >> 1;
+          for (low_ip1 = 0; low_ip1 < nd2; low_ip1++) {
+            nx = (varargin_2->size[1] - low_ip1) - 1;
+            xtmp_re = y_data[low_ip1].re;
+            xtmp_im = y_data[low_ip1].im;
+            y_data[low_ip1] = y_data[nx];
+            y_data[nx].re = xtmp_re;
+            y_data[nx].im = xtmp_im;
+          }
         }
-        nd2 = varargin_2->size[1] >> 1;
-        for (b_j1 = 0; b_j1 < nd2; b_j1++) {
-          nx = (varargin_2->size[1] - b_j1) - 1;
-          xtmp_re = y_data[b_j1].re;
-          xtmp_im = y_data[b_j1].im;
-          y_data[b_j1] = y_data[nx];
-          y_data[nx].re = xtmp_re;
-          y_data[nx].im = xtmp_im;
-        }
-      }
-      for (k = 0; k < 42; k++) {
-        Vq[k].re = rtNaNF;
-        Vq[k].im = rtNaNF;
-        xtmp = dv[k];
-        if ((!(xtmp > x_data[x->size[1] - 1])) && (!(xtmp < x_data[0]))) {
-          nd2 = b_bsearch(x, xtmp) - 1;
-          xtmp = (xtmp - x_data[nd2]) / (x_data[nd2 + 1] - x_data[nd2]);
-          if (xtmp == 0.0) {
-            Vq[k] = y_data[nd2];
-          } else if (xtmp == 1.0) {
-            Vq[k] = y_data[nd2 + 1];
-          } else {
-            float b_y_tmp;
-            float y_tmp;
-            xtmp_re = y_data[nd2].re;
-            xtmp_im = y_data[nd2 + 1].re;
-            y_tmp = y_data[nd2].im;
-            b_y_tmp = y_data[nd2 + 1].im;
-            if ((xtmp_re == xtmp_im) && (y_tmp == b_y_tmp)) {
-              Vq[k] = y_data[nd2];
+        nd2 = varargin_3->size[1];
+        for (k = 0; k < nd2; k++) {
+          xtmp = varargin_3_data[k];
+          if (rtIsNaN(xtmp)) {
+            Vq_data[k].re = rtNaNF;
+            Vq_data[k].im = rtNaNF;
+          } else if ((!(xtmp > x_data[x->size[1] - 1])) &&
+                     (!(xtmp < x_data[0]))) {
+            nx = x->size[1];
+            low_i = 1;
+            low_ip1 = 2;
+            while (nx > low_ip1) {
+              int mid_i;
+              mid_i = (low_i >> 1) + (nx >> 1);
+              if (((low_i & 1) == 1) && ((nx & 1) == 1)) {
+                mid_i++;
+              }
+              if (varargin_3_data[k] >= x_data[mid_i - 1]) {
+                low_i = mid_i;
+                low_ip1 = mid_i + 1;
+              } else {
+                nx = mid_i;
+              }
+            }
+            xtmp = x_data[low_i - 1];
+            xtmp = (varargin_3_data[k] - xtmp) / (x_data[low_i] - xtmp);
+            if (xtmp == 0.0) {
+              Vq_data[k] = y_data[low_i - 1];
+            } else if (xtmp == 1.0) {
+              Vq_data[k] = y_data[low_i];
             } else {
-              Vq[k].re = (float)(1.0 - xtmp) * xtmp_re + (float)xtmp * xtmp_im;
-              Vq[k].im = (float)(1.0 - xtmp) * y_tmp + (float)xtmp * b_y_tmp;
+              creal32_T y_tmp_tmp;
+              float y_tmp;
+              y_tmp_tmp = y_data[low_i - 1];
+              xtmp_re = y_data[low_i].re;
+              xtmp_im = y_data[low_i - 1].im;
+              y_tmp = y_data[low_i].im;
+              if ((y_tmp_tmp.re == xtmp_re) && (xtmp_im == y_tmp)) {
+                Vq_data[k] = y_tmp_tmp;
+              } else {
+                Vq_data[k].re =
+                    (float)(1.0 - xtmp) * y_tmp_tmp.re + (float)xtmp * xtmp_re;
+                Vq_data[k].im =
+                    (float)(1.0 - xtmp) * xtmp_im + (float)xtmp * y_tmp;
+              }
             }
           }
         }
+        exitg1 = 1;
       }
-      exitg1 = 1;
-    }
-  } while (exitg1 == 0);
+    } while (exitg1 == 0);
+  }
   emxFree_real_T(&x);
   emxFree_creal32_T(&y);
-}
-
-/*
- * Arguments    : const emxArray_real_T *varargin_1
- *                const emxArray_real32_T *varargin_2
- *                float Vq[42]
- * Return Type  : void
- */
-void interp1(const emxArray_real_T *varargin_1,
-             const emxArray_real32_T *varargin_2, float Vq[42])
-{
-  emxArray_real32_T *y;
-  emxArray_real_T *x;
-  const double *varargin_1_data;
-  double *x_data;
-  const float *varargin_2_data;
-  float *y_data;
-  int b_j1;
-  int k;
-  int nd2;
-  int nx;
-  varargin_2_data = varargin_2->data;
-  varargin_1_data = varargin_1->data;
-  emxInit_real32_T(&y, 2);
-  k = y->size[0] * y->size[1];
-  y->size[0] = 1;
-  y->size[1] = varargin_2->size[1];
-  emxEnsureCapacity_real32_T(y, k);
-  y_data = y->data;
-  nd2 = varargin_2->size[1];
-  for (k = 0; k < nd2; k++) {
-    y_data[k] = varargin_2_data[k];
-  }
-  emxInit_real_T(&x);
-  k = x->size[0] * x->size[1];
-  x->size[0] = 1;
-  x->size[1] = varargin_1->size[1];
-  emxEnsureCapacity_real_T(x, k);
-  x_data = x->data;
-  nd2 = varargin_1->size[1];
-  for (k = 0; k < nd2; k++) {
-    x_data[k] = varargin_1_data[k];
-  }
-  nx = varargin_1->size[1] - 1;
-  k = 0;
-  int exitg1;
-  do {
-    exitg1 = 0;
-    if (k <= nx) {
-      if (rtIsNaN(varargin_1_data[k])) {
-        exitg1 = 1;
-      } else {
-        k++;
-      }
-    } else {
-      double xtmp;
-      if (varargin_1_data[1] < varargin_1_data[0]) {
-        k = (nx + 1) >> 1;
-        for (b_j1 = 0; b_j1 < k; b_j1++) {
-          xtmp = x_data[b_j1];
-          nd2 = nx - b_j1;
-          x_data[b_j1] = x_data[nd2];
-          x_data[nd2] = xtmp;
-        }
-        nd2 = varargin_2->size[1] >> 1;
-        for (b_j1 = 0; b_j1 < nd2; b_j1++) {
-          float b_xtmp;
-          nx = (varargin_2->size[1] - b_j1) - 1;
-          b_xtmp = y_data[b_j1];
-          y_data[b_j1] = y_data[nx];
-          y_data[nx] = b_xtmp;
-        }
-      }
-      for (k = 0; k < 42; k++) {
-        Vq[k] = rtNaNF;
-        xtmp = dv[k];
-        if ((!(xtmp > x_data[x->size[1] - 1])) && (!(xtmp < x_data[0]))) {
-          nd2 = b_bsearch(x, xtmp) - 1;
-          xtmp = (xtmp - x_data[nd2]) / (x_data[nd2 + 1] - x_data[nd2]);
-          if (xtmp == 0.0) {
-            Vq[k] = y_data[nd2];
-          } else if (xtmp == 1.0) {
-            Vq[k] = y_data[nd2 + 1];
-          } else if (y_data[nd2] == y_data[nd2 + 1]) {
-            Vq[k] = y_data[nd2];
-          } else {
-            Vq[k] = (float)(1.0 - xtmp) * y_data[nd2] +
-                    (float)xtmp * y_data[nd2 + 1];
-          }
-        }
-      }
-      exitg1 = 1;
-    }
-  } while (exitg1 == 0);
-  emxFree_real_T(&x);
-  emxFree_real32_T(&y);
 }
 
 /*

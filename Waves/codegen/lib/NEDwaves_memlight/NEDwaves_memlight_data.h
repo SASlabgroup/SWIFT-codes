@@ -5,7 +5,7 @@
  * File: NEDwaves_memlight_data.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 06-Jul-2023 15:08:49
  */
 
 #ifndef NEDWAVES_MEMLIGHT_DATA_H
@@ -15,9 +15,6 @@
 #include "rtwtypes.h"
 #include <stddef.h>
 #include <stdlib.h>
-
-/* Variable Declarations */
-extern const double dv[42];
 
 #endif
 /*

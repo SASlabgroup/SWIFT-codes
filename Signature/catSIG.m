@@ -14,9 +14,10 @@ if nargin > 1
     end
     if ~(any(strcmp(varargin,'plot') | strcmp(varargin,'qc')))
         error('Optional inputs must be ''plot'' or ''qc''')
-    end 
+    end
 end
 
+if isfield(SIG,'time')
 sig.time = [SIG.time];
 sig.avgz = SIG(round(end/2)).profile.z';
 sig.avgu = NaN(length(sig.avgz),length(sig.time));
@@ -26,7 +27,7 @@ sig.avgcorr = sig.avgu;
 sig.avgamp = sig.avgu;
 sig.avguerr = sig.avgu;
 sig.avgverr = sig.avgu;
-sig.avgwerr = sig.avgu;     
+sig.avgwerr = sig.avgu;
 sig.hrz = SIG(round(end)).HRprofile.z;
 sig.hrw = NaN(length(sig.hrz),length(sig.time));
 sig.hrwvar = sig.hrw;
@@ -82,7 +83,7 @@ else
     sig.badburst = badburst;
 end
 
-% Plot        
+% Plot
 if plotsig && length(sig.time)>1
 clear b
 figure('color','w')
@@ -187,4 +188,6 @@ ylim([0 mean(sqrt(sig.pitchvar),'omitnan') + 2*std(sqrt(sig.pitchvar),'omitnan')
 datetick('x','KeepLimits')
 end
 
+else
+    sig = [];
 end

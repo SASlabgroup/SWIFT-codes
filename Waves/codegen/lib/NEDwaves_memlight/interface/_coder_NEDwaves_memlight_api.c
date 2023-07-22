@@ -5,7 +5,7 @@
  * File: _coder_NEDwaves_memlight_api.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 06-Jul-2023 15:08:49
  */
 
 /* Include Files */
@@ -353,9 +353,6 @@ void NEDwaves_memlight_api(const mxArray *const prhs[4], int32_T nlhs,
   emxArray_real32_T *down;
   emxArray_real32_T *east;
   emxArray_real32_T *north;
-  const mxArray *prhs_copy_idx_0;
-  const mxArray *prhs_copy_idx_1;
-  const mxArray *prhs_copy_idx_2;
   real_T fs;
   real16_T(*E)[42];
   real16_T Dp;
@@ -379,16 +376,13 @@ void NEDwaves_memlight_api(const mxArray *const prhs[4], int32_T nlhs,
   emxInit_real32_T(&st, &north);
   emxInit_real32_T(&st, &east);
   emxInit_real32_T(&st, &down);
-  prhs_copy_idx_0 = emlrtProtectR2012b(prhs[0], 0, false, -1);
-  prhs_copy_idx_1 = emlrtProtectR2012b(prhs[1], 1, false, -1);
-  prhs_copy_idx_2 = emlrtProtectR2012b(prhs[2], 2, false, -1);
   /* Marshall function inputs */
   north->canFreeData = false;
-  emlrt_marshallIn(&st, emlrtAlias(prhs_copy_idx_0), "north", north);
+  emlrt_marshallIn(&st, emlrtAlias(prhs[0]), "north", north);
   east->canFreeData = false;
-  emlrt_marshallIn(&st, emlrtAlias(prhs_copy_idx_1), "east", east);
+  emlrt_marshallIn(&st, emlrtAlias(prhs[1]), "east", east);
   down->canFreeData = false;
-  emlrt_marshallIn(&st, emlrtAlias(prhs_copy_idx_2), "down", down);
+  emlrt_marshallIn(&st, emlrtAlias(prhs[2]), "down", down);
   fs = c_emlrt_marshallIn(&st, emlrtAliasP(prhs[3]), "fs");
   /* Invoke the target function */
   NEDwaves_memlight(north, east, down, fs, &Hs, &Tp, &Dp, *E, &b_fmin, &b_fmax,

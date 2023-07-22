@@ -32,15 +32,15 @@
 %         data, and/or fish. Gives warning if standard error is increased
 %         by applying the QC.
 %       Aug 2022(K. Zeiden)
-%            1. Add toggle to save new SWIFT structure or not 
+%            1. Add toggle to save new SWIFT structure or not
 %            2. Removed any "continue" statements
 %               -> might want burst plots for post-mortem even if data is bad
 %            3. Variables have been renamed (for typing efficiency mostly,
 %                   and seem more inutitive)
 %            4. Added test to see if QC reduced the standard error. If not,
 %                   relace with non-qc values
-%            5. Add toggle to also/istead save burst-averaged signature data 
-%                   in a separate structure with analagous format to SWIFT structure  
+%            5. Add toggle to also/istead save burst-averaged signature data
+%                   in a separate structure with analagous format to SWIFT structure
 %                   (SIG structure, see catSIG as well for plotting the structure)
 %                   motivated by missing data in SWIFT structure due to no timestamp match)
 %            6. Add maximum velocity error to flag bad bursts (i.e. out of water)
@@ -72,6 +72,8 @@
 %           values, and no longer lumping all flags into 'out-of-water'.
 %           Single flag for 'badburst' for SWIFT structure culling, but
 %           keep the other flags separate for SIG structure QC fields.
+%       Jul 2023 (J. Thomson)
+%           improve cross-platform usage with ispc binary calls
 
 
 % NOTE: Known issue -- sometimes the ADCP 'sputters' and for a few minutes
@@ -84,35 +86,38 @@
 %% User Defined Inputs
 
 % JIM - MAC
+if ~ispc
 % % Directory with existing SWIFT structures (e.g. from telemetry)
-% swiftdir = './';
-% % Directory with signature burst files 
-% burstdir = './';% 
-% % Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
-% saveswiftdir = [ swiftstructdir ];
-% savesigdir = [ swiftstructdir ];
-% % Directory to save figures (will create folder for each mission if doesn't already exist)
-% savefigdir = './';
+swiftdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/'; % must end in /
+% Directory with signature burst files
+burstdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/'; % must end in /
+% Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
+saveswiftdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
+savesigdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
+% Directory to save figures (will create folder for each mission if doesn't already exist)
+savefigdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
 
 % KRISTIN - PC
+else
 % Directory with existing SWIFT structures (e.g. from telemetry)
 swiftdir = 'S:\LakeWA\Signature_Testing\PugetSound_07Jul2023\';
-% Directory with signature burst files 
+% Directory with signature burst files
 burstdir = 'S:\LakeWA\Signature_Testing\PugetSound_07Jul2023\';
 % Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
 saveswiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Data\L2\';
 savesigdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Data\L2\SIG\';
 % Directory to save figures (will create folder for each mission if doesn't already exist)
-savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Figures\';
+savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\Signature';
+end
 
 %Data Load/Save Toggles
-readraw = false;% read raw binary files
-saveSWIFT = false;% save updated SWIFT structure
-saveSIG = false; %save detailed sig data in separate SIG structure
+readraw = true;% read raw binary files
+saveSWIFT = true;% save updated SWIFT structure
+saveSIG = true; %save detailed sig data in separate SIG structure
 
 % Plotting Toggles
-plotburst = true; % generate plots for each burst
-plotmission = false; % generate summary plot for mission
+plotburst = false; % generate plots for each burst
+plotmission = true; % generate summary plot for mission
 saveplots = true; % save generated plots
 
 % Signature Config
@@ -127,9 +132,9 @@ nsumeof = 5;% Number of lowest-mode EOFs to remove from turbulent velocity
 
 % Broadband QC Toggles
 QCcorr = false;% (NOT recommended) standard, QC removes any data below 'mincorr'
-QCbin = false;% QC entire bins with greater than pbadmax perecent bad correlation 
+QCbin = false;% QC entire bins with greater than pbadmax perecent bad correlation
 QCping = false; % QC entire ping with greater than pbadmax percent bad correlation
-QCfish = true;% detects fish from highly skewed amplitude distributions in a depth bin 
+QCfish = true;% detects fish from highly skewed amplitude distributions in a depth bin
 QCalt = false; % trim data based on altimeter
 
 %Populate list of SWIFT missions to re-process
@@ -144,48 +149,57 @@ clear SWIFT SIG
 
 for iswift = 1:nswift
 
-    SNprocess = swifts{iswift}; 
+    SNprocess = swifts{iswift};
     disp(['********** Reprocessing ' SNprocess ' **********'])
 
     % Create SIG structure for detailed signature data results
     SIG = struct;
     isig = 1;
 
-    % Load pre-existing mission mat file with SWIFT structure 
-    structfile = dir([swiftdir SNprocess '\' SNprocess(1:6) '*.mat']);
-    if length(structfile) > 1
-    structfile = structfile(contains({structfile.name},'reprocessedSBG.mat'));
-    end 
-    if isempty(structfile)
-    disp('No SWIFT structure found...')
-    SWIFT = struct;
+    % find pre-existing mission mat file with SWIFT structure
+    if ispc
+        structfile = dir([swiftdir SNprocess '\' SNprocess(1:6) '*.mat']);
     else
-    load([structfile.folder '\' structfile.name])
-    % Prepare flag vector for replaced burst data
-    burstreplaced = false(length(SWIFT),1);
+        structfile = dir([swiftdir SNprocess '/' SNprocess(1:6) '*.mat']);
+    end
+    if length(structfile) > 1
+        structfile = structfile(contains({structfile.name},'reprocessedSBG.mat'));  % this might vary
+    end
+    % Load pre-existing mission mat file with SWIFT structure
+    if isempty(structfile)
+        disp('No SWIFT structure found...')
+        SWIFT = struct;
+    elseif ispc
+        load([structfile.folder '\' structfile.name])
+        % Prepare flag vector for replaced burst data
+        burstreplaced = false(length(SWIFT),1);
+    else
+        load([structfile.folder '/' structfile.name])
+        % Prepare flag vector for replaced burst data
+        burstreplaced = false(length(SWIFT),1);
     end
 
     % Populate list of burst files
     if readraw
-    ftype = '.dat';
+        ftype = '.dat';
     else
-    ftype = '.mat';
+        ftype = '.mat';
     end
     if ispc
-    fpath = '\SIG\Raw\*\*';
+        fpath = '\SIG\Raw\*\*';
     else
-    fpath = '/SIG/Raw/*/*';
+        fpath = '/SIG/Raw/*/*';
     end
     bfiles = dir([burstdir SNprocess fpath ftype]);
     if isempty(bfiles)
-    disp('   No burst files found, skipping SWIFT...')
-    continue
+        disp('   No burst files found, skipping SWIFT...')
+        continue
     end
     nburst = length(bfiles);
-    
+
     % Loop through and process burst files
     for iburst = 1:nburst
-        
+
         % Burst time stamp
         day = bfiles(iburst).name(13:21);
         hour = bfiles(iburst).name(23:24);
@@ -197,9 +211,15 @@ for iswift = 1:nswift
         % Load burst file
         if readraw
 %              cd(bfiles(iburst).folder)
-            [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder '\' bfiles(iburst).name]);
+            if ispc
+                [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder '\' bfiles(iburst).name]);
+            else
+                [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder '/' bfiles(iburst).name]);
+            end
+        elseif ispc
+            load([bfiles(iburst).folder '\' bfiles(iburst).name])
         else
-        load([bfiles(iburst).folder '\' bfiles(iburst).name])
+            load([bfiles(iburst).folder '/' bfiles(iburst).name])
         end
 
         % Skip burst if empty
@@ -225,7 +245,7 @@ for iswift = 1:nswift
             smallfile = true;
         else
             smallfile = false;
-        end      
+        end
 
         % Flag if coming in/out of the water
         if any(ischange(burst.Pressure)) && any(ischange(burst.Temperature))
@@ -233,7 +253,7 @@ for iswift = 1:nswift
             outofwater = true;
         else
             outofwater = false;
-        end  
+        end
 
         % Flag out of water based on bursts w/anomalously high amp
         if any(mean(squeeze(mean(avgamp,'omitnan'))) > maxamp)
@@ -241,7 +261,7 @@ for iswift = 1:nswift
             badamp = true;
         else
             badamp = false;
-        end                 
+        end
 
         % Flag out of water based on bursts w/low cor
         if any(mean(squeeze(mean(avgcorr,'omitnan'))) < mincorr)
@@ -249,7 +269,7 @@ for iswift = 1:nswift
             badcorr = true;
         else
             badcorr = false;
-        end 
+        end
 
         % Flag out of water based on bursts with high velocity variance
         if any(mean(squeeze(std(avgvel,[],1,'omitnan')/sqrt(nping))) > maxuerr)
@@ -257,7 +277,7 @@ for iswift = 1:nswift
             badvel = true;
         else
             badvel = false;
-        end 
+        end
 
         % Determine Altimeter Distance
         if isfield(avg,'AltimeterDistance') && QCalt
@@ -364,12 +384,16 @@ for iswift = 1:nswift
             c(4).Ticks = [0.25 1 1.75];c(4).TickLabels = {'Good','Bad C','Fish'};
             c(5).Label.String = 'Bin #';c(5).TickLabels = num2str([c(5).Ticks']*nbin);
             drawnow
-            if saveplots
+            if saveplots && plotburst
                 % Create mission folder if doesn't already exist
                 if ~isfolder([savefigdir SNprocess])
                     mkdir([savefigdir SNprocess])
                 end
-                figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                if ispc
+                    figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                else
+                    figname = [savefigdir SNprocess '/' get(gcf,'Name')];
+                end
                 print(figname,'-dpng')
                 close gcf
             end
@@ -379,24 +403,26 @@ for iswift = 1:nswift
             clear b1 b2 b3 p1 p2 p3
             for ibeam = 1:4
                 subplot(2,3,ibeam)
-                [b1(ibeam),p1(ibeam)] = boundedline(-avgz,avgu_noqc(:,ibeam),avguerr_noqc(:,ibeam));
+                %[b1(ibeam),p1(ibeam)] = boundedline(-avgz,avgu_noqc(:,ibeam),avguerr_noqc(:,ibeam));
+                errorbar(-avgz,avgu_noqc(:,ibeam),avguerr_noqc(:,ibeam));
                 hold on
-                [b2(ibeam),p2(ibeam)] = boundedline(-avgz,avgu(:,ibeam),avguerr(:,ibeam));
+                %[b2(ibeam),p2(ibeam)] = boundedline(-avgz,avgu(:,ibeam),avguerr(:,ibeam));
+                errorbar(-avgz,avgu(:,ibeam),avguerr(:,ibeam));
                 grid
                 xlim([min(-avgz) max(-avgz)])
                 ylim(nanmean(avgu_noqc(:,ibeam))+[-0.1 0.1])
                 plot(xlim,[0 0],'--k')
-                if ibeam == 1
-                    legend([b1(ibeam) b2(ibeam)],'No QC','QC','Location','southeast')
-                end
+                %if ibeam == 1
+                %    legend([b1(ibeam) b2(ibeam)],'No QC','QC','Location','southeast')
+                %end
                 view(gca,[90 -90])
                 title(['Beam ' num2str(ibeam)])
                 ylabel('u_{r} [m/s]');xlabel('z[m]')
             end
-            set([b1 b2],'LineWidth',2)
-            set([p1 p2],'FaceAlpha',0.1)
-            set(p1,'FaceColor',rgb('crimson'));set(b1,'Color',rgb('crimson'));
-            set(p2,'FaceColor','k');set(b2,'Color','k');
+            %set([b1 b2],'LineWidth',2)
+            %set([p1 p2],'FaceAlpha',0.1)
+            %set(p1,'FaceColor',rgb('crimson'));set(b1,'Color',rgb('crimson'));
+            %set(p2,'FaceColor','k');set(b2,'Color','k');
             subplot(2,3,5)
             p1 = plot(squeeze(nanmean(avgamp)),-avgz,'linewidth',1.5);
             hold on
@@ -419,7 +445,11 @@ for iswift = 1:nswift
             ylabel('z [m]')
             drawnow
             if saveplots
-                figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                if ispc
+                    figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                else
+                    figname = [savefigdir SNprocess '/' get(gcf,'Name')];
+                end
                 print(figname,'-dpng')
                 close gcf
             end
@@ -431,7 +461,7 @@ for iswift = 1:nswift
             ibadqc = avguerr > avguerr_noqc;
             avgu(ibadqc) = avgu_noqc(ibadqc);
             avguerr(ibadqc) = avguerr_noqc(ibadqc);
-        end     
+        end
 
         % Separate U, V, W
         avgw = avgu(:,4);
@@ -468,12 +498,12 @@ for iswift = 1:nswift
             hramp = burst.AmplitudeData';
             hrvel = -burst.VelocityData';
 
-            % N pings + N z-bins 
+            % N pings + N z-bins
             [nbin,nping] = size(hrvel);
             dz = burst.CellSize;
             bz = burst.Blanking;
             hrz = xcdrdepth + bz + dz*(1:nbin);
-            dt = range(hrtime)./nping*24*3600;
+            dt = ( max(hrtime) - min(hrtime) ) ./nping*24*3600; %range(hrtime)./nping*24*3600;
 
             % Find spikes w/phase-shift threshold (Shcherbina 2018)
             Vr = mean(burst.SoundSpeed,'omitnan').^2./(4*10^6*5.5);% m/s
@@ -482,7 +512,7 @@ for iswift = 1:nswift
 
             % Spatial High-pass and flag bad pings w/too high variance
             nsm = round(2/dz); % 1 m
-            wphp = wclean - smooth_mat(wclean',hann(nsm))';           
+            wphp = wclean - smooth_mat(wclean',hann(nsm))';
             badping = sum(ispike)./nbin > 0.5 | std(wphp,[],'omitnan') > 0.01;
 
             % QC & Calculate Mean Velocity + SE
@@ -519,7 +549,7 @@ for iswift = 1:nswift
                 xlabel('Ping #')
                 drawnow
                 if saveplots
-                    figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                    figname = [savefigdir SNprocess WRindex get(gcf,'Name')];
                     print(figname,'-dpng')
                     close gcf
                 end
@@ -650,7 +680,11 @@ for iswift = 1:nswift
                     set(gca,'YAxisLocation','right')
                     drawnow
                     if saveplots
-                        figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                        if ispc
+                            figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                        else
+                            figname = [savefigdir SNprocess '/' get(gcf,'Name')];
+                        end
                         print(figname,'-dpng')
                         close gcf
                     end
@@ -814,7 +848,7 @@ for iswift = 1:nswift
 
     % End burst loop
     end
-        
+
     % NaN out SWIFT sig fields which were not matched to bursts
     if ~isempty(fieldnames(SWIFT))
         inan = find(~burstreplaced);
@@ -841,40 +875,40 @@ for iswift = 1:nswift
     end
 
     % Sort by time
-    if ~isempty(fieldnames(SWIFT))
+    if ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
     [~,isort] = sort([SWIFT.time]);
     SWIFT = SWIFT(isort);
     end
-    
+
     %%%%%% Plot burst Averaged SWIFT Signature Data %%%%%%
     if plotmission
         catSIG(SIG,'plot');
         set(gcf,'Name',SNprocess)
         if saveplots
             %Create mission folder if doesn't already exist
-            if ~isfolder([savefigdir SNprocess])
-                mkdir([savefigdir SNprocess])
-            end
-            figname = [savefigdir '\' get(gcf,'Name')];
+%             if ~isfolder([savefigdir SNprocess])
+%                 mkdir([savefigdir SNprocess])
+%             end
+            figname = [savefigdir get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
         end
     end
-            
+
 	%%%%%% Save SWIFT Structure %%%%%%%%
-    if saveSWIFT && ~isempty(fieldnames(SWIFT))
+    if saveSWIFT && ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
         if strcmp(structfile.name(end-6:end-4),'SBG')
             save([saveswiftdir SNprocess '_reprocessedSIGandSBG.mat'],'SWIFT')
         else
             save([saveswiftdir SNprocess '_reprocessedSIG.mat'],'SWIFT')
         end
     end
-    
+
     %%%%%% Save SIG Structure %%%%%%%%
     if saveSIG
        save([savesigdir SNprocess '_burstavgSIG.mat'],'SIG')
     end
-    
+
 % End mission loop
 end
 % clear all

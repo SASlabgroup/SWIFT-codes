@@ -1,0 +1,47 @@
+% matlab script to test NEDwaves, 
+% especially the memory light version relative to the full version
+%
+% J Thomson, 6/2023
+
+clear all
+
+%% load a test case 
+cd('/Users/jthomson/Dropbox/engineering/SWIFT/microSWIFT_v2/NEDwaves_testcases')
+load('testcase1.mat')
+
+
+%% run full version
+
+[ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves(north, east, down, fs); 
+
+ f = linspace(fmin,fmax,length(E));
+
+    figure(1), clf
+
+    subplot(2,1,1)
+    loglog(f,E ), hold on
+    set(gca,'YLim',[1e-3 2e2])
+    ylabel('Energy [m^2/Hz]')
+
+    subplot(8,1,5)
+    loglog(f,double(a1)./100)
+    set(gca,'YLim',[-1 1])
+    ylabel('a_1')
+
+    subplot(8,1,6)
+    loglog(f,double(b1)./100)
+    set(gca,'YLim',[-1 1])
+    ylabel('b_1')
+    
+    subplot(8,1,7)
+    loglog(f,double(a2)./100)
+    set(gca,'YLim',[-1 1])
+    ylabel('a_2')
+
+    subplot(8,1,8)
+    loglog(f,double(b2)./100)
+    set(gca,'YLim',[-1 1])
+    ylabel('b_2')
+    xlabel('frequency [Hz]')
+
+    %% compare to memory light

@@ -210,6 +210,7 @@ while (~feof(fid))
                     if endposition > startposition + DataSize,
                         disp('read too far, saving partial file')
                         save([filename(1:end-4) '_partial.mat'],'burst','avg','battery','echo')
+                        fclose (fid);
                         return
                         %fseek(fid, -1, startposition + DataSize)
                     else
@@ -555,6 +556,7 @@ while (~feof(fid))
                     if endposition > startposition + DataSize,
                         disp('read too far, saving partial file')
                         save([filename(1:end-4) '_partial.mat'],'burst','avg','battery','echo')
+                        fclose (fid);
                         return
                         %fseek(fid, -1, startposition + DataSize)
                     else
