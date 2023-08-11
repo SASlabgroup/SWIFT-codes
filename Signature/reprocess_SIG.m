@@ -479,8 +479,11 @@ for iswift = 2%:nswift
             hrz = xcdrdepth + bz + dz*(1:nbin);
             dt = ( max(hrtime) - min(hrtime) ) ./nping*24*3600; %range(hrtime)./nping*24*3600;
 
-            % Find spikes w/phase-shift threshold (Shcherbina 2018)
-            Vr = mean(burst.SoundSpeed,'omitnan').^2./(4*10^6*5.5);% m/s
+            % QC: Find spikes w/phase-shift threshold (Shcherbina 2018)
+            L = bz+dz*nbin; % m
+            F0 = 10^6; % Hz, pulse carrier frequency (1 MHz for Sig 1000)
+            cs = mean(burst.SoundSpeed,'omitnan'); % m/s
+            Vr = cs.^2./(4*F0*L);% m/s
             nfilt = round(1/dz);% 1 m
             [wclean,ispike] = despikeSIG(hrvel,nfilt,Vr/2,'interp');
 
