@@ -74,6 +74,9 @@
 %           keep the other flags separate for SIG structure QC fields.
 %       Jul 2023 (J. Thomson)
 %           improve cross-platform usage with ispc binary calls
+%       Aug 2023 (K. Zeiden)
+%           simplify directory usage, prep to convert reprocess_SIG to
+%           function where directories are inputs
 
 
 % NOTE: Known issue -- sometimes the ADCP 'sputters' and for a few minutes
@@ -83,32 +86,23 @@
 % traps due to the periodic oscillations which make the mean value
 % reasonable. So far only known to have happened on SWIFT 22, LC-DRI Exp.
 
-%% User Defined Inputs
+%% Directories
 
 % JIM - MAC
 if ~ispc
-% % Directory with existing SWIFT structures (e.g. from telemetry)
-swiftdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/'; % must end in /
-% Directory with signature burst files
+% % Directory with existing SWIFT structures and burst files
 burstdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/'; % must end in /
-% Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
-saveswiftdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
-savesigdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
-% Directory to save figures (will create folder for each mission if doesn't already exist)
-savefigdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
-
+% Directory to save updated/new SWIFT/SIG structures and figures(see toggle 'saveSWIFT')
+savedir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'; % must end in /
 % KRISTIN - PC
 else
 % Directory with existing SWIFT structures (e.g. from telemetry)
-swiftdir = 'S:\Misc\SWIFTSigTests\SWIFT27_BenchTest_25July2023\';
-% Directory with signature burst files
-burstdir = 'S:\Misc\SWIFTSigTests\SWIFT27_BenchTest_25July2023\SIG\Raw\';
-% Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
-saveswiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\SWIFT27_BenchTest_25July2023\Data\L2\';
-savesigdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\SWIFT27_BenchTest_25July2023\Data\L2\SIG\';
-% Directory to save figures (will create folder for each mission if doesn't already exist)
-savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\Signature';
+burstdir = 'S:\Misc\SWIFTSigTests\SWIFT27_BenchTest_25July2023\';
+% Directory to save updated/new SWIFT/SIG structures and figures (see toggle 'saveSWIFT')
+savedir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\SWIFT27_BenchTest_25July2023\Figures';
 end
+
+%% Default processing parameters
 
 %Data Load/Save Toggles
 readraw = true;% read raw binary files
@@ -158,9 +152,9 @@ for iswift = 1:nswift
 
     % find pre-existing mission mat file with SWIFT structure
     if ispc
-        structfile = dir([swiftdir SNprocess '\' SNprocess(1:6) '*.mat']);
+        structfile = dir([burstdir SNprocess '\' SNprocess(1:6) '*.mat']);
     else
-        structfile = dir([swiftdir SNprocess '/' SNprocess(1:6) '*.mat']);
+        structfile = dir([burstdir SNprocess '/' SNprocess(1:6) '*.mat']);
     end
     if length(structfile) > 1
         structfile = structfile(contains({structfile.name},'reprocessedSBG.mat'));  % this might vary
@@ -386,13 +380,13 @@ for iswift = 1:nswift
             drawnow
             if saveplots && plotburst
                 % Create mission folder if doesn't already exist
-                if ~isfolder([savefigdir SNprocess])
-                    mkdir([savefigdir SNprocess])
+                if ~isfolder([savedir SNprocess])
+                    mkdir([savedir SNprocess])
                 end
                 if ispc
-                    figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                    figname = [savedir SNprocess '\' get(gcf,'Name')];
                 else
-                    figname = [savefigdir SNprocess '/' get(gcf,'Name')];
+                    figname = [savedir SNprocess '/' get(gcf,'Name')];
                 end
                 print(figname,'-dpng')
                 close gcf
@@ -446,9 +440,9 @@ for iswift = 1:nswift
             drawnow
             if saveplots
                 if ispc
-                    figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                    figname = [savedir SNprocess '\' get(gcf,'Name')];
                 else
-                    figname = [savefigdir SNprocess '/' get(gcf,'Name')];
+                    figname = [savedir SNprocess '/' get(gcf,'Name')];
                 end
                 print(figname,'-dpng')
                 close gcf
@@ -549,7 +543,7 @@ for iswift = 1:nswift
                 xlabel('Ping #')
                 drawnow
                 if saveplots
-                    figname = [savefigdir SNprocess WRindex get(gcf,'Name')];
+                    figname = [savedir SNprocess WRindex get(gcf,'Name')];
                     print(figname,'-dpng')
                     close gcf
                 end
@@ -681,9 +675,9 @@ for iswift = 1:nswift
                     drawnow
                     if saveplots
                         if ispc
-                            figname = [savefigdir SNprocess '\' get(gcf,'Name')];
+                            figname = [savedir SNprocess '\' get(gcf,'Name')];
                         else
-                            figname = [savefigdir SNprocess '/' get(gcf,'Name')];
+                            figname = [savedir SNprocess '/' get(gcf,'Name')];
                         end
                         print(figname,'-dpng')
                         close gcf
@@ -889,7 +883,7 @@ for iswift = 1:nswift
 %             if ~isfolder([savefigdir SNprocess])
 %                 mkdir([savefigdir SNprocess])
 %             end
-            figname = [savefigdir get(gcf,'Name')];
+            figname = [savedir get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
         end
@@ -898,15 +892,15 @@ for iswift = 1:nswift
 	%%%%%% Save SWIFT Structure %%%%%%%%
     if saveSWIFT && ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
         if strcmp(structfile.name(end-6:end-4),'SBG')
-            save([saveswiftdir SNprocess '_reprocessedSIGandSBG.mat'],'SWIFT')
+            save([savedir SNprocess '_reprocessedSIGandSBG.mat'],'SWIFT')
         else
-            save([saveswiftdir SNprocess '_reprocessedSIG.mat'],'SWIFT')
+            save([savedir SNprocess '_reprocessedSIG.mat'],'SWIFT')
         end
     end
 
     %%%%%% Save SIG Structure %%%%%%%%
     if saveSIG
-       save([savesigdir SNprocess '_burstavgSIG.mat'],'SIG')
+       save([savedir SNprocess '_burstavgSIG.mat'],'SIG')
     end
 
 % End mission loop
