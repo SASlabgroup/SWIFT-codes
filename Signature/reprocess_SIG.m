@@ -100,12 +100,12 @@ savefigdir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessin
 % KRISTIN - PC
 else
 % Directory with existing SWIFT structures (e.g. from telemetry)
-swiftdir = 'S:\LakeWA\Signature_Testing\PugetSound_07Jul2023\';
+swiftdir = 'S:\Misc\SWIFTSigTests\SWIFT27_BenchTest_25July2023\';
 % Directory with signature burst files
-burstdir = 'S:\LakeWA\Signature_Testing\PugetSound_07Jul2023\';
+burstdir = 'S:\Misc\SWIFTSigTests\SWIFT27_BenchTest_25July2023\SIG\Raw\';
 % Directory to save updated/new SWIFT/SIG structures (see toggle 'saveSWIFT')
-saveswiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Data\L2\';
-savesigdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Data\L2\SIG\';
+saveswiftdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\SWIFT27_BenchTest_25July2023\Data\L2\';
+savesigdir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\SWIFT27_BenchTest_25July2023\Data\L2\SIG\';
 % Directory to save figures (will create folder for each mission if doesn't already exist)
 savefigdir = 'C:\Users\kfitz\Dropbox\MATLAB\LC-DRI\Figures\Signature';
 end
