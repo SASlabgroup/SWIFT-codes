@@ -1,11 +1,11 @@
-function [eps,epserr,fitcoeff,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
+function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 % This function applies Taylor cascade theory to estimate dissipation from 
 % the second order velocity structure function computed from vertical profiles 
 % of turbulent velocity (see Wiles et al. 2006). SFdissipation was
 % formulated with data from the Nortek Signature 1000 ADCP operating in pulse-coherent
 % (HR) mode, but can be applied to any ensemble of velocity profiles.
 %       
-%   in:     w (or dW)       nbin x nping ensemble of velocity profiles. Ensemble averaging
+%   in:     w (or dW)  nbin x nping ensemble of velocity profiles. Ensemble averaging
 %                           occurs across the 'ping' dimension. Can alternatively 
 %                           input the velocity difference matrix (dW).
 %           z           1 x nbin
@@ -29,13 +29,12 @@ function [eps,epserr,fitcoeff,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,
 %                           is taken to determine the expected value of the squared velocity difference
 %
 %   out:    eps         1 x nbin profile of dissipation
-%           epserr      dissipation uncertainty obtained by propagating standard error on the
-%                           mean of the square velocity difference through the 
-%                           error on the least-square model parameters 
-%           fitcoeff    structure with coefficients of the
-%                           least-squares fit
-%           mspe         mean-square percent error between model and data,
-%                           metric for goodness of fit
+%           qual        structure with metrics for evaluating quality of eps including:
+%                       - mean square percent error of the fit (mspe), 
+%                       - propagated error of the fit (epserr), 
+%                       - ADCP error inferred from the SF intercept (N), 
+%                       - slope of the SF (slope), 
+%                       - wave term coefficient (B, if modified r^2 fit used).
 
 %           K.Zeiden Summer/Fall 2022
 
@@ -204,14 +203,13 @@ end
 eps(A<0) = NaN;
 epserr(A<0) = NaN;
 
-% Save coefficents of the fit
-fitcoeff.A = A;
-fitcoeff.B = B;
-fitcoeff.N = N;
-
-% Save quality metrix
+% Save quality metrics
 qual.mspe = mspe;
 qual.slope = slope;
+qual.epserr = epserr;
+qual.A = A;
+qual.B = B;
+qual.N = N;
 
 %%%%% End function
 

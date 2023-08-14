@@ -97,9 +97,9 @@ savedir = '/Volumes/Data/PAPA/SikuliaqCruise2019/SWIFT_L0_raw/NewSigProcessing/'
 % KRISTIN - PC
 else
 % Directory with existing SWIFT structures (e.g. from telemetry)
-burstdir = 'S:\LakeWA\Signature_Testing\LakeWA_29June2023';% must end in /
+burstdir = 'S:\LakeWA\Signature_Testing\PugetSound_07Jul2023';% must end in /
 % Directory to save updated/new SWIFT/SIG structures and figures (see toggle 'saveSWIFT')
-savedir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\LakeWA_29Jun2023\Figures';
+savedir = 'C:\Users\kfitz\Dropbox\MATLAB\Testing\PugetSound_07Jul2023\Figures';
 end
 
 %% Default processing parameters
@@ -110,7 +110,7 @@ saveSWIFT = true;% save updated SWIFT structure
 saveSIG = true; %save detailed sig data in separate SIG structure
 
 % Plotting Toggles
-plotburst = true; % generate plots for each burst
+plotburst = false; % generate plots for each burst
 plotmission = true; % generate summary plot for mission
 saveplots = true; % save generated plots
 
@@ -156,7 +156,7 @@ end
 % For each mission, loop through burst files and process the data
 clear SWIFT SIG
 
-for iswift = 2%:nswift
+for iswift = 1:nswift
 
     SNprocess = swifts{iswift};
     disp(['********** Reprocessing ' SNprocess ' **********'])
@@ -547,12 +547,24 @@ for iswift = 2%:nswift
                 eps_structHP = NaN(size(hrw));
                 eps_structEOF = NaN(size(hrw));
                 eps_spectral = NaN(size(hrw));
-                mspe0 = NaN(size(hrw));
-                mspeHP = NaN(size(hrw));
-                mspeEOF = NaN(size(hrw));
-                slope0 = NaN(size(hrw));
-                slopeHP = NaN(size(hrw));
-                slopeEOF = NaN(size(hrw));
+                qual0.mspe = NaN(size(hrw));
+                qual0.slope = NaN(size(hrw));
+                qual0.epserr = NaN(size(hrw));
+                qual0.A = NaN(size(hrw));
+                qual0.B = NaN(size(hrw));
+                qual0.N = NaN(size(hrw));
+                qualHP.mspe = NaN(size(hrw));
+                qualHP.slope = NaN(size(hrw));
+                qualHP.epserr = NaN(size(hrw));
+                qualHP.A = NaN(size(hrw));
+                qualHP.B = NaN(size(hrw));
+                qualHP.N = NaN(size(hrw));
+                qualEOF.mspe = NaN(size(hrw));
+                qualEOF.slope = NaN(size(hrw));
+                qualEOF.epserr = NaN(size(hrw));
+                qualEOF.A = NaN(size(hrw));
+                qualEOF.B = NaN(size(hrw));
+                qualEOF.N = NaN(size(hrw));
                 wpsd = NaN(nbin,2*nwin+1);
                 bobpsd = NaN(1,2*nwin+1);
                 f = NaN(1,2*nwin+1);
@@ -578,16 +590,10 @@ for iswift = 2%:nswift
                 wp1(ibad) = NaN;
                 wp2(ibad) = NaN;
                 warning('off','all')
-                [eps_struct0,~,~,qual0] = SFdissipation(w,hrz,rmin,2*rmax,nzfit,'cubic','mean');
-                [eps_structEOF,~,~,qualEOF] = SFdissipation(wp1,hrz,rmin,rmax,nzfit,'linear','mean');
-                [eps_structHP,~,~,qualHP] = SFdissipation(wp2,hrz,rmin,rmax,nzfit,'linear','mean');
+                [eps_struct0,qual0] = SFdissipation(w,hrz,rmin,2*rmax,nzfit,'cubic','mean');
+                [eps_structEOF,qualEOF] = SFdissipation(wp1,hrz,rmin,rmax,nzfit,'linear','mean');
+                [eps_structHP,qualHP] = SFdissipation(wp2,hrz,rmin,rmax,nzfit,'linear','mean');
                 warning('on','all')
-                mspe0 = qual0.mspe;
-                mspeHP = qualHP.mspe;
-                mspeEOF = qualEOF.mspe;
-                slope0 = qual0.slope;
-                slopeHP = qualHP.slope;
-                slopeEOF = qualEOF.slope;
 
                 % Spectral dissipation (self-advected turbulence: Tennekes '75)
                 if isfield(burst,'AHRS_GyroX')
@@ -712,12 +718,19 @@ for iswift = 2%:nswift
         SIG(isig).QC.wpsd = wpsd;
         SIG(isig).QC.bobpsd = bobpsd;
         SIG(isig).QC.f = f;
-        SIG(isig).QC.mspe0 = mspe0;
-        SIG(isig).QC.mspeHP = mspeHP;
-        SIG(isig).QC.mspeEOF = mspeEOF;
-        SIG(isig).QC.slope0 = slope0;
-        SIG(isig).QC.slopeHP = slopeHP;
-        SIG(isig).QC.slopeEOF = slopeEOF;
+        SIG(isig).QC.mspe0 = qual0.mspe;
+        SIG(isig).QC.mspeHP = qualHP.mspe;
+        SIG(isig).QC.mspeEOF = qualEOF.mspe;
+        SIG(isig).QC.slope0 = qual0.slope;
+        SIG(isig).QC.slopeHP = qualHP.slope;
+        SIG(isig).QC.slopeEOF = qualEOF.slope;
+        SIG(isig).QC.epserr0 = qual0.epserr;
+        SIG(isig).QC.epserrHP = qualHP.epserr;
+        SIG(isig).QC.epserrEOF = qualEOF.epserr;       
+        SIG(isig).QC.N0 = qual0.N;
+        SIG(isig).QC.NHP = qualHP.N;
+        SIG(isig).QC.NEOF = qualEOF.N;    
+        SIG(isig).QC.pspike = sum(ispike,2,'omitnan')./nping;
         isig = isig+1;
 
        %%%%%%%% Match burst time to existing SWIFT fields and replace data %%%%%%%%
