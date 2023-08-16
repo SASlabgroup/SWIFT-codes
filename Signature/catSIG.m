@@ -33,9 +33,9 @@ sig.hrw = NaN(length(sig.hrz),length(sig.time));
 sig.hrwvar = sig.hrw;
 sig.hrcorr = sig.hrw;
 sig.hramp = sig.hrw;
-sig.eps_struct = sig.hrw;
-sig.struct_slope = sig.hrw;
-sig.eps_spectral = sig.hrw;
+sig.eps = sig.hrw;
+sig.mspe = sig.hrw;
+sig.slope = sig.hrw;
 sig.pitchvar = NaN(1,length(sig.time));
 for it = 1:length(sig.time)
     %Broadband
@@ -53,9 +53,9 @@ for it = 1:length(sig.time)
     sig.hrwvar(1:nz,it) = SIG(it).HRprofile.werr;
     sig.hrcorr(1:nz,it) = SIG(it).QC.hrcorr;
     sig.hramp(1:nz,it) = SIG(it).QC.hramp;
-    sig.eps_struct(1:nz,it) = SIG(it).HRprofile.eps_structEOF;
-    sig.struct_slope(1:nz,it) = SIG(it).QC.slopeEOF;
-    sig.eps_spectral(1:nz,it) = SIG(it).HRprofile.eps_spectral;
+    sig.eps(1:nz,it) = SIG(it).HRprofile.eps_structEOF;
+    sig.mspe(1:nz,it) = SIG(it).QC.mspeEOF;
+    sig.slope(1:nz,it) = SIG(it).QC.slopeEOF;
     sig.pitchvar(it) = SIG(it).QC.pitchvar;
 end
 
@@ -72,9 +72,9 @@ if QCsig && sum(badburst) < length(sig.time)
     sig.avgamp(:,badburst) = [];
     sig.hrw(:,badburst) = [];
     sig.hrwvar(:,badburst) = [];
-    sig.eps_spectral(:,badburst) = [];
-    sig.eps_struct(:,badburst) = [];
-    sig.struct_slope(:,badburst) = [];
+    sig.eps(:,badburst) = [];
+    sig.mspe(:,badburst) = [];
+    sig.slope(:,badburst) = [];
     sig.pitchvar(badburst) = [];
     sig.hrcorr(:,badburst) = [];
     sig.hramp(:,badburst) = [];
@@ -116,7 +116,7 @@ xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,10)
 pcolor(sig.time,-sig.avgz,sig.avgverr);shading flat
-caxis([0 0.01]);
+caxis([0 0.03]);
 hold on;plot(xlim,max(sig.hrz)*[1 1],'k')
 ylabel('Depth (m)');title('\sigma_V')
 c = colorbar;c.Label.String = 'ms^{-1}';
@@ -155,27 +155,27 @@ xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 %Dissipation
 subplot(4,3,3)
-pcolor(sig.time,-sig.hrz,log10(sig.eps_struct));shading flat
+pcolor(sig.time,-sig.hrz,log10(sig.eps));shading flat
 caxis([-7.5 -4.5]);
-ylabel('Depth (m)');title('SF \epsilon')
+ylabel('Depth (m)');title('Dissipation Rate')
 c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,6)
-pcolor(sig.time,-sig.hrz,sig.struct_slope);shading flat
+pcolor(sig.time,-sig.hrz,100*sqrt(sig.mspe));shading flat
+caxis([0 100]);
+ylabel('Depth (m)');title('MSPE')
+c = colorbar;c.Label.String = '[%]';
+xlim([min(sig.time) max(sig.time)])
+datetick('x','KeepLimits')
+subplot(4,3,9)
+pcolor(sig.time,-sig.hrz,sig.slope);shading flat
 caxis([0 2*2/3]);
 ylabel('Depth (m)');title('SF Slope')
 c = colorbar;c.Label.String = 'D \propto r^n';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 cmocean('curl')
-subplot(4,3,9)
-pcolor(sig.time,-sig.hrz,log10(sig.eps_spectral));shading flat
-caxis([-5 -2]);
-ylabel('Depth (m)');title('Spectral \epsilon')
-c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
-xlim([min(sig.time) max(sig.time)])
-datetick('x','KeepLimits')
 %Pitch + Roll
 subplot(4,3,12)
 b(1) = bar(sig.time,sqrt(sig.pitchvar));
