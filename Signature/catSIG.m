@@ -19,6 +19,7 @@ end
 
 if isfield(SIG,'time')
 sig.time = [SIG.time];
+
 sig.avgz = SIG(round(end/2)).profile.z';
 sig.avgu = NaN(length(sig.avgz),length(sig.time));
 sig.avgv = sig.avgu;
@@ -28,7 +29,8 @@ sig.avgamp = sig.avgu;
 sig.avguerr = sig.avgu;
 sig.avgverr = sig.avgu;
 sig.avgwerr = sig.avgu;
-sig.hrz = SIG(round(end)).HRprofile.z;
+
+sig.hrz = SIG(round(end/2)).HRprofile.z;
 sig.hrw = NaN(length(sig.hrz),length(sig.time));
 sig.hrwvar = sig.hrw;
 sig.hrcorr = sig.hrw;
@@ -37,6 +39,7 @@ sig.eps = sig.hrw;
 sig.mspe = sig.hrw;
 sig.slope = sig.hrw;
 sig.pitchvar = NaN(1,length(sig.time));
+
 for it = 1:length(sig.time)
     %Broadband
     sig.avgu(:,it) = SIG(it).profile.u;
@@ -57,6 +60,7 @@ for it = 1:length(sig.time)
     sig.mspe(1:nz,it) = SIG(it).QC.mspeEOF;
     sig.slope(1:nz,it) = SIG(it).QC.slopeEOF;
     sig.pitchvar(it) = SIG(it).QC.pitchvar;
+
 end
 
 %QC
@@ -78,6 +82,12 @@ if QCsig && sum(badburst) < length(sig.time)
     sig.pitchvar(badburst) = [];
     sig.hrcorr(:,badburst) = [];
     sig.hramp(:,badburst) = [];
+    sig.eps(:,badburst) = [];
+    sig.slope(:,badburst) = [];
+    sig.pspike(:,badburst) = [];
+    sig.mspe(:,badburst) = [];
+    sig.epserr(:,badburst) = [];
+    sig.N(:,badburst) = [];
     sig.time(badburst) = [];
 else
     sig.badburst = badburst;
@@ -176,16 +186,16 @@ c = colorbar;c.Label.String = 'D \propto r^n';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 cmocean('curl')
-%Pitch + Roll
+
 subplot(4,3,12)
-b(1) = bar(sig.time,sqrt(sig.pitchvar));
-b(1).FaceColor = 'r';
-set(b,'EdgeColor',rgb('grey'))
-ylabel('\sigma_{\phi} (^{\circ})');title('Pitch Variance')
-c = colorbar;c.Visible = 'off';
+pcolor(sig.time,-sig.hrz,log10(100*sqrt(sig.mspe)));shading flat
+caxis([0 2]);
+ylabel('Depth (m)');title('MSPE')
+c = colorbar;c.Label.String = 'MSPE {%}';
 xlim([min(sig.time) max(sig.time)])
-ylim([0 mean(sqrt(sig.pitchvar),'omitnan') + 2*std(sqrt(sig.pitchvar),'omitnan')])
 datetick('x','KeepLimits')
+
+
 end
 
 else
