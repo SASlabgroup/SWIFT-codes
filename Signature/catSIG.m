@@ -19,6 +19,7 @@ end
 
 if isfield(SIG,'time')
 sig.time = [SIG.time];
+
 sig.avgz = SIG(round(end/2)).profile.z';
 sig.avgu = NaN(length(sig.avgz),length(sig.time));
 sig.avgv = sig.avgu;
@@ -28,15 +29,20 @@ sig.avgamp = sig.avgu;
 sig.avguerr = sig.avgu;
 sig.avgverr = sig.avgu;
 sig.avgwerr = sig.avgu;
-sig.hrz = SIG(round(end)).HRprofile.z;
+
+sig.hrz = SIG(round(end/2)).HRprofile.z;
 sig.hrw = NaN(length(sig.hrz),length(sig.time));
 sig.hrwvar = sig.hrw;
 sig.hrcorr = sig.hrw;
 sig.hramp = sig.hrw;
-sig.eps_struct = sig.hrw;
-sig.struct_slope = sig.hrw;
-sig.eps_spectral = sig.hrw;
-sig.pitchvar = NaN(1,length(sig.time));
+
+sig.eps = sig.hrw;
+sig.slope = sig.hrw;
+sig.pspike = sig.hrw;
+sig.mspe = sig.hrw;
+sig.epserr = sig.hrw;
+sig.N = sig.hrw;
+
 for it = 1:length(sig.time)
     %Broadband
     sig.avgu(:,it) = SIG(it).profile.u;
@@ -53,10 +59,12 @@ for it = 1:length(sig.time)
     sig.hrwvar(1:nz,it) = SIG(it).HRprofile.werr;
     sig.hrcorr(1:nz,it) = SIG(it).QC.hrcorr;
     sig.hramp(1:nz,it) = SIG(it).QC.hramp;
-    sig.eps_struct(1:nz,it) = SIG(it).HRprofile.eps_structEOF;
-    sig.struct_slope(1:nz,it) = SIG(it).QC.slopeEOF;
-    sig.eps_spectral(1:nz,it) = SIG(it).HRprofile.eps_spectral;
-    sig.pitchvar(it) = SIG(it).QC.pitchvar;
+    sig.eps(1:nz,it) = SIG(it).HRprofile.eps_structEOF;
+    sig.slope(1:nz,it) = SIG(it).QC.slopeEOF;
+    sig.pspike(1:nz,it) = SIG(it).QC.pspike;
+    sig.mspe(1:nz,it) = SIG(it).QC.mspeEOF;
+    sig.epserr(1:nz,it) = SIG(it).QC.epserrEOF;
+    sig.N(1:nz,it) = SIG(it).QC.NEOF;
 end
 
 %QC
@@ -72,12 +80,14 @@ if QCsig && sum(badburst) < length(sig.time)
     sig.avgamp(:,badburst) = [];
     sig.hrw(:,badburst) = [];
     sig.hrwvar(:,badburst) = [];
-    sig.eps_spectral(:,badburst) = [];
-    sig.eps_struct(:,badburst) = [];
-    sig.struct_slope(:,badburst) = [];
-    sig.pitchvar(badburst) = [];
     sig.hrcorr(:,badburst) = [];
     sig.hramp(:,badburst) = [];
+    sig.eps(:,badburst) = [];
+    sig.slope(:,badburst) = [];
+    sig.pspike(:,badburst) = [];
+    sig.mspe(:,badburst) = [];
+    sig.epserr(:,badburst) = [];
+    sig.N(:,badburst) = [];
     sig.time(badburst) = [];
 else
     sig.badburst = badburst;
@@ -155,37 +165,36 @@ xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 %Dissipation
 subplot(4,3,3)
-pcolor(sig.time,-sig.hrz,log10(sig.eps_struct));shading flat
+pcolor(sig.time,-sig.hrz,log10(sig.eps));shading flat
 caxis([-7.5 -4.5]);
 ylabel('Depth (m)');title('SF \epsilon')
 c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 subplot(4,3,6)
-pcolor(sig.time,-sig.hrz,sig.struct_slope);shading flat
+pcolor(sig.time,-sig.hrz,log10(sig.epserr));shading flat
+caxis([-8.5 -5.5]);
+ylabel('Depth (m)');title('Error')
+c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
+xlim([min(sig.time) max(sig.time)])
+datetick('x','KeepLimits')
+subplot(4,3,9)
+pcolor(sig.time,-sig.hrz,sig.slope);shading flat
 caxis([0 2*2/3]);
 ylabel('Depth (m)');title('SF Slope')
 c = colorbar;c.Label.String = 'D \propto r^n';
 xlim([min(sig.time) max(sig.time)])
 datetick('x','KeepLimits')
 cmocean('curl')
-subplot(4,3,9)
-pcolor(sig.time,-sig.hrz,log10(sig.eps_spectral));shading flat
-caxis([-5 -2]);
-ylabel('Depth (m)');title('Spectral \epsilon')
-c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
-xlim([min(sig.time) max(sig.time)])
-datetick('x','KeepLimits')
-%Pitch + Roll
 subplot(4,3,12)
-b(1) = bar(sig.time,sqrt(sig.pitchvar));
-b(1).FaceColor = 'r';
-set(b,'EdgeColor',rgb('grey'))
-ylabel('\sigma_{\phi} (^{\circ})');title('Pitch Variance')
-c = colorbar;c.Visible = 'off';
+pcolor(sig.time,-sig.hrz,log10(100*sqrt(sig.mspe)));shading flat
+caxis([0 2]);
+ylabel('Depth (m)');title('MSPE')
+c = colorbar;c.Label.String = 'MSPE {%}';
 xlim([min(sig.time) max(sig.time)])
-ylim([0 mean(sqrt(sig.pitchvar),'omitnan') + 2*std(sqrt(sig.pitchvar),'omitnan')])
 datetick('x','KeepLimits')
+
+
 end
 
 else
