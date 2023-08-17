@@ -1,4 +1,4 @@
-function [SWIFT,SIG,opt] = reprocess_SIG(missiondir,savedir,varargin)
+function [SWIFT,SIG] = reprocess_SIG(missiondir,savedir,varargin)
 
 % Reprocess SWIFT v4 signature velocities from burst data
 %   Loops through burst MAT or DAT files for a given SWIFT deployment,
