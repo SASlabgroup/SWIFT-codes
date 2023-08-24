@@ -9,7 +9,7 @@ U10factor = 1.5;
 
 figure(1), clf
 
-flist = dir('*reprocessedSIG*.mat');
+flist = dir('*reprocessedSIGandSBG*.mat');
 
 for i = 1:length(flist);
 
