@@ -215,6 +215,14 @@ for iburst = 1:nburst
     end
     
     %%%%%%% FLAGS %%%%%%
+    
+    % Flag if burst time from name is very different from recorded
+    t0 = datenum(datestr(min(avg.time),'dd-mmm-yyyy HH:MM'));
+    if abs(btime - t0) > 12/(60*24)
+        disp('   WARNING: File name time disagrees with recorded time. Using recorded time...   ')
+    else
+        t0 = btime;
+    end
 
     % Flag if file is too small
     if bfiles(iburst).bytes < 1e6 % 2e6,
@@ -500,7 +508,7 @@ for iburst = 1:nburst
     %%%%%%%% Save processed signature data in seperate structure %%%%%%%%
 
     %Time
-    SIG(isig).time = btime;
+    SIG(isig).time = t0;
     %Temperaure
     SIG(isig).watertemp = profile.temp;
     % HR data
