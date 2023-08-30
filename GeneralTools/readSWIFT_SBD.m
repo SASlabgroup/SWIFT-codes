@@ -448,6 +448,7 @@ while 1
         disp('reading microSWIFT (compact)')
         replacedrawvalues = port*10 % microSWIFTs do not give com port, so we are using a diagnostic for raw data QC (and replacement)
         SWIFT.replacedrawvalues = replacedrawvalues;
+        % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
         SWIFT.peakwavedirT       = half.typecast(fread(fid, 1,'*uint16')).double; % dominant wave direction
