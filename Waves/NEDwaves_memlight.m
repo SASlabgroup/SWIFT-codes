@@ -27,8 +27,9 @@ function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves_memlight
 % J. Thomson,  12/2022 (modified from GPSwaves)
 %              1/2023 memory light version... removes filtering, windowing,etc
 %                       assumes input data is clean and ready
-%              6/2023 attempt to put windowing back in, 
+%              6/2023 put windowing back in (as for loop that over-writes) 
 %                   abandon convention that upper cases is in frequency domain
+%              9/2023 reverse convention for wave direction and filter twice
 %
 %#codegen
 
@@ -41,7 +42,7 @@ pts = length(east);  % length of the input data (should be 2^N for efficiency)
 %fmax = 0.5; % max frequecny for final output, Hz
 %nf = 42; % number of frequency bands in final result
 
-RC = 3; % time constant [s] for high-pass filter (pass T < 2 pi * RC)
+RC = 4; % time constant [s] for high-pass filter (pass T < 2 pi * RC)
 wsecs = 256;   % window length in seconds, should make 2^N samples is fs is even
 merge = 3;      % freq bands to merge, must be odd?
 maxf = .5;       % frequency cutoff for telemetry Hz
@@ -85,9 +86,15 @@ v = v - mean(v);
 w = w - mean(w);
 
 
-%% high-pass RC filter, 
+%% high-pass RC filter, applied twice
 
 alpha = RC / (RC + 1./fs); 
+
+filtereddata = u; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( u(ui) - u(ui-1) );
+end
+u = filtereddata;
 
 filtereddata = u; 
 for ui = 2:length(filtereddata),
@@ -100,6 +107,18 @@ for ui = 2:length(filtereddata),
    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( v(ui) - v(ui-1) );
 end
 v = filtereddata;
+
+filtereddata = v; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( v(ui) - v(ui-1) );
+end
+v = filtereddata;
+
+filtereddata = w; 
+for ui = 2:length(filtereddata),
+   filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( w(ui) - w(ui-1) );
+end
+w = filtereddata;
 
 filtereddata = w; 
 for ui = 2:length(filtereddata),
@@ -236,8 +255,8 @@ Dp = atan2( b1(fpindex), a1(fpindex) ) ;  % [rad], 4 quadrant
 Dp = - 180 ./ 3.14 * Dp;  % switch from rad to deg, and CCW to CW (negate)
 Dp = Dp + 90;  % rotate from eastward = 0 to northward  = 0
 if Dp < 0, Dp = Dp + 360; end % take NW quadrant from negative to 270-360 range
-if Dp > 180, Dp = Dp - 180; end % take reciprocal such wave direction is FROM, not TOWARDS
-if Dp < 180, Dp = Dp + 180; end % take reciprocal such wave direction is FROM, not TOWARDS
+%if Dp > 180, Dp = Dp - 180; end % take reciprocal such wave direction is FROM, not TOWARDS
+%if Dp < 180, Dp = Dp + 180; end % take reciprocal such wave direction is FROM, not TOWARDS
 
 
 
