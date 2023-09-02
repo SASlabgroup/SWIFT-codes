@@ -5,7 +5,7 @@
  * File: NEDwaves_memlight.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jul-2023 15:08:49
+ * C/C++ source code generated on  : 02-Sep-2023 15:57:28
  */
 
 /* Include Files */
@@ -320,8 +320,9 @@ static double rt_roundd_snf(double u)
  *  J. Thomson,  12/2022 (modified from GPSwaves)
  *               1/2023 memory light version... removes filtering, windowing,etc
  *                        assumes input data is clean and ready
- *               6/2023 attempt to put windowing back in,
+ *               6/2023 put windowing back in (as for loop that over-writes)
  *                    abandon convention that upper cases is in frequency domain
+ *               9/2023 reverse convention for wave direction and filter twice
  *
  *
  * Arguments    : const emxArray_real32_T *north
@@ -406,14 +407,13 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   float *u_data;
   float *v_data;
   float *w_data;
-  int b_n;
   int i;
   int k;
-  int k0;
   int loop_ub;
   int loop_ub_tmp;
   int nx;
   int nxin;
+  int nxout;
   int q;
   int *r2;
   int *r4;
@@ -498,7 +498,7 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   emxInit_real_T(&taper, 2);
   if ((int)windows - 1 >= 0) {
     loop_ub = (int)(wpts - 1.0);
-    alpha = 3.0 / (1.0 / fs + 3.0);
+    alpha = 4.0 / (1.0 / fs + 4.0);
     d = rt_roundd_snf(wpts / 2.0 + 1.0);
     loop_ub_tmp = (int)(wpts - d);
     d1 = rawf_tmp;
@@ -518,126 +518,168 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   emxInit_creal32_T(&c_u, 2);
   for (q = 0; q < i; q++) {
     Nyquist = (((double)q + 1.0) - 1.0) * (0.25 * wpts);
-    k0 = u_tmp->size[0];
+    k = u_tmp->size[0];
     u_tmp->size[0] = (int)(wpts - 1.0) + 1;
-    emxEnsureCapacity_real_T(u_tmp, k0);
+    emxEnsureCapacity_real_T(u_tmp, k);
     taper_data = u_tmp->data;
-    for (k0 = 0; k0 <= loop_ub; k0++) {
-      taper_data[k0] = Nyquist + ((double)k0 + 1.0);
+    for (k = 0; k <= loop_ub; k++) {
+      taper_data[k] = Nyquist + ((double)k + 1.0);
     }
-    k0 = u->size[0] * u->size[1];
+    k = u->size[0] * u->size[1];
     u->size[0] = 1;
     u->size[1] = u_tmp->size[0];
-    emxEnsureCapacity_real32_T(u, k0);
+    emxEnsureCapacity_real32_T(u, k);
     u_data = u->data;
     nx = u_tmp->size[0];
-    for (k0 = 0; k0 < nx; k0++) {
-      u_data[k0] = east_data[(int)taper_data[k0] - 1];
+    for (k = 0; k < nx; k++) {
+      u_data[k] = east_data[(int)taper_data[k] - 1];
     }
-    k0 = v->size[0] * v->size[1];
+    k = v->size[0] * v->size[1];
     v->size[0] = 1;
     v->size[1] = u_tmp->size[0];
-    emxEnsureCapacity_real32_T(v, k0);
+    emxEnsureCapacity_real32_T(v, k);
     v_data = v->data;
     nx = u_tmp->size[0];
-    for (k0 = 0; k0 < nx; k0++) {
-      v_data[k0] = north_data[(int)taper_data[k0] - 1];
+    for (k = 0; k < nx; k++) {
+      v_data[k] = north_data[(int)taper_data[k] - 1];
     }
-    k0 = w->size[0] * w->size[1];
+    k = w->size[0] * w->size[1];
     w->size[0] = 1;
     w->size[1] = u_tmp->size[0];
-    emxEnsureCapacity_real32_T(w, k0);
+    emxEnsureCapacity_real32_T(w, k);
     w_data = w->data;
     nx = u_tmp->size[0];
-    for (k0 = 0; k0 < nx; k0++) {
-      w_data[k0] = down_data[(int)taper_data[k0] - 1];
+    for (k = 0; k < nx; k++) {
+      w_data[k] = down_data[(int)taper_data[k] - 1];
     }
     /*  remove the mean */
     fe = combineVectorElements(u) / (float)u_tmp->size[0];
-    k0 = u->size[0] * u->size[1];
+    k = u->size[0] * u->size[1];
     u->size[0] = 1;
-    emxEnsureCapacity_real32_T(u, k0);
+    emxEnsureCapacity_real32_T(u, k);
     u_data = u->data;
     nx = u->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      u_data[k0] -= fe;
+    for (k = 0; k <= nx; k++) {
+      u_data[k] -= fe;
     }
     fe = combineVectorElements(v) / (float)u_tmp->size[0];
-    k0 = v->size[0] * v->size[1];
+    k = v->size[0] * v->size[1];
     v->size[0] = 1;
-    emxEnsureCapacity_real32_T(v, k0);
+    emxEnsureCapacity_real32_T(v, k);
     v_data = v->data;
     nx = v->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      v_data[k0] -= fe;
+    for (k = 0; k <= nx; k++) {
+      v_data[k] -= fe;
     }
     fe = combineVectorElements(w) / (float)u_tmp->size[0];
-    k0 = w->size[0] * w->size[1];
+    k = w->size[0] * w->size[1];
     w->size[0] = 1;
-    emxEnsureCapacity_real32_T(w, k0);
+    emxEnsureCapacity_real32_T(w, k);
     w_data = w->data;
     nx = w->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      w_data[k0] -= fe;
+    for (k = 0; k <= nx; k++) {
+      w_data[k] -= fe;
     }
-    /*  high-pass RC filter,  */
-    k0 = filtereddata->size[0] * filtereddata->size[1];
+    /*  high-pass RC filter, applied twice */
+    k = filtereddata->size[0] * filtereddata->size[1];
     filtereddata->size[0] = 1;
     filtereddata->size[1] = u->size[1];
-    emxEnsureCapacity_real32_T(filtereddata, k0);
+    emxEnsureCapacity_real32_T(filtereddata, k);
     filtereddata_data = filtereddata->data;
     nx = u->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      filtereddata_data[k0] = u_data[k0];
+    for (k = 0; k < nx; k++) {
+      filtereddata_data[k] = u_data[k];
     }
-    k0 = u->size[1];
-    for (nx = 0; nx <= k0 - 2; nx++) {
+    k = u->size[1];
+    for (nx = 0; nx <= k - 2; nx++) {
       filtereddata_data[nx + 1] = (float)alpha * filtereddata_data[nx] +
                                   (float)alpha * (u_data[nx + 1] - u_data[nx]);
     }
-    k0 = u->size[0] * u->size[1];
+    k = u->size[0] * u->size[1];
     u->size[0] = 1;
     u->size[1] = filtereddata->size[1];
-    emxEnsureCapacity_real32_T(u, k0);
+    emxEnsureCapacity_real32_T(u, k);
     u_data = u->data;
     nx = filtereddata->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      u_data[k0] = filtereddata_data[k0];
+    for (k = 0; k < nx; k++) {
+      u_data[k] = filtereddata_data[k];
     }
-    k0 = filtereddata->size[0] * filtereddata->size[1];
+    k = filtereddata->size[1];
+    for (nx = 0; nx <= k - 2; nx++) {
+      filtereddata_data[nx + 1] = (float)alpha * filtereddata_data[nx] +
+                                  (float)alpha * (u_data[nx + 1] - u_data[nx]);
+    }
+    k = u->size[0] * u->size[1];
+    u->size[0] = 1;
+    u->size[1] = filtereddata->size[1];
+    emxEnsureCapacity_real32_T(u, k);
+    u_data = u->data;
+    nx = filtereddata->size[1];
+    for (k = 0; k < nx; k++) {
+      u_data[k] = filtereddata_data[k];
+    }
+    k = filtereddata->size[0] * filtereddata->size[1];
     filtereddata->size[0] = 1;
     filtereddata->size[1] = v->size[1];
-    emxEnsureCapacity_real32_T(filtereddata, k0);
+    emxEnsureCapacity_real32_T(filtereddata, k);
     filtereddata_data = filtereddata->data;
     nx = v->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      filtereddata_data[k0] = v_data[k0];
+    for (k = 0; k < nx; k++) {
+      filtereddata_data[k] = v_data[k];
     }
-    k0 = v->size[1];
-    for (nx = 0; nx <= k0 - 2; nx++) {
+    k = v->size[1];
+    for (nx = 0; nx <= k - 2; nx++) {
       filtereddata_data[nx + 1] = (float)alpha * filtereddata_data[nx] +
                                   (float)alpha * (v_data[nx + 1] - v_data[nx]);
     }
-    k0 = v->size[0] * v->size[1];
+    k = v->size[0] * v->size[1];
     v->size[0] = 1;
     v->size[1] = filtereddata->size[1];
-    emxEnsureCapacity_real32_T(v, k0);
+    emxEnsureCapacity_real32_T(v, k);
     v_data = v->data;
     nx = filtereddata->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      v_data[k0] = filtereddata_data[k0];
+    for (k = 0; k < nx; k++) {
+      v_data[k] = filtereddata_data[k];
     }
-    k0 = filtereddata->size[0] * filtereddata->size[1];
+    k = filtereddata->size[1];
+    for (nx = 0; nx <= k - 2; nx++) {
+      filtereddata_data[nx + 1] = (float)alpha * filtereddata_data[nx] +
+                                  (float)alpha * (v_data[nx + 1] - v_data[nx]);
+    }
+    k = v->size[0] * v->size[1];
+    v->size[0] = 1;
+    v->size[1] = filtereddata->size[1];
+    emxEnsureCapacity_real32_T(v, k);
+    v_data = v->data;
+    nx = filtereddata->size[1];
+    for (k = 0; k < nx; k++) {
+      v_data[k] = filtereddata_data[k];
+    }
+    k = filtereddata->size[0] * filtereddata->size[1];
     filtereddata->size[0] = 1;
     filtereddata->size[1] = w->size[1];
-    emxEnsureCapacity_real32_T(filtereddata, k0);
+    emxEnsureCapacity_real32_T(filtereddata, k);
     filtereddata_data = filtereddata->data;
     nx = w->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      filtereddata_data[k0] = w_data[k0];
+    for (k = 0; k < nx; k++) {
+      filtereddata_data[k] = w_data[k];
     }
-    k0 = w->size[1];
-    for (nx = 0; nx <= k0 - 2; nx++) {
+    k = w->size[1];
+    for (nx = 0; nx <= k - 2; nx++) {
+      filtereddata_data[nx + 1] = (float)alpha * filtereddata_data[nx] +
+                                  (float)alpha * (w_data[nx + 1] - w_data[nx]);
+    }
+    k = w->size[0] * w->size[1];
+    w->size[0] = 1;
+    w->size[1] = filtereddata->size[1];
+    emxEnsureCapacity_real32_T(w, k);
+    w_data = w->data;
+    nx = filtereddata->size[1];
+    for (k = 0; k < nx; k++) {
+      w_data[k] = filtereddata_data[k];
+    }
+    k = filtereddata->size[1];
+    for (nx = 0; nx <= k - 2; nx++) {
       filtereddata_data[nx + 1] = (float)alpha * filtereddata_data[nx] +
                                   (float)alpha * (w_data[nx + 1] - w_data[nx]);
     }
@@ -647,32 +689,32 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
     x = var(v);
     /*  define the taper */
     if (rtIsNaN(wpts)) {
-      k0 = taper->size[0] * taper->size[1];
+      k = taper->size[0] * taper->size[1];
       taper->size[0] = 1;
       taper->size[1] = 1;
-      emxEnsureCapacity_real_T(taper, k0);
+      emxEnsureCapacity_real_T(taper, k);
       taper_data = taper->data;
       taper_data[0] = rtNaN;
     } else if (wpts < 1.0) {
       taper->size[1] = 0;
     } else {
-      k0 = taper->size[0] * taper->size[1];
+      k = taper->size[0] * taper->size[1];
       taper->size[0] = 1;
       taper->size[1] = (int)(wpts - 1.0) + 1;
-      emxEnsureCapacity_real_T(taper, k0);
+      emxEnsureCapacity_real_T(taper, k);
       taper_data = taper->data;
       nx = (int)(wpts - 1.0);
-      for (k0 = 0; k0 <= nx; k0++) {
-        taper_data[k0] = (double)k0 + 1.0;
+      for (k = 0; k <= nx; k++) {
+        taper_data[k] = (double)k + 1.0;
       }
     }
-    k0 = taper->size[0] * taper->size[1];
+    k = taper->size[0] * taper->size[1];
     taper->size[0] = 1;
-    emxEnsureCapacity_real_T(taper, k0);
+    emxEnsureCapacity_real_T(taper, k);
     taper_data = taper->data;
     nx = taper->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      taper_data[k0] = taper_data[k0] * 3.1415926535897931 / wpts;
+    for (k = 0; k <= nx; k++) {
+      taper_data[k] = taper_data[k] * 3.1415926535897931 / wpts;
     }
     nx = taper->size[1];
     for (k = 0; k < nx; k++) {
@@ -681,68 +723,68 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
     /*  apply the taper */
     if (u->size[1] == taper->size[1]) {
       nx = u->size[1] - 1;
-      k0 = u->size[0] * u->size[1];
+      k = u->size[0] * u->size[1];
       u->size[0] = 1;
-      emxEnsureCapacity_real32_T(u, k0);
+      emxEnsureCapacity_real32_T(u, k);
       u_data = u->data;
-      for (k0 = 0; k0 <= nx; k0++) {
-        u_data[k0] *= (float)taper_data[k0];
+      for (k = 0; k <= nx; k++) {
+        u_data[k] *= (float)taper_data[k];
       }
     } else {
       d_binary_expand_op(u, taper);
     }
     if (v->size[1] == taper->size[1]) {
       nx = v->size[1] - 1;
-      k0 = v->size[0] * v->size[1];
+      k = v->size[0] * v->size[1];
       v->size[0] = 1;
-      emxEnsureCapacity_real32_T(v, k0);
+      emxEnsureCapacity_real32_T(v, k);
       v_data = v->data;
-      for (k0 = 0; k0 <= nx; k0++) {
-        v_data[k0] *= (float)taper_data[k0];
+      for (k = 0; k <= nx; k++) {
+        v_data[k] *= (float)taper_data[k];
       }
     } else {
       d_binary_expand_op(v, taper);
     }
     if (filtereddata->size[1] == taper->size[1]) {
-      k0 = w->size[0] * w->size[1];
+      k = w->size[0] * w->size[1];
       w->size[0] = 1;
       w->size[1] = filtereddata->size[1];
-      emxEnsureCapacity_real32_T(w, k0);
+      emxEnsureCapacity_real32_T(w, k);
       w_data = w->data;
       nx = filtereddata->size[1];
-      for (k0 = 0; k0 < nx; k0++) {
-        w_data[k0] = filtereddata_data[k0] * (float)taper_data[k0];
+      for (k = 0; k < nx; k++) {
+        w_data[k] = filtereddata_data[k] * (float)taper_data[k];
       }
     } else {
       c_binary_expand_op(w, filtereddata, taper);
     }
     /*  then rescale to regain the same original variance */
     fe = sqrtf(fe / var(u));
-    k0 = u->size[0] * u->size[1];
+    k = u->size[0] * u->size[1];
     u->size[0] = 1;
-    emxEnsureCapacity_real32_T(u, k0);
+    emxEnsureCapacity_real32_T(u, k);
     u_data = u->data;
     nx = u->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      u_data[k0] *= fe;
+    for (k = 0; k <= nx; k++) {
+      u_data[k] *= fe;
     }
     fe = sqrtf(x / var(v));
-    k0 = v->size[0] * v->size[1];
+    k = v->size[0] * v->size[1];
     v->size[0] = 1;
-    emxEnsureCapacity_real32_T(v, k0);
+    emxEnsureCapacity_real32_T(v, k);
     v_data = v->data;
     nx = v->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      v_data[k0] *= fe;
+    for (k = 0; k <= nx; k++) {
+      v_data[k] *= fe;
     }
     fe = sqrtf(var(filtereddata) / var(w));
-    k0 = w->size[0] * w->size[1];
+    k = w->size[0] * w->size[1];
     w->size[0] = 1;
-    emxEnsureCapacity_real32_T(w, k0);
+    emxEnsureCapacity_real32_T(w, k);
     w_data = w->data;
     nx = w->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      w_data[k0] *= fe;
+    for (k = 0; k <= nx; k++) {
+      w_data[k] *= fe;
     }
     /*  FFT */
     /*  calculate Fourier coefs (complex values, double sided) */
@@ -750,76 +792,76 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
     fft(v, b_v);
     fft(w, b_w);
     /*  second half of Matlab's FFT is redundant, so throw it out */
-    k0 = r->size[0] * r->size[1];
+    k = r->size[0] * r->size[1];
     r->size[0] = 1;
     r->size[1] = (int)(wpts - d) + 1;
-    emxEnsureCapacity_int32_T(r, k0);
+    emxEnsureCapacity_int32_T(r, k);
     r2 = r->data;
-    for (k0 = 0; k0 <= loop_ub_tmp; k0++) {
-      r2[k0] = (int)(d + (double)k0);
+    for (k = 0; k <= loop_ub_tmp; k++) {
+      r2[k] = (int)(d + (double)k);
     }
     nullAssignment(b_u, r);
     b_u_data = b_u->data;
-    k0 = r->size[0] * r->size[1];
+    k = r->size[0] * r->size[1];
     r->size[0] = 1;
     r->size[1] = (int)(wpts - d) + 1;
-    emxEnsureCapacity_int32_T(r, k0);
+    emxEnsureCapacity_int32_T(r, k);
     r2 = r->data;
-    for (k0 = 0; k0 <= loop_ub_tmp; k0++) {
-      r2[k0] = (int)(d + (double)k0);
+    for (k = 0; k <= loop_ub_tmp; k++) {
+      r2[k] = (int)(d + (double)k);
     }
     nullAssignment(b_v, r);
     b_v_data = b_v->data;
-    k0 = r->size[0] * r->size[1];
+    k = r->size[0] * r->size[1];
     r->size[0] = 1;
     r->size[1] = (int)(wpts - d) + 1;
-    emxEnsureCapacity_int32_T(r, k0);
+    emxEnsureCapacity_int32_T(r, k);
     r2 = r->data;
-    for (k0 = 0; k0 <= loop_ub_tmp; k0++) {
-      r2[k0] = (int)(d + (double)k0);
+    for (k = 0; k <= loop_ub_tmp; k++) {
+      r2[k] = (int)(d + (double)k);
     }
     nullAssignment(b_w, r);
     b_w_data = b_w->data;
     /*  throw out the mean (first coef) and add a zero (to make it the right
      * length)   */
     nxin = b_u->size[1];
-    nx = b_u->size[1] - 1;
-    for (k = 0; k < nx; k++) {
+    nxout = b_u->size[1] - 1;
+    for (k = 0; k < nxout; k++) {
       b_u_data[k] = b_u_data[k + 1];
     }
-    k0 = b_u->size[0] * b_u->size[1];
-    if (nx < 1) {
+    k = b_u->size[0] * b_u->size[1];
+    if (nxout < 1) {
       b_u->size[1] = 0;
     } else {
       b_u->size[1] = nxin - 1;
     }
-    emxEnsureCapacity_creal32_T(b_u, k0);
+    emxEnsureCapacity_creal32_T(b_u, k);
     b_u_data = b_u->data;
     nxin = b_v->size[1];
-    nx = b_v->size[1] - 1;
-    for (k = 0; k < nx; k++) {
+    nxout = b_v->size[1] - 1;
+    for (k = 0; k < nxout; k++) {
       b_v_data[k] = b_v_data[k + 1];
     }
-    k0 = b_v->size[0] * b_v->size[1];
-    if (nx < 1) {
+    k = b_v->size[0] * b_v->size[1];
+    if (nxout < 1) {
       b_v->size[1] = 0;
     } else {
       b_v->size[1] = nxin - 1;
     }
-    emxEnsureCapacity_creal32_T(b_v, k0);
+    emxEnsureCapacity_creal32_T(b_v, k);
     b_v_data = b_v->data;
     nxin = b_w->size[1];
-    nx = b_w->size[1] - 1;
-    for (k = 0; k < nx; k++) {
+    nxout = b_w->size[1] - 1;
+    for (k = 0; k < nxout; k++) {
       b_w_data[k] = b_w_data[k + 1];
     }
-    k0 = b_w->size[0] * b_w->size[1];
-    if (nx < 1) {
+    k = b_w->size[0] * b_w->size[1];
+    if (nxout < 1) {
       b_w->size[1] = 0;
     } else {
       b_w->size[1] = nxin - 1;
     }
-    emxEnsureCapacity_creal32_T(b_w, k0);
+    emxEnsureCapacity_creal32_T(b_w, k);
     b_w_data = b_w->data;
     b_u_data[(int)d1 - 1].re = 0.0F;
     b_u_data[(int)d1 - 1].im = 0.0F;
@@ -838,141 +880,121 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
     /*  % find middle of each freq band, ONLY WORKS WHEN MERGING ODD NUMBER OF
      * BANDS! */
     /*  f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ;  */
-    k0 = c_u->size[0] * c_u->size[1];
+    k = c_u->size[0] * c_u->size[1];
     c_u->size[0] = 1;
     c_u->size[1] = b_u->size[1];
-    emxEnsureCapacity_creal32_T(c_u, k0);
+    emxEnsureCapacity_creal32_T(c_u, k);
     c_u_data = c_u->data;
     nx = b_u->size[0] * b_u->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      c_u_data[k0] = b_u_data[k0];
+    for (k = 0; k <= nx; k++) {
+      c_u_data[k] = b_u_data[k];
     }
     interp1(rawf, c_u, f, b_u);
-    k0 = c_u->size[0] * c_u->size[1];
+    k = c_u->size[0] * c_u->size[1];
     c_u->size[0] = 1;
     c_u->size[1] = b_v->size[1];
-    emxEnsureCapacity_creal32_T(c_u, k0);
+    emxEnsureCapacity_creal32_T(c_u, k);
     c_u_data = c_u->data;
     nx = b_v->size[0] * b_v->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      c_u_data[k0] = b_v_data[k0];
+    for (k = 0; k <= nx; k++) {
+      c_u_data[k] = b_v_data[k];
     }
     interp1(rawf, c_u, f, b_v);
-    k0 = c_u->size[0] * c_u->size[1];
+    k = c_u->size[0] * c_u->size[1];
     c_u->size[0] = 1;
     c_u->size[1] = b_w->size[1];
-    emxEnsureCapacity_creal32_T(c_u, k0);
+    emxEnsureCapacity_creal32_T(c_u, k);
     c_u_data = c_u->data;
     nx = b_w->size[0] * b_w->size[1] - 1;
-    for (k0 = 0; k0 <= nx; k0++) {
-      c_u_data[k0] = b_w_data[k0];
+    for (k = 0; k <= nx; k++) {
+      c_u_data[k] = b_w_data[k];
     }
     interp1(rawf, c_u, f, b_w);
     /*  remove the high frequency tail (to save memory) */
-    k0 = b_f->size[0] * b_f->size[1];
+    k = b_f->size[0] * b_f->size[1];
     b_f->size[0] = 1;
     b_f->size[1] = f->size[1];
-    emxEnsureCapacity_boolean_T(b_f, k0);
+    emxEnsureCapacity_boolean_T(b_f, k);
     b_f_data = b_f->data;
     nx = f->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      b_f_data[k0] = (f_data[k0] > 0.5);
+    for (k = 0; k < nx; k++) {
+      b_f_data[k] = (f_data[k] > 0.5);
     }
-    b_nullAssignment(b_u, b_f);
+    c_nullAssignment(b_u, b_f);
     b_u_data = b_u->data;
-    k0 = b_f->size[0] * b_f->size[1];
+    k = b_f->size[0] * b_f->size[1];
     b_f->size[0] = 1;
     b_f->size[1] = f->size[1];
-    emxEnsureCapacity_boolean_T(b_f, k0);
+    emxEnsureCapacity_boolean_T(b_f, k);
     b_f_data = b_f->data;
     nx = f->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      b_f_data[k0] = (f_data[k0] > 0.5);
+    for (k = 0; k < nx; k++) {
+      b_f_data[k] = (f_data[k] > 0.5);
     }
-    b_nullAssignment(b_v, b_f);
+    c_nullAssignment(b_v, b_f);
     b_v_data = b_v->data;
-    k0 = b_f->size[0] * b_f->size[1];
+    k = b_f->size[0] * b_f->size[1];
     b_f->size[0] = 1;
     b_f->size[1] = f->size[1];
-    emxEnsureCapacity_boolean_T(b_f, k0);
+    emxEnsureCapacity_boolean_T(b_f, k);
     b_f_data = b_f->data;
     nx = f->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      b_f_data[k0] = (f_data[k0] > 0.5);
+    for (k = 0; k < nx; k++) {
+      b_f_data[k] = (f_data[k] > 0.5);
     }
-    b_nullAssignment(b_w, b_f);
+    c_nullAssignment(b_w, b_f);
     b_w_data = b_w->data;
-    k0 = b_f->size[0] * b_f->size[1];
+    k = b_f->size[0] * b_f->size[1];
     b_f->size[0] = 1;
     b_f->size[1] = f->size[1];
-    emxEnsureCapacity_boolean_T(b_f, k0);
+    emxEnsureCapacity_boolean_T(b_f, k);
     b_f_data = b_f->data;
     nx = f->size[1];
-    for (k0 = 0; k0 < nx; k0++) {
-      b_f_data[k0] = (f_data[k0] > 0.5);
+    for (k = 0; k < nx; k++) {
+      b_f_data[k] = (f_data[k] > 0.5);
     }
-    nxin = f->size[1];
-    b_n = 0;
-    k0 = b_f->size[1];
-    for (k = 0; k < k0; k++) {
-      b_n += b_f_data[k];
-    }
-    nx = f->size[1] - b_n;
-    k0 = -1;
-    for (k = 0; k < nxin; k++) {
-      if ((k + 1 > b_f->size[1]) || (!b_f_data[k])) {
-        k0++;
-        f_data[k0] = f_data[k];
-      }
-    }
-    k0 = f->size[0] * f->size[1];
-    if (nx < 1) {
-      f->size[1] = 0;
-    } else {
-      f->size[1] = nx;
-    }
-    emxEnsureCapacity_real_T(f, k0);
+    b_nullAssignment(f, b_f);
     f_data = f->data;
     /*  accumulate POWER SPECTRAL DENSITY (auto-spectra) from this window */
     if (b_u->size[1] == 42) {
-      for (k0 = 0; k0 < 42; k0++) {
-        u_re_tmp = b_u_data[k0].re;
-        fe = b_u_data[k0].im;
-        UU[k0] += (u_re_tmp * u_re_tmp - fe * -fe) / (float)y;
+      for (k = 0; k < 42; k++) {
+        u_re_tmp = b_u_data[k].re;
+        fe = b_u_data[k].im;
+        UU[k] += (u_re_tmp * u_re_tmp - fe * -fe) / (float)y;
       }
     } else {
       b_binary_expand_op(UU, b_u, y);
     }
     if (b_v->size[1] == 42) {
-      for (k0 = 0; k0 < 42; k0++) {
-        x = b_v_data[k0].re;
-        fe = b_v_data[k0].im;
-        VV[k0] += (x * x - fe * -fe) / (float)y_tmp;
+      for (k = 0; k < 42; k++) {
+        x = b_v_data[k].re;
+        fe = b_v_data[k].im;
+        VV[k] += (x * x - fe * -fe) / (float)y_tmp;
       }
     } else {
       b_binary_expand_op(VV, b_v, y_tmp);
     }
     if (b_w->size[1] == 42) {
-      for (k0 = 0; k0 < 42; k0++) {
-        fe = b_w_data[k0].re;
-        x = b_w_data[k0].im;
-        WW[k0] += (fe * fe - x * -x) / (float)y_tmp;
+      for (k = 0; k < 42; k++) {
+        fe = b_w_data[k].re;
+        x = b_w_data[k].im;
+        WW[k] += (fe * fe - x * -x) / (float)y_tmp;
       }
     } else {
       b_binary_expand_op(WW, b_w, y_tmp);
     }
     /*  accumulate CROSS-SPECTRAL DENSITY from this window */
     if (b_u->size[1] == 1) {
-      b_n = b_v->size[1];
+      nxin = b_v->size[1];
     } else {
-      b_n = b_u->size[1];
+      nxin = b_u->size[1];
     }
-    if ((b_u->size[1] == b_v->size[1]) && (b_n == 42)) {
-      for (k0 = 0; k0 < 42; k0++) {
-        v_re = b_v_data[k0].re;
-        fe = -b_v_data[k0].im;
-        u_re_tmp = b_u_data[k0].re;
-        x = b_u_data[k0].im;
+    if ((b_u->size[1] == b_v->size[1]) && (nxin == 42)) {
+      for (k = 0; k < 42; k++) {
+        v_re = b_v_data[k].re;
+        fe = -b_v_data[k].im;
+        u_re_tmp = b_u_data[k].re;
+        x = b_u_data[k].im;
         u_re = u_re_tmp * v_re - x * fe;
         fe = u_re_tmp * fe + x * v_re;
         if (fe == 0.0F) {
@@ -985,23 +1007,23 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
           u_re /= (float)y_tmp;
           fe /= (float)y_tmp;
         }
-        UV[k0].re += u_re;
-        UV[k0].im += fe;
+        UV[k].re += u_re;
+        UV[k].im += fe;
       }
     } else {
       binary_expand_op(UV, b_u, b_v, y_tmp);
     }
     if (b_u->size[1] == 1) {
-      b_n = b_w->size[1];
+      nxin = b_w->size[1];
     } else {
-      b_n = b_u->size[1];
+      nxin = b_u->size[1];
     }
-    if ((b_u->size[1] == b_w->size[1]) && (b_n == 42)) {
-      for (k0 = 0; k0 < 42; k0++) {
-        w_re = b_w_data[k0].re;
-        w_im = -b_w_data[k0].im;
-        u_re_tmp = b_u_data[k0].re;
-        x = b_u_data[k0].im;
+    if ((b_u->size[1] == b_w->size[1]) && (nxin == 42)) {
+      for (k = 0; k < 42; k++) {
+        w_re = b_w_data[k].re;
+        w_im = -b_w_data[k].im;
+        u_re_tmp = b_u_data[k].re;
+        x = b_u_data[k].im;
         u_re = u_re_tmp * w_re - x * w_im;
         fe = u_re_tmp * w_im + x * w_re;
         if (fe == 0.0F) {
@@ -1014,23 +1036,23 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
           u_re /= (float)y_tmp;
           fe /= (float)y_tmp;
         }
-        UW[k0].re += u_re;
-        UW[k0].im += fe;
+        UW[k].re += u_re;
+        UW[k].im += fe;
       }
     } else {
       binary_expand_op(UW, b_u, b_w, y_tmp);
     }
     if (b_v->size[1] == 1) {
-      b_n = b_w->size[1];
+      nxin = b_w->size[1];
     } else {
-      b_n = b_v->size[1];
+      nxin = b_v->size[1];
     }
-    if ((b_v->size[1] == b_w->size[1]) && (b_n == 42)) {
-      for (k0 = 0; k0 < 42; k0++) {
-        w_re = b_w_data[k0].re;
-        w_im = -b_w_data[k0].im;
-        x = b_v_data[k0].re;
-        fe = b_v_data[k0].im;
+    if ((b_v->size[1] == b_w->size[1]) && (nxin == 42)) {
+      for (k = 0; k < 42; k++) {
+        w_re = b_w_data[k].re;
+        w_im = -b_w_data[k].im;
+        x = b_v_data[k].re;
+        fe = b_v_data[k].im;
         v_re = x * w_re - fe * w_im;
         fe = x * w_im + fe * w_re;
         if (fe == 0.0F) {
@@ -1043,8 +1065,8 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
           v_re /= (float)y_tmp;
           fe /= (float)y_tmp;
         }
-        VW[k0].re += v_re;
-        VW[k0].im += fe;
+        VW[k].re += v_re;
+        VW[k].im += fe;
       }
     } else {
       binary_expand_op(VW, b_v, b_w, y_tmp);
@@ -1155,10 +1177,10 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   /*  wave stats */
   /*  frequency cutoff for wave stats */
   /*  significant wave height */
-  k0 = f->size[1] - 1;
+  nxout = f->size[1] - 1;
   nx = 0;
-  for (nxin = 0; nxin <= k0; nxin++) {
-    if (f_data[nxin] > 0.05) {
+  for (loop_ub = 0; loop_ub <= nxout; loop_ub++) {
+    if (f_data[loop_ub] > 0.05) {
       nx++;
     }
   }
@@ -1168,18 +1190,18 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   r1->size[1] = nx;
   emxEnsureCapacity_int32_T(r1, i);
   r2 = r1->data;
-  b_n = 0;
-  for (nxin = 0; nxin <= k0; nxin++) {
-    if (f_data[nxin] > 0.05) {
-      r2[b_n] = nxin + 1;
-      b_n++;
+  nxin = 0;
+  for (loop_ub = 0; loop_ub <= nxout; loop_ub++) {
+    if (f_data[loop_ub] > 0.05) {
+      r2[nxin] = loop_ub + 1;
+      nxin++;
     }
   }
   /*   energy period */
-  k0 = f->size[1] - 1;
+  nxout = f->size[1] - 1;
   nx = 0;
-  for (nxin = 0; nxin <= k0; nxin++) {
-    if (f_data[nxin] > 0.05) {
+  for (loop_ub = 0; loop_ub <= nxout; loop_ub++) {
+    if (f_data[loop_ub] > 0.05) {
       nx++;
     }
   }
@@ -1189,11 +1211,11 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   r3->size[1] = nx;
   emxEnsureCapacity_int32_T(r3, i);
   r4 = r3->data;
-  b_n = 0;
-  for (nxin = 0; nxin <= k0; nxin++) {
-    if (f_data[nxin] > 0.05) {
-      r4[b_n] = nxin + 1;
-      b_n++;
+  nxin = 0;
+  for (loop_ub = 0; loop_ub <= nxout; loop_ub++) {
+    if (f_data[loop_ub] > 0.05) {
+      r4[nxin] = loop_ub + 1;
+      nxin++;
     }
   }
   i = u->size[0] * u->size[1];
@@ -1203,8 +1225,8 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   u_data = u->data;
   nx = r3->size[1];
   for (i = 0; i < nx; i++) {
-    k0 = r4[i];
-    u_data[i] = (float)f_data[k0 - 1] * b_E[k0 - 1];
+    k = r4[i];
+    u_data[i] = (float)f_data[k - 1] * b_E[k - 1];
   }
   i = v->size[0] * v->size[1];
   v->size[0] = 1;
@@ -1235,7 +1257,7 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   for (k = 0; k < nx; k++) {
     u_data[k] = fabsf(v_data[k]);
   }
-  minimum(u, &x, &b_n);
+  minimum(u, &x, &nxin);
   /*  peak period */
   /* [~ , fpindex] = max(UU+VV); % can use velocity (picks out more distint
    * peak) */
@@ -1245,7 +1267,7 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
   if (Nyquist > 18.0) {
     /*  if reasonable peak not found, use centroid */
     Nyquist = 1.0F / fe;
-    nx = b_n;
+    nx = nxin;
   }
   /*  wave directions */
   /*  peak wave direction, rotated to geographic conventions */
@@ -1257,14 +1279,10 @@ void NEDwaves_memlight(const emxArray_real32_T *north,
     fe += 360.0F;
   }
   /*  take NW quadrant from negative to 270-360 range */
-  if (fe > 180.0F) {
-    fe -= 180.0F;
-  }
-  /*  take reciprocal such wave direction is FROM, not TOWARDS */
-  if (fe < 180.0F) {
-    fe += 180.0F;
-  }
-  /*  take reciprocal such wave direction is FROM, not TOWARDS */
+  /* if Dp > 180, Dp = Dp - 180; end % take reciprocal such wave direction is
+   * FROM, not TOWARDS */
+  /* if Dp < 180, Dp = Dp + 180; end % take reciprocal such wave direction is
+   * FROM, not TOWARDS */
   /*  format for microSWIFT telemetry output (payload type 52) */
   i = v->size[0] * v->size[1];
   v->size[0] = 1;
