@@ -39,6 +39,14 @@ if isfield(SIG,'time')
     sig.mspe = sig.hrcorr;
     sig.slope = sig.hrcorr;
     sig.pspike = sig.hrcorr;
+    sig.N = sig.hrcorr;
+    sig.pitchvar = NaN(1,length(sig.time));
+    sig.rollvar = NaN(1,length(sig.time));
+    sig.waveheight = NaN(1,length(sig.time));
+    sig.hrwmag = sig.hrcorr;
+    sig.hrwmag0 = sig.hrcorr;
+    sig.hrw0 = sig.hrcorr;
+    sig.hrwvar0 = sig.hrcorr;
 
 
     for it = 1:length(sig.time)
@@ -61,6 +69,14 @@ if isfield(SIG,'time')
         sig.mspe(1:nz,it) = SIG(it).HRprofile.QC.mspeEOF;
         sig.slope(1:nz,it) = SIG(it).HRprofile.QC.slopeEOF;
         sig.pspike(1:nz,it) = SIG(it).HRprofile.QC.pspike;
+        sig.N(1:nz,it) = SIG(it).HRprofile.QC.NEOF;
+        sig.pitchvar(it) = SIG(it).motion.pitchvar;
+        sig.rollvar(it) = SIG(it).motion.rollvar;
+        sig.waveheight(it) = SIG(it).motion.waveheight;
+        sig.hrwmag(1:nz,it) = SIG(it).HRprofile.QC.wmag;
+        sig.hrwmag0(1:nz,it) = SIG(it).HRprofile.QC.wmag0;
+        sig.hrw0(1:nz,it) = SIG(it).HRprofile.QC.w0;
+        sig.hrwvar0(1:nz,it) = SIG(it).HRprofile.QC.wvar0;
     end
 
     %QC
@@ -83,6 +99,14 @@ if isfield(SIG,'time')
         sig.mspe(:,badburst) = [];
         sig.slope(:,badburst) = [];  
         sig.pspike(:,badburst) = [];
+        sig.N(:,badburst) = [];
+        sig.pitchvar(badburst) = [];
+        sig.rollvar(badburst) = [];
+        sig.waveheight(badburst) = [];
+        sig.hrw0(:,badburst) = [];
+        sig.hrwvar0(:,badburst) = [];
+        sig.hrwmag(:,badburst) = [];
+        sig.hrwmag0(:,badburst) = [];
 
         sig.time(badburst) = [];
     else

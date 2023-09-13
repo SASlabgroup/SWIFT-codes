@@ -185,8 +185,16 @@ if isempty(bfiles)
     error('   No burst files found    ')
 end
 bfiles = bfiles(~contains({bfiles.name},'smoothwHR'));
-ipart = contains({bfiles.name},'partial');
-bfiles(find(ipart)-1) = [];
+ipart = find(contains({bfiles.name},'partial'));
+idel = false(size(ipart));
+for ip = 1:length(ipart)
+    pname = bfiles(ipart(ip)).name;
+    pdir = bfiles(ipart(ip)).folder;
+    if exist([pdir slash pname(1:end-12) '.mat'])
+        idel(ip) = true;
+    end
+end
+bfiles(ipart(idel)-1) = [];
 nburst = length(bfiles);
 
 %% Loop through and process burst files
@@ -518,6 +526,10 @@ for iburst = 1:nburst
     SIG(isig).HRprofile.eps_struct0 = eps_struct0';
     SIG(isig).HRprofile.eps_structHP = eps_structHP';
     SIG(isig).HRprofile.eps_structEOF = eps_structEOF';
+    SIG(isig).HRprofile.QC.wmag = mean(abs(wclean),2,'omitnan');
+    SIG(isig).HRprofile.QC.wmag0 = mean(abs(hrvel),2,'omitnan');
+    SIG(isig).HRprofile.QC.w0 = mean(hrvel,2,'omitnan');
+    SIG(isig).HRprofile.QC.wvar0 = var(hrvel,[],2,'omitnan');
     SIG(isig).HRprofile.QC.hrcorr = mean(hrcorr,2,'omitnan')';
     SIG(isig).HRprofile.QC.hramp = mean(hramp,2,'omitnan')';
     SIG(isig).HRprofile.QC.mspe0 = qual0.mspe;
@@ -554,6 +566,7 @@ for iburst = 1:nburst
     SIG(isig).motion.pitchvar = var(avg.Pitch,'omitnan');
     SIG(isig).motion.rollvar = var(avg.Roll,'omitnan');
     SIG(isig).motion.headvar = var(unwrap(avg.Heading),'omitnan');
+    SIG(isig).motion.waveheight = NaN;% Will fill in later from SWIFT if avail
     SIG(isig).motion.wpsd = wpsd;
     SIG(isig).motion.bobpsd = bobpsd;
     SIG(isig).motion.f = f;
@@ -604,6 +617,9 @@ for iburst = 1:nburst
             SWIFT(tindex).signature.altimeter = maxz;
             % Temperaure
             SWIFT(tindex).watertemp = profile.temp;
+            
+            % Save significant wave height in SIG structure if avail
+            SIG(isig-1).motion.waveheight = SWIFT(tindex).sigwaveheight;
 
         elseif timematch && badburst % Bad burst & time match
             % HR data
@@ -699,17 +715,6 @@ if ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
 SWIFT = SWIFT(isort);
 end
 
-%%%%%% Plot burst Averaged SWIFT Signature Data %%%%%%
-if opt.plotmission
-    catSIG(SIG,'plot','qc');
-    set(gcf,'Name',SNprocess)
-    if opt.saveplots
-        figname = [savedir get(gcf,'Name')];
-        print(figname,'-dpng')
-        close gcf
-    end
-end
-
 %%%%%% Save SWIFT Structure %%%%%%%%
 if opt.saveSWIFT && ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
     if strcmp(mfile.name(end-6:end-4),'SBG')
@@ -722,6 +727,17 @@ end
 %%%%%% Save SIG Structure %%%%%%%%
 if opt.saveSIG
    save([savedir SNprocess '_burstavgSIG.mat'],'SIG')
+end
+
+%%%%%% Plot burst Averaged SWIFT Signature Data %%%%%%
+if opt.plotmission
+    catSIG(SIG,'plot','qc');
+    set(gcf,'Name',SNprocess)
+    if opt.saveplots
+        figname = [savedir get(gcf,'Name')];
+        print(figname,'-dpng')
+        close gcf
+    end
 end
 
 
