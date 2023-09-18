@@ -24,15 +24,19 @@ plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots.
 fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
 micro = false; % initialize flag for microSWIFT, which flips to true if detected
 
-minwaveheight = 0; % minimum wave height in data screening
+disp('-------------------------------------')
+disp('Check QC settings... currently using:')
 
-minsalinity = 20; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minwaveheight = 0 % minimum wave height in data screening
 
-maxdriftspd = 5;  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
+minsalinity = 0 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
-maxwindspd = 30; % m/s for malfunctioning Airmars
+maxdriftspd = 5  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
 
-minairtemp = -20; % min airtemp
+maxwindspd = 30 % m/s for malfunctioning Airmars
+
+minairtemp = -20 % min airtemp
+disp('-------------------------------------')
 
 wd = pwd;
 wdi = find(wd == '/',1,'last');
