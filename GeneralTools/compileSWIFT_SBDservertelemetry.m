@@ -29,7 +29,7 @@ disp('Check QC settings... currently using:')
 
 minwaveheight = 0 % minimum wave height in data screening
 
-minsalinity = 0 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 20 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 5  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
 
@@ -192,7 +192,7 @@ for ai = 1:length(flist),
         end
     end
     % salinity limit
-    if isfield(oneSWIFT,'salinity') && ~micro
+    if isfield(oneSWIFT,'salinity') %&& ~micro
         if all(oneSWIFT.salinity < minsalinity) % & all(~isnan(oneSWIFT.salinity)),
             badburst(ai) = true;
             disp('=================================')

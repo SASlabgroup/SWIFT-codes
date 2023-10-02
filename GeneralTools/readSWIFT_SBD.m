@@ -471,6 +471,18 @@ while 1
         epochTime                = fread(fid, 1,'float'); % epoch time
         asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
         SWIFT.time               = datenum(asDatetime); % time at end of burst
+        % also get the time from the filename and see how they compare
+        year = fname(26:29);
+        month = fname(23:25);
+        day = fname(21:22);
+        hour = fname(31:32);
+        minutes = fname(33:34);
+        seconds = fname(35:36);
+        filetime = datenum([day '-' month '-' year ' ' hour ':' minutes ':' seconds ]);  
+        tooearly = 3; % maximum time gaps (in days) to tolerate between embedded time and file received time
+        if SWIFT.time < ( filetime - tooearly) 
+            SWIFT.time = filetime
+        end
 
     else
         
