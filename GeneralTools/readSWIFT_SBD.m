@@ -69,7 +69,6 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 recip = true; % binary flag to change wave direction to FROM
 errorfile = false; % initialize
 
-SWIFT.time = [];
 SWIFT.lat = [];
 SWIFT.lon = [];
 PBlat = NaN;
@@ -481,7 +480,7 @@ while 1
         filetime = datenum([day '-' month '-' year ' ' hour ':' minutes ':' seconds ]);  
         tooearly = 3; % maximum time gaps (in days) to tolerate between embedded time and file received time
         if SWIFT.time < ( filetime - tooearly) 
-            SWIFT.time = filetime
+            SWIFT.time = filetime;
         end
 
     else
