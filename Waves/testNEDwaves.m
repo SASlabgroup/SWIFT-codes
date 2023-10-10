@@ -14,9 +14,10 @@ load(['testcase' num2str(tcase,1) '.mat'])
 
 %% run full version
 
-[ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves(north, east, down, fs);
+%[ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves(north, east, down, fs);
+%f = linspace(fmin,fmax,length(E));
 
-f = linspace(fmin,fmax,length(E));
+[ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(north, east, [], fs);
 
 figure(1), clf
 
@@ -86,4 +87,8 @@ xlabel('frequency [Hz]')
 
 
 print('-dpng',['test case' num2str(tcase,1) '.png'])
+
+%% compare variance
+
+varratio = Hsml.^2 / Hs.^2
 

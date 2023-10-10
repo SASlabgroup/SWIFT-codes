@@ -15,9 +15,11 @@ north = fread(fid,8192,'single'); % mm/s
 east  = fread(fid,8192,'single'); % mm/s
 down  = fread(fid,8192,'single'); % mm/s
 
+fclose(fid);
+
 if plotflag
 
-    figure,
+    figure(1), clf
     plot(north), hold on, plot(east), plot(down)
     ylabel('velocity [mm/s]')
     legend('north','east','down')
