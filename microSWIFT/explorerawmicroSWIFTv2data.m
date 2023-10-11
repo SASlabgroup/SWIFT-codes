@@ -6,10 +6,12 @@
 
 clear
 
+cd('/Users/jthomson/Dropbox/engineering/SWIFT/microSWIFT_v2/Testing/RawData/oct10_test_uSWIFT_003/')
+
 GPSflist = dir('*.bin');
 GPSsamplingrate = 4; % assume 5 Hz
 includetelemetry = true;
-despike = true;
+despike = false;
 
 if includetelemetry
     load('microSWIFT003_telemetry.mat')
@@ -45,6 +47,7 @@ for gi = 1:length(GPSflist)
     
     % onboard GPS (NED) waves processing
     [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check ] = NEDwaves_memlight(north', east', down', GPSsamplingrate);
+    %[ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check ] = NEDwaves(north', east', down', GPSsamplingrate);
     % store in SWIFT structure
     NEDresults(gi).sigwaveheight = Hs;
     NEDresults(gi).peakwaveperiod = Tp;
@@ -63,12 +66,15 @@ for gi = 1:length(GPSflist)
     
     figure(2), clf
     loglog(GPSresults(gi).wavespectra.freq, GPSresults(gi).wavespectra.energy), hold on
-    loglog(NEDresults(gi).wavespectra.freq, NEDresults(gi).wavespectra.energy), hold on
+    loglog(NEDresults(gi).wavespectra.freq, NEDresults(gi).wavespectra.energy,'--'), hold on
     if includetelemetry
         loglog(SWIFT(gi).wavespectra.freq, SWIFT(gi).wavespectra.energy,'k:'), hold on
+        legend(['GPSwaves, H_s = ' num2str(GPSresults(gi).sigwaveheight,2) ],...
+            ['NEDwaves memlight, H_s = ' num2str(NEDresults(gi).sigwaveheight,2)],'telemetry')
+    else
+        legend(['GPSwaves, H_s = ' num2str(GPSresults(gi).sigwaveheight,2) ],...
+            ['NEDwaves memlight, H_s = ' num2str(NEDresults(gi).sigwaveheight,2)],'telemetry')
     end
-    legend(['GPSwaves, H_s = ' num2str(GPSresults(gi).sigwaveheight,2) ],...
-        ['NEDwaves memlight, H_s = ' num2str(NEDresults(gi).sigwaveheight,2)])
     title(GPSflist(gi).name)
     xlabel('frequency [Hz]')
     ylabel('Energy density [m^2/Hz]')
@@ -85,7 +91,7 @@ figure(3),
 plot( [NEDresults.sigwaveheight].^2 ./ [GPSresults.sigwaveheight].^2, 'bo','linewidth',3)
 ylabel('Variance ratio')
 xlabel('file number')
-axis([0 inf 0 1])
+axis([0 inf 0 2])
 grid
 print -dpng varianceratio.png
 

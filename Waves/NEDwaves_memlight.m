@@ -25,11 +25,21 @@ function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves_memlight
 % and only uses frequency limits, not full f array
 %
 % J. Thomson,  12/2022 (modified from GPSwaves)
+%
 %              1/2023 memory light version... removes filtering, windowing,etc
 %                       assumes input data is clean and ready
+%
 %              6/2023 put windowing back in (as for loop that over-writes)
 %                   abandon convention that upper cases is in frequency domain
+%
 %              9/2023 reverse convention for wave direction and filter twice
+%
+%              10/2023 fix major bug introduced at 6/2023 wherein raw fft
+%              coefficients where merged across neighbor frequencies before
+%              calculating auto and cross spectra (i.e., averaging before
+%              applying a nonlinear operator)
+%
+%              10/2023 reintroduce simply despiking
 %
 %#codegen
 
@@ -38,17 +48,15 @@ function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves_memlight
 %% parameters
 
 pts = length(east);  % length of the input data (should be 2^N for efficiency)
-%fmin = 0.01; % min frequecny for final output, Hz
-%fmax = 0.5; % max frequecny for final output, Hz
-%nf = 42; % number of frequency bands in final result
 
+Nstd = 10;  % number of standard deviations to identify spikes
 RC = 4; % time constant [s] for high-pass filter (pass T < 2 pi * RC)
 wsecs = 256;   % window length in seconds, should make 2^N samples is fs is even
 merge = 3;      % freq bands to merge, must be odd?
 maxf = .5;       % frequency cutoff for telemetry Hz
 
 wpts = round(fs * wsecs); % window length in data points
-if rem(wpts,2)~=0,
+if rem(wpts,2) ~= 0
     wpts = wpts-1;
 end  % make wpts an even number
 windows = floor( 4*(pts/wpts - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
@@ -60,11 +68,13 @@ f1 = 1./(wpts./fs);    % frequency resolution
 rawf = linspace(f1, Nyquist, round(wpts/2)); % raw frequency bands
 n = (wpts/2) / merge;                         % number of f bands after merging
 bandwidth = Nyquist/n ;                    % freq (Hz) bandwitdh after merging
-% find middle of each merged freq band, ONLY WORKS WHEN MERGING ODD NUMBER OF BANDS!
+% find middle of each merged freq band, to make the final frequency vector 
+% using the middle ONLY WORKS WHEN MERGING ODD NUMBER OF BANDS!
 f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ;
+f(f>maxf) = [];  % should end up with length(f) = 42 with maxf=0.5, merge=3, and wsecs = 256
 
 %% initialize spectral ouput, which will accumulate as windows are processed
-% length will only be 42 is wsecs = 256, merge = 3, maxf = 0.5 (params above)
+% length will only be 42 if wsecs = 256, merge = 3, maxf = 0.5 (params above)
 UU = single( zeros(1,42) );
 VV = single( zeros(1,42) );
 WW = single( zeros(1,42) );
@@ -72,63 +82,54 @@ UV = single( 1i*zeros(1,42) );
 UW = single( 1i*zeros(1,42) );
 VW = single( 1i*zeros(1,42) );
 
+%% Despike the full time series
+
+bad = abs(east) >= Nstd * std(east); % logical array of indices for bad points
+east(bad) = mean( east(~bad) );
+bad = abs(north) >= Nstd * std(north); % logical array of indices for bad points
+north(bad) = mean( north(~bad) );
+bad = abs(down) >= Nstd * std(down); % logical array of indices for bad points
+down(bad) = mean( down(~bad) );
+
 %% loop thru windows, accumulating spectral results
 
 for q=1:windows
     u = east(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  );
     v = north(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  );
     w = down(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  );
-    
+
     %% remove the mean
-    
+
     u = u - mean(u);
     v = v - mean(v);
     w = w - mean(w);
-    
-    
-    %% high-pass RC filter, applied twice / ONCE / OFF
-    
+
+
+    %% high-pass RC filter this window
+
     alpha = RC / (RC + 1./fs);
-    
-    % filtereddata = u;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( u(ui) - u(ui-1) );
-    % end
-    % u = filtereddata;
-    
-    % filtereddata = u;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( u(ui) - u(ui-1) );
-    % end
-    % u = filtereddata;
-    
-    % filtereddata = v;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( v(ui) - v(ui-1) );
-    % end
-    % v = filtereddata;
-    
-    % filtereddata = v;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( v(ui) - v(ui-1) );
-    % end
-    % v = filtereddata;
-    
-    % filtereddata = w;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( w(ui) - w(ui-1) );
-    % end
-    % w = filtereddata;
-    
-    % filtereddata = w;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( w(ui) - w(ui-1) );
-    % end
-    % w = filtereddata;
-    
+
+    filtereddata = u;
+    for ui = 2:length(filtereddata),
+        filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( u(ui) - u(ui-1) );
+    end
+    u = filtereddata;
+
+    filtereddata = v;
+    for ui = 2:length(filtereddata),
+        filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( v(ui) - v(ui-1) );
+    end
+    v = filtereddata;
+
+    filtereddata = w;
+    for ui = 2:length(filtereddata),
+        filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( w(ui) - w(ui-1) );
+    end
+    w = filtereddata;
+
     %% taper and rescale (to preserve variance)
-    
-    % get original variance of each
+
+    % get original variance of each window
     uvar = var(u);
     vvar = var(v);
     wvar = var(w);
@@ -142,20 +143,20 @@ for q=1:windows
     u = u * sqrt( uvar ./ var(u) );
     v = v * sqrt( vvar ./ var(v) );
     w = w * sqrt( wvar ./ var(w) );
-    
-    
+
+
     %% FFT
-    
+
     % calculate Fourier coefs (complex values, double sided)
     u = single(fft(u));
     v = single(fft(v));
     w = single(fft(w));
-    
+
     % second half of Matlab's FFT is redundant, so throw it out
     u( round(wpts/2+1):wpts ) = [];
     v( round(wpts/2+1):wpts ) = [];
     w( round(wpts/2+1):wpts ) = [];
-    
+
     % throw out the mean (first coef) and add a zero (to make it the right length)
     u(1)=[];
     v(1)=[];
@@ -163,47 +164,41 @@ for q=1:windows
     u(round(wpts/2))=0;
     v(round(wpts/2))=0;
     w(round(wpts/2))=0;
-    
-    % merge frequency bands (moved up to top of code)
-    % Nyquist = fs / 2;     % highest spectral frequency
-    % f1 = 1./(wpts./fs);    % frequency resolution
-    % rawf = linspace(f1, Nyquist, round(wpts/2)); % raw frequency bands
-    % n = (wpts/2) / merge;                         % number of f bands after merging
-    % bandwidth = Nyquist/n ;                    % freq (Hz) bandwitdh after merging
-    % % find middle of each freq band, ONLY WORKS WHEN MERGING ODD NUMBER OF BANDS!
-    % f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ;
-    u = interp1( rawf, u, f);
-    v = interp1( rawf, v, f);
-    w = interp1( rawf, w, f);
-    
-    % remove the high frequency tail (to save memory)
-    u( f > maxf ) = [];
-    v( f > maxf ) = [];
-    w( f > maxf ) = [];
-    f( f > maxf ) = [];
-    
-    % accumulate POWER SPECTRAL DENSITY (auto-spectra) from this window
-    UU = UU + ( real ( u .* conj(u) ) / (round(wpts/2) * fs ) );
-    VV = VV + ( real ( v .* conj(v) ) / (round(wpts/2) * fs ) );
-    WW = WW + ( real ( w .* conj(w) ) / (round(wpts/2) * fs ) );
-    % accumulate CROSS-SPECTRAL DENSITY from this window
-    UV = UV + ( ( u .* conj(v) ) / (round(wpts/2) * fs ) );
-    UW = UW + ( ( u .* conj(w) ) / (round(wpts/2) * fs ) );
-    VW = VW + ( ( v .* conj(w) ) / (round(wpts/2) * fs ) );
-    
+
+    % Calculate the auto-spectra and cross-spectra from this window 
+    % ** do this before merging frequency bands or ensemble averging windows **
+    % only compute for raw frequencies less than the max frequency of interest (to save memory)
+    UUwindow = ( real ( u( rawf < maxf ) .* conj(u( rawf < maxf )) ) / (round(wpts/2) * fs ) );
+    VVwindow = ( real ( v( rawf < maxf ) .* conj(v( rawf < maxf )) ) / (round(wpts/2) * fs ) );
+    WWwindow = ( real ( w( rawf < maxf ) .* conj(w( rawf < maxf )) ) / (round(wpts/2) * fs ) );
+    UVwindow = ( ( u( rawf < maxf ) .* conj(v( rawf < maxf )) ) / (round(wpts/2) * fs ) );
+    UWwindow = ( ( u( rawf < maxf ) .* conj(w( rawf < maxf )) ) / (round(wpts/2) * fs ) );
+    VWwindow = ( ( v( rawf < maxf ) .* conj(w( rawf < maxf )) ) / (round(wpts/2) * fs ) );
+
+    % accumulate window results and merge neighboring frequency bands (to increase DOFs)
+    for mi = merge : merge : length(f)*merge
+        UU(mi/merge) = UU(mi/merge) + mean( UUwindow((mi-merge+1):mi) );
+        VV(mi/merge) = VV(mi/merge) + mean( VVwindow((mi-merge+1):mi) );
+        WW(mi/merge) = WW(mi/merge) + mean( WWwindow((mi-merge+1):mi) );
+        UV(mi/merge) = UV(mi/merge) + mean( UVwindow((mi-merge+1):mi) );
+        UW(mi/merge) = UW(mi/merge) + mean( UWwindow((mi-merge+1):mi) );
+        VW(mi/merge) = VW(mi/merge) + mean( VWwindow((mi-merge+1):mi) );
+    end
+
+
 end % close window loop
 
 %% divide accumulated results by number of windows (effectively an ensemble avg)
-UU = UU ./ windows * merge;
-VV = VV ./ windows * merge;
-WW = WW ./ windows * merge;
-UV = UV ./ windows * merge;
-UW = UW ./ windows * merge;
-VW = VW ./ windows * merge;
-
+UU = UU ./ windows;
+VV = VV ./ windows;
+WW = WW ./ windows;
+UV = UV ./ windows;
+UW = UW ./ windows;
+VW = VW ./ windows;
 
 %% wave spectral moments
 % see definitions from Kuik et al, JPO, 1988 and Herbers et al, JTech, 2012, Thomson et al, J Tech 2018
+% save memory by calling the co- and quad spectra inline, rather than making the variables
 
 %Qxz = imag(UW); % quadspectrum of vertical and east horizontal motion
 %Cxz = real(UW); % cospectrum of vertical and east horizontal motion
@@ -230,7 +225,7 @@ check = WW ./ (UU + VV);
 fwaves = f>0.05; % frequency cutoff for wave stats
 
 % significant wave height
-Hs  = 4*sqrt( sum( E(fwaves) ) * (f(2)-f(1)) );
+Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
 
 %  energy period
 fe = sum( f(fwaves).*E(fwaves) )./sum( E(fwaves) );

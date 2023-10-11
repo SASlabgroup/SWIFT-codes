@@ -5,7 +5,7 @@
  * File: NEDwaves_memlight_types.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 02-Sep-2023 15:57:28
+ * C/C++ source code generated on  : 10-Oct-2023 20:23:55
  */
 
 #ifndef NEDWAVES_MEMLIGHT_TYPES_H
@@ -45,6 +45,21 @@ struct emxArray_real_T {
 typedef struct emxArray_real_T emxArray_real_T;
 #endif /* typedef_emxArray_real_T */
 
+#ifndef struct_emxArray_boolean_T
+#define struct_emxArray_boolean_T
+struct emxArray_boolean_T {
+  bool *data;
+  int *size;
+  int allocatedSize;
+  int numDimensions;
+  bool canFreeData;
+};
+#endif /* struct_emxArray_boolean_T */
+#ifndef typedef_emxArray_boolean_T
+#define typedef_emxArray_boolean_T
+typedef struct emxArray_boolean_T emxArray_boolean_T;
+#endif /* typedef_emxArray_boolean_T */
+
 #ifndef typedef_emxArray_creal32_T
 #define typedef_emxArray_creal32_T
 typedef struct {
@@ -70,21 +85,6 @@ struct emxArray_int32_T {
 #define typedef_emxArray_int32_T
 typedef struct emxArray_int32_T emxArray_int32_T;
 #endif /* typedef_emxArray_int32_T */
-
-#ifndef struct_emxArray_boolean_T
-#define struct_emxArray_boolean_T
-struct emxArray_boolean_T {
-  bool *data;
-  int *size;
-  int allocatedSize;
-  int numDimensions;
-  bool canFreeData;
-};
-#endif /* struct_emxArray_boolean_T */
-#ifndef typedef_emxArray_boolean_T
-#define typedef_emxArray_boolean_T
-typedef struct emxArray_boolean_T emxArray_boolean_T;
-#endif /* typedef_emxArray_boolean_T */
 
 #endif
 /*

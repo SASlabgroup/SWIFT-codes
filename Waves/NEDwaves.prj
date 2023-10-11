@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.coder" plugin-version="R2021a">
-  <configuration build-checksum="4057417744" file="/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves.prj" location="/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves" name="NEDwaves" preferred-package-location="/Users/jthomson/Downloads/NEDwaves_testcases" preferred-package-type="package.type.zip.flat" target="target.unifiedcoder" target-name="MATLAB Coder">
+  <configuration build-checksum="2481482018" file="/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves.prj" location="/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves" name="NEDwaves" preferred-package-location="/Users/jthomson/Downloads/NEDwaves_testcases" preferred-package-type="package.type.zip.flat" target="target.unifiedcoder" target-name="MATLAB Coder">
     <profile key="profile.mex">
       <param.BuiltInstrumentedMex />
       <param.RanInstrumentedMex>false</param.RanInstrumentedMex>
@@ -591,11 +591,11 @@
     <param.hdlParamStorage />
     <var.gc.lastOutputRoot>codegen/lib/NEDwaves_memlight</var.gc.lastOutputRoot>
     <var.gc.lastOutputType>C_CODE</var.gc.lastOutputType>
-    <var.gc.preBuildChecksum>2178103939</var.gc.preBuildChecksum>
+    <var.gc.preBuildChecksum>2113345651</var.gc.preBuildChecksum>
     <var.cfi.lastOutputRoot />
     <var.cfi.preBuildChecksum />
     <var.outdatedOnRestore>false</var.outdatedOnRestore>
-    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves_memlight.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;499516785&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
+    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves_memlight.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;2225621143&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
     <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves_memlight.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
     <param.forceMexBuild>false</param.forceMexBuild>
     <param.NoDefaultJIT>false</param.NoDefaultJIT>

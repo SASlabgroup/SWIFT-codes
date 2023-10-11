@@ -54,8 +54,8 @@ testing = false;
 % standard deviations for despiking        
     Nstd = 10; 
 
-% time constant [s] for high-pass filter 
-    RC = 3.5; 
+% time constant [s] for high-pass filter, actual filter is 2pi * RC
+    RC = 4; 
 
 % energy ratios (unused as of Oct 2017)
 %maxEratio = 5; % max allowed ratio of Ezz to Exx + Eyy, default is 5

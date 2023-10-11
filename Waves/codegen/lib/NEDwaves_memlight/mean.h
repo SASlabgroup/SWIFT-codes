@@ -5,7 +5,7 @@
  * File: mean.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 06-Jan-2023 10:46:55
+ * C/C++ source code generated on  : 10-Oct-2023 20:23:55
  */
 
 #ifndef MEAN_H
@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-float mean(const emxArray_real32_T *x);
+creal32_T mean(const emxArray_creal32_T *x);
 
 #ifdef __cplusplus
 }

@@ -32,10 +32,9 @@ testing = false;
 
 %% tunable parameters
 
-Nstd = 4; % standard deviations for despiking
+Nstd = 10; % standard deviations for despiking
 
-RC = 3.5; % time constant [s] for high-pass filter (pass T < 2 pi * RC)
-
+RC = 4; % time constant [s] for high-pass filter (pass T < 2 pi * RC)
 
 %% fixed parameters (which will produce 42 frequency bands)
 
@@ -66,45 +65,27 @@ pts = length(east);       % record length in data points
 if pts >= 2*wsecs & fs>=1 & sum(bad)<100 & sum(bad)<100,  % minimum length and quality for processing
     
     
-    %% high-pass RC filter, once or twice ?
+    %% high-pass RC filter the full time series
     
     alpha = RC / (RC + 1./fs);
     
-    % filtereddata = east;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( east(ui) - east(ui-1) );
-    % end
-    % east = filtereddata;
-    %
-    % filtereddata = north;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( north(ui) - north(ui-1) );
-    % end
-    % north = filtereddata;
-    %
-    % filtereddata = down;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( down(ui) - down(ui-1) );
-    % end
-    % down = filtereddata;
-    %
-    % filtereddata = east;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( east(ui) - east(ui-1) );
-    % end
-    % east = filtereddata;
-    %
-    % filtereddata = north;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( north(ui) - north(ui-1) );
-    % end
-    % north = filtereddata;
-    %
-    % filtereddata = down;
-    % for ui = 2:length(filtereddata),
-    %    filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( down(ui) - down(ui-1) );
-    % end
-    % down = filtereddata;
+    filtereddata = east;
+    for ui = 2:length(filtereddata),
+       filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( east(ui) - east(ui-1) );
+    end
+    east = filtereddata;
+    
+    filtereddata = north;
+    for ui = 2:length(filtereddata),
+       filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( north(ui) - north(ui-1) );
+    end
+    north = filtereddata;
+    
+    filtereddata = down;
+    for ui = 2:length(filtereddata),
+       filtereddata(ui) = alpha * filtereddata(ui-1) + alpha * ( down(ui) - down(ui-1) );
+    end
+    down = filtereddata;
     
     %% break into windows (use 75 percent overlap)
     

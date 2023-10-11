@@ -5,7 +5,7 @@
  * File: div.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 02-Sep-2023 15:57:28
+ * C/C++ source code generated on  : 10-Oct-2023 20:23:55
  */
 
 #ifndef DIV_H
@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void e_binary_expand_op(float in1[42], const float in2[42],
+void c_binary_expand_op(float in1[42], const float in2[42],
                         const emxArray_real_T *in3);
 
 #ifdef __cplusplus

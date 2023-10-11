@@ -2,14 +2,14 @@
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
- * File: interp1.h
+ * File: std.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 02-Sep-2023 15:57:28
+ * C/C++ source code generated on  : 10-Oct-2023 20:23:55
  */
 
-#ifndef INTERP1_H
-#define INTERP1_H
+#ifndef STD_H
+#define STD_H
 
 /* Include Files */
 #include "NEDwaves_memlight_types.h"
@@ -22,9 +22,7 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void interp1(const emxArray_real_T *varargin_1,
-             const emxArray_creal32_T *varargin_2,
-             const emxArray_real_T *varargin_3, emxArray_creal32_T *Vq);
+float b_std(const emxArray_real32_T *x);
 
 #ifdef __cplusplus
 }
@@ -32,7 +30,7 @@ void interp1(const emxArray_real_T *varargin_1,
 
 #endif
 /*
- * File trailer for interp1.h
+ * File trailer for std.h
  *
  * [EOF]
  */
