@@ -129,9 +129,9 @@ uwindow = zeros(win,windows);
 vwindow = zeros(win,windows);
 zwindow = zeros(win,windows);
 for q=1:windows, 
-	uwindow(:,q) = u(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
-	vwindow(:,q) = v(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
-  	zwindow(:,q) = z(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );  
+	uwindow(:,q) = u(  (q-1)*floor(.25*win)+1  :  (q-1)*floor(.25*win)+win  );  
+	vwindow(:,q) = v(  (q-1)*floor(.25*win)+1  :  (q-1)*floor(.25*win)+win  );  
+  	zwindow(:,q) = z(  (q-1)*floor(.25*win)+1  :  (q-1)*floor(.25*win)+win  );  
 end
 
 %% detrend individual windows (full series already detrended)

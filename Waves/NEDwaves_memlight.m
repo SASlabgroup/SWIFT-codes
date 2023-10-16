@@ -49,28 +49,23 @@ function [ Hs, Tp, Dp, E, fmin, fmax, a1, b1, a2, b2, check] = NEDwaves_memlight
 
 pts = length(east);  % length of the input data (should be 2^N for efficiency)
 
-Nstd = 10;  % number of standard deviations to identify spikes
-RC = 4; % time constant [s] for high-pass filter (pass T < 2 pi * RC)
-wsecs = 256;   % window length in seconds, should make 2^N samples is fs is even
-merge = 3;      % freq bands to merge, must be odd?
-maxf = .5;       % frequency cutoff for telemetry Hz
+Nstd = 10;   % number of standard deviations to identify spikes
+RC = 4;      % time constant [s] for high-pass filter (pass T < 2 pi * RC)
+wsecs = 256; % window length in seconds, should make 2^N samples is fs is even
+merge = 3;   % freq bands to merge, must be odd?
+maxf = .5;   % frequency cutoff for telemetry Hz
 
 wpts = round(fs * wsecs); % window length in data points
-if rem(wpts,2) ~= 0
-    wpts = wpts-1;
-end  % make wpts an even number
-windows = floor( 4*(pts/wpts - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
+if rem(wpts,2) ~= 0, wpts = wpts-1; end  % make wpts an even number
+windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 75% overlap
 %dof = 2*windows*merge; % degrees of freedom
 
 %% frequency resolution
 Nyquist = fs / 2;     % highest spectral frequency
-f1 = 1./(wpts./fs);    % frequency resolution
-rawf = linspace(f1, Nyquist, round(wpts/2)); % raw frequency bands
-n = (wpts/2) / merge;                         % number of f bands after merging
-bandwidth = Nyquist/n ;                    % freq (Hz) bandwitdh after merging
-% find middle of each merged freq band, to make the final frequency vector 
-% using the middle ONLY WORKS WHEN MERGING ODD NUMBER OF BANDS!
-f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ;
+f1 = 1/(wsecs);    % frequency resolution
+rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
+bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
+f = [ (f1 + bandwidth/2) : bandwidth : Nyquist ];  % frequency vector after merging
 f(f>maxf) = [];  % should end up with length(f) = 42 with maxf=0.5, merge=3, and wsecs = 256
 
 %% initialize spectral ouput, which will accumulate as windows are processed
@@ -94,9 +89,9 @@ down(bad) = mean( down(~bad) );
 %% loop thru windows, accumulating spectral results
 
 for q=1:windows
-    u = east(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  );
-    v = north(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  );
-    w = down(  (q-1)*(.25*wpts)+1  :  (q-1)*(.25*wpts)+wpts  );
+    u = east(   (q-1)*floor(.25*wpts)+1  :  (q-1)*floor(.25*wpts)+wpts  );
+    v = north(  (q-1)*floor(.25*wpts)+1  :  (q-1)*floor(.25*wpts)+wpts  );
+    w = down(   (q-1)*floor(.25*wpts)+1  :  (q-1)*floor(.25*wpts)+wpts  );
 
     %% remove the mean
 

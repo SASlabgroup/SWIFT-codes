@@ -100,9 +100,9 @@ if pts >= 2*wsecs & fs>=1 & sum(bad)<100 & sum(bad)<100,  % minimum length and q
     wwindow = zeros(win,windows);
     
     for q=1:windows,
-        uwindow(:,q) = east(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );
-        vwindow(:,q) = north(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );
-        wwindow(:,q) = down(  (q-1)*(.25*win)+1  :  (q-1)*(.25*win)+win  );
+        uwindow(:,q) = east(  (q-1)*floor(.25*win)+1  :  (q-1)*floor(.25*win)+win  );
+        vwindow(:,q) = north(  (q-1)*floor(.25*win)+1  :  (q-1)*floor(.25*win)+win  );
+        wwindow(:,q) = down(  (q-1)*floor(.25*win)+1  :  (q-1)*floor(.25*win)+win  );
     end
     
     %% detrend individual windows (full series already detrended)

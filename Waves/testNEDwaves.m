@@ -10,6 +10,10 @@ tcase = 4;
 
 cd('/Users/jthomson/Dropbox/engineering/SWIFT/microSWIFT_v2/NEDwaves_testcases')
 load(['testcase' num2str(tcase,1) '.mat'])
+% fs=4.1; % try messing with some inputs
+% east = east(1:fs*256*2);
+% north = north(1:fs*256*2);
+% down = down(1:fs*256*2);
 
 %% run legacy version of GPSwaves 
 u = east; v = north;
