@@ -2,14 +2,14 @@
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
- * File: linspace.h
+ * File: colon.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 10-Oct-2023 20:23:55
+ * C/C++ source code generated on  : 16-Oct-2023 17:01:43
  */
 
-#ifndef LINSPACE_H
-#define LINSPACE_H
+#ifndef COLON_H
+#define COLON_H
 
 /* Include Files */
 #include "NEDwaves_memlight_types.h"
@@ -22,7 +22,9 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void linspace(double d1, double d2, double n, emxArray_real_T *y);
+void b_eml_float_colon(double b, emxArray_real_T *y);
+
+void eml_float_colon(double b, emxArray_real_T *y);
 
 #ifdef __cplusplus
 }
@@ -30,7 +32,7 @@ void linspace(double d1, double d2, double n, emxArray_real_T *y);
 
 #endif
 /*
- * File trailer for linspace.h
+ * File trailer for colon.h
  *
  * [EOF]
  */
