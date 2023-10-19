@@ -47,6 +47,9 @@ if isfield(SIG,'time')
     sig.hrwmag0 = sig.hrcorr;
     sig.hrw0 = sig.hrcorr;
     sig.hrwvar0 = sig.hrcorr;
+    sig.hrcorrvar = sig.hrcorr;
+    sig.hrampvar = sig.hramp;
+    sig.wpvar = sig.hramp;
 
 
     for it = 1:length(sig.time)
@@ -77,6 +80,9 @@ if isfield(SIG,'time')
         sig.hrwmag0(1:nz,it) = SIG(it).HRprofile.QC.wmag0;
         sig.hrw0(1:nz,it) = SIG(it).HRprofile.QC.w0;
         sig.hrwvar0(1:nz,it) = SIG(it).HRprofile.QC.wvar0;
+        sig.hrcorrvar(1:nz,it) = SIG(it).HRprofile.QC.hrcorrvar;
+        sig.hrampvar(1:nz,it) = SIG(it).HRprofile.QC.hrampvar;
+        sig.wpvar(1:nz,it) = SIG(it).HRprofile.QC.wpvar;
     end
 
     %QC
@@ -107,6 +113,9 @@ if isfield(SIG,'time')
         sig.hrwvar0(:,badburst) = [];
         sig.hrwmag(:,badburst) = [];
         sig.hrwmag0(:,badburst) = [];
+        sig.hrcorrvar(:,badburst) = [];
+        sig.hrampvar(:,badburst) = [];
+        sig.wpvar(:,badburst) = [];
 
         sig.time(badburst) = [];
     else

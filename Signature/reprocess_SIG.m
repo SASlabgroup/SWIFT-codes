@@ -391,6 +391,7 @@ for iburst = 1:nburst
         % Skip dissipation estimates if bad-burst
         if badburst  ||  sum(badping)/nping > 0.90
             disp('   Skipping dissipation...')
+            wpeof = NaN(size(hrw));
             eps_struct0 = NaN(size(hrw));
             eps_structHP = NaN(size(hrw));
             eps_structEOF = NaN(size(hrw));
@@ -530,8 +531,11 @@ for iburst = 1:nburst
     SIG(isig).HRprofile.QC.wmag0 = mean(abs(hrvel),2,'omitnan');
     SIG(isig).HRprofile.QC.w0 = mean(hrvel,2,'omitnan');
     SIG(isig).HRprofile.QC.wvar0 = var(hrvel,[],2,'omitnan');
+    SIG(isig).HRprofile.QC.wpvar = var(wpeof,[],2,'omitnan');
     SIG(isig).HRprofile.QC.hrcorr = mean(hrcorr,2,'omitnan')';
     SIG(isig).HRprofile.QC.hramp = mean(hramp,2,'omitnan')';
+    SIG(isig).HRprofile.QC.hrampvar = var(hramp,[],2,'omitnan');
+    SIG(isig).HRprofile.QC.hrcorrvar = var(hrcorr,[],2,'omitnan');
     SIG(isig).HRprofile.QC.mspe0 = qual0.mspe;
     SIG(isig).HRprofile.QC.mspeHP = qualHP.mspe;
     SIG(isig).HRprofile.QC.mspeEOF = qualEOF.mspe;
