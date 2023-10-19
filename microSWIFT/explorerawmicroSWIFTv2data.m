@@ -6,11 +6,10 @@
 
 clear
 
-%cd('/Users/jthomson/Dropbox/engineering/SWIFT/microSWIFT_v2/Testing/RawData/oct10_test_uSWIFT_003/')
-
+% load all files in current directory
 GPSflist = dir('*.bin');
 GPSsamplingrate = 4; % assume 4 Hz
-includetelemetry = false;
+includetelemetry = true;
 despike = false;
 
 if includetelemetry
