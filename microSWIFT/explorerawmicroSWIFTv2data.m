@@ -6,11 +6,11 @@
 
 clear
 
-cd('/Users/jthomson/Dropbox/engineering/SWIFT/microSWIFT_v2/Testing/RawData/oct10_test_uSWIFT_003/')
+%cd('/Users/jthomson/Dropbox/engineering/SWIFT/microSWIFT_v2/Testing/RawData/oct10_test_uSWIFT_003/')
 
 GPSflist = dir('*.bin');
-GPSsamplingrate = 4; % assume 5 Hz
-includetelemetry = true;
+GPSsamplingrate = 4; % assume 4 Hz
+includetelemetry = false;
 despike = false;
 
 if includetelemetry
