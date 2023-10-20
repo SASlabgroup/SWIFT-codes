@@ -40,7 +40,7 @@ swift.driftu = driftu;
 swift.driftv = driftv;
 
 % Relative Velocity
-if isfield(SWIFT,'signature') & isstruct(SWIFT(1).signature.profile)
+if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
     swift.depth = SWIFT(1).signature.profile.z';
     nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
