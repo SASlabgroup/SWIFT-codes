@@ -67,7 +67,6 @@ u = ufiltered;
 v = vfiltered;
 heave = heavefiltered;
 
-    
 %% break into windows (use 75 percent overlap)
 w = round(fs * wsecs);  % window length in data points
 if rem(w,2)~=0, w = w-1; else end  % make w an even number
