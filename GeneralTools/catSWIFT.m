@@ -161,5 +161,3 @@ else
     end
     swift.surftke(1:4,:) = NaN;% Deepest three bins are bad 
 end
-
-
