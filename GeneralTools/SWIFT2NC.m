@@ -12,7 +12,7 @@ function SWIFT2NC(SWIFT_in,filename)
 %   Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
 %   Feb 2023 by J. Thomson for SASSIE and general use
 
-swiftnum = str2num( SWIFT_in(1).ID );
+swiftnum = str2num(strrep(strrep(SWIFT_in(1).ID, 'SWIFT', ''), ' ', '') );
 
 SWIFT = SWIFT_in;
 
@@ -205,6 +205,7 @@ netcdf.putAtt(ncid,varid,'creator','Jim Thomson (APL-UW)');
 netcdf.putAtt(ncid,varid,'please_acknowledge:','investigator above');
 netcdf.putAtt(ncid,varid,'institution','Applied Physics Laboratory at the University of Washington (APL-UW)');
 netcdf.putAtt(ncid,varid,'contact_email_1','jthomson@apl.washington.edu');
+netcdf.putAtt(ncid,varid,'id', swiftnum);
 if swiftnum < 100 %2 digit input number = SWIFT
     netcdf.putAtt(ncid,varid,'description',['Data collected from Surface Wave Instrument Float with Tracking (SWIFT) ' num2str(swiftnum) '.  See www.apl.uw.edu/SWIFT for more information']);
 end
