@@ -9,7 +9,7 @@ swift.lon = 360 + [SWIFT.lon];
 swift.lat = [SWIFT.lat];
 swift.driftspd = [SWIFT.driftspd];
 
-%Air & sea temperature & pressure
+%Air & sea temperature & pressure & salinity
 if isfield(SWIFT,'airtemp')
 swift.tair = [SWIFT.airtemp];
 else
@@ -22,6 +22,11 @@ if isfield(SWIFT,'airtemp')
 swift.tair = [SWIFT.airtemp];
 else
     swift.tair = NaN(1,nt);
+end
+if isfield(SWIFT,'salinity')
+    swift.sal = [SWIFT.salinity];
+else
+    swift.sal = NaN(1,nt);
 end
 
 % Drift velocity
@@ -53,10 +58,12 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
         if isfield(SWIFT(it).signature.profile,'east') && ~isempty(SWIFT(it).signature.profile.east)
             swift.relu(:,it) = SWIFT(it).signature.profile.east;
             swift.relv(:,it) = SWIFT(it).signature.profile.north;
+            if isfield(SWIFT(it).signature.profile,'w')
             swift.relw(:,it) = SWIFT(it).signature.profile.w;
             swift.reluerr(:,it) = SWIFT(it).signature.profile.uerr;
             swift.relverr(:,it) = SWIFT(it).signature.profile.verr;
             swift.relwerr(:,it) = SWIFT(it).signature.profile.werr;
+            end
         elseif isfield(SWIFT(it).signature.profile,'u')  && ~isempty(SWIFT(it).signature.profile.u)
             swift.relu(:,it) = SWIFT(it).signature.profile.u;
             swift.relv(:,it) = SWIFT(it).signature.profile.v;
