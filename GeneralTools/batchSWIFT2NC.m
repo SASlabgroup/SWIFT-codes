@@ -9,24 +9,7 @@ flist = dir('SWIFT*.mat')
 for fi=1:length(flist), 
 
     load(flist(fi).name)
-
-    if exist('SWIFT') == 1
-
-        badindex = false( length(SWIFT),1);
-        for si = 1 : length(SWIFT) 
-            if isempty(SWIFT(si).ID)
-                badindex(si) = true;
-            elseif isfield(SWIFT(si).wavespectra, 'energy_alt') && length(SWIFT(si).wavespectra.energy_alt) == 1 ...
-                    && SWIFT(si).wavespectra.energy_alt == 9999
-                badindex(si) = true;
-            end
-        end
-        SWIFT(badindex) = [];
     
-        SWIFT2NC(SWIFT,[ flist(fi).name(1:end-4) '.nc'] )
+    SWIFT2NC(SWIFT,[ flist(fi).name(1:end-4) '.nc'] )
     
-    else
-
-    end
-
 end

@@ -12,8 +12,9 @@ function SWIFT2NC(SWIFT_in,filename)
 %   Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
 %   Feb 2023 by J. Thomson for SASSIE and general use
 
+swiftnum = str2num(strrep(strrep(SWIFT_in(1).ID, 'SWIFT', ''), ' ', '') );
+
 SWIFT = SWIFT_in;
-swiftnum = str2num(char(regexp(SWIFT(1).ID, '([0-9]*)', 'match')))
 
 if isfield(SWIFT,'wavehistogram')
     SWIFT=rmfield(SWIFT,'wavehistogram');

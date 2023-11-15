@@ -38,8 +38,8 @@ RC = 4; % time constant [s] for high-pass filter (pass T < 2 pi * RC)
 
 %% fixed parameters (which will produce 42 frequency bands)
 
-wsecs = 256;   % windoz length in seconds, should make 2^N samples, usually 256
-merge = 3;      % freq bands to merge, must be odd?, usually 
+wsecs = 256;   % windoz length in seconds, should make 2^N samples
+merge = 3;      % freq bands to merge, must be odd?
 maxf = .5;       % frequency cutoff for telemetry Hz
 
 
@@ -62,7 +62,7 @@ down(bad) = mean( down(~bad) );
 %% begin processing, if data sufficient
 pts = length(east);       % record length in data points
 
-if pts >= 1*wsecs & fs>=1 & sum(bad)<100 & sum(bad)<100,  % minimum length and quality for processing
+if pts >= 2*wsecs & fs>=1 & sum(bad)<100 & sum(bad)<100,  % minimum length and quality for processing
     
     
     %% high-pass RC filter the full time series
@@ -234,7 +234,7 @@ if pts >= 1*wsecs & fs>=1 & sum(bad)<100 & sum(bad)<100,  % minimum length and q
     %% wave stats
     fwaves = f>0.05 & f<maxf; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
     
-    %E( ~fwaves ) = 0;
+    E( ~fwaves ) = 0;
     
     % significant wave height
     Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);

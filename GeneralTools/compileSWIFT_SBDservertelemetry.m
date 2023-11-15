@@ -29,7 +29,7 @@ disp('Check QC settings... currently using:')
 
 minwaveheight = 0 % minimum wave height in data screening
 
-minsalinity = 20 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = 0 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 5  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
 
@@ -286,7 +286,7 @@ elseif length(SWIFT) <= 3 %&& ~isfield(SWIFT,'driftspd')
 end
 
 % quality control by removing drift results associated with large time gaps
-if length([SWIFT.time]) > 1
+if length([SWIFT.time]) > 1,
     dt = gradient([SWIFT.time]);
     for si = 1:length(SWIFT),
         if dt(si) > 1/12, % 1/12 of day is two hours
@@ -299,12 +299,10 @@ else
 end
 
 % quality control drift speeds too fast (prob on deck) with new drift spd
-if length([SWIFT.time]) > 1
-    if isfield(SWIFT(1),'driftspd')
-        toofast = [SWIFT.driftspd] > maxdriftspd;
-        SWIFT( toofast ) =[];
-        battery( toofast ) = [];
-    end
+if isfield(SWIFT(1),'driftspd')
+    toofast = [SWIFT.driftspd] > maxdriftspd;
+    SWIFT( toofast ) =[];
+    battery( toofast ) = [];
 end
 
 % quality control with wind speed limit
@@ -335,9 +333,8 @@ if ~isempty(GPS), SWIFT_GPS = SWIFT(GPS); end
 %save([ wd '.mat'], 'SWIFT')
 if micro
     save(['microSWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT*')
-elseif length([SWIFT.time]) > 1
-    save(['SWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT')
 else
+    save(['SWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT')
 end
 
 
