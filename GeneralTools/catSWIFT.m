@@ -74,25 +74,39 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
 
         end
     end
-else
+elseif isfield(SWIFT,'downlooking')
     swift.depth = SWIFT(1).downlooking.z';
-    nz = length(swift.(sname).depth);
+    nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
     swift.relw = NaN(nz,nt);
     swift.reluerr = NaN(nz,nt);
     swift.relverr = NaN(nz,nt);
     swift.relwerr = NaN(nz,nt);       
+elseif isfield(SWIFT,'uplooking')
+    swift.depth = SWIFT(1).uplooking.z;
+    nz = length(swift.depth);
+    swift.relu = NaN(nz,nt);
+    swift.relv = NaN(nz,nt);
+    swift.relw = NaN(nz,nt);
+    swift.reluerr = NaN(nz,nt);
+    swift.relverr = NaN(nz,nt);
+    swift.relwerr = NaN(nz,nt); 
 end
 % Absolute velocity
 swift.subu = swift.relu + swift.driftu;
 swift.subv = swift.relv + swift.driftv;
 
 %Waves
-SWIFT = SWIFT_Stokes(SWIFT);
+% SWIFT = SWIFT_Stokes(SWIFT);
 for it = 1:nt
- swift.wavepower(:,it) = SWIFT(it).wavespectra.energy;
- swift.wavefreq(:,it) = SWIFT(it).wavespectra.freq;
+    wavepower = SWIFT(it).wavespectra.energy;
+    wavefreq = SWIFT(it).wavespectra.freq;
+    if length(wavepower) ~= length(wavefreq)
+        wavepower = NaN(size(wavefreq));
+    end
+ swift.wavepower(:,it) = wavepower;
+ swift.wavefreq(:,it) = wavefreq;
 end
 swift.wavefreq = mean(swift.wavefreq,2,'omitnan');
 swift.wavesigH = [SWIFT.sigwaveheight];
@@ -151,7 +165,7 @@ if isfield(SWIFT,'signature')
         if isfield(SWIFT(it).signature.HRprofile,'tkedissipationrate')
         tke = SWIFT(it).signature.HRprofile.tkedissipationrate;
             if ~isempty(tke)
-                swift.surftke(:,it) = tke;
+                swift.surftke(1:length(tke),it) = tke;
             else
                 swift.surftke(:,it) = NaN(nz,1);
             end

@@ -181,7 +181,7 @@ SWIFT(ii).Stokes.spectral_bias.profile.east = uSemiStokes_spectral_east;
 SWIFT(ii).Stokes.spectral_bias.profile.north = uSemiStokes_spectral_north;
 
 % Save correction:
-if isfield(SWIFT(ii).signature.profile,'east')
+if isfield(SWIFT,'signature')
     
     if ~isempty(SWIFT(ii).signature.profile.east)
         
