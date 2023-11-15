@@ -4,7 +4,7 @@ if nargin == 3
 	twoZs = 0;
 end
 
-%ad2cpstr = 'AD2CP_';
+% ad2cpstr = 'AD2CP_';
 ad2cpstr = '';
 
 if strcmpi( mode, 'avg' )
