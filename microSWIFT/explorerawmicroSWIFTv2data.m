@@ -9,8 +9,9 @@ clear
 % load all files in current directory
 GPSflist = dir('*.bin');
 GPSsamplingrate = 4; % assume 4 Hz
-includetelemetry = true;
+includetelemetry = false;
 despike = false;
+pts = 4096;
 
 if includetelemetry
     load('microSWIFT003_telemetry.mat')
@@ -19,7 +20,7 @@ end
 for gi = 1:length(GPSflist)
     
     disp(['GPS file ' num2str(gi) ' of ' num2str(length(GPSflist))])
-    [north east down] = read_microSWIFTv2_rawdata( GPSflist(gi).name , true );
+    [north east down] = read_microSWIFTv2_rawdata( GPSflist(gi).name , pts, true );
     
     if despike
         north = filloutliers(north,'nearest');
