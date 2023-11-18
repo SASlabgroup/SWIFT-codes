@@ -20,9 +20,9 @@
 %             7/2022    allow microSWIFT timestamps (not from filename)
 clear all,
 
-plotflag = 1;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
+plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
-micro = false; % initialize flag for microSWIFT, which flips to true if detected
+fixpositions = false; % binary flag to use "filloutliers" to fix spurious positions.   Use with care. 
 
 disp('-------------------------------------')
 disp('Check QC settings... currently using:')
@@ -69,7 +69,7 @@ for ai = 1:length(flist),
     
     %% time stamp
     
-    if flist(ai).name(6)=='S', % SWIFT v3 and v4
+    if flist(ai).name(6)=='S' % SWIFT v3 and v4
         % take the time from the filename, 
         % even when there is time from the airmar (because of parsing errors)
         % for telemetry, this is the telemtry time (at the end of the burst).
@@ -82,8 +82,9 @@ for ai = 1:length(flist),
         minute = flist(ai).name(nameoffset + [13:14]);
         sec = flist(ai).name(nameoffset + [15:16]);
         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+        micro = false;
 
-    elseif flist(ai).name(6)=='m', % microSWIFT
+    elseif flist(ai).name(6)=='m' % microSWIFT
         nameoffset = 20;
         micro = true;
         % use the time embedded within the payload 50 or 51 or 52 of the SBD file
@@ -91,12 +92,13 @@ for ai = 1:length(flist),
     else
         nameoffset = 0;
         oneSWIFT.time = NaN;
+        micro = false;
     end
     
     
     %% remove bad Airmar data
     
-    if isfield(oneSWIFT,'airtemp'),
+    if isfield(oneSWIFT,'airtemp')
         if oneSWIFT.airtemp == 0.0 | oneSWIFT.airtemp < minairtemp | oneSWIFT.airtemp > 50,
             oneSWIFT.airtemp = NaN;
             oneSWIFT.windspd = NaN;
@@ -227,14 +229,16 @@ SWIFT = SWIFT(tinds);
 battery = battery(tinds);
 
 %% look for outliers of position
-[cleanlon cloni] = filloutliers([SWIFT.lon],'linear');
-[cleanlat clati] = filloutliers([SWIFT.lat],'linear');
-if cloni == clati, 
-    for ci = find(cloni)
-        SWIFT(ci).lon = cleanlon(ci);
-        SWIFT(ci).lat = cleanlat(ci);
+if fixpositions
+    [cleanlon cloni] = filloutliers([SWIFT.lon],'linear');
+    [cleanlat clati] = filloutliers([SWIFT.lat],'linear');
+    if cloni == clati,
+        for ci = find(cloni)
+            SWIFT(ci).lon = cleanlon(ci);
+            SWIFT(ci).lat = cleanlat(ci);
+        end
+        disp([num2str(sum(cloni)) ' positions filled that were outliers'])
     end
-    disp([num2str(sum(cloni)) ' positions filled that were outliers'])
 end
 
 %% calc drift (note that wind slip, which is 1%, is not removed)
@@ -279,7 +283,7 @@ if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
     %     end
     
 elseif length(SWIFT) <= 3 %&& ~isfield(SWIFT,'driftspd')
-    for si = 1:length(SWIFT),
+    for si = 1:length(SWIFT)
         SWIFT(si).driftspd = NaN;
         SWIFT(si).driftdirT = NaN;
     end
@@ -344,7 +348,7 @@ end
 
 %% ploting
 
-if plotflag == 1,
+if plotflag
     
     plotSWIFT(SWIFT)
     
@@ -362,5 +366,4 @@ if plotflag == 1,
     else
     end
     
-else
 end % close plot statement
