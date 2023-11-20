@@ -22,9 +22,13 @@ for fi=1:length(flist),
             end
         end
         SWIFT(badindex) = [];
-    
-        SWIFT2NC(SWIFT,[ flist(fi).name(1:end-4) '.nc'] )
-    
+        disp(flist(fi).name(1:end-4))
+        try
+            SWIFT2NC(SWIFT,[ flist(fi).name(1:end-4) '.nc'] )
+        catch error
+            disp(strcat('Failed converting [', flist(fi).name, '] to netCDF with error: '))
+            disp(error)
+        end
     else
 
     end

@@ -12,6 +12,7 @@ function SWIFT2NC(SWIFT_in,filename)
 %   Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
 %   Feb 2023 by J. Thomson for SASSIE and general use
 
+
 SWIFT = SWIFT_in;
 swiftnum = str2num(char(regexp(SWIFT(1).ID, '([0-9]*)', 'match')))
 
@@ -50,29 +51,51 @@ if isfield(SWIFT,'downlooking')
 end
 if isfield(SWIFT,'signature')
     sig_names = fieldnames(SWIFT(1).signature)
-    if isfield(SWIFT(1).signature,'HRprofile')
-        zHR_dim = netcdf.defDim(ncid,'zHR', length(SWIFT(1).signature.HRprofile.z));
-        zHR_names = fieldnames(SWIFT(1).signature.HRprofile);
-    end
-    if isfield(SWIFT(1).signature,'profile')
-        z_dim = netcdf.defDim(ncid,'z', length(SWIFT(1).signature.profile.z));
-        z_names = fieldnames(SWIFT(1).signature.profile);
-    end
+    for i=1:length(SWIFT)
+        if isempty(SWIFT(i).signature.profile)
+            continue
+        end
+        if isfield(SWIFT(i).signature,'HRprofile')
+            zHR_dim = netcdf.defDim(ncid,'zHR', length(SWIFT(i).signature.HRprofile.z));
+            zHR_names = fieldnames(SWIFT(i).signature.HRprofile);
+        end
+        if isfield(SWIFT(i).signature,'profile')
+            z_dim = netcdf.defDim(ncid,'z', length(SWIFT(i).signature.profile.z));
+            z_names = fieldnames(SWIFT(i).signature.profile);
+        end
+        break
 end
 
 
 
 j=1;
 for i=1:length(full_names), 
-    if ~strcmp(full_names{i},'ID') && ~strcmp(full_names{i},'date')
+    if ~strcmp(full_names{i},'ID') && ~strcmp(full_names{i},'date')      
         if strcmp(full_names{i},'signature')
             for t=1:length(SWIFT)
                 for iz=1:length(z_names)
-                    eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=SWIFT(t).signature.profile.',z_names{iz},'(:)'))
+                    if eval(strcat('length(SWIFT(t).signature.profile.', z_names{iz}, '(:));')) > 0
+                        eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=SWIFT(t).signature.profile.',z_names{iz},'(:);'))
+                        eval(strcat('default_size.z_',z_names{iz},'=size(SWIFT(t).signature.profile.',z_names{iz},');'))
+                    else
+                        eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=NaN(default_size.z_',z_names{iz},');'))
+                    end
+                    %eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=SWIFT(t).signature.profile.',z_names{iz},'(:)'))
                 end
+                    disp(size(S.signature.profile.east))
+                    disp(size(S.signature.profile.north))
+                    disp(size(S.signature.profile.z))
                 for iz=1:length(zHR_names)
-                    eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(t,:)=SWIFT(t).signature.HRprofile.',zHR_names{iz},'(:)'))
+                    if eval(strcat('length(SWIFT(t).signature.HRprofile.', zHR_names{iz}, '(:));')) > 0
+                        eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(t,:)=SWIFT(t).signature.HRprofile.',zHR_names{iz},'(:);'))
+                        eval(strcat('default_size.zhr_',zHR_names{iz},'=size(SWIFT(t).signature.HRprofile.',zHR_names{iz},');'))
+                    else
+                        eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(t,:)=NaN(default_size.zhr_',zHR_names{iz},');'))
+                    end
                 end
+                    disp(size(S.signature.HRprofile.zHR))
+                    disp(size(S.signature.HRprofile.tkedissipationrateHR))
+
             end
         elseif strcmp(full_names{i},'time')
             S.time= [SWIFT.time]-datenum(1970,1,1,0,0,0);
@@ -276,9 +299,11 @@ for i=1:length(names)
             end
         end
         for j=1:length(zHR_names)
+            disp(zHR_names{j})
             if strcmp(zHR_names{j},'z')
                 netcdf.putVar(ncid,zHR_id, S.signature.HRprofile.zHR(1,:));
             else
+                disp(S.signature.HRprofile)
                 eval(strcat('netcdf.putVar(ncid,',zHR_names{j},'HR_id, [S.signature.HRprofile.',zHR_names{j},'HR]'')'));
             end
         end
