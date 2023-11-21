@@ -154,7 +154,7 @@ while 1
         PBlon = num2str(fread(fid,1,'float'));  % longitude
         if length(PBlon)>5,
             dec = find( PBlon == '.');
-            if dec>4,
+            if dec >= 4
                 PBlon = str2num( PBlon([1:(dec-3)]) ) + str2num( PBlon([(dec-2):end]) ) / 60;  % parsing might not be robust, esp +/-
                 PBlon = - PBlon;  % assume western hemisphere (airmar telemetry is ambiguous) 
             else
