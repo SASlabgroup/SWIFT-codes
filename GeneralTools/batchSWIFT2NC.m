@@ -26,8 +26,8 @@ for fi=1:length(flist),
         try
             SWIFT2NC(SWIFT,[ flist(fi).name(1:end-4) '.nc'] )
         catch error
-            disp(strcat('Failed converting [', flist(fi).name, '] to netCDF with error: '))
-            disp(error)
+            fig=uifigure
+            uialert(fig,getReport(error),"Error Message","Interpreter","html");
         end
     else
 

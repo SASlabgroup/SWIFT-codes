@@ -52,20 +52,39 @@ end
 if isfield(SWIFT,'signature')
     sig_names = fieldnames(SWIFT(1).signature)
     for i=1:length(SWIFT)
-        if isempty(SWIFT(i).signature.profile)
-            continue
-        end
-        if isfield(SWIFT(i).signature,'HRprofile')
+        zHR_dim = 0
+        zHR_names = []
+        if isfield(SWIFT(i).signature,'HRprofile') && ~isempty(SWIFT(i).signature.HRprofile.z) 
             zHR_dim = netcdf.defDim(ncid,'zHR', length(SWIFT(i).signature.HRprofile.z));
             zHR_names = fieldnames(SWIFT(i).signature.HRprofile);
         end
-        if isfield(SWIFT(i).signature,'profile')
+        z_dim = 0
+        z_names=[]
+        if isfield(SWIFT(i).signature,'profile') && ~isempty(SWIFT(i).signature.profile.z) 
             z_dim = netcdf.defDim(ncid,'z', length(SWIFT(i).signature.profile.z));
             z_names = fieldnames(SWIFT(i).signature.profile);
         end
         break
 end
 
+
+default_size = struct([])
+for t=1:length(SWIFT)
+    for iz=1:length(z_names)
+        if ~isfield(default_size, z_names{iz})
+            eval(strcat('default_size(1).', z_names{iz}, ' = 0'));
+        end
+        eval(strcat('default_size(1).', z_names{iz}, ' = max(default_size.', z_names{iz}, ', length(SWIFT(t).signature.profile.', z_names{iz},'))'));        
+    end
+    for iz=1:length(zHR_names)
+        name = strcat(zHR_names{iz}, 'HR');
+        if ~isfield(default_size, name)
+            eval(strcat('default_size(1).', name, ' = 0'));
+        end
+        eval(strcat('default_size(1).', name, ' = max(default_size.', name ,', length(SWIFT(t).signature.HRprofile.', zHR_names{iz},'))'));
+        end
+    end
+end
 
 
 j=1;
@@ -76,26 +95,20 @@ for i=1:length(full_names),
                 for iz=1:length(z_names)
                     if eval(strcat('length(SWIFT(t).signature.profile.', z_names{iz}, '(:));')) > 0
                         eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=SWIFT(t).signature.profile.',z_names{iz},'(:);'))
-                        eval(strcat('default_size.z_',z_names{iz},'=size(SWIFT(t).signature.profile.',z_names{iz},');'))
+                        %eval(strcat('default_size.z_',z_names{iz},'=size(SWIFT(t).signature.profile.',z_names{iz},');'))
                     else
-                        eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=NaN(default_size.z_',z_names{iz},');'))
+                        eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=[NaN(1,default_size.',z_names{iz},')];'))
                     end
                     %eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=SWIFT(t).signature.profile.',z_names{iz},'(:)'))
                 end
-                    disp(size(S.signature.profile.east))
-                    disp(size(S.signature.profile.north))
-                    disp(size(S.signature.profile.z))
                 for iz=1:length(zHR_names)
                     if eval(strcat('length(SWIFT(t).signature.HRprofile.', zHR_names{iz}, '(:));')) > 0
                         eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(t,:)=SWIFT(t).signature.HRprofile.',zHR_names{iz},'(:);'))
-                        eval(strcat('default_size.zhr_',zHR_names{iz},'=size(SWIFT(t).signature.HRprofile.',zHR_names{iz},');'))
+                        %eval(strcat('default_size.',zHR_names{iz},'=size(SWIFT(t).signature.HRprofile.',zHR_names{iz},');'))
                     else
-                        eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(t,:)=NaN(default_size.zhr_',zHR_names{iz},');'))
+                        eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(t,:)=NaN(1,default_size.',zHR_names{iz},'HR);'))
                     end
                 end
-                    disp(size(S.signature.HRprofile.zHR))
-                    disp(size(S.signature.HRprofile.tkedissipationrateHR))
-
             end
         elseif strcmp(full_names{i},'time')
             S.time= [SWIFT.time]-datenum(1970,1,1,0,0,0);
@@ -299,16 +312,14 @@ for i=1:length(names)
             end
         end
         for j=1:length(zHR_names)
-            disp(zHR_names{j})
             if strcmp(zHR_names{j},'z')
                 netcdf.putVar(ncid,zHR_id, S.signature.HRprofile.zHR(1,:));
             else
-                disp(S.signature.HRprofile)
                 eval(strcat('netcdf.putVar(ncid,',zHR_names{j},'HR_id, [S.signature.HRprofile.',zHR_names{j},'HR]'')'));
             end
         end
     else
-
+        disp(names(i))
         eval(strcat('netcdf.putVar(ncid,',names{i},'_id, S.',names{i},')'));
 
     end
