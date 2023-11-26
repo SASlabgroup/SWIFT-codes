@@ -68,7 +68,7 @@ if isfield(SWIFT,'signature')
 end
 
 
-default_size = struct([])
+default_size = struct([]);
 for t=1:length(SWIFT)
     for iz=1:length(z_names)
         if ~isfield(default_size, z_names{iz})
