@@ -2,12 +2,13 @@
 function swift = catSWIFT(SWIFT)
 % Returns concatenated swift data in structure format
 
-%Time, lat, lon
+%Time, lat, lon, battery
 swift.time = [SWIFT.time];
 nt = length(swift.time);
 swift.lon = 360 + [SWIFT.lon];
 swift.lat = [SWIFT.lat];
 swift.driftspd = [SWIFT.driftspd];
+swift.battery = [SWIFT.battery];
 
 %Air & sea temperature & pressure & salinity
 if isfield(SWIFT,'airtemp')
@@ -85,6 +86,15 @@ elseif isfield(SWIFT,'downlooking')
     swift.relwerr = NaN(nz,nt);       
 elseif isfield(SWIFT,'uplooking')
     swift.depth = SWIFT(1).uplooking.z;
+    nz = length(swift.depth);
+    swift.relu = NaN(nz,nt);
+    swift.relv = NaN(nz,nt);
+    swift.relw = NaN(nz,nt);
+    swift.reluerr = NaN(nz,nt);
+    swift.relverr = NaN(nz,nt);
+    swift.relwerr = NaN(nz,nt); 
+else
+    swift.depth = [0:0.5:20]';
     nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
@@ -173,7 +183,7 @@ if isfield(SWIFT,'signature')
             swift.surftke(:,it) = NaN(nz,1);
         end
     end
-else
+elseif isfield(SWIFT,'uplooking')
     swift.surfz = SWIFT(1).uplooking.z';
     nz = length(swift.surfz);
     swift.surftke = NaN(nz,nt);
