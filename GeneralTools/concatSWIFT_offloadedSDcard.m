@@ -100,6 +100,7 @@ if ~isempty(sbdlist),
 else 
 end
 
+
 %% clean up, move burst files to new directory
 
 mkdir ConcatProcessed
@@ -108,3 +109,16 @@ eval(['!mv *.sbd ConcatProcessed/'])
 eval(['!mv buoy*.mat ConcatProcessed/'])
 
 !rm payload
+
+%% apply QC and rename results (not telemetry)
+[flist removed] = SWIFT_QC( 25, 0.5, 2 );
+
+if isfield(SWIFT(1),'ID')
+    load(['SWIFT' SWIFT(1).ID '_telemetry.mat'])
+    save(['SWIFT' SWIFT(1).ID '_' datestr(min([SWIFT.time]),'ddmmmyyyy') '-' datestr(max([SWIFT.time]),'ddmmmyyyy') '_L1.mat'  ], 'SWIFT')
+    eval(['!rm *telemetry.mat'])
+else
+end
+
+plotSWIFT(SWIFT)
+
