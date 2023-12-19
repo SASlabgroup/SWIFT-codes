@@ -8,7 +8,9 @@ nt = length(swift.time);
 swift.lon = 360 + [SWIFT.lon];
 swift.lat = [SWIFT.lat];
 swift.driftspd = [SWIFT.driftspd];
+if isfield(SWIFT,'battery')
 swift.battery = [SWIFT.battery];
+end
 
 %Air & sea temperature & pressure & salinity
 if isfield(SWIFT,'airtemp')
@@ -28,6 +30,9 @@ if isfield(SWIFT,'salinity')
     swift.sal = [SWIFT.salinity];
 else
     swift.sal = NaN(1,nt);
+end
+if isfield(SWIFT,'airpres')
+    swift.press = [SWIFT.airpres];
 end
 
 % Drift velocity
