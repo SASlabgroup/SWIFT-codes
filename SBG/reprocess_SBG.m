@@ -7,7 +7,7 @@
 %                   and replace SWIFT data structure results.
 clear all, close all
 
-plotflag = true;
+plotflag = false;
 
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 %parentdir = ('/Volumes/Data/Newport/SWIFT19_15-18Oct2016');  % change this to be the parent directory (CF card offload from SWIFT)
@@ -15,14 +15,14 @@ parentdir = pwd;  % change this to be the parent directory of all raw raw data (
 readfromconcat = 0; % force starting with original onboard results
 useGPSpositions = false; % option instead of GPS velocities for alt spectra
 secondsofdata = 475;  % seconds of raw data to process (from the end of each burst, not beginning), must be more than 1536/5 = 307.2
-interpf = false; % binary flag to interp to original (onboard) frequency bands
+interpf = true; % binary flag to interp to original (onboard) frequency bands
 
 %% load existing SWIFT structure created during concatSWIFT_processed, replace only the new wave results
 cd(parentdir);
 wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
-telemfile = dir('SWIFT*.mat');
+telemfile = dir('SWIFT*telemetry.mat');
 
 if ~isempty(dir([wd '_reprocessedSIG.mat'])) & readfromconcat~=1,
     SIGrep = true;
@@ -122,7 +122,7 @@ for di = 1:length(dirlist),
             fs = 5; % should be 5 Hz for standard SBG settings
 
             % reprocess to get proper directional momements (bug fix in 11/2017)
-            [ newHs, newTp, newDp, newE, newf, newa1, newb1, newa2, newb2, check ] = SBGwaves(u, v, z, fs);
+            [ newHs, newTp, newDp, newE, newf, newa1, newb1, newa2, newb2, newcheck ] = SBGwaves(u, v, z, fs);
 
             % reprocess using GPS velocites to get alternate results
             [ altHs, altTp, altDp, altE, altf, alta1, altb1, alta2, altb2 ] = GPSwaves(u,v,[],fs);
@@ -140,6 +140,7 @@ for di = 1:length(dirlist),
                 b1 = interp1(newf,newb1,f);
                 a2 = interp1(newf,newa2,f);
                 b2 = interp1(newf,newb2,f);
+                check = interp1(newf,newcheck,f);
             else
                 E = newE;
                 f = newf;
@@ -147,6 +148,7 @@ for di = 1:length(dirlist),
                 b1 = newb1;
                 a2 = newa2;
                 b2 = newb2;
+                check = newcheck;
             end
 
             if useGPSpositions
