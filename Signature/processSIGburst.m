@@ -65,15 +65,16 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
     wpeof = eofs(:,opt.nsumeof+1:end)*(eof_amp(:,opt.nsumeof+1:end)');
     
     %Structure Function Dissipation
+    ibad = ispike | repmat(badping,nbin,1);
     rmin = dz;
     rmax = 4*dz;
     nzfit = 1;
     w = wclean;
     wp1 = wpeof;
     wp2 = wphp;
-    w(ispike) = NaN;
-    wp1(ispike) = NaN;
-    wp2(ispike) = NaN;
+    w(ibad) = NaN;
+    wp1(ibad) = NaN;
+    wp2(ibad) = NaN;
     warning('off','all')
     [eps_struct0,qual0] = SFdissipation(w,hrz,rmin,2*rmax,nzfit,'cubic','mean');
     [eps_structEOF,qualEOF] = SFdissipation(wp1,hrz,rmin,rmax,nzfit,'linear','mean');
