@@ -211,9 +211,9 @@ for iburst = 1:nburst
 
     % Load burst file
     if opt.readraw
-       [burst,avg,battery,echo] = readSWIFTv4_SIG([bfiles(iburst).folder slash bfiles(iburst).name]);
+   [burst,avg,~,~] = readSWIFTv4_SIG([bfiles(iburst).folder slash bfiles(iburst).name]);
     else
-        load([bfiles(iburst).folder slash bfiles(iburst).name])
+        load([bfiles(iburst).folder slash bfiles(iburst).name],'burst','avg')
     end
     
     % Skip burst if empty
@@ -368,7 +368,8 @@ for iburst = 1:nburst
             SWIFT(tindex).signature.HRprofile.w = HRprofile.w;
             SWIFT(tindex).signature.HRprofile.wvar = HRprofile.wvar;
             SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
-            SWIFT(tindex).signature.HRprofile.tkedissipationrate = HRprofile.eps_structEOF;
+            SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
+                HRprofile.eps_structEOF;
             % Broadband data
             SWIFT(tindex).signature.profile = [];
             SWIFT(tindex).signature.profile.east = profile.u;
@@ -389,7 +390,8 @@ for iburst = 1:nburst
             SWIFT(tindex).signature.HRprofile.w = NaN(size(HRprofile.w));
             SWIFT(tindex).signature.HRprofile.wvar = NaN(size(HRprofile.w));
             SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
-            SWIFT(tindex).signature.HRprofile.tkedissipationrate = NaN(size(HRprofile.w'));
+            SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
+                NaN(size(HRprofile.w'));
             % Broadband data
             SWIFT(tindex).signature.profile = [];
             SWIFT(tindex).signature.profile.w = NaN(size(profile.u));
@@ -402,7 +404,7 @@ for iburst = 1:nburst
         elseif ~timematch && ~badburst % Good burst, no time match
             disp('   ALERT: Burst good, but no time match...')
             tindex = length(SWIFT)+1;
-            burstreplaced = [burstreplaced; true];
+            burstreplaced = [burstreplaced; true]; %#ok<AGROW>
             varcopy = fieldnames(SWIFT);
             varcopy = varcopy(~strcmp(varcopy,'signature'));
             for icopy = 1:length(varcopy)
@@ -421,7 +423,8 @@ for iburst = 1:nburst
             SWIFT(tindex).signature.HRprofile.w = HRprofile.w;
             SWIFT(tindex).signature.HRprofile.wvar = HRprofile.wvar;
             SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
-            SWIFT(tindex).signature.HRprofile.tkedissipationrate = HRprofile.eps_structEOF;
+            SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
+                HRprofile.eps_structEOF;
             % Broadband data
             SWIFT(tindex).signature.profile = [];
             SWIFT(tindex).signature.profile.east = profile.u;

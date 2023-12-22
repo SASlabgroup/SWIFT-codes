@@ -58,7 +58,7 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
     % 2) EOF High-pass (remove worst pings to get good EOFs)
     badping = sum(ispike)./nbin > 0.6; % | std(wphp,[],'omitnan') > 0.01;
     eof_amp = NaN(nping,nbin);
-    [eofs,eof_amp(~badping,:),eofvar,~] = eof(wclean(:,~badping)');
+    [eofs,eof_amp(~badping,:),~,~] = eof(wclean(:,~badping)');
     for ieof = 1:nbin
         eof_amp(:,ieof) = interp1(find(~badping),eof_amp(~badping,ieof),1:nping);
     end

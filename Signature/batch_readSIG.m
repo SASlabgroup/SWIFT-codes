@@ -16,7 +16,7 @@ if ~strcmp(expdir(end),slash)
     expdir = [expdir slash];
 end
 
-for im = 2:length(missions)
+for im = 1:length(missions)
     
     bfiles = dir([expdir missions(im).name slash 'SIG' slash 'Raw' slash '*' slash '*.dat']);
 
