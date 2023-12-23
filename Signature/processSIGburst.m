@@ -4,7 +4,6 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
     badburst = false;
 
     % Check to make sure dimensions correct
-    % NOTE: need tocatch error in reprocess_SIG
     if length(size(burst.VelocityData)) > 2
         disp('   HR data dimensions bad')
         badburst = true;

@@ -185,16 +185,20 @@ if isempty(bfiles)
     error('   No burst files found    ')
 end
 bfiles = bfiles(~contains({bfiles.name},'smoothwHR'));
-ipart = find(contains({bfiles.name},'partial'));
-idel = false(size(ipart));
-for ip = 1:length(ipart)
-    pname = bfiles(ipart(ip)).name;
-    pdir = bfiles(ipart(ip)).folder;
-    if exist([pdir slash pname(1:end-12) '.mat'])
-        idel(ip) = true;
-    end
-end
-bfiles(ipart(idel)-1) = [];
+
+% Deal with 'partial' files (two options)
+bfiles = bfiles(~contains({bfiles.name},'partial'));
+% % Only delete partial files if the full file exists (WHY!?)
+% ipart = find(contains({bfiles.name},'partial'));
+% idel = false(size(ipart));
+% for ip = 1:length(ipart)
+%     pname = bfiles(ipart(ip)).name;
+%     pdir = bfiles(ipart(ip)).folder;
+%     if exist([pdir slash pname(1:end-12) '.mat'])
+%         idel(ip) = true;
+%     end
+% end
+% bfiles(ipart(idel)-1) = [];
 nburst = length(bfiles);
 
 %% Loop through and process burst files
