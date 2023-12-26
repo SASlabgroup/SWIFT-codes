@@ -42,7 +42,6 @@ if isfield(SIG,'time')
     sig.N = sig.hrcorr;
     sig.pitchvar = NaN(1,length(sig.time));
     sig.rollvar = NaN(1,length(sig.time));
-    sig.waveheight = NaN(1,length(sig.time));
     sig.hrwmag = sig.hrcorr;
     sig.hrwmag0 = sig.hrcorr;
     sig.hrw0 = sig.hrcorr;
@@ -75,7 +74,6 @@ if isfield(SIG,'time')
         sig.N(1:nz,it) = SIG(it).HRprofile.QC.NEOF;
         sig.pitchvar(it) = SIG(it).motion.pitchvar;
         sig.rollvar(it) = SIG(it).motion.rollvar;
-        sig.waveheight(it) = SIG(it).motion.waveheight;
         sig.hrwmag(1:nz,it) = SIG(it).HRprofile.QC.wmag;
         sig.hrwmag0(1:nz,it) = SIG(it).HRprofile.QC.wmag0;
         sig.hrw0(1:nz,it) = SIG(it).HRprofile.QC.w0;
@@ -108,7 +106,6 @@ if isfield(SIG,'time')
         sig.N(:,badburst) = [];
         sig.pitchvar(badburst) = [];
         sig.rollvar(badburst) = [];
-        sig.waveheight(badburst) = [];
         sig.hrw0(:,badburst) = [];
         sig.hrwvar0(:,badburst) = [];
         sig.hrwmag(:,badburst) = [];
