@@ -307,6 +307,10 @@ for iburst = 1:nburst
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
     
         [HRprofile,fh] = processSIGburst(burst,opt);
+        
+        if isempty(HRprofile)
+            HRprofile = NaNstructR(SIG(isig-1).HRprofile);
+        end
     
            if opt.saveplots && ~isempty(fh)
             figure(fh(1))
@@ -409,19 +413,8 @@ for iburst = 1:nburst
             disp('   ALERT: Burst good, but no time match...')
             tindex = length(SWIFT)+1;
             burstreplaced = [burstreplaced; true]; %#ok<AGROW>
-            varcopy = fieldnames(SWIFT);
-            varcopy = varcopy(~strcmp(varcopy,'signature'));
-            for icopy = 1:length(varcopy)
-                if isa(SWIFT(1).(varcopy{icopy}),'double')
-                    SWIFT(tindex).(varcopy{icopy}) = NaN;
-                elseif isa(SWIFT(1).(varcopy{icopy}),'struct')
-                    varcopy2 = fieldnames(SWIFT(1).(varcopy{icopy}));
-                    for icopy2 = 1:length(varcopy2)
-                        varsize = size(SWIFT(1).(varcopy{icopy}).(varcopy2{icopy2}));
-                        SWIFT(tindex).(varcopy{icopy}).(varcopy2{icopy2}) = NaN(varsize);
-                    end
-                end
-            end
+            % Copy fields from SWIFT(1);
+            SWIFT(tindex) = NaNstructR(SWIFT(1));            
             % HR data
             SWIFT(tindex).signature.HRprofile = [];
             SWIFT(tindex).signature.HRprofile.w = HRprofile.w;
@@ -444,7 +437,7 @@ for iburst = 1:nburst
             SWIFT(tindex).watertemp = profile.temp;
             % Time
             SWIFT(tindex).time = btime;
-            disp(['   Burst time: ' datestr(btime)])
+            SWIFT(tindex).date = datestr(btime,'ddmmyyyy');
             disp(['   (new) SWIFT time: ' datestr(SWIFT(tindex).time)])
         end
     end

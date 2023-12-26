@@ -6,7 +6,9 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
     % Check to make sure dimensions correct
     if length(size(burst.VelocityData)) > 2
         disp('   HR data dimensions bad')
-        badburst = true;
+        HRprofile = [];
+        fh = [];
+        return
     end
     
     % Data
@@ -121,15 +123,15 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
         HRprofile.eps_struct0 = NaN(size(hrw))';
         HRprofile.eps_structHP = NaN(size(hrw))';
         HRprofile.eps_structEOF = NaN(size(hrw))';
-        HRprofile.QC.wmag = NaN(size(hrw));
-        HRprofile.QC.wmag0 = NaN(size(hrw));
-        HRprofile.QC.w0 = NaN(size(hrw));
-        HRprofile.QC.wvar0 = NaN(size(hrw));
+        HRprofile.QC.wmag = mean(abs(wclean),2,'omitnan')';
+        HRprofile.QC.wmag0 = mean(abs(hrvel),2,'omitnan')';
+        HRprofile.QC.w0 = mean(hrvel,2,'omitnan')';
+        HRprofile.QC.wvar0 = var(hrvel,[],2,'omitnan')';
         HRprofile.QC.wpvar = NaN(size(hrw));
-        HRprofile.QC.hrcorr = NaN(size(hrw));
-        HRprofile.QC.hramp = NaN(size(hrw));
-        HRprofile.QC.hrampvar = NaN(size(hrw));
-        HRprofile.QC.hrcorrvar = NaN(size(hrw));
+        HRprofile.QC.hrcorr = mean(hrcorr,2,'omitnan')';
+        HRprofile.QC.hramp = mean(hramp,2,'omitnan')';
+        HRprofile.QC.hrampvar = var(hramp,[],2,'omitnan')';
+        HRprofile.QC.hrcorrvar = var(hrcorr,[],2,'omitnan')';
         HRprofile.QC.mspe0 = NaN(size(hrw));
         HRprofile.QC.mspeHP = NaN(size(hrw));
         HRprofile.QC.mspeEOF = NaN(size(hrw));
@@ -142,7 +144,7 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
         HRprofile.QC.N0 = NaN(size(hrw));
         HRprofile.QC.NHP = NaN(size(hrw));
         HRprofile.QC.NEOF = NaN(size(hrw));    
-        HRprofile.QC.pspike = NaN(size(hrw));
+        HRprofile.QC.pspike = (sum(ispike,2,'omitnan')./nping)';
     end
 
     % Plot Burst 
