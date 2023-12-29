@@ -38,6 +38,19 @@ function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 
 %           K.Zeiden Summer/Fall 2022
 
+% Return control to calling function/script if all NaN data
+nz = length(z);
+if ~any(~isnan(w(:)))
+    eps = NaN(1,nz);
+    qual.mspe = NaN(1,nz);
+    qual.slope = NaN(1,nz);
+    qual.epserr = NaN(1,nz);
+    qual.A = NaN(1,nz);
+    qual.B = NaN(1,nz);
+    qual.N = NaN(1,nz);
+    return
+end
+
 % Matrices of all possible data pair separation distances (R), and
 % corresponding mean vertical position (Z0)
 z = z(:)';

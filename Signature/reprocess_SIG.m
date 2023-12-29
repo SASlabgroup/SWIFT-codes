@@ -268,13 +268,13 @@ for iburst = 1:nburst
         badcorr = false;
     end
 
-    % Flag out of water based on bursts with high velocity variance
-    if  mean(std(burst.VelocityData,[],2,'omitnan')) > opt.maxwvar
-        disp('   FLAG: Bad Vel (high along-beam variance)...')
-        badvel = true;
-    else
-        badvel = false;
-    end
+%     % Flag out of water based on bursts with high velocity variance
+%     if  mean(std(burst.VelocityData,[],2,'omitnan')) > opt.maxwvar
+%         disp('   FLAG: Bad Vel (high along-beam variance)...')
+%         badvel = true;
+%     else
+%         badvel = false;
+%     end
 
     % Determine Altimeter Distance
     if isfield(avg,'AltimeterDistance')
@@ -283,7 +283,7 @@ for iburst = 1:nburst
         maxz = inf;
     end
 
-    badburst = smallfile | outofwater | badamp | badcorr | badvel;
+    badburst = smallfile | outofwater | badamp | badcorr;% | badvel;
 
     %%%%%%% Process Broadband velocity data ('avg' structure) %%%%%%
 
@@ -350,7 +350,6 @@ for iburst = 1:nburst
     SIG(isig).flag.outofwater = outofwater;
     SIG(isig).flag.badamp = badamp;
     SIG(isig).flag.badcorr = badcorr;
-    SIG(isig).flag.badvel = badvel;
 
     isig = isig+1;
 
@@ -377,7 +376,7 @@ for iburst = 1:nburst
             SWIFT(tindex).signature.HRprofile.wvar = HRprofile.wvar;
             SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
             SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
-                HRprofile.eps_structEOF;
+                HRprofile.eps;
             % Broadband data
             SWIFT(tindex).signature.profile = [];
             SWIFT(tindex).signature.profile.east = profile.u;
@@ -421,7 +420,7 @@ for iburst = 1:nburst
             SWIFT(tindex).signature.HRprofile.wvar = HRprofile.wvar;
             SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
             SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
-                HRprofile.eps_structEOF;
+                HRprofile.eps;
             % Broadband data
             SWIFT(tindex).signature.profile = [];
             SWIFT(tindex).signature.profile.east = profile.u;

@@ -19,10 +19,10 @@ end
 
 if isfield(SIG,'time')
     sig.time = [SIG.time];
-
+    nt = length(sig.time);
     sig.avgz = SIG(round(end/2)).profile.z';
-
-    sig.avgcorr = NaN(length(sig.avgz),length(sig.time));
+    nzavg = length(sig.avgz);
+    sig.avgcorr = NaN(nzavg,nt);
     sig.avgamp = sig.avgcorr;
     sig.avgu = sig.avgcorr;
     sig.avgv = sig.avgcorr;
@@ -31,7 +31,8 @@ if isfield(SIG,'time')
     sig.avgvvar = sig.avgcorr;
     sig.avgwvar = sig.avgcorr;
     sig.hrz = SIG(round(end/2)).HRprofile.z;
-    sig.hrcorr = NaN(length(sig.hrz),length(sig.time));
+    nzhr = length(sig.hrz);
+    sig.hrcorr = NaN(nzhr,nt);
     sig.hramp = sig.hrcorr;
     sig.hrw = sig.hrcorr;
     sig.hrwvar = sig.hrcorr;
@@ -39,17 +40,10 @@ if isfield(SIG,'time')
     sig.mspe = sig.hrcorr;
     sig.slope = sig.hrcorr;
     sig.pspike = sig.hrcorr;
-    sig.N = sig.hrcorr;
-    sig.pitchvar = NaN(1,length(sig.time));
-    sig.rollvar = NaN(1,length(sig.time));
-    sig.hrwmag = sig.hrcorr;
-    sig.hrwmag0 = sig.hrcorr;
-    sig.hrw0 = sig.hrcorr;
-    sig.hrwvar0 = sig.hrcorr;
-    sig.hrcorrvar = sig.hrcorr;
-    sig.hrampvar = sig.hramp;
-    sig.wpvar = sig.hramp;
-
+    
+    sig.wpeofmag = sig.hrcorr;
+    sig.eofs = NaN(nzhr,nzhr,nt);
+    sig.eofsvar = sig.hrcorr;
 
     for it = 1:length(sig.time)
         %Broadband
@@ -65,22 +59,16 @@ if isfield(SIG,'time')
         nz = length(SIG(it).HRprofile.w);
         sig.hrcorr(1:nz,it) = SIG(it).HRprofile.QC.hrcorr;
         sig.hramp(1:nz,it) = SIG(it).HRprofile.QC.hramp;
+        sig.pspike(1:nz,it) = SIG(it).HRprofile.QC.pspike;
         sig.hrw(1:nz,it) = SIG(it).HRprofile.w;
         sig.hrwvar(1:nz,it) = SIG(it).HRprofile.wvar;
-        sig.eps(1:nz,it) = SIG(it).HRprofile.eps_structEOF;
-        sig.mspe(1:nz,it) = SIG(it).HRprofile.QC.mspeEOF;
-        sig.slope(1:nz,it) = SIG(it).HRprofile.QC.slopeEOF;
-        sig.pspike(1:nz,it) = SIG(it).HRprofile.QC.pspike;
-        sig.N(1:nz,it) = SIG(it).HRprofile.QC.NEOF;
-        sig.pitchvar(it) = SIG(it).motion.pitchvar;
-        sig.rollvar(it) = SIG(it).motion.rollvar;
-        sig.hrwmag(1:nz,it) = SIG(it).HRprofile.QC.wmag;
-        sig.hrwmag0(1:nz,it) = SIG(it).HRprofile.QC.wmag0;
-        sig.hrw0(1:nz,it) = SIG(it).HRprofile.QC.w0;
-        sig.hrwvar0(1:nz,it) = SIG(it).HRprofile.QC.wvar0;
-        sig.hrcorrvar(1:nz,it) = SIG(it).HRprofile.QC.hrcorrvar;
-        sig.hrampvar(1:nz,it) = SIG(it).HRprofile.QC.hrampvar;
-        sig.wpvar(1:nz,it) = SIG(it).HRprofile.QC.wpvar;
+        sig.eps(1:nz,it) = SIG(it).HRprofile.eps;
+        sig.mspe(1:nz,it) = SIG(it).HRprofile.QC.qualEOF.mspe;
+        sig.slope(1:nz,it) = SIG(it).HRprofile.QC.qualEOF.slope;
+        
+        sig.wpeofmag(1:nz,it) = SIG(it).HRprofile.QC.wpeofmag;
+        sig.eofs(1:nz,1:nz,it) = SIG(it).HRprofile.QC.eofs;
+        sig.eofsvar(1:nz,it) = SIG(it).HRprofile.QC.eofsvar;
     end
 
     %QC
@@ -94,7 +82,6 @@ if isfield(SIG,'time')
         sig.avguvar(:,badburst) = [];
         sig.avgvvar(:,badburst) = [];
         sig.avgwvar(:,badburst) = [];
-
         sig.hrcorr(:,badburst) = [];
         sig.hramp(:,badburst) = [];
         sig.hrw(:,badburst) = [];
@@ -103,18 +90,11 @@ if isfield(SIG,'time')
         sig.mspe(:,badburst) = [];
         sig.slope(:,badburst) = [];  
         sig.pspike(:,badburst) = [];
-        sig.N(:,badburst) = [];
-        sig.pitchvar(badburst) = [];
-        sig.rollvar(badburst) = [];
-        sig.hrw0(:,badburst) = [];
-        sig.hrwvar0(:,badburst) = [];
-        sig.hrwmag(:,badburst) = [];
-        sig.hrwmag0(:,badburst) = [];
-        sig.hrcorrvar(:,badburst) = [];
-        sig.hrampvar(:,badburst) = [];
-        sig.wpvar(:,badburst) = [];
-
         sig.time(badburst) = [];
+        
+        sig.wpeofmag(:,badburst) = [];
+        sig.eofs(:,:,badburst) = [];
+        sig.eofsvar(:,badburst) = [];
     else
         sig.badburst = badburst;
     end
