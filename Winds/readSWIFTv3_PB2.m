@@ -132,7 +132,9 @@ if zdalength>1, % valid data indicated by a time string
     [timelinenum ui ] = unique(timelinenum);
     gpstime = gpstime(ui);
 
+    if exist('positionlinenum')
     time = interp1(timelinenum(~isnan(gpstime)),gpstime(~isnan(gpstime)),positionlinenum,'linear','extrap');
+    end
 
     save([filename(1:end-4) '.mat'],'time', 'rawwindspd', 'rawwinddir', 'rawairtemp', 'rawairpres', 'lat', 'lon', 'sog', 'cog', 'pitch', 'roll');
 
