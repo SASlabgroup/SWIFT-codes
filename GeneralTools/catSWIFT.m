@@ -66,17 +66,20 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
             swift.relv(:,it) = SWIFT(it).signature.profile.north;
             if isfield(SWIFT(it).signature.profile,'w')
             swift.relw(:,it) = SWIFT(it).signature.profile.w;
-            swift.reluerr(:,it) = SWIFT(it).signature.profile.uvar;
-            swift.relverr(:,it) = SWIFT(it).signature.profile.vvar;
-            swift.relwerr(:,it) = SWIFT(it).signature.profile.wvar;
             end
         elseif isfield(SWIFT(it).signature.profile,'u')  && ~isempty(SWIFT(it).signature.profile.u)
             swift.relu(:,it) = SWIFT(it).signature.profile.u;
             swift.relv(:,it) = SWIFT(it).signature.profile.v;
             swift.relw(:,it) = SWIFT(it).signature.profile.w;
+            if isfield(SWIFT(it).signature.profile,'uvar')
             swift.reluerr(:,it) = SWIFT(it).signature.profile.uvar;
             swift.relverr(:,it) = SWIFT(it).signature.profile.vvar;
             swift.relwerr(:,it) = SWIFT(it).signature.profile.wvar;
+            else
+            swift.reluerr(:,it) = SWIFT(it).signature.profile.uerr;
+            swift.relverr(:,it) = SWIFT(it).signature.profile.verr;
+            swift.relwerr(:,it) = SWIFT(it).signature.profile.werr;
+            end
 
         end
     end
