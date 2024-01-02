@@ -44,9 +44,10 @@ if isfield(AQH,'time')
         aqh.pspike(1:nz,it) = AQH(it).HRprofile.QC.pspike;
         aqh.hrw(1:nz,it) = AQH(it).HRprofile.w;
         aqh.hrwvar(1:nz,it) = AQH(it).HRprofile.wvar;
-        aqh.eps(1:nz,it) = AQH(it).HRprofile.QC.epsWV;
-        aqh.mspe(1:nz,it) = AQH(it).HRprofile.QC.qualWV.mspe;
-        aqh.slope(1:nz,it) = AQH(it).HRprofile.QC.qualWV.slope;
+
+        aqh.eps(1:nz,it) = AQH(it).HRprofile.QC.epsEOF;
+        aqh.mspe(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.mspe;
+        aqh.slope(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.slope;
         
         aqh.wpeofmag(1:nz,it) = AQH(it).HRprofile.QC.wpeofmag;
         aqh.eofs(1:nz,1:nz,it) = AQH(it).HRprofile.QC.eofs;

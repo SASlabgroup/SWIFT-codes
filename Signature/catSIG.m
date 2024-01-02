@@ -62,7 +62,8 @@ if isfield(SIG,'time')
         sig.pspike(1:nz,it) = SIG(it).HRprofile.QC.pspike;
         sig.hrw(1:nz,it) = SIG(it).HRprofile.w;
         sig.hrwvar(1:nz,it) = SIG(it).HRprofile.wvar;
-        sig.eps(1:nz,it) = SIG(it).HRprofile.eps;
+
+        sig.eps(1:nz,it) = SIG(it).HRprofile.QC.epsEOF;
         sig.mspe(1:nz,it) = SIG(it).HRprofile.QC.qualEOF.mspe;
         sig.slope(1:nz,it) = SIG(it).HRprofile.QC.qualEOF.slope;
         
