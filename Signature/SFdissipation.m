@@ -8,7 +8,7 @@ function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 %   in:     w (or dW)  nbin x nping ensemble of velocity profiles. Ensemble averaging
 %                           occurs across the 'ping' dimension. Can alternatively 
 %                           input the velocity difference matrix (dW).
-%           z           1 x nbin
+%           z           1 x nbin, negative values (forced if not)
 %           rmin        minimum separation distance allowed in the fit
 %           rmax        maximum separation distance, assumed to be within the
 %                           inerital subrange
@@ -53,7 +53,7 @@ end
 
 % Matrices of all possible data pair separation distances (R), and
 % corresponding mean vertical position (Z0)
-z = z(:)';
+z = -abs(z(:)');
 dz = median(diff(z));
 R = z-z';
 R = round(R,2);
@@ -120,8 +120,7 @@ for ibin = 1:length(z)
     ifit = Ri <= rmax & Ri >= rmin; 
     nfit = sum(ifit);
     if nfit < 3 % Must contain more than 3 points
-        continue
-        
+        continue       
     end
     xN = ones(nfit,1);
     x1 = Ri(ifit).^(2/3);
