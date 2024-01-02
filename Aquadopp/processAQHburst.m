@@ -4,6 +4,9 @@ function [HRprofile,fh] = processAQHburst(burst,opt)
 %     opt.xz = 0.2;
 %     opt.nsumeof = 5;
 %     opt.plotburst = true;
+%     opt.lsm = 0.12;
+%     opt.dz = 0.04;
+%     opt.bz = 0.1;
 
 %    Check to make sure dimensions correct
     if length(size(burst.VelocityData)) > 2
@@ -23,7 +26,7 @@ function [HRprofile,fh] = processAQHburst(burst,opt)
     z = opt.xz - opt.bz - opt.dz*(1:nbin)';
 
     % Find Spikes + High Pass
-    nsm = round(0.16/opt.dz); % 0.16 m
+    nsm = round(opt.lsm/opt.dz); % 0.16 m
     wlp = smooth_mat(w',hann(nsm))';
     wphp = w - wlp; 
     wstd = std(wphp);

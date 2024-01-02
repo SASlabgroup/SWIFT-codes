@@ -20,7 +20,8 @@ opt.bz = 0.1; % blanking distance
 opt.dt = 1/4; % seconds
 
 % QC Parameters
-opt.nsumeof = 3;% Number of lowest-mode EOFs to remove from turbulent velocity
+opt.nsumeof = 1;% too few EOFs to remove more
+opt.lsm = 0.12;%
 opt.mincorr = 50;
 
 % Compare with varargin
@@ -170,7 +171,7 @@ for iburst = 1:nburst
 
     badburst = smallfile | outofwater | badcorr;
 
-    %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
+%%%%%%% Process HR velocity data ('burst' structure) %%%%%%
     
     [HRprofile,fh] = processAQHburst(burst,opt);
 
@@ -193,7 +194,7 @@ for iburst = 1:nburst
        end
     
     
-    %%%%%%%% Save detailed signature data in SIG structure %%%%%%%%
+%%%%%%%% Save detailed signature data in SIG structure %%%%%%%%
 
     %Time
     AQH(iaqh).time = t0;

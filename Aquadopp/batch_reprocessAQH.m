@@ -6,10 +6,10 @@ savedir = 'C:\Users\kfitz\Dropbox\MATLAB\NORSE\Data\2023\SWIFT\reprocessedAQH\';
 missions = dir([expdir '\*SWIFT*']);
 
 %% Loop through and Reprocess
-%SUGGESTION: run 'batch_readSIG.m' prior to this script, to read in raw
+%SUGGESTION: run 'batch_readAQH.m' prior to this script, to read in raw
 % data first and save to mat files, instead of using opt 'readraw' here
 
-for im = [2 3 5:length(missions)]
+for im = 1:length(missions)
     
     if isfolder([expdir missions(im).name '\AQH'])
         
