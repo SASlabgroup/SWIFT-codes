@@ -1,4 +1,4 @@
-function [time Vel Amp Cor Pressure pitch roll heading ] = readSWIFTv3_AQH(filename);
+function [time Vel Amp Cor Pressure Temp pitch roll heading ] = readSWIFTv3_AQH(filename);
 % SWIFT v.3 RAW AQD processing
 % input is string of filename with extension
 % output is data, also automatically saves mat file%
@@ -139,4 +139,4 @@ fclose (fid);
 
 save([filename(1:end-4) '.mat'])
 
-batteryVoltage = mean(battery)
+% batteryVoltage = mean(battery)
