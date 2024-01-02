@@ -1,12 +1,16 @@
-function [HRprofile,fh] = processAQHburst(burst,opt)
+function [HRprofile,fh] = processAQHburst(burst,varargin)
     
-%     % Default values
-%     opt.xz = 0.2;
-%     opt.nsumeof = 5;
-%     opt.plotburst = true;
-%     opt.lsm = 0.12;
-%     opt.dz = 0.04;
-%     opt.bz = 0.1;
+if ~isempty(varargin)
+    opt = varargin{1};
+else
+    % Default values
+    opt.xz = 0.8;
+    opt.nsumeof = 5;
+    opt.plotburst = true;
+    opt.lsm = 0.12;
+    opt.dz = 0.04;
+    opt.bz = 0.1;
+end
 
 %    Check to make sure dimensions correct
     if length(size(burst.VelocityData)) > 2
@@ -69,7 +73,7 @@ function [HRprofile,fh] = processAQHburst(burst,opt)
 
     warning('off','all')
     % No filter, no analytic wave fit (D ~ r^{-2/3})
-    [epsNF,qualNF] = SFdissipation(w,z,rmin,2*rmax,nzfit,'linear','mean');
+    [epsNF,qualNF] = SFdissipation(w,z,rmin,rmax,nzfit,'linear','mean');
     % Analytic wave fit  (D ~ Ar^{-2/3} + Br^2)
     [epsWV,qualWV] = SFdissipation(w,z,rmin,2*rmax,nzfit,'cubic','mean');
     % EOF filter (D ~ r^{-2/3})
@@ -137,14 +141,14 @@ function [HRprofile,fh] = processAQHburst(burst,opt)
         MP = get(0,'monitorposition');
         set(gcf,'outerposition',MP(1,:).*[1 1 0.5 1]);
         subplot(1,2,1)
-        b(1) = errorbar(HRprofile.w,HRprofile.z,sqrt(HRprofile.wvar)./nping,'horizontal');
+        b(1) = errorbar(HRprofile.w,-HRprofile.z,sqrt(HRprofile.wvar)./nping,'horizontal');
         hold on
         set(b,'LineWidth',2)
         plot([0 0],[0 20],'k--')
         xlabel('w [m/s]');
         title('Velocity')
         set(gca,'Ydir','reverse')
-        ylim([0 6])
+        ylim([0 1])
         xlim([-0.1 0.1])
         set(gca,'YAxisLocation','right')
         subplot(1,2,2)
@@ -154,7 +158,7 @@ function [HRprofile,fh] = processAQHburst(burst,opt)
         s(3) =  semilogx(epsHP,z,'m','LineWidth',2);
         s(4) = semilogx(epsWV,z,'c','LineWidth',2);
         xlim(10.^([-9 -3]))
-        ylim([0 6])
+        ylim([0 1])
         legend(s,'No-filter','EOF Filter','HP Filter','Analytic Filter','Location','southeast')
         title('Dissipation')
         xlabel('\epsilon [W/Kg]'),ylabel('z [m]')

@@ -20,7 +20,7 @@ opt.bz = 0.1; % blanking distance
 opt.dt = 1/4; % seconds
 
 % QC Parameters
-opt.nsumeof = 1;% too few EOFs to remove more
+opt.nsumeof = 1;% too few EOFs to remove more...
 opt.lsm = 0.12;%
 opt.mincorr = 50;
 

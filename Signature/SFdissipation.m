@@ -54,7 +54,7 @@ end
 % Matrices of all possible data pair separation distances (R), and
 % corresponding mean vertical position (Z0)
 z = -abs(z(:)');
-dz = median(diff(z));
+dz = abs(median(diff(z)));
 R = z-z';
 R = round(R,2);
 [Z1,Z2] = meshgrid(z);
