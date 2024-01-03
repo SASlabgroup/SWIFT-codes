@@ -28,40 +28,49 @@ for im = 1:length(missions)
     
     if isfolder([expdir missions(im).name '\AQH'])
     
-    bfiles = dir([expdir missions(im).name slash 'AQH' slash 'Raw' slash '*' slash '*.dat']);
+        bfiles = dir([expdir missions(im).name slash 'AQH' slash 'Raw' slash '*' slash '*.dat']);
 
-    for iburst = 1:length(bfiles)
+        for iburst = 1:length(bfiles)
+            
+            % File and Folder names
+            bname = bfiles(iburst).name(1:end-4);
+            bfold = bfiles(iburst).folder;
+            disp(['Burst ' num2str(iburst) ' : ' bname])
 
-        disp(['Burst ' num2str(iburst) ' : ' bfiles(iburst).name(1:end-4)])
-        bname = bfiles(iburst).name(1:end-4);
-        bfold = bfiles(iburst).folder;
-
-        % Read + save burst file (skip if mat file already exists)
-        if exist([bfold slash bname '.mat'],'file')
-            disp('*** mat file already exists ***')
-            continue
-        else
-        [time] = readSWIFTv3_AQH([bfold slash bname '.dat']);
-            if isempty(time)
-                disp('*** no data ***')
+            % Read + save burst file (skip if mat file already exists)
+            if exist([bfold slash bname '.mat'],'file')
+                disp('*** mat file already exists ***')
+            else
+            [time] = readSWIFTv3_AQH([bfold slash bname '.dat']);
+                if isempty(time)
+                    disp('*** no data ***')
+                end
             end
-        end
-        
-        % Plot burst + save if plotburst = true
-        if plotburst
-            burst = load([bfold slash bname '.mat']);
-            fh = plotAQHburst(burst);
-            figure(fh(1))
-            figname = [bfold slash bname];
-            if zoom
-               limx = xlim;
-               xlim(max(xlim).*[0.4 0.6])
-            end
-            print(figname,'-dpng')
-            close(fh)
-        end
 
-    end
+            % Plot burst + save if plotburst = true
+            if plotburst 
+                if exist([bfold slash bname '.png'],'file')
+                    disp('*** png already exists ***')
+                    continue
+                end
+                burst = load([bfold slash bname '.mat']);
+                if isempty(burst)
+                    disp('*** mat file empty, no plot ***')
+                    continue
+                else
+                    fh = plotAQHburst(burst);
+                    figure(fh(1))
+                    figname = [bfold slash bname];
+                    if zoom
+                       limx = xlim;
+                       xlim(max(xlim).*[0.4 0.6])
+                    end
+                    print(fh,figname,'-dpng')
+                    close(fh)
+                end
+            end
+
+        end
     
     else
         disp(['No AQH data found for ' missions(im).name])
