@@ -292,18 +292,27 @@ if ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
 SWIFT = SWIFT(isort);
 end
 
-%%%%%% Save SWIFT Structure %%%%%%%%
-if opt.saveSWIFT && ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
-    if strcmp(mfile.name(end-6:end-4),'SBG')
-        save([savedir SNprocess '_reprocessedAQHandSBG.mat'],'SWIFT')
-    else
-        save([savedir SNprocess '_reprocessedAQH.mat'],'SWIFT')
+%%%%%% Save mat file %%%%%%%%
+if exist(savedir,'dir')
+    
+    % SWIFT Structure
+    if opt.saveSWIFT && ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
+            if strcmp(mfile.name(end-6:end-4),'SBG')
+                save([savedir SNprocess '_reprocessedAQHandSBG.mat'],'SWIFT')
+            else
+                save([savedir SNprocess '_reprocessedAQH.mat'],'SWIFT')
+            end
     end
-end
 
-%%%%%% Save AQH Structure %%%%%%%%
-if opt.saveAQH
-   save([savedir SNprocess '_burstavgAQH.mat'],'AQH')
+    % AQH structure
+    if opt.saveAQH
+       save([savedir SNprocess '_burstavgAQH.mat'],'AQH')
+    end
+
+    cd(savedir)
+    
+else
+    warning('Unable to save mat files, directory does not exist')
 end
 
 %%%%%% Plot burst Averaged SWIFT Signature Data %%%%%%
@@ -316,8 +325,5 @@ end
 %         close gcf
 %     end
 % end
-
-
-cd(savedir)
 
 end

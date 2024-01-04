@@ -4,10 +4,12 @@
 
 % Experiment to process
 % expdir = 'S:\NORSE\2023\';
-expdir = 'S:\LC-DRI\';
+% expdir = 'S:\LC-DRI\';
+
+expdir = 'S:\ATOMIC\SWIFT\';
 
 % Plotting toggles
-plotburst = true;% generates plot of each burst and saves as a png file
+plotburst = false;% generates plot of each burst and saves as a png file
 zoom = true;% zooms into center 20% of the pings for visual clarity
 
 %% Generate list of missions
@@ -20,6 +22,7 @@ if ~strcmp(expdir(end),slash)
     expdir = [expdir slash];
 end
 missions = dir([expdir 'SWIFT*']);
+missions = missions([missions.isdir]);
 
 %% Run through each mission, reading in raw AQH data (unless mat file already exists)
 % Plot burst data if plotburst = true;
@@ -41,9 +44,14 @@ for im = 1:length(missions)
             if exist([bfold slash bname '.mat'],'file')
                 disp('*** mat file already exists ***')
             else
-            [time] = readSWIFTv3_AQH([bfold slash bname '.dat']);
-                if isempty(time)
+                try % read raw burst file
+                [time] = readSWIFTv3_AQH([bfold slash bname '.dat']);
+                    if isempty(time)
                     disp('*** no data ***')
+                    end
+                catch ME
+                    warning(['Error: ' ME.identifier])
+                    continue
                 end
             end
 

@@ -1,13 +1,15 @@
 % Bulk reprocess_AQH on an entire experiment w/multiple missions
 
-expdir = 'S:\NORSE\2023\';% must end with \
-savedir = ['C:\Users\' getenv('username') '\Dropbox\MATLAB\NORSE\Data\2023\SWIFT\reprocessedAQH\'];% must end with \
+%SUGGESTION: run 'batch_readrawAQH.m' prior to this script, to read in raw
+% data first and save to mat files, instead of using opt 'readraw'
+
+expdir = 'S:\ATOMIC\SWIFT\';
+savedir = 'C:\Users\kfitz\Dropbox\MATLAB\ATOMIC\Data\reprocessed_AQH\';
 
 missions = dir([expdir '\*SWIFT*']);
+missions = missions([missions.isdir]);
 
 %% Loop through and Reprocess
-%SUGGESTION: run 'batch_readrawAQH.m' prior to this script, to read in raw
-% data first and save to mat files, instead of using opt 'readraw' here
 
 for im = 1:length(missions)
     
@@ -15,7 +17,7 @@ for im = 1:length(missions)
         
         try
         missiondir = [expdir missions(im).name];         
-        [SWIFT,SIG] = reprocess_AQH(missiondir,savedir,...
+        [SWIFT,AQH] = reprocess_AQH(missiondir,savedir,...
             'saveAQH','saveSWIFT');
         passthrough = false;
         catch ME

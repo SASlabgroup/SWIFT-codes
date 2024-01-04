@@ -175,7 +175,7 @@ end
  end
 
 %TKE Dissipation Rate and HR vertical velocity
-if isfield(SWIFT,'signature')
+if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.HRprofile)
     swift.surfz = SWIFT(1).signature.HRprofile.z';
     nz = length(swift.surfz);
     swift.surftke = NaN(nz,nt);
