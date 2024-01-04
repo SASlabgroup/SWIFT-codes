@@ -3,8 +3,8 @@
 %SUGGESTION: run 'batch_readrawAQH.m' prior to this script, to read in raw
 % data first and save to mat files, instead of using opt 'readraw'
 
-expdir = 'S:\ATOMIC\SWIFT\';
-savedir = 'C:\Users\kfitz\Dropbox\MATLAB\ATOMIC\Data\reprocessed_AQH\';
+expdir = 'S:\PAPA\SikuliaqCruise2019\SWIFT_L0_raw\';
+savedir = 'C:\Users\Kristin Zeiden\Dropbox\MATLAB\OSPAPA\Data\2019\reprocessed_AQH\';
 
 missions = dir([expdir '\*SWIFT*']);
 missions = missions([missions.isdir]);

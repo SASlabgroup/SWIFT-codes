@@ -88,6 +88,13 @@ function [SWIFT,SIG] = reprocess_SIG(missiondir,savedir,varargin)
 % traps due to the periodic oscillations which make the mean value
 % reasonable. So far only known to have happened on SWIFT 22, LC-DRI Exp.
 
+%% Make sure savedir exists
+
+if ~exist(savedir,'dir')
+    error('Save directory does not exist, please redefine.')
+end
+
+
 %% Load/Save/Plot Toggles
 
 %Default
@@ -217,7 +224,13 @@ for iburst = 1:nburst
     if opt.readraw
    [burst,avg,~,~] = readSWIFTv4_SIG([bfiles(iburst).folder slash bfiles(iburst).name]);
     else
+        try
         load([bfiles(iburst).folder slash bfiles(iburst).name],'burst','avg')
+        catch ME
+            disp(ME.message)
+            disp('Skipping burst...')
+            continue
+        end
     end
     
     % Skip burst if empty

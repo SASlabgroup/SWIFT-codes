@@ -2,6 +2,14 @@ function [SWIFT,AQH] = reprocess_AQH(missiondir,savedir,varargin)
 % Reprocess AQH data to compute dissipation rate. Based on reprocess_SIG(missiondir,savedir).
 % Jan 2024, K. Zeiden
 
+
+%% Make sure savedir exists
+
+if ~exist(savedir,'dir')
+    error('Save directory does not exist, please redefine.')
+end
+
+
 %% Load/Save/Plot Toggles
 
 %Default
@@ -292,38 +300,19 @@ if ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
 SWIFT = SWIFT(isort);
 end
 
-%%%%%% Save mat file %%%%%%%%
-if exist(savedir,'dir')
-    
-    % SWIFT Structure
-    if opt.saveSWIFT && ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
-            if strcmp(mfile.name(end-6:end-4),'SBG')
-                save([savedir SNprocess '_reprocessedAQHandSBG.mat'],'SWIFT')
-            else
-                save([savedir SNprocess '_reprocessedAQH.mat'],'SWIFT')
-            end
+%%%%%% Save SWIFT Structure %%%%%%%%
+if opt.saveSWIFT && ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
+    if strcmp(mfile.name(end-6:end-4),'SBG')
+        save([savedir SNprocess '_reprocessedAQHandSBG.mat'],'SWIFT')
+    else
+        save([savedir SNprocess '_reprocessedAQH.mat'],'SWIFT')
     end
-
-    % AQH structure
-    if opt.saveAQH
-       save([savedir SNprocess '_burstavgAQH.mat'],'AQH')
-    end
-
-    cd(savedir)
-    
-else
-    warning('Unable to save mat files, directory does not exist')
 end
 
-%%%%%% Plot burst Averaged SWIFT Signature Data %%%%%%
-% if opt.plotmission
-%     catAQH(AQH,'plot');
-%     set(gcf,'Name',SNprocess)
-%     if opt.saveplots
-%         figname = [savedir get(gcf,'Name')];
-%         print(figname,'-dpng')
-%         close gcf
-%     end
-% end
+%%%%%% Save AQH Structure %%%%%%%%
+if opt.saveAQH
+   save([savedir SNprocess '_burstavgAQH.mat'],'AQH')
+end
+
 
 end

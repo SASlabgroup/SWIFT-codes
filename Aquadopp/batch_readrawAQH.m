@@ -3,16 +3,13 @@
 %       expdir\mission\SIG\Raw\YYYYMMDD\rawfile.dat
 
 % Experiment to process
-% expdir = 'S:\NORSE\2023\';
-% expdir = 'S:\LC-DRI\';
-
-expdir = 'S:\ATOMIC\SWIFT\';
+expdir = 'S:\NORSE\2023\';
 
 % Plotting toggles
-plotburst = false;% generates plot of each burst and saves as a png file
+plotburst = true;% generates plot of each burst and saves as a png file
 zoom = true;% zooms into center 20% of the pings for visual clarity
 
-%% Generate list of missions
+% Generate list of missions
 if ispc
     slash = '\';
 else
@@ -27,7 +24,7 @@ missions = missions([missions.isdir]);
 %% Run through each mission, reading in raw AQH data (unless mat file already exists)
 % Plot burst data if plotburst = true;
 
-for im = 1:length(missions)
+for im = 4:5%length(missions)
     
     if isfolder([expdir missions(im).name '\AQH'])
     
