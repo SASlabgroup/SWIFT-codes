@@ -44,7 +44,7 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
     wphp = winterp - smooth_mat(winterp',hann(nsm))';
 
     % 2) EOF High-pass using interpolated data 
-    badping = sum(ispike)./nbin > 0.6; 
+    badping = sum(ispike)./nbin > 0.5;% | std(wphp,[],'omitnan') > 0.01; 
     %   - remove worst pings to get good EOFs, then interpolate back in time
     %   - alternatively, could use *only* despiked data. This does not
     %       work well when data are very noisy/poor quality

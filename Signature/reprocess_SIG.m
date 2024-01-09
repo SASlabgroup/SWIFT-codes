@@ -88,6 +88,12 @@ function [SWIFT,SIG] = reprocess_SIG(missiondir,savedir,varargin)
 % traps due to the periodic oscillations which make the mean value
 % reasonable. So far only known to have happened on SWIFT 22, LC-DRI Exp.
 
+%% Make sure save directory exists
+
+if ~exist(savedir,'dir')
+    error('Save directory does not exist.')
+end
+
 %% Load/Save/Plot Toggles
 
 %Default
@@ -127,7 +133,7 @@ opt.mincorr = 40; % burst-avg correlation minimum
 opt.maxamp = 150; % burst-avg amplitude maximum
 opt.maxwvar = 0.2; % burst-avg HR velocity (percent) error maximum
 opt.pbadmax = 80; % maximum percent 'bad' amp/corr/err values per bin or ping allowed
-opt.nsumeof = 5;% Number of lowest-mode EOFs to remove from turbulent velocity
+opt.nsumeof = 3;% Default 3? Number of lowest-mode EOFs to remove from turbulent velocity
 
 % Data type
 if opt.readraw
@@ -369,7 +375,7 @@ for iburst = 1:nburst
             timematch = false;
         end
 
-        if  timematch && ~badburst % Good burst & time match
+        if  timematch %&& ~badburst % time match
             % HR data
             SWIFT(tindex).signature.HRprofile = [];
             SWIFT(tindex).signature.HRprofile.w = HRprofile.w;
@@ -391,23 +397,23 @@ for iburst = 1:nburst
             % Temperaure
             SWIFT(tindex).watertemp = profile.temp;
 
-        elseif timematch && badburst % Bad burst & time match
-            % HR data
-            SWIFT(tindex).signature.HRprofile = [];
-            SWIFT(tindex).signature.HRprofile.w = NaN(size(HRprofile.w));
-            SWIFT(tindex).signature.HRprofile.wvar = NaN(size(HRprofile.w));
-            SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
-            SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
-                NaN(size(HRprofile.w'));
-            % Broadband data
-            SWIFT(tindex).signature.profile = [];
-            SWIFT(tindex).signature.profile.w = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.east = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.north = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.uvar = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.vvar = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.wvar = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.z = profile.z;
+%         elseif timematch && badburst % Bad burst & time match
+%             % HR data
+%             SWIFT(tindex).signature.HRprofile = [];
+%             SWIFT(tindex).signature.HRprofile.w = NaN(size(HRprofile.w));
+%             SWIFT(tindex).signature.HRprofile.wvar = NaN(size(HRprofile.w));
+%             SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
+%             SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
+%                 NaN(size(HRprofile.w'));
+%             % Broadband data
+%             SWIFT(tindex).signature.profile = [];
+%             SWIFT(tindex).signature.profile.w = NaN(size(profile.u));
+%             SWIFT(tindex).signature.profile.east = NaN(size(profile.u));
+%             SWIFT(tindex).signature.profile.north = NaN(size(profile.u));
+%             SWIFT(tindex).signature.profile.uvar = NaN(size(profile.u));
+%             SWIFT(tindex).signature.profile.vvar = NaN(size(profile.u));
+%             SWIFT(tindex).signature.profile.wvar = NaN(size(profile.u));
+%             SWIFT(tindex).signature.profile.z = profile.z;
         elseif ~timematch && ~badburst % Good burst, no time match
             disp('   ALERT: Burst good, but no time match...')
             tindex = length(SWIFT)+1;
