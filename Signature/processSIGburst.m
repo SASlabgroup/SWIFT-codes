@@ -97,6 +97,7 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
     HRprofile.QC.hrcorr = mean(corr,2,'omitnan');
     HRprofile.QC.hramp = mean(amp,2,'omitnan');
     HRprofile.QC.pspike = (sum(ispike,2,'omitnan')./nping);  
+    HRprofile.QC.pbadping = sum(badping)./nping;
 
     % Plot Burst 
     if opt.plotburst
@@ -132,35 +133,35 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
         drawnow
 
         % Velocity and Dissipation Profiles
-        fh(2) = figure('color','w');
-        clear b s
-        MP = get(0,'monitorposition');
-        set(gcf,'outerposition',MP(1,:).*[1 1 0.5 1]);
-        subplot(1,2,1)
-        b(1) = errorbar(HRprofile.w,HRprofile.z,sqrt(HRprofile.wvar)./nping,'horizontal');
-        hold on
-        set(b,'LineWidth',2)
-        plot([0 0],[0 20],'k--')
-        xlabel('w [m/s]');
-        title('Velocity')
-        set(gca,'Ydir','reverse')
-        ylim([0 6])
-        xlim([-0.1 0.1])
-        set(gca,'YAxisLocation','right')
-        subplot(1,2,2)
-        s(1) = semilogx(epsNF,z,'k','LineWidth',2);
-        hold on
-        s(2) = semilogx(epsEOF,z,'r','LineWidth',2);
-        s(3) =  semilogx(epsHP,z,'m','LineWidth',2);
-        s(4) = semilogx(epsWV,z,'c','LineWidth',2);
-        xlim(10.^([-9 -3]))
-        ylim([0 6])
-        legend(s,'No-filter','EOF Filter','HP Filter','Analytic Filter','Location','southeast')
-        title('Dissipation')
-        xlabel('\epsilon [W/Kg]'),ylabel('z [m]')
-        set(gca,'Ydir','reverse')
-        set(gca,'YAxisLocation','right')
-        drawnow
+%         fh(2) = figure('color','w');
+%         clear b s
+%         MP = get(0,'monitorposition');
+%         set(gcf,'outerposition',MP(1,:).*[1 1 0.5 1]);
+%         subplot(1,2,1)
+%         b(1) = errorbar(HRprofile.w,HRprofile.z,sqrt(HRprofile.wvar)./nping,'horizontal');
+%         hold on
+%         set(b,'LineWidth',2)
+%         plot([0 0],[0 20],'k--')
+%         xlabel('w [m/s]');
+%         title('Velocity')
+%         set(gca,'Ydir','reverse')
+%         ylim([0 6])
+%         xlim([-0.1 0.1])
+%         set(gca,'YAxisLocation','right')
+%         subplot(1,2,2)
+%         s(1) = semilogx(epsNF,z,'k','LineWidth',2);
+%         hold on
+%         s(2) = semilogx(epsEOF,z,'r','LineWidth',2);
+%         s(3) =  semilogx(epsHP,z,'m','LineWidth',2);
+%         s(4) = semilogx(epsWV,z,'c','LineWidth',2);
+%         xlim(10.^([-9 -3]))
+%         ylim([0 6])
+%         legend(s,'No-filter','EOF Filter','HP Filter','Analytic Filter','Location','southeast')
+%         title('Dissipation')
+%         xlabel('\epsilon [W/Kg]'),ylabel('z [m]')
+%         set(gca,'Ydir','reverse')
+%         set(gca,'YAxisLocation','right')
+%         drawnow
     else
         fh = [];
     end

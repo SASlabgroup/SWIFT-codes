@@ -124,6 +124,7 @@ for ibin = 1:length(z)
         
     end
     xN = ones(nfit,1);
+    x = Ri(ifit);
     x1 = Ri(ifit).^(2/3);
     x3 = x1.^3;
     d = Di(ifit);
@@ -134,6 +135,7 @@ for ibin = 1:length(z)
     x1log = log10(x1(ilog));
     dlog = log10(d(ilog));
     xNlog = xN(ilog);
+%     xlog = log10(x(ilog));
     G = [x1log(:) xNlog(:)];
     Gg = (G'*G)\G';
     m = Gg*dlog(:);
@@ -147,9 +149,9 @@ for ibin = 1:length(z)
         Gg = (G'*G)\G';
         m = Gg*d(:);
         B(ibin) = m(1);
-        A(ibin) = m(1);
+        A(ibin) = m(2);
         
-        %Remove model shear term & fit Ar^(2/3) to residual
+        %Remove model shear term & fit Ar^(2/3) to residual (to get mspe)
         dmod = d-B(ibin)*x3;
         G = [x1(:) xN(:)];
         Gg = (G'*G)\G';
@@ -157,12 +159,15 @@ for ibin = 1:length(z)
         dm = G*m;
         imse = abs(dm) > 10^(-8);
         mspe(ibin) =  mean(((dm(imse)-dmod(imse))./dm(imse)).^2);
-        A(ibin) = m(1);
+        if A(ibin) ~= m(1)
+            warning('new value for eps')
+        end
+%         A(ibin) = m(1);
         N(ibin) = m(2);
         merr = sqrt(diag(derr.^2*((G'*G)^(-1))));
         Aerr(ibin) = merr(1);
         
-        % Slope of residual structure function
+        % update w/slope of residual structure function
         ilog = x1 > 0 & dmod > 0;% log(0) = -Inf
         x1log = log10(x1(ilog));
         dlog = log10(dmod(ilog));
@@ -188,6 +193,7 @@ for ibin = 1:length(z)
             
     elseif strcmp(fittype,'log')
         
+            % Don't presume a slope
             d = d(x1>0);
             xN = xN(x1>0);
             x1 = x1(x1>0);

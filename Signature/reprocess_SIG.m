@@ -295,6 +295,10 @@ for iburst = 1:nburst
 
       [profile,fh] = processSIGavg(avg,opt);
       
+       if isempty(profile)
+            profile = NaNstructR(SIG(isig-1).profile);
+        end
+      
         if opt.saveplots && ~isempty(fh)
             figure(fh(1))
             set(gcf,'Name',[bname '_bband_data'])
@@ -325,11 +329,11 @@ for iburst = 1:nburst
             print(figname,'-dpng')
             close gcf
             
-            figure(fh(2))
-            set(gcf,'Name',[bname '_HR_profiles'])
-            figname = [savedir SNprocess slash get(gcf,'Name')];
-            print(figname,'-dpng')
-            close gcf
+%             figure(fh(2))
+%             set(gcf,'Name',[bname '_HR_profiles'])
+%             figname = [savedir SNprocess slash get(gcf,'Name')];
+%             print(figname,'-dpng')
+%             close gcf
            end
     
     %%%%%%%% Save detailed signature data in SIG structure %%%%%%%%
