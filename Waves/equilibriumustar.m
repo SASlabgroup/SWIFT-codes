@@ -19,11 +19,13 @@ if isfield(SWIFT,'wavespectra'),
     for si = 1:length(SWIFT)
         
         findices = find( SWIFT(si).wavespectra.freq > fmin & SWIFT(si).wavespectra.freq < fmax );
-        ustar(si) = nanmean( SWIFT(si).wavespectra.energy(findices) .* SWIFT(si).wavespectra.freq(findices).^4 .* 16 .* pi^4 )...
-            ./ ( beta .* Ip .* 9.8 .* 2 .* pi );
+        df = nanmean( abs( diff(SWIFT(si).wavespectra.freq) ) );
+       
+        ustar(si) = nansum( SWIFT(si).wavespectra.energy(findices) .* SWIFT(si).wavespectra.freq(findices).^4 .* 2 .* pi^3 ./ ...
+            ( beta .* Ip .* 9.8 *(fmax - fmin) ) )*df;  % Iyer et al, JGR 2022a, Eq 3
+
     end
     
 else
 end
 
-ustar = ustar./2; % fix typo in 2013 paper?
