@@ -22,7 +22,7 @@ cd(parentdir);
 wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
-telemfile = dir('SWIFT*telemetry.mat');
+telemfile = dir('SWIFT*L1.mat');
 
 if ~isempty(dir([wd '_reprocessedSIG.mat'])) & readfromconcat~=1,
     SIGrep = true;

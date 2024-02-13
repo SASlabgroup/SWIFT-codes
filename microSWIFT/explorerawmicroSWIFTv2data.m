@@ -21,6 +21,7 @@ for gi = 1:length(GPSflist)
     
     disp(['GPS file ' num2str(gi) ' of ' num2str(length(GPSflist))])
     [north east down] = read_microSWIFTv2_rawdata( GPSflist(gi).name , pts, true );
+    save( [GPSflist(gi).name(1:end-4) '.mat'], 'north', 'east', 'down')
     
     if despike
         north = filloutliers(north,'nearest');
