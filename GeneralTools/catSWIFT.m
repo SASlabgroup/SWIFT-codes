@@ -52,7 +52,7 @@ swift.driftv = driftv;
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
-    swift.depth = SWIFT(1).signature.profile.z';
+    swift.depth = SWIFT(round(nt/2)).signature.profile.z';
     nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
@@ -176,7 +176,7 @@ end
 
 %TKE Dissipation Rate and HR vertical velocity
 if isfield(SWIFT,'signature')
-    swift.surfz = SWIFT(1).signature.HRprofile.z';
+    swift.surfz = SWIFT(round(nt/2)).signature.HRprofile.z';
     nz = length(swift.surfz);
     swift.surftke = NaN(nz,nt);
     for it = 1:nt
