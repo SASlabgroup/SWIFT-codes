@@ -16,6 +16,8 @@ clear all; close all
 parentdir = './';
 parentdir = pwd;
 
+plotflag = true;
+
 %quality control parameters
 minamp = 30; %amplitude cutoff, usually 30 or 40
 minn = 50; %number of cells averaged for each depth
@@ -61,6 +63,16 @@ for di = 1:length(dirlist),
         % Average amplitudes of just velocity measurements used
         Amp1(exclude) = NaN; Amp2(exclude) = NaN;
         Amp = (Amp1+Amp2)./2;%corresponds to those used in velocity
+        
+        if plotflag
+            pcolor(time, z, Amp')
+            shading flat
+            set(gca,'YDir','reverse')
+            ylabel('Depth [m]')
+            datetick
+            title([filelist(fi).name(1:end-4) ' AQD backscatter' ],'interp','none')
+            print('-dpng',[filelist(fi).name(1:end-4) '_backscatter.png']),
+        end
         
         n = sum(~isnan(Amp),1);
         E_error = Hori_prec./sqrt(n); N_error = E_error;
