@@ -1,4 +1,4 @@
-function [wclean,ispike] = despikeSIG(wraw,nfilt,dwmax,filltype)
+function [wclean,ispike] = despikeSIG(wraw,nfilt,dspikemax,filltype)
 % Function to de-spike Signature 1000 HR velocity data using a median
 % filter
 %               wraw        raw HR velocity data, assumed size is nbin x nping
@@ -15,7 +15,7 @@ wclean = NaN(size(wraw));
 
 % Identify Spikes
 wfilt = medfilt1(wraw,nfilt,'omitnan','truncate');
-ispike = abs(wraw - wfilt) > dwmax;
+ispike = abs(wraw - wfilt) > dspikemax;
 
 % Fill with linear interpolation
 if strcmp(filltype,'none')
