@@ -14,81 +14,131 @@
 #include "sortIdx.h"
 #include "sortLE.h"
 #include "coder_array.h"
-#include <algorithm>
 #include <cmath>
 
 // Function Definitions
 namespace coder {
 namespace internal {
-void sort(creal_T x[128], int idx[128])
+void sort(::coder::array<creal_T, 1U> &x, ::coder::array<int, 1U> &idx)
 {
-  creal_T xwork[128];
-  int iwork[128];
+  array<creal_T, 1U> vwork;
+  array<creal_T, 1U> xwork;
+  array<int, 1U> iidx;
+  array<int, 1U> iwork;
+  int dim;
   int i;
   int k;
   int qEnd;
-  for (k = 0; k <= 126; k += 2) {
-    if (sortLE(x, k + 1, k + 2)) {
-      idx[k] = k + 1;
-      idx[k + 1] = k + 2;
-    } else {
-      idx[k] = k + 2;
-      idx[k + 1] = k + 1;
-    }
+  int vlen_tmp;
+  int vstride;
+  dim = 0;
+  if (x.size(0) != 1) {
+    dim = -1;
   }
-  i = 2;
-  while (i < 128) {
-    int i2;
-    int j;
-    i2 = i << 1;
-    j = 1;
-    for (int pEnd{i + 1}; pEnd < 129; pEnd = qEnd + i) {
-      int kEnd;
-      int p;
-      int q;
-      p = j;
-      q = pEnd;
-      qEnd = j + i2;
-      k = 0;
-      kEnd = qEnd - j;
-      while (k + 1 <= kEnd) {
-        int b_i;
-        int i1;
-        b_i = idx[p - 1];
-        i1 = idx[q - 1];
-        if (sortLE(x, b_i, i1)) {
-          iwork[k] = b_i;
-          p++;
-          if (p == pEnd) {
-            while (q < qEnd) {
-              k++;
-              iwork[k] = idx[q - 1];
-              q++;
-            }
-          }
+  if (dim + 2 <= 1) {
+    i = x.size(0);
+  } else {
+    i = 1;
+  }
+  vlen_tmp = i - 1;
+  vwork.set_size(i);
+  idx.set_size(x.size(0));
+  vstride = 1;
+  for (k = 0; k <= dim; k++) {
+    vstride *= x.size(0);
+  }
+  for (int j{0}; j < vstride; j++) {
+    int i1;
+    int n_tmp;
+    for (k = 0; k <= vlen_tmp; k++) {
+      vwork[k] = x[j + k * vstride];
+    }
+    i = vwork.size(0);
+    n_tmp = vwork.size(0) + 1;
+    iidx.set_size(vwork.size(0));
+    dim = vwork.size(0);
+    for (i1 = 0; i1 < dim; i1++) {
+      iidx[i1] = 0;
+    }
+    if (vwork.size(0) != 0) {
+      iwork.set_size(vwork.size(0));
+      for (k = 1; k <= vlen_tmp; k += 2) {
+        if (sortLE(vwork, k, k + 1)) {
+          iidx[k - 1] = k;
+          iidx[k] = k + 1;
         } else {
-          iwork[k] = i1;
-          q++;
-          if (q == qEnd) {
-            while (p < pEnd) {
-              k++;
-              iwork[k] = idx[p - 1];
-              p++;
-            }
-          }
+          iidx[k - 1] = k + 1;
+          iidx[k] = k;
         }
-        k++;
       }
-      for (k = 0; k < kEnd; k++) {
-        idx[(j + k) - 1] = iwork[k];
+      if ((vwork.size(0) & 1) != 0) {
+        iidx[vwork.size(0) - 1] = vwork.size(0);
       }
-      j = qEnd;
+      dim = 2;
+      while (dim < i) {
+        int b_j;
+        int i2;
+        i2 = dim << 1;
+        b_j = 1;
+        for (int pEnd{dim + 1}; pEnd < i + 1; pEnd = qEnd + dim) {
+          int kEnd;
+          int p;
+          int q;
+          p = b_j;
+          q = pEnd;
+          qEnd = b_j + i2;
+          if (qEnd > i + 1) {
+            qEnd = n_tmp;
+          }
+          k = 0;
+          kEnd = qEnd - b_j;
+          while (k + 1 <= kEnd) {
+            int b_i2;
+            i1 = iidx[p - 1];
+            b_i2 = iidx[q - 1];
+            if (sortLE(vwork, i1, b_i2)) {
+              iwork[k] = i1;
+              p++;
+              if (p == pEnd) {
+                while (q < qEnd) {
+                  k++;
+                  iwork[k] = iidx[q - 1];
+                  q++;
+                }
+              }
+            } else {
+              iwork[k] = b_i2;
+              q++;
+              if (q == qEnd) {
+                while (p < pEnd) {
+                  k++;
+                  iwork[k] = iidx[p - 1];
+                  p++;
+                }
+              }
+            }
+            k++;
+          }
+          for (k = 0; k < kEnd; k++) {
+            iidx[(b_j + k) - 1] = iwork[k];
+          }
+          b_j = qEnd;
+        }
+        dim = i2;
+      }
+      xwork.set_size(vwork.size(0));
+      for (k = 0; k <= n_tmp - 2; k++) {
+        xwork[k] = vwork[k];
+      }
+      for (k = 0; k <= n_tmp - 2; k++) {
+        vwork[k] = xwork[iidx[k] - 1];
+      }
     }
-    i = i2;
-  }
-  std::copy(&x[0], &x[128], &xwork[0]);
-  for (k = 0; k < 128; k++) {
-    x[k] = xwork[idx[k] - 1];
+    for (k = 0; k <= vlen_tmp; k++) {
+      i = j + k * vstride;
+      x[i] = vwork[k];
+      idx[i] = iidx[k];
+    }
   }
 }
 
@@ -132,6 +182,7 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
       }
       if (vwork.size(0) != 0) {
         double x4[4];
+        int idx4[4];
         int bLen;
         int i1;
         int i2;
@@ -140,7 +191,6 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
         int iidx_tmp;
         int n;
         int wOffset_tmp;
-        short idx4[4];
         n = vwork.size(0);
         x4[0] = 0.0;
         idx4[0] = 0;
@@ -170,7 +220,7 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
             bLen++;
           } else {
             dim++;
-            idx4[dim - 1] = static_cast<short>(k + 1);
+            idx4[dim - 1] = k + 1;
             x4[dim - 1] = vwork[k];
             if (dim == 4) {
               double d;
@@ -320,7 +370,7 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
             if (nBlocks > 0) {
               for (int b{0}; b < nBlocks; b++) {
                 double c_xwork[256];
-                short c_iwork[256];
+                int c_iwork[256];
                 i4 = (b << 8) - 1;
                 for (int b_b{0}; b_b < 6; b_b++) {
                   bLen = 1 << (b_b + 2);
@@ -330,7 +380,7 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
                     i2 = (i4 + k * n) + 1;
                     for (i1 = 0; i1 < n; i1++) {
                       dim = i2 + i1;
-                      c_iwork[i1] = static_cast<short>(iidx[dim]);
+                      c_iwork[i1] = iidx[dim];
                       c_xwork[i1] = vwork[dim];
                     }
                     i3 = 0;

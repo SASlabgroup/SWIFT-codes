@@ -41,32 +41,15 @@
 #include "coder_array.h"
 
 // Function Declarations
-static coder::array<double, 2U> argInit_128xUnbounded_real_T();
-
 static coder::array<char, 2U> argInit_1xUnbounded_char_T();
+
+static coder::array<double, 2U> argInit_UnboundedxUnbounded_real_T();
 
 static char argInit_char_T();
 
 static double argInit_real_T();
 
 // Function Definitions
-static coder::array<double, 2U> argInit_128xUnbounded_real_T()
-{
-  coder::array<double, 2U> result;
-  // Set the size of the array.
-  // Change this size to the value that the application requires.
-  result.set_size(128, 2);
-  // Loop over the array to initialize each element.
-  for (int idx0{0}; idx0 < 128; idx0++) {
-    for (int idx1{0}; idx1 < result.size(1); idx1++) {
-      // Set the value of the array element.
-      // Change this value to the value that the application requires.
-      result[idx0 + 128 * idx1] = argInit_real_T();
-    }
-  }
-  return result;
-}
-
 static coder::array<char, 2U> argInit_1xUnbounded_char_T()
 {
   coder::array<char, 2U> result;
@@ -79,6 +62,23 @@ static coder::array<char, 2U> argInit_1xUnbounded_char_T()
       // Set the value of the array element.
       // Change this value to the value that the application requires.
       result[idx1] = argInit_char_T();
+    }
+  }
+  return result;
+}
+
+static coder::array<double, 2U> argInit_UnboundedxUnbounded_real_T()
+{
+  coder::array<double, 2U> result;
+  // Set the size of the array.
+  // Change this size to the value that the application requires.
+  result.set_size(2, 2);
+  // Loop over the array to initialize each element.
+  for (int idx0{0}; idx0 < result.size(0); idx0++) {
+    for (int idx1{0}; idx1 < result.size(1); idx1++) {
+      // Set the value of the array element.
+      // Change this value to the value that the application requires.
+      result[idx0 + result.size(0) * idx1] = argInit_real_T();
     }
   }
   return result;
@@ -109,13 +109,13 @@ int main(int, char **)
 
 void main_processSIGburst_onboard()
 {
+  coder::array<double, 2U> eps;
   coder::array<double, 2U> wraw;
   coder::array<char, 2U> avgtype_tmp;
-  double eps[128];
   double cs_tmp;
   // Initialize function 'processSIGburst_onboard' input arguments.
   // Initialize function input argument 'wraw'.
-  wraw = argInit_128xUnbounded_real_T();
+  wraw = argInit_UnboundedxUnbounded_real_T();
   cs_tmp = argInit_real_T();
   // Initialize function input argument 'avgtype'.
   avgtype_tmp = argInit_1xUnbounded_char_T();

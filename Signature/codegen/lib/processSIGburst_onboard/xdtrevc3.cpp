@@ -14,304 +14,257 @@
 #include "xaxpy.h"
 #include "xdlaln2.h"
 #include "xgemv.h"
+#include "coder_array.h"
 #include <cmath>
-#include <cstring>
 
 // Function Definitions
 namespace coder {
 namespace internal {
 namespace reflapack {
-void xdtrevc3(const double T[16384], double vr[16384])
+void xdtrevc3(const ::coder::array<double, 2U> &T,
+              ::coder::array<double, 2U> &vr)
 {
-  double work[384];
+  array<double, 2U> work;
   double x[4];
+  double bignum;
   double emax;
+  double smlnum;
+  int i;
+  int ii;
   int ip;
-  int iyend;
   int j;
-  std::memset(&work[0], 0, 384U * sizeof(double));
+  int n;
+  int n2;
+  int np1;
+  n = T.size(0);
+  smlnum = 2.2250738585072014E-308 *
+           (static_cast<double>(T.size(0)) / 2.2204460492503131E-16);
+  bignum = 0.99999999999999978 / smlnum;
+  work.set_size(T.size(0), 3);
+  ii = T.size(0) * 3;
+  for (i = 0; i < ii; i++) {
+    work[i] = 0.0;
+  }
   x[0] = 0.0;
   x[1] = 0.0;
   x[2] = 0.0;
   x[3] = 0.0;
   work[0] = 0.0;
-  for (j = 0; j < 127; j++) {
-    work[j + 1] = 0.0;
-    for (iyend = 0; iyend <= j; iyend++) {
-      work[j + 1] += std::abs(T[iyend + ((j + 1) << 7)]);
+  for (j = 2; j <= n; j++) {
+    work[j - 1] = 0.0;
+    for (ii = 0; ii <= j - 2; ii++) {
+      work[j - 1] = work[j - 1] + std::abs(T[ii + T.size(0) * (j - 1)]);
     }
   }
+  n2 = (T.size(0) << 1) + 1;
+  np1 = T.size(0) + 1;
   ip = 0;
-  for (int ki{127}; ki >= 0; ki--) {
+  for (int ki{n}; ki >= 1; ki--) {
     if (ip == -1) {
       ip = 1;
     } else {
       double smin;
       double wi;
-      double wr_tmp;
-      int wr_tmp_tmp;
-      if ((ki + 1 == 1) || (T[ki + ((ki - 1) << 7)] == 0.0)) {
+      double wr;
+      if ((ki == 1) || (T[(ki + T.size(0) * (ki - 2)) - 1] == 0.0)) {
         ip = 0;
       } else {
         ip = -1;
       }
-      wr_tmp_tmp = ki << 7;
-      iyend = ki + wr_tmp_tmp;
-      wr_tmp = T[iyend];
+      wr = T[(ki + T.size(0) * (ki - 1)) - 1];
       wi = 0.0;
       if (ip != 0) {
-        wi = std::sqrt(std::abs(T[ki + ((ki - 1) << 7)])) *
-             std::sqrt(std::abs(T[iyend - 1]));
+        wi = std::sqrt(std::abs(T[(ki + T.size(0) * (ki - 2)) - 1])) *
+             std::sqrt(std::abs(T[(ki + T.size(0) * (ki - 1)) - 2]));
       }
-      smin = std::fmax(2.2204460492503131E-16 * (std::abs(wr_tmp) + wi),
-                       1.2826677504057426E-290);
+      smin = std::fmax(2.2204460492503131E-16 * (std::abs(wr) + wi), smlnum);
       if (ip == 0) {
         double scale;
-        int i;
-        work[ki + 256] = 1.0;
-        for (int k{0}; k < ki; k++) {
-          work[k + 256] = -T[k + wr_tmp_tmp];
+        work[(ki + work.size(0) * 2) - 1] = 1.0;
+        for (int k{0}; k <= ki - 2; k++) {
+          work[k + work.size(0) * 2] = -T[k + T.size(0) * (ki - 1)];
         }
-        j = ki - 1;
-        int exitg1;
-        do {
-          exitg1 = 0;
-          if (j + 1 >= 1) {
-            int i1;
-            bool guard1;
-            guard1 = false;
-            if (j + 1 == 1) {
-              guard1 = true;
-            } else {
-              i = (j - 1) << 7;
-              i1 = j + i;
-              if (T[i1] == 0.0) {
-                guard1 = true;
-              } else {
-                scale = xdlaln2(2, 1, smin, T, i1, work, j + 256, wr_tmp, 0.0,
-                                x, emax);
-                if ((emax > 1.0) && (std::fmax(work[j - 1], work[j]) >
-                                     7.7962512091199975E+289 / emax)) {
-                  x[0] /= emax;
-                  x[1] /= emax;
-                  scale /= emax;
-                }
-                if (scale != 1.0) {
-                  i1 = ki + 257;
-                  for (int k{257}; k <= i1; k++) {
-                    work[k - 1] *= scale;
-                  }
-                }
-                work[j + 255] = x[0];
-                work[j + 256] = x[1];
-                blas::xaxpy(j - 1, -x[0], T, i + 1, work);
-                blas::xaxpy(j - 1, -x[1], T, (j << 7) + 1, work);
-                j -= 2;
+        j = ki - 2;
+        while (j + 1 >= 1) {
+          if ((j + 1 == 1) || (T[j + T.size(0) * (j - 1)] == 0.0)) {
+            i = j * n;
+            scale = xdlaln2(1, 1, smin, T, (i + j) + 1, n, work, j + n2, n, wr,
+                            0.0, x, emax);
+            if ((emax > 1.0) && (work[j] > bignum / emax)) {
+              x[0] /= emax;
+              scale /= emax;
+            }
+            if (scale != 1.0) {
+              ii = n2 + ki;
+              for (int k{n2}; k < ii; k++) {
+                work[k - 1] = scale * work[k - 1];
               }
             }
-            if (guard1) {
-              i = j << 7;
-              scale = xdlaln2(1, 1, smin, T, (i + j) + 1, work, j + 257, wr_tmp,
-                              0.0, x, emax);
-              if ((emax > 1.0) && (work[j] > 7.7962512091199975E+289 / emax)) {
-                x[0] /= emax;
-                scale /= emax;
-              }
-              if (scale != 1.0) {
-                i1 = ki + 257;
-                for (int k{257}; k <= i1; k++) {
-                  work[k - 1] *= scale;
-                }
-              }
-              work[j + 256] = x[0];
-              blas::xaxpy(j, -x[0], T, i + 1, work);
-              j--;
-            }
+            work[j + work.size(0) * 2] = x[0];
+            blas::xaxpy(j, -x[0], T, i + 1, work, n2);
+            j--;
           } else {
-            exitg1 = 1;
+            i = (j - 1) * n;
+            scale = xdlaln2(2, 1, smin, T, i + j, n, work, (n2 + j) - 1, n, wr,
+                            0.0, x, emax);
+            if ((emax > 1.0) &&
+                (std::fmax(work[j - 1], work[j]) > bignum / emax)) {
+              x[0] /= emax;
+              x[1] /= emax;
+              scale /= emax;
+            }
+            if (scale != 1.0) {
+              ii = n2 + ki;
+              for (int k{n2}; k < ii; k++) {
+                work[k - 1] = scale * work[k - 1];
+              }
+            }
+            work[(j + work.size(0) * 2) - 1] = x[0];
+            work[j + work.size(0) * 2] = x[1];
+            blas::xaxpy(j - 1, -x[0], T, i + 1, work, n2);
+            blas::xaxpy(j - 1, -x[1], T, j * n + 1, work, n2);
+            j -= 2;
           }
-        } while (exitg1 == 0);
-        if (ki + 1 > 1) {
-          blas::xgemv(ki, work, work[ki + 256], vr, wr_tmp_tmp + 1);
         }
-        iyend = -1;
-        emax = std::abs(vr[wr_tmp_tmp]);
-        for (int k{0}; k < 127; k++) {
-          scale = std::abs(vr[(wr_tmp_tmp + k) + 1]);
-          if (scale > emax) {
-            iyend = k;
-            emax = scale;
+        if (ki > 1) {
+          blas::xgemv(n, ki - 1, n, work, n2, work[(ki + work.size(0) * 2) - 1],
+                      vr, (ki - 1) * n + 1);
+        }
+        j = (ki - 1) * n;
+        if (n < 1) {
+          ii = 0;
+        } else {
+          ii = 1;
+          if (n > 1) {
+            emax = std::abs(vr[j]);
+            for (int k{2}; k <= n; k++) {
+              scale = std::abs(vr[(j + k) - 1]);
+              if (scale > emax) {
+                ii = k;
+                emax = scale;
+              }
+            }
           }
         }
-        emax = 1.0 / std::abs(vr[(iyend + wr_tmp_tmp) + 1]);
-        i = wr_tmp_tmp + 128;
-        for (int k{wr_tmp_tmp + 1}; k <= i; k++) {
-          vr[k - 1] *= emax;
+        emax = 1.0 / std::abs(vr[(ii + vr.size(0) * (ki - 1)) - 1]);
+        i = j + n;
+        for (int k{j + 1}; k <= i; k++) {
+          vr[k - 1] = emax * vr[k - 1];
         }
       } else {
         double scale;
-        int i;
-        int i1;
-        int ix;
-        int ix0;
-        emax = T[iyend - 1];
-        ix0 = (ki - 1) << 7;
-        scale = T[ki + ix0];
+        emax = T[(ki + T.size(0) * (ki - 1)) - 2];
+        scale = T[(ki + T.size(0) * (ki - 2)) - 1];
         if (std::abs(emax) >= std::abs(scale)) {
-          work[ki + 127] = 1.0;
-          work[ki + 256] = wi / emax;
+          work[(ki + work.size(0)) - 2] = 1.0;
+          work[(ki + work.size(0) * 2) - 1] = wi / emax;
         } else {
-          work[ki + 127] = -wi / scale;
-          work[ki + 256] = 1.0;
+          work[(ki + work.size(0)) - 2] = -wi / scale;
+          work[(ki + work.size(0) * 2) - 1] = 1.0;
         }
-        work[ki + 128] = 0.0;
-        work[ki + 255] = 0.0;
-        for (int k{0}; k <= ki - 2; k++) {
-          work[k + 128] = -work[ki + 127] * T[k + ix0];
-          work[k + 256] = -work[ki + 256] * T[k + wr_tmp_tmp];
+        work[(ki + work.size(0)) - 1] = 0.0;
+        work[(ki + work.size(0) * 2) - 2] = 0.0;
+        for (int k{0}; k <= ki - 3; k++) {
+          work[k + work.size(0)] =
+              -work[(ki + work.size(0)) - 2] * T[k + T.size(0) * (ki - 2)];
+          work[k + work.size(0) * 2] =
+              -work[(ki + work.size(0) * 2) - 1] * T[k + T.size(0) * (ki - 1)];
         }
-        j = ki - 2;
-        int exitg1;
-        do {
-          exitg1 = 0;
-          if (j + 1 >= 1) {
-            bool guard1;
-            guard1 = false;
-            if (j + 1 == 1) {
-              guard1 = true;
-            } else {
-              i = (j - 1) << 7;
-              i1 = j + i;
-              if (T[i1] == 0.0) {
-                guard1 = true;
-              } else {
-                scale = xdlaln2(2, 2, smin, T, i1, work, j + 128, wr_tmp, wi, x,
-                                emax);
-                if ((emax > 1.0) && (std::fmax(work[j - 1], work[j]) >
-                                     7.7962512091199975E+289 / emax)) {
-                  emax = 1.0 / emax;
-                  x[0] *= emax;
-                  x[2] *= emax;
-                  x[1] *= emax;
-                  x[3] *= emax;
-                  scale *= emax;
-                }
-                if (scale != 1.0) {
-                  i1 = ki + 129;
-                  for (int k{129}; k <= i1; k++) {
-                    work[k - 1] *= scale;
-                  }
-                  i1 = ki + 257;
-                  for (int k{257}; k <= i1; k++) {
-                    work[k - 1] *= scale;
-                  }
-                }
-                work[j + 127] = x[0];
-                work[j + 128] = x[1];
-                work[j + 255] = x[2];
-                work[j + 256] = x[3];
-                if ((j - 1 >= 1) && (!(-x[0] == 0.0))) {
-                  i1 = j - 2;
-                  for (int k{0}; k <= i1; k++) {
-                    work[k + 128] += -x[0] * T[i + k];
-                  }
-                }
-                if ((j - 1 >= 1) && (!(-x[1] == 0.0))) {
-                  ix = j << 7;
-                  i1 = j - 2;
-                  for (int k{0}; k <= i1; k++) {
-                    work[k + 128] += -x[1] * T[ix + k];
-                  }
-                }
-                blas::xaxpy(j - 1, -x[2], T, i + 1, work);
-                blas::xaxpy(j - 1, -x[3], T, (j << 7) + 1, work);
-                j -= 2;
+        j = ki - 3;
+        while (j + 1 >= 1) {
+          if ((j + 1 == 1) || (T[j + T.size(0) * (j - 1)] == 0.0)) {
+            i = j * n;
+            scale = xdlaln2(1, 2, smin, T, (i + j) + 1, n, work, (j + n) + 1, n,
+                            wr, wi, x, emax);
+            if ((emax > 1.0) && (work[j] > bignum / emax)) {
+              x[0] /= emax;
+              x[2] /= emax;
+              scale /= emax;
+            }
+            if (scale != 1.0) {
+              ii = n + ki;
+              for (int k{np1}; k <= ii; k++) {
+                work[k - 1] = scale * work[k - 1];
+              }
+              ii = n2 + ki;
+              for (int k{n2}; k < ii; k++) {
+                work[k - 1] = scale * work[k - 1];
               }
             }
-            if (guard1) {
-              i = j << 7;
-              scale = xdlaln2(1, 2, smin, T, (i + j) + 1, work, j + 129, wr_tmp,
-                              wi, x, emax);
-              if ((emax > 1.0) && (work[j] > 7.7962512091199975E+289 / emax)) {
-                x[0] /= emax;
-                x[2] /= emax;
-                scale /= emax;
-              }
-              if (scale != 1.0) {
-                i1 = ki + 129;
-                for (int k{129}; k <= i1; k++) {
-                  work[k - 1] *= scale;
-                }
-                i1 = ki + 257;
-                for (int k{257}; k <= i1; k++) {
-                  work[k - 1] *= scale;
-                }
-              }
-              work[j + 128] = x[0];
-              work[j + 256] = x[2];
-              if ((j >= 1) && (!(-x[0] == 0.0))) {
-                i1 = j - 1;
-                for (int k{0}; k <= i1; k++) {
-                  work[k + 128] += -x[0] * T[i + k];
-                }
-              }
-              blas::xaxpy(j, -x[2], T, i + 1, work);
-              j--;
-            }
+            work[j + work.size(0)] = x[0];
+            work[j + work.size(0) * 2] = x[2];
+            blas::xaxpy(j, -x[0], T, i + 1, work, n + 1);
+            blas::xaxpy(j, -x[2], T, i + 1, work, n2);
+            j--;
           } else {
-            exitg1 = 1;
-          }
-        } while (exitg1 == 0);
-        if (ki + 1 > 2) {
-          iyend = ix0 + 128;
-          emax = work[ki + 127];
-          if (emax != 1.0) {
-            if (emax == 0.0) {
-              if (ix0 + 1 <= iyend) {
-                std::memset(&vr[ix0], 0,
-                            static_cast<unsigned int>(iyend - ix0) *
-                                sizeof(double));
+            i = (j - 1) * n;
+            scale = xdlaln2(2, 2, smin, T, i + j, n, work, j + n, n, wr, wi, x,
+                            emax);
+            if ((emax > 1.0) &&
+                (std::fmax(work[j - 1], work[j]) > bignum / emax)) {
+              emax = 1.0 / emax;
+              x[0] *= emax;
+              x[2] *= emax;
+              x[1] *= emax;
+              x[3] *= emax;
+              scale *= emax;
+            }
+            if (scale != 1.0) {
+              ii = n + ki;
+              for (int k{np1}; k <= ii; k++) {
+                work[k - 1] = scale * work[k - 1];
               }
-            } else {
-              for (j = ix0 + 1; j <= iyend; j++) {
-                vr[j - 1] *= emax;
+              ii = n2 + ki;
+              for (int k{n2}; k < ii; k++) {
+                work[k - 1] = scale * work[k - 1];
               }
             }
+            work[(j + work.size(0)) - 1] = x[0];
+            work[j + work.size(0)] = x[1];
+            work[(j + work.size(0) * 2) - 1] = x[2];
+            work[j + work.size(0) * 2] = x[3];
+            blas::xaxpy(j - 1, -x[0], T, i + 1, work, n + 1);
+            ii = j * n + 1;
+            blas::xaxpy(j - 1, -x[1], T, ii, work, n + 1);
+            blas::xaxpy(j - 1, -x[2], T, i + 1, work, n2);
+            blas::xaxpy(j - 1, -x[3], T, ii, work, n2);
+            j -= 2;
           }
-          ix = 128;
-          i = ((ki - 2) << 7) + 1;
-          for (j = 1; j <= i; j += 128) {
-            i1 = j + 127;
-            for (int k{j}; k <= i1; k++) {
-              iyend = (ix0 + k) - j;
-              vr[iyend] += vr[k - 1] * work[ix];
-            }
-            ix++;
-          }
-          blas::xgemv(ki - 1, work, work[ki + 256], vr, wr_tmp_tmp + 1);
+        }
+        if (ki > 2) {
+          blas::xgemv(n, ki - 2, n, work, n + 1, work[(ki + work.size(0)) - 2],
+                      vr, (ki - 2) * n + 1);
+          blas::xgemv(n, ki - 2, n, work, n2, work[(ki + work.size(0) * 2) - 1],
+                      vr, (ki - 1) * n + 1);
         } else {
-          i = ix0 + 128;
-          for (int k{ix0 + 1}; k <= i; k++) {
-            vr[k - 1] *= work[128];
+          emax = work[work.size(0)];
+          ii = (ki - 2) * n;
+          i = ii + n;
+          for (int k{ii + 1}; k <= i; k++) {
+            vr[k - 1] = emax * vr[k - 1];
           }
-          i = wr_tmp_tmp + 128;
-          for (int k{wr_tmp_tmp + 1}; k <= i; k++) {
-            vr[k - 1] *= work[ki + 256];
+          emax = work[(ki + work.size(0) * 2) - 1];
+          ii = (ki - 1) * n;
+          i = ii + n;
+          for (int k{ii + 1}; k <= i; k++) {
+            vr[k - 1] = emax * vr[k - 1];
           }
         }
         emax = 0.0;
-        for (int k{0}; k < 128; k++) {
-          emax = std::fmax(emax, std::abs(vr[k + ix0]) +
-                                     std::abs(vr[k + wr_tmp_tmp]));
+        for (int k{0}; k < n; k++) {
+          emax = std::fmax(emax, std::abs(vr[k + vr.size(0) * (ki - 2)]) +
+                                     std::abs(vr[k + vr.size(0) * (ki - 1)]));
         }
         emax = 1.0 / emax;
-        i = ix0 + 128;
-        for (int k{ix0 + 1}; k <= i; k++) {
-          vr[k - 1] *= emax;
+        ii = (ki - 2) * n;
+        i = ii + n;
+        for (int k{ii + 1}; k <= i; k++) {
+          vr[k - 1] = emax * vr[k - 1];
         }
-        i = wr_tmp_tmp + 128;
-        for (int k{wr_tmp_tmp + 1}; k <= i; k++) {
-          vr[k - 1] *= emax;
+        ii = (ki - 1) * n;
+        i = ii + n;
+        for (int k{ii + 1}; k <= i; k++) {
+          vr[k - 1] = emax * vr[k - 1];
         }
       }
     }

@@ -12,82 +12,89 @@
 #include "xzunghr.h"
 #include "rt_nonfinite.h"
 #include "xzlarf.h"
-#include <cstring>
+#include "coder_array.h"
 
 // Function Definitions
 namespace coder {
 namespace internal {
 namespace reflapack {
-void xzunghr(int ilo, int ihi, double A[16384], const double tau[127])
+void xzunghr(int n, int ilo, int ihi, ::coder::array<double, 2U> &A, int lda,
+             const ::coder::array<double, 1U> &tau)
 {
-  double work[128];
+  array<double, 1U> work;
   int a;
-  int i;
+  int b_i;
   int ia;
   int ia0;
-  int itau;
+  int iajm1;
   int nh;
   nh = ihi - ilo;
   a = ilo + 1;
   for (int j{ihi}; j >= a; j--) {
-    ia = (j - 1) << 7;
-    i = static_cast<unsigned char>(j - 1);
-    std::memset(&A[ia], 0,
-                static_cast<unsigned int>((i + ia) - ia) * sizeof(double));
-    i = j + 1;
-    for (int b_i{i}; b_i <= ihi; b_i++) {
-      itau = ia + b_i;
-      A[itau - 1] = A[itau - 129];
+    ia = (j - 1) * lda - 1;
+    for (int i{0}; i <= j - 2; i++) {
+      A[(ia + i) + 1] = 0.0;
     }
-    i = ihi + 1;
-    if (i <= 128) {
-      std::memset(&A[(i + ia) + -1], 0,
-                  static_cast<unsigned int>(((ia - i) - ia) + 129) *
-                      sizeof(double));
+    iajm1 = ia - lda;
+    b_i = j + 1;
+    for (int i{b_i}; i <= ihi; i++) {
+      A[ia + i] = A[iajm1 + i];
+    }
+    b_i = ihi + 1;
+    for (int i{b_i}; i <= n; i++) {
+      A[ia + i] = 0.0;
     }
   }
-  i = static_cast<unsigned char>(ilo);
-  for (int j{0}; j < i; j++) {
-    ia = j << 7;
-    std::memset(&A[ia], 0, 128U * sizeof(double));
+  for (int j{0}; j < ilo; j++) {
+    ia = j * lda;
+    for (int i{0}; i < n; i++) {
+      A[ia + i] = 0.0;
+    }
     A[ia + j] = 1.0;
   }
-  i = ihi + 1;
-  for (int j{i}; j < 129; j++) {
-    ia = (j - 1) << 7;
-    std::memset(&A[ia], 0, 128U * sizeof(double));
+  b_i = ihi + 1;
+  for (int j{b_i}; j <= n; j++) {
+    ia = (j - 1) * lda;
+    for (int i{0}; i < n; i++) {
+      A[ia + i] = 0.0;
+    }
     A[(ia + j) - 1] = 1.0;
   }
-  ia0 = ilo + (ilo << 7);
+  ia0 = ilo + ilo * lda;
   if (nh >= 1) {
-    i = nh - 1;
-    for (int j{nh}; j <= i; j++) {
-      ia = ia0 + (j << 7);
-      std::memset(&A[ia], 0,
-                  static_cast<unsigned int>(((i + ia) - ia) + 1) *
-                      sizeof(double));
+    b_i = nh - 1;
+    for (int j{nh}; j <= b_i; j++) {
+      ia = ia0 + j * lda;
+      for (int i{0}; i <= b_i; i++) {
+        A[ia + i] = 0.0;
+      }
       A[ia + j] = 1.0;
     }
-    itau = (ilo + nh) - 2;
-    std::memset(&work[0], 0, 128U * sizeof(double));
-    for (int b_i{nh}; b_i >= 1; b_i--) {
-      ia = (ia0 + b_i) + ((b_i - 1) << 7);
-      if (b_i < nh) {
-        A[ia - 1] = 1.0;
-        i = nh - b_i;
-        xzlarf(i + 1, i, ia, tau[itau], A, ia + 128, work);
-        a = ia + 1;
-        i = (ia + nh) - b_i;
-        for (int j{a}; j <= i; j++) {
-          A[j - 1] *= -tau[itau];
+    unsigned int unnamed_idx_0;
+    ia = (ilo + nh) - 2;
+    unnamed_idx_0 = static_cast<unsigned int>(A.size(1));
+    work.set_size(static_cast<int>(unnamed_idx_0));
+    a = static_cast<int>(unnamed_idx_0);
+    for (b_i = 0; b_i < a; b_i++) {
+      work[b_i] = 0.0;
+    }
+    for (int i{nh}; i >= 1; i--) {
+      iajm1 = (ia0 + i) + (i - 1) * lda;
+      if (i < nh) {
+        A[iajm1 - 1] = 1.0;
+        b_i = nh - i;
+        xzlarf(b_i + 1, b_i, iajm1, tau[ia], A, iajm1 + lda, lda, work);
+        a = iajm1 + 1;
+        b_i = (iajm1 + nh) - i;
+        for (int j{a}; j <= b_i; j++) {
+          A[j - 1] = -tau[ia] * A[j - 1];
         }
       }
-      A[ia - 1] = 1.0 - tau[itau];
-      i = static_cast<unsigned char>(b_i - 1);
-      for (int j{0}; j < i; j++) {
-        A[(ia - j) - 2] = 0.0;
+      A[iajm1 - 1] = 1.0 - tau[ia];
+      for (int j{0}; j <= i - 2; j++) {
+        A[(iajm1 - j) - 2] = 0.0;
       }
-      itau--;
+      ia--;
     }
   }
 }

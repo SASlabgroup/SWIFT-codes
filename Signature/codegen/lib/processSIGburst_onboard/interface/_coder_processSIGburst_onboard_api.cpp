@@ -62,16 +62,16 @@ static void emlrt_marshallIn(const emlrtStack &sp, const mxArray *u,
                              const emlrtMsgIdentifier *parentId,
                              coder::array<char_T, 2U> &y);
 
-static const mxArray *emlrt_marshallOut(const real_T u[128]);
+static const mxArray *emlrt_marshallOut(const coder::array<real_T, 2U> &u);
 
 // Function Definitions
 static void b_emlrt_marshallIn(const emlrtStack &sp, const mxArray *src,
                                const emlrtMsgIdentifier *msgId,
                                coder::array<real_T, 2U> &ret)
 {
-  static const int32_T dims[2]{128, -1};
+  static const int32_T dims[2]{-1, -1};
   int32_T iv[2];
-  boolean_T bv[2]{false, true};
+  boolean_T bv[2]{true, true};
   emlrtCheckVsBuiltInR2012b((emlrtConstCTX)&sp, msgId, src, "double", false, 2U,
                             (const void *)&dims[0], &bv[0], &iv[0]);
   ret.prealloc(iv[0] * iv[1]);
@@ -168,16 +168,15 @@ static void emlrt_marshallIn(const emlrtStack &sp, const mxArray *u,
   emlrtDestroyArray(&u);
 }
 
-static const mxArray *emlrt_marshallOut(const real_T u[128])
+static const mxArray *emlrt_marshallOut(const coder::array<real_T, 2U> &u)
 {
   static const int32_T iv[2]{0, 0};
-  static const int32_T iv1[2]{1, 128};
   const mxArray *m;
   const mxArray *y;
   y = nullptr;
   m = emlrtCreateNumericArray(2, (const void *)&iv[0], mxDOUBLE_CLASS, mxREAL);
-  emlrtMxSetData((mxArray *)m, (void *)&u[0]);
-  emlrtSetDimensions((mxArray *)m, &iv1[0], 2);
+  emlrtMxSetData((mxArray *)m, &(((coder::array<real_T, 2U> *)&u)->data())[0]);
+  emlrtSetDimensions((mxArray *)m, ((coder::array<real_T, 2U> *)&u)->size(), 2);
   emlrtAssign(&y, m);
   return y;
 }
@@ -185,6 +184,7 @@ static const mxArray *emlrt_marshallOut(const real_T u[128])
 void processSIGburst_onboard_api(const mxArray *const prhs[10],
                                  const mxArray **plhs)
 {
+  coder::array<real_T, 2U> eps;
   coder::array<real_T, 2U> wraw;
   coder::array<char_T, 2U> avgtype;
   coder::array<char_T, 2U> fittype;
@@ -193,7 +193,6 @@ void processSIGburst_onboard_api(const mxArray *const prhs[10],
       nullptr, // tls
       nullptr  // prev
   };
-  real_T(*eps)[128];
   real_T bz;
   real_T cs;
   real_T dz;
@@ -202,7 +201,6 @@ void processSIGburst_onboard_api(const mxArray *const prhs[10],
   real_T rmax;
   real_T rmin;
   st.tls = emlrtRootTLSGlobal;
-  eps = (real_T(*)[128])mxMalloc(sizeof(real_T[128]));
   emlrtHeapReferenceStackEnterFcnR2012b(&st);
   // Marshall function inputs
   wraw.no_free();
@@ -218,9 +216,10 @@ void processSIGburst_onboard_api(const mxArray *const prhs[10],
   emlrt_marshallIn(st, emlrtAliasP(prhs[9]), "fittype", fittype);
   // Invoke the target function
   processSIGburst_onboard(wraw, cs, dz, bz, neoflp, rmin, rmax, nzfit, avgtype,
-                          fittype, *eps);
+                          fittype, eps);
   // Marshall function outputs
-  *plhs = emlrt_marshallOut(*eps);
+  eps.no_free();
+  *plhs = emlrt_marshallOut(eps);
   emlrtHeapReferenceStackLeaveFcnR2012b(&st);
 }
 

@@ -19,9 +19,11 @@
 
 // Function Declarations
 namespace coder {
-void mean(const ::coder::array<double, 2U> &x, double y[128]);
+double mean(const ::coder::array<double, 2U> &x);
 
-void mean(const ::coder::array<double, 3U> &x, double y[16384]);
+void mean(const ::coder::array<double, 2U> &x, ::coder::array<double, 1U> &y);
+
+void mean(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y);
 
 } // namespace coder
 

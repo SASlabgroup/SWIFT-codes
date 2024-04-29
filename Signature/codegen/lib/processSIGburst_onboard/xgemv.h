@@ -13,6 +13,7 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
@@ -20,7 +21,8 @@
 namespace coder {
 namespace internal {
 namespace blas {
-void xgemv(int n, const double x[384], double beta1, double y[16384], int iy0);
+void xgemv(int m, int n, int lda, const ::coder::array<double, 2U> &x, int ix0,
+           double beta1, ::coder::array<double, 2U> &y, int iy0);
 
 }
 } // namespace internal

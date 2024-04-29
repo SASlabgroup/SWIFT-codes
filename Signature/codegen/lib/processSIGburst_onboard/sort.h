@@ -20,7 +20,7 @@
 // Function Declarations
 namespace coder {
 namespace internal {
-void sort(creal_T x[128], int idx[128]);
+void sort(::coder::array<creal_T, 1U> &x, ::coder::array<int, 1U> &idx);
 
 void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx);
 

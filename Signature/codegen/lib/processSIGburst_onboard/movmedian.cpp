@@ -27,9 +27,10 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
   int kleft;
   int kright;
   int npages;
+  int nx;
   if (k >= 2.147483647E+9) {
-    kleft = 128;
-    kright = 128;
+    kleft = x.size(0);
+    kright = x.size(0);
   } else {
     xold = std::floor(k / 2.0);
     kleft = static_cast<int>(xold);
@@ -37,23 +38,26 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
     if (static_cast<int>(xold) << 1 == k) {
       kright = static_cast<int>(xold) - 1;
     }
-    if (static_cast<int>(xold) > 128) {
-      kleft = 128;
+    if (static_cast<int>(xold) > x.size(0)) {
+      kleft = x.size(0);
     }
-    if (kright > 128) {
-      kright = 128;
+    if (kright > x.size(0)) {
+      kright = x.size(0);
     }
   }
-  y.set_size(128, x.size(1));
-  k0 = x.size(1) << 7;
+  nx = x.size(0);
+  y.set_size(x.size(0), x.size(1));
+  k0 = x.size(0) * x.size(1);
   for (i = 0; i < k0; i++) {
     y[i] = 0.0;
   }
   npages = x.size(1);
   for (int p{0}; p < npages; p++) {
+    int ny;
     int workspace_ixfirst_tmp;
-    workspace_ixfirst_tmp = p << 7;
-    if (y.size(1) != 0) {
+    ny = x.size(0);
+    workspace_ixfirst_tmp = p * x.size(0);
+    if ((y.size(0) != 0) && (y.size(1) != 0)) {
       double d;
       double xnew;
       int iLeftLast;
@@ -74,8 +78,8 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
       } else {
         iLeftLast = 1 - kleft;
       }
-      if (kright + 1 > 128) {
-        iRightLast = 128;
+      if (kright + 1 > nx) {
+        iRightLast = nx;
       } else {
         iRightLast = kright + 1;
       }
@@ -97,20 +101,20 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
           }
         }
       }
-      if (k0 + 1 > 128) {
-        for (int b_k{0}; b_k < 127; b_k++) {
+      if (k0 + 1 > nx) {
+        for (int b_k{2}; b_k <= ny; b_k++) {
           int k1;
           bool b_remove;
           bool guard1;
           bool insert;
-          if (b_k + 2 <= kleft) {
+          if (b_k <= kleft) {
             k1 = 1;
           } else {
-            k1 = (b_k - kleft) + 2;
+            k1 = b_k - kleft;
           }
-          k0 = (b_k + kright) + 2;
-          if (k0 > 128) {
-            k0 = 128;
+          k0 = b_k + kright;
+          if (k0 > ny) {
+            k0 = ny;
           }
           if (k1 > iLeftLast) {
             xold = x[(workspace_ixfirst_tmp + iLeftLast) - 1];
@@ -155,7 +159,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
               }
             }
           }
-          i = (workspace_ixfirst_tmp + b_k) + 1;
+          i = (workspace_ixfirst_tmp + b_k) - 1;
           if (s.nbuf == 0) {
             y[i] = rtNaN;
           } else {
@@ -176,7 +180,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
         int i1;
         int k1;
         k0 = kleft + 2;
-        k1 = 128 - kright;
+        k1 = nx - kright;
         i = kleft + 1;
         for (int b_k{2}; b_k <= i; b_k++) {
           s.insert(x[((workspace_ixfirst_tmp + b_k) + kright) - 1]);
@@ -216,8 +220,8 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
             }
           }
         }
-        i = 129 - kright;
-        for (int b_k{i}; b_k < 129; b_k++) {
+        i = k1 + 1;
+        for (int b_k{i}; b_k <= ny; b_k++) {
           i1 = workspace_ixfirst_tmp + b_k;
           k1 = (i1 - kleft) - 2;
           if (!std::isnan(x[k1])) {

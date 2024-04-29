@@ -13,12 +13,14 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
 // Function Declarations
 namespace coder {
-void eig(const double A[16384], creal_T V[16384], creal_T D[128]);
+void eig(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 2U> &V,
+         ::coder::array<creal_T, 1U> &D);
 
 }
 

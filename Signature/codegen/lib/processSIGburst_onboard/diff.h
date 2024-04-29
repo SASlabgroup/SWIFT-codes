@@ -3,21 +3,25 @@
 // course requirements at degree granting institutions only.  Not for
 // government, commercial, or other organizational use.
 //
-// nanmean.h
+// diff.h
 //
-// Code generation for function 'nanmean'
+// Code generation for function 'diff'
 //
 
-#ifndef NANMEAN_H
-#define NANMEAN_H
+#ifndef DIFF_H
+#define DIFF_H
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
 // Function Declarations
-double nanmean(double x);
+namespace coder {
+void diff(const ::coder::array<double, 2U> &x, ::coder::array<double, 2U> &y);
+
+}
 
 #endif
-// End of code generation (nanmean.h)
+// End of code generation (diff.h)

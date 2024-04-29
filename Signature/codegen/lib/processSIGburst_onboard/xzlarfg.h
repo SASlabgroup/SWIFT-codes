@@ -13,6 +13,7 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
@@ -22,7 +23,7 @@ namespace internal {
 namespace reflapack {
 double xzlarfg(int n, double &alpha1, double x[3]);
 
-double xzlarfg(int n, double &alpha1, double x[16384], int ix0);
+double xzlarfg(int n, double *alpha1, ::coder::array<double, 2U> &x, int ix0);
 
 } // namespace reflapack
 } // namespace internal

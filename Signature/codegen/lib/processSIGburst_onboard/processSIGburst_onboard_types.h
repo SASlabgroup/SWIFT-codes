@@ -13,6 +13,7 @@
 
 // Include files
 #include "rtwtypes.h"
+#define MAX_THREADS omp_get_max_threads()
 
 #endif
 // End of code generation (processSIGburst_onboard_types.h)

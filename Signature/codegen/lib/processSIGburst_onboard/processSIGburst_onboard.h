@@ -24,7 +24,7 @@ extern void processSIGburst_onboard(const coder::array<double, 2U> &wraw,
                                     double nzfit,
                                     const coder::array<char, 2U> &avgtype,
                                     const coder::array<char, 2U> &fittype,
-                                    double eps[128]);
+                                    coder::array<double, 2U> &eps);
 
 #endif
 // End of code generation (processSIGburst_onboard.h)

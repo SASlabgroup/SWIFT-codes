@@ -19,7 +19,7 @@
 
 // Function Declarations
 namespace coder {
-void b_std(const ::coder::array<double, 3U> &x, double y[16384]);
+void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y);
 
 }
 

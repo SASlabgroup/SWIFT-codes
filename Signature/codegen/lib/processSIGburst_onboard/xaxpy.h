@@ -13,6 +13,7 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
@@ -20,7 +21,8 @@
 namespace coder {
 namespace internal {
 namespace blas {
-void xaxpy(int n, double a, const double x[16384], int ix0, double y[384]);
+void xaxpy(int n, double a, const ::coder::array<double, 2U> &x, int ix0,
+           ::coder::array<double, 2U> &y, int iy0);
 
 }
 } // namespace internal

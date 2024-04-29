@@ -13,6 +13,7 @@
 #include "rt_nonfinite.h"
 #include "xdlanv2.h"
 #include "xzlarfg.h"
+#include "coder_array.h"
 #include <cmath>
 
 // Function Declarations
@@ -46,401 +47,754 @@ static int div_nzp_s32(int numerator, int denominator)
 namespace coder {
 namespace internal {
 namespace reflapack {
-int xdlahqr(int ilo, int ihi, double h[16384], int iloz, int ihiz,
-            double z[16384], double wr[128], double wi[128])
+int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
+            ::coder::array<double, 2U> &z, ::coder::array<double, 1U> &wr,
+            ::coder::array<double, 1U> &wi)
 {
-  double aa;
   double d;
+  double h12;
   double h22;
   double rt1r;
   double rt2r;
   double s;
-  double s_tmp_tmp;
-  int b_i;
-  int i;
+  double tr;
+  double tst;
   int info;
+  int n;
+  n = h.size(0);
+  wr.set_size(h.size(0));
+  wi.set_size(wr.size(0));
   info = 0;
-  i = static_cast<unsigned char>(ilo - 1);
-  for (b_i = 0; b_i < i; b_i++) {
-    wr[b_i] = h[b_i + (b_i << 7)];
-    wi[b_i] = 0.0;
-  }
-  i = ihi + 1;
-  for (b_i = i; b_i < 129; b_i++) {
-    wr[b_i - 1] = h[(b_i + ((b_i - 1) << 7)) - 1];
-    wi[b_i - 1] = 0.0;
-  }
-  if (ilo == ihi) {
-    wr[ilo - 1] = h[(ilo + ((ilo - 1) << 7)) - 1];
-    wi[ilo - 1] = 0.0;
-  } else {
-    double smlnum;
-    int i1;
-    int itmax;
-    int j;
-    int kdefl;
+  if ((h.size(0) != 0) && (h.size(1) != 0)) {
+    int i;
     int nh;
-    int nz;
-    bool exitg1;
-    i = ihi - 3;
-    for (j = ilo; j <= i; j++) {
-      i1 = j + ((j - 1) << 7);
-      h[i1 + 1] = 0.0;
-      h[i1 + 2] = 0.0;
+    for (i = 0; i <= ilo - 2; i++) {
+      wr[i] = h[i + h.size(0) * i];
+      wi[i] = 0.0;
     }
-    if (ilo <= ihi - 2) {
-      h[(ihi + ((ihi - 3) << 7)) - 1] = 0.0;
+    nh = ihi + 1;
+    for (i = nh; i <= n; i++) {
+      wr[i - 1] = h[(i + h.size(0) * (i - 1)) - 1];
+      wi[i - 1] = 0.0;
     }
-    nh = (ihi - ilo) + 1;
-    nz = (ihiz - iloz) + 1;
-    smlnum = 2.2250738585072014E-308 *
-             (static_cast<double>(nh) / 2.2204460492503131E-16);
-    if (nh < 10) {
-      nh = 10;
-    }
-    itmax = 30 * nh;
-    kdefl = 0;
-    b_i = ihi - 1;
-    exitg1 = false;
-    while ((!exitg1) && (b_i + 1 >= ilo)) {
-      double h21;
-      double tst;
-      int b_k;
-      int i2;
-      int its;
-      int k;
-      int l;
-      int nr;
-      bool converged;
-      bool exitg2;
-      l = ilo;
-      converged = false;
-      its = 0;
-      exitg2 = false;
-      while ((!exitg2) && (its <= itmax)) {
-        double tr;
-        bool exitg3;
-        k = b_i;
-        exitg3 = false;
-        while ((!exitg3) && (k + 1 > l)) {
-          i = k + ((k - 1) << 7);
-          d = std::abs(h[i]);
-          if (d <= smlnum) {
-            exitg3 = true;
-          } else {
-            nh = k + (k << 7);
-            h21 = h[nh];
-            tr = std::abs(h21);
-            aa = h[i - 1];
-            tst = std::abs(aa) + tr;
-            if (tst == 0.0) {
-              if (k - 1 >= ilo) {
-                tst = std::abs(h[(k + ((k - 2) << 7)) - 1]);
+    if (ilo == ihi) {
+      wr[ilo - 1] = h[(ilo + h.size(0) * (ilo - 1)) - 1];
+      wi[ilo - 1] = 0.0;
+    } else {
+      double smlnum;
+      int itmax;
+      int iy;
+      int kdefl;
+      int nz;
+      bool exitg1;
+      nh = ihi - 3;
+      for (iy = ilo; iy <= nh; iy++) {
+        h[(iy + h.size(0) * (iy - 1)) + 1] = 0.0;
+        h[(iy + h.size(0) * (iy - 1)) + 2] = 0.0;
+      }
+      if (ilo <= ihi - 2) {
+        h[(ihi + h.size(0) * (ihi - 3)) - 1] = 0.0;
+      }
+      nh = (ihi - ilo) + 1;
+      nz = ihiz - iloz;
+      smlnum = 2.2250738585072014E-308 *
+               (static_cast<double>(nh) / 2.2204460492503131E-16);
+      if (nh < 10) {
+        nh = 10;
+      }
+      itmax = 30 * nh;
+      kdefl = 0;
+      i = ihi - 1;
+      exitg1 = false;
+      while ((!exitg1) && (i + 1 >= ilo)) {
+        double aa;
+        int its;
+        int ix0;
+        int k;
+        int l;
+        bool converged;
+        bool exitg2;
+        l = ilo;
+        converged = false;
+        its = 0;
+        exitg2 = false;
+        while ((!exitg2) && (its <= itmax)) {
+          bool exitg3;
+          k = i;
+          exitg3 = false;
+          while ((!exitg3) && (k + 1 > l)) {
+            d = std::abs(h[k + h.size(0) * (k - 1)]);
+            if (d <= smlnum) {
+              exitg3 = true;
+            } else {
+              h12 = std::abs(h[k + h.size(0) * k]);
+              aa = h[(k + h.size(0) * (k - 1)) - 1];
+              tst = std::abs(aa) + h12;
+              if (tst == 0.0) {
+                if (k - 1 >= ilo) {
+                  tst = std::abs(h[(k + h.size(0) * (k - 2)) - 1]);
+                }
+                if (k + 2 <= ihi) {
+                  tst += std::abs(h[(k + h.size(0) * k) + 1]);
+                }
               }
-              if (k + 2 <= ihi) {
-                tst += std::abs(h[nh + 1]);
-              }
-            }
-            if (d <= 2.2204460492503131E-16 * tst) {
-              h22 = std::abs(h[nh - 1]);
-              h21 = std::abs(aa - h21);
-              aa = std::fmax(tr, h21);
-              tst = std::fmin(tr, h21);
-              s = aa + tst;
-              if (std::fmin(d, h22) * (std::fmax(d, h22) / s) <=
-                  std::fmax(smlnum,
-                            2.2204460492503131E-16 * (tst * (aa / s)))) {
-                exitg3 = true;
+              if (d <= 2.2204460492503131E-16 * tst) {
+                tr = std::abs(h[(k + h.size(0) * k) - 1]);
+                tst = std::abs(aa - h[k + h.size(0) * k]);
+                aa = std::fmax(h12, tst);
+                tst = std::fmin(h12, tst);
+                s = aa + tst;
+                if (std::fmin(d, tr) * (std::fmax(d, tr) / s) <=
+                    std::fmax(smlnum,
+                              2.2204460492503131E-16 * (tst * (aa / s)))) {
+                  exitg3 = true;
+                } else {
+                  k--;
+                }
               } else {
                 k--;
               }
-            } else {
-              k--;
             }
           }
-        }
-        l = k + 1;
-        if (k + 1 > ilo) {
-          h[k + ((k - 1) << 7)] = 0.0;
-        }
-        if (k + 1 >= b_i) {
-          converged = true;
-          exitg2 = true;
-        } else {
-          double v[3];
-          int m;
-          kdefl++;
-          if (kdefl - div_nzp_s32(kdefl, 20) * 20 == 0) {
-            s = std::abs(h[b_i + ((b_i - 1) << 7)]) +
-                std::abs(h[(b_i + ((b_i - 2) << 7)) - 1]);
-            tst = 0.75 * s + h[b_i + (b_i << 7)];
-            aa = -0.4375 * s;
-            h21 = s;
-            h22 = tst;
-          } else if (kdefl - div_nzp_s32(kdefl, 10) * 10 == 0) {
-            nh = k + (k << 7);
-            s = std::abs(h[nh + 1]) + std::abs(h[(k + ((k + 1) << 7)) + 2]);
-            tst = 0.75 * s + h[nh];
-            aa = -0.4375 * s;
-            h21 = s;
-            h22 = tst;
-          } else {
-            nh = b_i + ((b_i - 1) << 7);
-            tst = h[nh - 1];
-            h21 = h[nh];
-            nh = b_i + (b_i << 7);
-            aa = h[nh - 1];
-            h22 = h[nh];
+          l = k + 1;
+          if (k + 1 > ilo) {
+            h[k + h.size(0) * (k - 1)] = 0.0;
           }
-          s = ((std::abs(tst) + std::abs(aa)) + std::abs(h21)) + std::abs(h22);
-          if (s == 0.0) {
-            rt1r = 0.0;
-            tr = 0.0;
-            rt2r = 0.0;
-            h22 = 0.0;
+          if (k + 1 >= i) {
+            converged = true;
+            exitg2 = true;
           } else {
-            tst /= s;
-            h21 /= s;
-            aa /= s;
-            h22 /= s;
-            tr = (tst + h22) / 2.0;
-            tst = (tst - tr) * (h22 - tr) - aa * h21;
-            h21 = std::sqrt(std::abs(tst));
-            if (tst >= 0.0) {
-              rt1r = tr * s;
-              rt2r = rt1r;
-              tr = h21 * s;
-              h22 = -tr;
+            double v[3];
+            int m;
+            kdefl++;
+            if (kdefl - div_nzp_s32(kdefl, 20) * 20 == 0) {
+              s = std::abs(h[i + h.size(0) * (i - 1)]) +
+                  std::abs(h[(i + h.size(0) * (i - 2)) - 1]);
+              tst = 0.75 * s + h[i + h.size(0) * i];
+              h12 = -0.4375 * s;
+              aa = s;
+              h22 = tst;
+            } else if (kdefl - div_nzp_s32(kdefl, 10) * 10 == 0) {
+              s = std::abs(h[(k + h.size(0) * k) + 1]) +
+                  std::abs(h[(k + h.size(0) * (k + 1)) + 2]);
+              tst = 0.75 * s + h[k + h.size(0) * k];
+              h12 = -0.4375 * s;
+              aa = s;
+              h22 = tst;
             } else {
-              rt1r = tr + h21;
-              rt2r = tr - h21;
-              if (std::abs(rt1r - h22) <= std::abs(rt2r - h22)) {
-                rt1r *= s;
+              tst = h[(i + h.size(0) * (i - 1)) - 1];
+              aa = h[i + h.size(0) * (i - 1)];
+              h12 = h[(i + h.size(0) * i) - 1];
+              h22 = h[i + h.size(0) * i];
+            }
+            s = ((std::abs(tst) + std::abs(h12)) + std::abs(aa)) +
+                std::abs(h22);
+            if (s == 0.0) {
+              rt1r = 0.0;
+              h12 = 0.0;
+              rt2r = 0.0;
+              aa = 0.0;
+            } else {
+              tst /= s;
+              aa /= s;
+              h12 /= s;
+              h22 /= s;
+              tr = (tst + h22) / 2.0;
+              tst = (tst - tr) * (h22 - tr) - h12 * aa;
+              h12 = std::sqrt(std::abs(tst));
+              if (tst >= 0.0) {
+                rt1r = tr * s;
                 rt2r = rt1r;
+                h12 *= s;
+                aa = -h12;
               } else {
-                rt2r *= s;
-                rt1r = rt2r;
+                rt1r = tr + h12;
+                rt2r = tr - h12;
+                if (std::abs(rt1r - h22) <= std::abs(rt2r - h22)) {
+                  rt1r *= s;
+                  rt2r = rt1r;
+                } else {
+                  rt2r *= s;
+                  rt1r = rt2r;
+                }
+                h12 = 0.0;
+                aa = 0.0;
               }
-              tr = 0.0;
-              h22 = 0.0;
             }
-          }
-          m = b_i - 1;
-          exitg3 = false;
-          while ((!exitg3) && (m >= k + 1)) {
-            nh = m + ((m - 1) << 7);
-            tst = h[nh];
-            s_tmp_tmp = h[nh - 1];
-            h21 = s_tmp_tmp - rt2r;
-            s = (std::abs(h21) + std::abs(h22)) + std::abs(tst);
-            aa = tst / s;
-            nh = m + (m << 7);
-            v[0] = (aa * h[nh - 1] + h21 * (h21 / s)) - tr * (h22 / s);
-            tst = h[nh];
-            v[1] = aa * (((s_tmp_tmp + tst) - rt1r) - rt2r);
-            v[2] = aa * h[nh + 1];
-            s = (std::abs(v[0]) + std::abs(v[1])) + std::abs(v[2]);
-            v[0] /= s;
-            v[1] /= s;
-            v[2] /= s;
-            if (m == k + 1) {
-              exitg3 = true;
-            } else {
-              i = m + ((m - 2) << 7);
-              if (std::abs(h[i - 1]) * (std::abs(v[1]) + std::abs(v[2])) <=
-                  2.2204460492503131E-16 * std::abs(v[0]) *
-                      ((std::abs(h[i - 2]) + std::abs(s_tmp_tmp)) +
-                       std::abs(tst))) {
+            m = i - 1;
+            exitg3 = false;
+            while ((!exitg3) && (m >= k + 1)) {
+              tst = h[m + h.size(0) * (m - 1)];
+              tr = h[(m + h.size(0) * (m - 1)) - 1];
+              h22 = tr - rt2r;
+              s = (std::abs(h22) + std::abs(aa)) + std::abs(tst);
+              tst /= s;
+              v[0] = (tst * h[(m + h.size(0) * m) - 1] + h22 * (h22 / s)) -
+                     h12 * (aa / s);
+              v[1] = tst * (((tr + h[m + h.size(0) * m]) - rt1r) - rt2r);
+              v[2] = tst * h[(m + h.size(0) * m) + 1];
+              s = (std::abs(v[0]) + std::abs(v[1])) + std::abs(v[2]);
+              v[0] /= s;
+              v[1] /= s;
+              v[2] /= s;
+              if ((m == k + 1) ||
+                  (std::abs(h[(m + h.size(0) * (m - 2)) - 1]) *
+                       (std::abs(v[1]) + std::abs(v[2])) <=
+                   2.2204460492503131E-16 * std::abs(v[0]) *
+                       ((std::abs(h[(m + h.size(0) * (m - 2)) - 2]) +
+                         std::abs(tr)) +
+                        std::abs(h[m + h.size(0) * m])))) {
                 exitg3 = true;
               } else {
                 m--;
               }
             }
+            for (int b_k{m}; b_k <= i; b_k++) {
+              nh = (i - b_k) + 2;
+              if (nh >= 3) {
+                nh = 3;
+              }
+              if (b_k > m) {
+                ix0 = ((b_k - 2) * n + b_k) - 1;
+                for (iy = 0; iy < nh; iy++) {
+                  v[iy] = h[ix0 + iy];
+                }
+              }
+              tst = v[0];
+              tr = xzlarfg(nh, tst, v);
+              if (b_k > m) {
+                h[(b_k + h.size(0) * (b_k - 2)) - 1] = tst;
+                h[b_k + h.size(0) * (b_k - 2)] = 0.0;
+                if (b_k < i) {
+                  h[(b_k + h.size(0) * (b_k - 2)) + 1] = 0.0;
+                }
+              } else if (m > k + 1) {
+                h[(b_k + h.size(0) * (b_k - 2)) - 1] =
+                    h[(b_k + h.size(0) * (b_k - 2)) - 1] * (1.0 - tr);
+              }
+              d = v[1];
+              tst = tr * v[1];
+              if (nh == 3) {
+                h22 = v[2];
+                aa = tr * v[2];
+                for (iy = b_k; iy <= n; iy++) {
+                  rt2r = h[(b_k + h.size(0) * (iy - 1)) - 1];
+                  rt1r = h[b_k + h.size(0) * (iy - 1)];
+                  s = h[(b_k + h.size(0) * (iy - 1)) + 1];
+                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  rt2r -= h12 * tr;
+                  h[(b_k + h.size(0) * (iy - 1)) - 1] = rt2r;
+                  rt1r -= h12 * tst;
+                  h[b_k + h.size(0) * (iy - 1)] = rt1r;
+                  s -= h12 * aa;
+                  h[(b_k + h.size(0) * (iy - 1)) + 1] = s;
+                }
+                if (b_k + 3 <= i + 1) {
+                  nh = b_k + 2;
+                } else {
+                  nh = i;
+                }
+                for (iy = 0; iy <= nh; iy++) {
+                  rt2r = h[iy + h.size(0) * (b_k - 1)];
+                  rt1r = h[iy + h.size(0) * b_k];
+                  s = h[iy + h.size(0) * (b_k + 1)];
+                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  rt2r -= h12 * tr;
+                  h[iy + h.size(0) * (b_k - 1)] = rt2r;
+                  rt1r -= h12 * tst;
+                  h[iy + h.size(0) * b_k] = rt1r;
+                  s -= h12 * aa;
+                  h[iy + h.size(0) * (b_k + 1)] = s;
+                }
+                for (iy = iloz; iy <= ihiz; iy++) {
+                  rt2r = z[(iy + z.size(0) * (b_k - 1)) - 1];
+                  rt1r = z[(iy + z.size(0) * b_k) - 1];
+                  s = z[(iy + z.size(0) * (b_k + 1)) - 1];
+                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  rt2r -= h12 * tr;
+                  z[(iy + z.size(0) * (b_k - 1)) - 1] = rt2r;
+                  rt1r -= h12 * tst;
+                  z[(iy + z.size(0) * b_k) - 1] = rt1r;
+                  s -= h12 * aa;
+                  z[(iy + z.size(0) * (b_k + 1)) - 1] = s;
+                }
+              } else if (nh == 2) {
+                for (iy = b_k; iy <= n; iy++) {
+                  h22 = h[(b_k + h.size(0) * (iy - 1)) - 1];
+                  rt2r = h[b_k + h.size(0) * (iy - 1)];
+                  h12 = h22 + d * rt2r;
+                  h22 -= h12 * tr;
+                  h[(b_k + h.size(0) * (iy - 1)) - 1] = h22;
+                  rt2r -= h12 * tst;
+                  h[b_k + h.size(0) * (iy - 1)] = rt2r;
+                }
+                for (iy = 0; iy <= i; iy++) {
+                  h22 = h[iy + h.size(0) * (b_k - 1)];
+                  rt2r = h[iy + h.size(0) * b_k];
+                  h12 = h22 + d * rt2r;
+                  h22 -= h12 * tr;
+                  h[iy + h.size(0) * (b_k - 1)] = h22;
+                  rt2r -= h12 * tst;
+                  h[iy + h.size(0) * b_k] = rt2r;
+                }
+                for (iy = iloz; iy <= ihiz; iy++) {
+                  h22 = z[(iy + z.size(0) * (b_k - 1)) - 1];
+                  rt2r = z[(iy + z.size(0) * b_k) - 1];
+                  h12 = h22 + d * rt2r;
+                  h22 -= h12 * tr;
+                  z[(iy + z.size(0) * (b_k - 1)) - 1] = h22;
+                  rt2r -= h12 * tst;
+                  z[(iy + z.size(0) * b_k) - 1] = rt2r;
+                }
+              }
+            }
+            its++;
           }
-          for (int c_k{m}; c_k <= b_i; c_k++) {
-            nh = (b_i - c_k) + 2;
-            if (nh >= 3) {
-              nr = 3;
-            } else {
-              nr = nh;
-            }
-            if (c_k > m) {
-              nh = (((c_k - 2) << 7) + c_k) - 1;
-              for (b_k = 0; b_k < nr; b_k++) {
-                v[b_k] = h[nh + b_k];
+        }
+        if (!converged) {
+          info = i + 1;
+          exitg1 = true;
+        } else {
+          if (l == i + 1) {
+            wr[i] = h[i + h.size(0) * i];
+            wi[i] = 0.0;
+          } else if (l == i) {
+            d = h[(i + h.size(0) * i) - 1];
+            h22 = h[i + h.size(0) * (i - 1)];
+            rt2r = h[i + h.size(0) * i];
+            aa = xdlanv2(&h[(i + h.size(0) * (i - 1)) - 1], d, h22, rt2r, tst,
+                         rt1r, s, h12, tr);
+            wi[i - 1] = tst;
+            wr[i - 1] = aa;
+            wr[i] = rt1r;
+            wi[i] = s;
+            h[(i + h.size(0) * i) - 1] = d;
+            h[i + h.size(0) * (i - 1)] = h22;
+            h[i + h.size(0) * i] = rt2r;
+            if (n > i + 1) {
+              nh = (n - i) - 2;
+              if (nh + 1 >= 1) {
+                iy = (i + 1) * n + i;
+                for (k = 0; k <= nh; k++) {
+                  ix0 = iy + k * n;
+                  tst = h[ix0];
+                  kdefl = ix0 - 1;
+                  aa = h[kdefl];
+                  h[ix0] = h12 * tst - tr * aa;
+                  h[kdefl] = h12 * aa + tr * tst;
+                }
               }
             }
-            tst = v[0];
-            tr = xzlarfg(nr, tst, v);
-            if (c_k > m) {
-              i = c_k + ((c_k - 2) << 7);
-              h[i - 1] = tst;
-              h[i] = 0.0;
-              if (c_k < b_i) {
-                h[i + 1] = 0.0;
+            if (i - 1 >= 1) {
+              nh = (i - 1) * n;
+              iy = i * n;
+              for (k = 0; k <= i - 2; k++) {
+                kdefl = iy + k;
+                tst = h[kdefl];
+                ix0 = nh + k;
+                aa = h[ix0];
+                h[kdefl] = h12 * tst - tr * aa;
+                h[ix0] = h12 * aa + tr * tst;
               }
-            } else if (m > k + 1) {
-              i = (c_k + ((c_k - 2) << 7)) - 1;
-              h[i] *= 1.0 - tr;
             }
-            d = v[1];
-            tst = tr * v[1];
-            if (nr == 3) {
-              s_tmp_tmp = v[2];
-              aa = tr * v[2];
-              for (j = c_k; j < 129; j++) {
-                i = c_k + ((j - 1) << 7);
-                rt2r = h[i - 1];
-                rt1r = h[i];
-                s = h[i + 1];
-                h21 = (rt2r + d * rt1r) + s_tmp_tmp * s;
-                rt2r -= h21 * tr;
-                h[i - 1] = rt2r;
-                rt1r -= h21 * tst;
-                h[i] = rt1r;
-                s -= h21 * aa;
-                h[i + 1] = s;
-              }
-              if (c_k + 3 <= b_i + 1) {
-                i = c_k;
-              } else {
-                i = b_i - 2;
-              }
-              i = static_cast<unsigned char>(i + 3);
-              for (j = 0; j < i; j++) {
-                i1 = j + ((c_k - 1) << 7);
-                rt2r = h[i1];
-                i2 = j + (c_k << 7);
-                rt1r = h[i2];
-                nh = j + ((c_k + 1) << 7);
-                s = h[nh];
-                h21 = (rt2r + d * rt1r) + s_tmp_tmp * s;
-                rt2r -= h21 * tr;
-                h[i1] = rt2r;
-                rt1r -= h21 * tst;
-                h[i2] = rt1r;
-                s -= h21 * aa;
-                h[nh] = s;
-              }
-              for (j = iloz; j <= ihiz; j++) {
-                i = (j + ((c_k - 1) << 7)) - 1;
-                rt2r = z[i];
-                i1 = (j + (c_k << 7)) - 1;
-                rt1r = z[i1];
-                i2 = (j + ((c_k + 1) << 7)) - 1;
-                s = z[i2];
-                h21 = (rt2r + d * rt1r) + s_tmp_tmp * s;
-                rt2r -= h21 * tr;
-                z[i] = rt2r;
-                rt1r -= h21 * tst;
-                z[i1] = rt1r;
-                s -= h21 * aa;
-                z[i2] = s;
-              }
-            } else if (nr == 2) {
-              for (j = c_k; j < 129; j++) {
-                i = c_k + ((j - 1) << 7);
-                s_tmp_tmp = h[i - 1];
-                rt2r = h[i];
-                h21 = s_tmp_tmp + d * rt2r;
-                s_tmp_tmp -= h21 * tr;
-                h[i - 1] = s_tmp_tmp;
-                rt2r -= h21 * tst;
-                h[i] = rt2r;
-              }
-              i = static_cast<unsigned char>(b_i + 1);
-              for (j = 0; j < i; j++) {
-                i1 = j + ((c_k - 1) << 7);
-                s_tmp_tmp = h[i1];
-                i2 = j + (c_k << 7);
-                rt2r = h[i2];
-                h21 = s_tmp_tmp + d * rt2r;
-                s_tmp_tmp -= h21 * tr;
-                h[i1] = s_tmp_tmp;
-                rt2r -= h21 * tst;
-                h[i2] = rt2r;
-              }
-              for (j = iloz; j <= ihiz; j++) {
-                i = (j + ((c_k - 1) << 7)) - 1;
-                s_tmp_tmp = z[i];
-                i1 = (j + (c_k << 7)) - 1;
-                rt2r = z[i1];
-                h21 = s_tmp_tmp + d * rt2r;
-                s_tmp_tmp -= h21 * tr;
-                z[i] = s_tmp_tmp;
-                rt2r -= h21 * tst;
-                z[i1] = rt2r;
+            if (nz + 1 >= 1) {
+              nh = ((i - 1) * n + iloz) - 1;
+              iy = (i * n + iloz) - 1;
+              for (k = 0; k <= nz; k++) {
+                kdefl = iy + k;
+                tst = z[kdefl];
+                ix0 = nh + k;
+                aa = z[ix0];
+                z[kdefl] = h12 * tst - tr * aa;
+                z[ix0] = h12 * aa + tr * tst;
               }
             }
           }
-          its++;
+          kdefl = 0;
+          i = l - 2;
         }
       }
-      if (!converged) {
-        info = b_i + 1;
-        exitg1 = true;
-      } else {
-        if (l == b_i + 1) {
-          wr[b_i] = h[b_i + (b_i << 7)];
-          wi[b_i] = 0.0;
-        } else if (l == b_i) {
-          i = b_i << 7;
-          i1 = b_i + i;
-          d = h[i1 - 1];
-          i2 = (b_i - 1) << 7;
-          nh = b_i + i2;
-          s_tmp_tmp = h[nh];
-          rt2r = h[i1];
-          wr[b_i - 1] = xdlanv2(h[nh - 1], d, s_tmp_tmp, rt2r, wi[b_i - 1],
-                                rt1r, s, aa, h22);
-          wr[b_i] = rt1r;
-          wi[b_i] = s;
-          h[i1 - 1] = d;
-          h[nh] = s_tmp_tmp;
-          h[i1] = rt2r;
-          if (b_i + 1 < 128) {
-            nh = ((b_i + 1) << 7) + b_i;
-            i1 = static_cast<unsigned char>(127 - b_i);
-            for (k = 0; k < i1; k++) {
-              nr = nh + (k << 7);
-              tst = h[nr];
-              h21 = h[nr - 1];
-              h[nr] = aa * tst - h22 * h21;
-              h[nr - 1] = aa * h21 + h22 * tst;
-            }
-          }
-          if (b_i - 1 >= 1) {
-            i1 = static_cast<unsigned char>(b_i - 1);
-            for (k = 0; k < i1; k++) {
-              b_k = i + k;
-              tst = h[b_k];
-              j = i2 + k;
-              h21 = h[j];
-              h[b_k] = aa * tst - h22 * h21;
-              h[j] = aa * h21 + h22 * tst;
-            }
-          }
-          if (nz >= 1) {
-            nh = (i2 + iloz) - 1;
-            nr = (i + iloz) - 1;
-            i = static_cast<unsigned char>(nz);
-            for (k = 0; k < i; k++) {
-              b_k = nr + k;
-              tst = z[b_k];
-              j = nh + k;
-              h21 = z[j];
-              z[b_k] = aa * tst - h22 * h21;
-              z[j] = aa * h21 + h22 * tst;
-            }
+      if (n > 2) {
+        for (iy = 3; iy <= n; iy++) {
+          for (i = iy; i <= n; i++) {
+            h[(i + h.size(0) * (iy - 3)) - 1] = 0.0;
           }
         }
-        kdefl = 0;
-        b_i = l - 2;
       }
     }
-    for (j = 0; j < 126; j++) {
-      for (b_i = j + 3; b_i < 129; b_i++) {
-        h[(b_i + (j << 7)) - 1] = 0.0;
+  }
+  return info;
+}
+
+int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
+            ::coder::array<double, 2U> &z, ::coder::array<double, 1U> &wr,
+            ::coder::array<double, 1U> &wi)
+{
+  double d;
+  double h12;
+  double h22;
+  double rt1r;
+  double rt2r;
+  double s;
+  double tr;
+  double tst;
+  int info;
+  int n;
+  n = h.size(0);
+  wr.set_size(h.size(0));
+  wi.set_size(wr.size(0));
+  info = 0;
+  if ((h.size(0) != 0) && (h.size(1) != 0)) {
+    int i;
+    int nr;
+    nr = ihi + 1;
+    for (i = nr; i <= n; i++) {
+      wr[i - 1] = h[(i + h.size(0) * (i - 1)) - 1];
+      wi[i - 1] = 0.0;
+    }
+    if (ihi == 1) {
+      wr[0] = h[0];
+      wi[0] = 0.0;
+    } else {
+      double smlnum;
+      int itmax;
+      int iy;
+      int kdefl;
+      bool exitg1;
+      for (iy = 0; iy <= ihi - 4; iy++) {
+        h[(iy + h.size(0) * iy) + 2] = 0.0;
+        h[(iy + h.size(0) * iy) + 3] = 0.0;
+      }
+      if (ihi - 2 >= 1) {
+        h[(ihi + h.size(0) * (ihi - 3)) - 1] = 0.0;
+      }
+      smlnum = 2.2250738585072014E-308 *
+               (static_cast<double>(ihi) / 2.2204460492503131E-16);
+      if (ihi >= 10) {
+        nr = ihi;
+      } else {
+        nr = 10;
+      }
+      itmax = 30 * nr;
+      kdefl = 0;
+      i = ihi - 1;
+      exitg1 = false;
+      while ((!exitg1) && (i + 1 >= 1)) {
+        double aa;
+        int its;
+        int k;
+        int l;
+        int u1;
+        bool converged;
+        bool exitg2;
+        l = 1;
+        converged = false;
+        its = 0;
+        exitg2 = false;
+        while ((!exitg2) && (its <= itmax)) {
+          bool exitg3;
+          k = i;
+          exitg3 = false;
+          while ((!exitg3) && (k + 1 > l)) {
+            d = std::abs(h[k + h.size(0) * (k - 1)]);
+            if (d <= smlnum) {
+              exitg3 = true;
+            } else {
+              h12 = std::abs(h[k + h.size(0) * k]);
+              aa = h[(k + h.size(0) * (k - 1)) - 1];
+              tst = std::abs(aa) + h12;
+              if (tst == 0.0) {
+                if (k - 1 >= 1) {
+                  tst = std::abs(h[(k + h.size(0) * (k - 2)) - 1]);
+                }
+                if (k + 2 <= ihi) {
+                  tst += std::abs(h[(k + h.size(0) * k) + 1]);
+                }
+              }
+              if (d <= 2.2204460492503131E-16 * tst) {
+                tr = std::abs(h[(k + h.size(0) * k) - 1]);
+                tst = std::abs(aa - h[k + h.size(0) * k]);
+                aa = std::fmax(h12, tst);
+                tst = std::fmin(h12, tst);
+                s = aa + tst;
+                if (std::fmin(d, tr) * (std::fmax(d, tr) / s) <=
+                    std::fmax(smlnum,
+                              2.2204460492503131E-16 * (tst * (aa / s)))) {
+                  exitg3 = true;
+                } else {
+                  k--;
+                }
+              } else {
+                k--;
+              }
+            }
+          }
+          l = k + 1;
+          if (k + 1 > 1) {
+            h[k + h.size(0) * (k - 1)] = 0.0;
+          }
+          if (k + 1 >= i) {
+            converged = true;
+            exitg2 = true;
+          } else {
+            double v[3];
+            int m;
+            kdefl++;
+            if (kdefl - div_nzp_s32(kdefl, 20) * 20 == 0) {
+              s = std::abs(h[i + h.size(0) * (i - 1)]) +
+                  std::abs(h[(i + h.size(0) * (i - 2)) - 1]);
+              tst = 0.75 * s + h[i + h.size(0) * i];
+              h12 = -0.4375 * s;
+              aa = s;
+              h22 = tst;
+            } else if (kdefl - div_nzp_s32(kdefl, 10) * 10 == 0) {
+              s = std::abs(h[(k + h.size(0) * k) + 1]) +
+                  std::abs(h[(k + h.size(0) * (k + 1)) + 2]);
+              tst = 0.75 * s + h[k + h.size(0) * k];
+              h12 = -0.4375 * s;
+              aa = s;
+              h22 = tst;
+            } else {
+              tst = h[(i + h.size(0) * (i - 1)) - 1];
+              aa = h[i + h.size(0) * (i - 1)];
+              h12 = h[(i + h.size(0) * i) - 1];
+              h22 = h[i + h.size(0) * i];
+            }
+            s = ((std::abs(tst) + std::abs(h12)) + std::abs(aa)) +
+                std::abs(h22);
+            if (s == 0.0) {
+              rt1r = 0.0;
+              h12 = 0.0;
+              rt2r = 0.0;
+              aa = 0.0;
+            } else {
+              tst /= s;
+              aa /= s;
+              h12 /= s;
+              h22 /= s;
+              tr = (tst + h22) / 2.0;
+              tst = (tst - tr) * (h22 - tr) - h12 * aa;
+              h12 = std::sqrt(std::abs(tst));
+              if (tst >= 0.0) {
+                rt1r = tr * s;
+                rt2r = rt1r;
+                h12 *= s;
+                aa = -h12;
+              } else {
+                rt1r = tr + h12;
+                rt2r = tr - h12;
+                if (std::abs(rt1r - h22) <= std::abs(rt2r - h22)) {
+                  rt1r *= s;
+                  rt2r = rt1r;
+                } else {
+                  rt2r *= s;
+                  rt1r = rt2r;
+                }
+                h12 = 0.0;
+                aa = 0.0;
+              }
+            }
+            m = i - 1;
+            exitg3 = false;
+            while ((!exitg3) && (m >= k + 1)) {
+              tst = h[m + h.size(0) * (m - 1)];
+              tr = h[(m + h.size(0) * (m - 1)) - 1];
+              h22 = tr - rt2r;
+              s = (std::abs(h22) + std::abs(aa)) + std::abs(tst);
+              tst /= s;
+              v[0] = (tst * h[(m + h.size(0) * m) - 1] + h22 * (h22 / s)) -
+                     h12 * (aa / s);
+              v[1] = tst * (((tr + h[m + h.size(0) * m]) - rt1r) - rt2r);
+              v[2] = tst * h[(m + h.size(0) * m) + 1];
+              s = (std::abs(v[0]) + std::abs(v[1])) + std::abs(v[2]);
+              v[0] /= s;
+              v[1] /= s;
+              v[2] /= s;
+              if ((m == k + 1) ||
+                  (std::abs(h[(m + h.size(0) * (m - 2)) - 1]) *
+                       (std::abs(v[1]) + std::abs(v[2])) <=
+                   2.2204460492503131E-16 * std::abs(v[0]) *
+                       ((std::abs(h[(m + h.size(0) * (m - 2)) - 2]) +
+                         std::abs(tr)) +
+                        std::abs(h[m + h.size(0) * m])))) {
+                exitg3 = true;
+              } else {
+                m--;
+              }
+            }
+            for (int b_k{m}; b_k <= i; b_k++) {
+              u1 = (i - b_k) + 2;
+              if (u1 >= 3) {
+                nr = 3;
+              } else {
+                nr = u1;
+              }
+              if (b_k > m) {
+                iy = ((b_k - 2) * n + b_k) - 1;
+                for (u1 = 0; u1 < nr; u1++) {
+                  v[u1] = h[iy + u1];
+                }
+              }
+              tst = v[0];
+              tr = xzlarfg(nr, tst, v);
+              if (b_k > m) {
+                h[(b_k + h.size(0) * (b_k - 2)) - 1] = tst;
+                h[b_k + h.size(0) * (b_k - 2)] = 0.0;
+                if (b_k < i) {
+                  h[(b_k + h.size(0) * (b_k - 2)) + 1] = 0.0;
+                }
+              } else if (m > k + 1) {
+                h[(b_k + h.size(0) * (b_k - 2)) - 1] =
+                    h[(b_k + h.size(0) * (b_k - 2)) - 1] * (1.0 - tr);
+              }
+              d = v[1];
+              tst = tr * v[1];
+              if (nr == 3) {
+                h22 = v[2];
+                aa = tr * v[2];
+                for (iy = b_k; iy <= n; iy++) {
+                  rt2r = h[(b_k + h.size(0) * (iy - 1)) - 1];
+                  rt1r = h[b_k + h.size(0) * (iy - 1)];
+                  s = h[(b_k + h.size(0) * (iy - 1)) + 1];
+                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  rt2r -= h12 * tr;
+                  h[(b_k + h.size(0) * (iy - 1)) - 1] = rt2r;
+                  rt1r -= h12 * tst;
+                  h[b_k + h.size(0) * (iy - 1)] = rt1r;
+                  s -= h12 * aa;
+                  h[(b_k + h.size(0) * (iy - 1)) + 1] = s;
+                }
+                if (b_k + 3 <= i + 1) {
+                  nr = b_k + 2;
+                } else {
+                  nr = i;
+                }
+                for (iy = 0; iy <= nr; iy++) {
+                  rt2r = h[iy + h.size(0) * (b_k - 1)];
+                  rt1r = h[iy + h.size(0) * b_k];
+                  s = h[iy + h.size(0) * (b_k + 1)];
+                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  rt2r -= h12 * tr;
+                  h[iy + h.size(0) * (b_k - 1)] = rt2r;
+                  rt1r -= h12 * tst;
+                  h[iy + h.size(0) * b_k] = rt1r;
+                  s -= h12 * aa;
+                  h[iy + h.size(0) * (b_k + 1)] = s;
+                }
+                for (iy = 0; iy < ihiz; iy++) {
+                  rt2r = z[iy + z.size(0) * (b_k - 1)];
+                  rt1r = z[iy + z.size(0) * b_k];
+                  s = z[iy + z.size(0) * (b_k + 1)];
+                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  rt2r -= h12 * tr;
+                  z[iy + z.size(0) * (b_k - 1)] = rt2r;
+                  rt1r -= h12 * tst;
+                  z[iy + z.size(0) * b_k] = rt1r;
+                  s -= h12 * aa;
+                  z[iy + z.size(0) * (b_k + 1)] = s;
+                }
+              } else if (nr == 2) {
+                for (iy = b_k; iy <= n; iy++) {
+                  h22 = h[(b_k + h.size(0) * (iy - 1)) - 1];
+                  rt2r = h[b_k + h.size(0) * (iy - 1)];
+                  h12 = h22 + d * rt2r;
+                  h22 -= h12 * tr;
+                  h[(b_k + h.size(0) * (iy - 1)) - 1] = h22;
+                  rt2r -= h12 * tst;
+                  h[b_k + h.size(0) * (iy - 1)] = rt2r;
+                }
+                for (iy = 0; iy <= i; iy++) {
+                  h22 = h[iy + h.size(0) * (b_k - 1)];
+                  rt2r = h[iy + h.size(0) * b_k];
+                  h12 = h22 + d * rt2r;
+                  h22 -= h12 * tr;
+                  h[iy + h.size(0) * (b_k - 1)] = h22;
+                  rt2r -= h12 * tst;
+                  h[iy + h.size(0) * b_k] = rt2r;
+                }
+                for (iy = 0; iy < ihiz; iy++) {
+                  h22 = z[iy + z.size(0) * (b_k - 1)];
+                  rt2r = z[iy + z.size(0) * b_k];
+                  h12 = h22 + d * rt2r;
+                  h22 -= h12 * tr;
+                  z[iy + z.size(0) * (b_k - 1)] = h22;
+                  rt2r -= h12 * tst;
+                  z[iy + z.size(0) * b_k] = rt2r;
+                }
+              }
+            }
+            its++;
+          }
+        }
+        if (!converged) {
+          info = i + 1;
+          exitg1 = true;
+        } else {
+          if (l == i + 1) {
+            wr[i] = h[i + h.size(0) * i];
+            wi[i] = 0.0;
+          } else if (l == i) {
+            d = h[(i + h.size(0) * i) - 1];
+            h22 = h[i + h.size(0) * (i - 1)];
+            rt2r = h[i + h.size(0) * i];
+            aa = xdlanv2(&h[(i + h.size(0) * (i - 1)) - 1], d, h22, rt2r, tst,
+                         rt1r, s, h12, tr);
+            wi[i - 1] = tst;
+            wr[i - 1] = aa;
+            wr[i] = rt1r;
+            wi[i] = s;
+            h[(i + h.size(0) * i) - 1] = d;
+            h[i + h.size(0) * (i - 1)] = h22;
+            h[i + h.size(0) * i] = rt2r;
+            if (n > i + 1) {
+              nr = (n - i) - 2;
+              if (nr + 1 >= 1) {
+                iy = (i + 1) * n + i;
+                for (k = 0; k <= nr; k++) {
+                  u1 = iy + k * n;
+                  tst = h[u1];
+                  kdefl = u1 - 1;
+                  aa = h[kdefl];
+                  h[u1] = h12 * tst - tr * aa;
+                  h[kdefl] = h12 * aa + tr * tst;
+                }
+              }
+            }
+            if (i - 1 >= 1) {
+              nr = (i - 1) * n;
+              iy = i * n;
+              for (k = 0; k <= i - 2; k++) {
+                kdefl = iy + k;
+                tst = h[kdefl];
+                u1 = nr + k;
+                aa = h[u1];
+                h[kdefl] = h12 * tst - tr * aa;
+                h[u1] = h12 * aa + tr * tst;
+              }
+            }
+            if (ihiz >= 1) {
+              nr = (i - 1) * n;
+              iy = i * n;
+              for (k = 0; k < ihiz; k++) {
+                kdefl = iy + k;
+                tst = z[kdefl];
+                u1 = nr + k;
+                aa = z[u1];
+                z[kdefl] = h12 * tst - tr * aa;
+                z[u1] = h12 * aa + tr * tst;
+              }
+            }
+          }
+          kdefl = 0;
+          i = l - 2;
+        }
+      }
+      if (n > 2) {
+        for (iy = 3; iy <= n; iy++) {
+          for (i = iy; i <= n; i++) {
+            h[(i + h.size(0) * (iy - 3)) - 1] = 0.0;
+          }
+        }
       }
     }
   }

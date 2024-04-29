@@ -13,6 +13,7 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
@@ -20,11 +21,11 @@
 namespace coder {
 namespace internal {
 namespace reflapack {
-void b_xzlascl(double cfrom, double cto, int m, double A[127], int iA0);
+void xzlascl(double cfrom, double cto, int m, ::coder::array<double, 1U> &A,
+             int iA0);
 
-void xzlascl(double cfrom, double cto, int m, double A[128], int iA0);
-
-void xzlascl(double cfrom, double cto, double A[16384]);
+void xzlascl(double cfrom, double cto, int m, int n,
+             ::coder::array<double, 2U> &A, int lda);
 
 } // namespace reflapack
 } // namespace internal
