@@ -28,7 +28,7 @@ void processSIGburst_onboard(coder::array<real_T, 2U> *wraw, real_T cs,
                              real_T rmax, real_T nzfit,
                              coder::array<char_T, 2U> *avgtype,
                              coder::array<char_T, 2U> *fittype,
-                             real_T eps[128]);
+                             coder::array<real_T, 2U> *eps);
 
 void processSIGburst_onboard_api(const mxArray *const prhs[10],
                                  const mxArray **plhs);

@@ -16,20 +16,32 @@
 
 // Function Definitions
 namespace coder {
-void b_std(const ::coder::array<double, 3U> &x, double y[16384])
+void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
 {
   array<double, 1U> absdiff;
   array<double, 1U> xv;
+  int firstBlockLength;
   int loop_ub;
   int n;
-  loop_ub = x.size(2);
-  n = x.size(2);
-  for (int j{0}; j < 16384; j++) {
+  int nnans;
+  int outsize_idx_0;
+  int stride;
+  y.set_size(x.size(0), x.size(1));
+  nnans = x.size(0) * x.size(1);
+  for (firstBlockLength = 0; firstBlockLength < nnans; firstBlockLength++) {
+    y[firstBlockLength] = 0.0;
+  }
+  stride = x.size(0) * x.size(1);
+  if (stride - 1 >= 0) {
+    outsize_idx_0 = x.size(2);
+    loop_ub = x.size(2);
+    n = x.size(2);
+  }
+  for (int j{0}; j < stride; j++) {
     int nn;
-    int nnans;
-    xv.set_size(x.size(2));
+    xv.set_size(outsize_idx_0);
     for (int k{0}; k < loop_ub; k++) {
-      xv[k] = x[j + (k << 14)];
+      xv[k] = x[j + k * stride];
     }
     nnans = 0;
     for (int k{0}; k < n; k++) {
@@ -57,11 +69,11 @@ void b_std(const ::coder::array<double, 3U> &x, double y[16384])
         int lastBlockLength;
         int nblocks;
         if (nn <= 1024) {
-          nnans = nn;
+          firstBlockLength = nn;
           lastBlockLength = 0;
           nblocks = 1;
         } else {
-          nnans = 1024;
+          firstBlockLength = 1024;
           nblocks = nn >> 10;
           lastBlockLength = nn - (nblocks << 10);
           if (lastBlockLength > 0) {
@@ -71,19 +83,18 @@ void b_std(const ::coder::array<double, 3U> &x, double y[16384])
           }
         }
         xbar = xv[0];
-        for (int k{2}; k <= nnans; k++) {
+        for (int k{2}; k <= firstBlockLength; k++) {
           xbar += xv[k - 1];
         }
         for (int ib{2}; ib <= nblocks; ib++) {
-          int hi;
           nnans = (ib - 1) << 10;
           bsum = xv[nnans];
           if (ib == nblocks) {
-            hi = lastBlockLength;
+            firstBlockLength = lastBlockLength;
           } else {
-            hi = 1024;
+            firstBlockLength = 1024;
           }
-          for (int k{2}; k <= hi; k++) {
+          for (int k{2}; k <= firstBlockLength; k++) {
             bsum += xv[(nnans + k) - 1];
           }
           xbar += bsum;

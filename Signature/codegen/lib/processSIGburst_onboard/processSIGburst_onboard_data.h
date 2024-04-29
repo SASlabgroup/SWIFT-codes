@@ -13,8 +13,13 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "omp.h"
 #include <cstddef>
 #include <cstdlib>
+
+// Variable Declarations
+extern omp_nest_lock_t processSIGburst_onboard_nestLockGlobal;
+extern bool isInitialized_processSIGburst_onboard;
 
 #endif
 // End of code generation (processSIGburst_onboard_data.h)

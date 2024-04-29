@@ -11,6 +11,7 @@
 // Include files
 #include "xnrm2.h"
 #include "rt_nonfinite.h"
+#include "coder_array.h"
 #include <cmath>
 
 // Function Definitions
@@ -52,7 +53,7 @@ double xnrm2(int n, const double x[3])
   return y;
 }
 
-double xnrm2(int n, const double x[16384], int ix0)
+double xnrm2(int n, const ::coder::array<double, 2U> &x, int ix0)
 {
   double y;
   y = 0.0;

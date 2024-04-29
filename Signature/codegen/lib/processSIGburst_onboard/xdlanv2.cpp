@@ -18,7 +18,7 @@
 namespace coder {
 namespace internal {
 namespace reflapack {
-double xdlanv2(double &a, double &b, double &c, double &d, double &rt1i,
+double xdlanv2(double *a, double &b, double &c, double &d, double &rt1i,
                double &rt2r, double &rt2i, double &cs, double &sn)
 {
   double rt1r;
@@ -30,13 +30,13 @@ double xdlanv2(double &a, double &b, double &c, double &d, double &rt1i,
     cs = 0.0;
     sn = 1.0;
     temp = d;
-    d = a;
-    a = temp;
+    d = *a;
+    *a = temp;
     b = -c;
     c = 0.0;
   } else {
     double temp;
-    temp = a - d;
+    temp = *a - d;
     if ((temp == 0.0) && ((b < 0.0) != (c < 0.0))) {
       cs = 1.0;
       sn = 0.0;
@@ -68,12 +68,12 @@ double xdlanv2(double &a, double &b, double &c, double &d, double &rt1i,
       z = p / scale * p + bcmax / scale * bcmis;
       if (z >= 8.8817841970012523E-16) {
         double tau;
-        a = std::sqrt(scale) * std::sqrt(z);
+        *a = std::sqrt(scale) * std::sqrt(z);
         if (p < 0.0) {
-          a = -a;
+          *a = -*a;
         }
-        z = p + a;
-        a = d + z;
+        z = p + *a;
+        *a = d + z;
         d -= bcmax / z * bcmis;
         tau = rt_hypotd_snf(c, z);
         cs = z / tau;
@@ -105,28 +105,28 @@ double xdlanv2(double &a, double &b, double &c, double &d, double &rt1i,
           count = -1;
         }
         sn = -(0.5 * temp / (tau * cs)) * static_cast<double>(count);
-        bcmax = a * cs + b * sn;
-        scale = -a * sn + b * cs;
+        bcmax = *a * cs + b * sn;
+        scale = -*a * sn + b * cs;
         z = c * cs + d * sn;
         bcmis = -c * sn + d * cs;
         b = scale * cs + bcmis * sn;
         c = -bcmax * sn + z * cs;
         temp = 0.5 * ((bcmax * cs + z * sn) + (-scale * sn + bcmis * cs));
-        a = temp;
+        *a = temp;
         d = temp;
         if (c != 0.0) {
           if (b != 0.0) {
             if ((b < 0.0) == (c < 0.0)) {
               bcmis = std::sqrt(std::abs(b));
               scale = std::sqrt(std::abs(c));
-              a = bcmis * scale;
+              *a = bcmis * scale;
               if (!(c < 0.0)) {
-                p = a;
+                p = *a;
               } else {
-                p = -a;
+                p = -*a;
               }
               tau = 1.0 / std::sqrt(std::abs(b + c));
-              a = temp + p;
+              *a = temp + p;
               d = temp - p;
               b -= c;
               c = 0.0;
@@ -147,7 +147,7 @@ double xdlanv2(double &a, double &b, double &c, double &d, double &rt1i,
       }
     }
   }
-  rt1r = a;
+  rt1r = *a;
   rt2r = d;
   if (c == 0.0) {
     rt1i = 0.0;

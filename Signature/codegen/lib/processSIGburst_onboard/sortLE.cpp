@@ -12,6 +12,7 @@
 #include "sortLE.h"
 #include "processSIGburst_onboard_rtwutil.h"
 #include "rt_nonfinite.h"
+#include "coder_array.h"
 #include "rt_defines.h"
 #include <cmath>
 
@@ -54,7 +55,7 @@ static double rt_atan2d_snf(double u0, double u1)
 
 namespace coder {
 namespace internal {
-bool sortLE(const creal_T v[128], int idx1, int idx2)
+bool sortLE(const ::coder::array<creal_T, 1U> &v, int idx1, int idx2)
 {
   bool p;
   if (std::isnan(v[idx2 - 1].re) || std::isnan(v[idx2 - 1].im)) {

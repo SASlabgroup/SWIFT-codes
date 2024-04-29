@@ -3,24 +3,25 @@
 // course requirements at degree granting institutions only.  Not for
 // government, commercial, or other organizational use.
 //
-// eigStandard.h
+// abs.h
 //
-// Code generation for function 'eigStandard'
+// Code generation for function 'abs'
 //
 
-#ifndef EIGSTANDARD_H
-#define EIGSTANDARD_H
+#ifndef ABS_H
+#define ABS_H
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
 // Function Declarations
 namespace coder {
-void eigStandard(const double A[16384], creal_T V[16384], creal_T D[128]);
+void b_abs(const ::coder::array<double, 2U> &x, ::coder::array<double, 2U> &y);
 
 }
 
 #endif
-// End of code generation (eigStandard.h)
+// End of code generation (abs.h)

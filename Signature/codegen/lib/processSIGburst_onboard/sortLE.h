@@ -13,13 +13,14 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
 // Function Declarations
 namespace coder {
 namespace internal {
-bool sortLE(const creal_T v[128], int idx1, int idx2);
+bool sortLE(const ::coder::array<creal_T, 1U> &v, int idx1, int idx2);
 
 }
 } // namespace coder

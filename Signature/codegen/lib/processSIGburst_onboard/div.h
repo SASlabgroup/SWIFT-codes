@@ -3,13 +3,13 @@
 // course requirements at degree granting institutions only.  Not for
 // government, commercial, or other organizational use.
 //
-// eof.h
+// div.h
 //
-// Code generation for function 'eof'
+// Code generation for function 'div'
 //
 
-#ifndef EOF_H
-#define EOF_H
+#ifndef DIV_H
+#define DIV_H
 
 // Include files
 #include "rtwtypes.h"
@@ -18,8 +18,11 @@
 #include <cstdlib>
 
 // Function Declarations
-void eof(coder::array<double, 2U> &X, creal_T EOFs[16384],
-         coder::array<creal_T, 2U> &alpha, double Xm[128], creal_T E[128]);
+void b_binary_expand_op(coder::array<double, 1U> &in1,
+                        const coder::array<int, 1U> &in2);
+
+void b_binary_expand_op(coder::array<double, 2U> &in1,
+                        const coder::array<int, 2U> &in2);
 
 #endif
-// End of code generation (eof.h)
+// End of code generation (div.h)

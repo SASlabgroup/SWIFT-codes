@@ -13,6 +13,7 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
@@ -22,7 +23,7 @@ namespace internal {
 namespace blas {
 double xnrm2(int n, const double x[3]);
 
-double xnrm2(int n, const double x[16384], int ix0);
+double xnrm2(int n, const ::coder::array<double, 2U> &x, int ix0);
 
 } // namespace blas
 } // namespace internal

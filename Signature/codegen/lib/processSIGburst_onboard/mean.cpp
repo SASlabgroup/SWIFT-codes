@@ -10,25 +10,22 @@
 
 // Include files
 #include "mean.h"
+#include "div.h"
 #include "rt_nonfinite.h"
 #include "coder_array.h"
 #include <cmath>
-#include <cstring>
 
 // Function Definitions
 namespace coder {
-void mean(const ::coder::array<double, 2U> &x, double y[128])
+double mean(const ::coder::array<double, 2U> &x)
 {
-  int counts[128];
-  int firstBlockLength;
+  double y;
   if (x.size(1) == 0) {
-    std::memset(&y[0], 0, 128U * sizeof(double));
-    std::memset(&counts[0], 0, 128U * sizeof(int));
+    y = 0.0;
   } else {
-    int ix;
+    int firstBlockLength;
     int lastBlockLength;
     int nblocks;
-    int xoffset;
     if (x.size(1) <= 1024) {
       firstBlockLength = x.size(1);
       lastBlockLength = 0;
@@ -43,7 +40,71 @@ void mean(const ::coder::array<double, 2U> &x, double y[128])
         lastBlockLength = 1024;
       }
     }
-    for (int xj{0}; xj < 128; xj++) {
+    y = x[0];
+    for (int k{2}; k <= firstBlockLength; k++) {
+      y += x[k - 1];
+    }
+    for (int ib{2}; ib <= nblocks; ib++) {
+      double bsum;
+      int hi;
+      firstBlockLength = (ib - 1) << 10;
+      bsum = x[firstBlockLength];
+      if (ib == nblocks) {
+        hi = lastBlockLength;
+      } else {
+        hi = 1024;
+      }
+      for (int k{2}; k <= hi; k++) {
+        bsum += x[(firstBlockLength + k) - 1];
+      }
+      y += bsum;
+    }
+  }
+  y /= static_cast<double>(x.size(1));
+  return y;
+}
+
+void mean(const ::coder::array<double, 2U> &x, ::coder::array<double, 1U> &y)
+{
+  array<double, 1U> bsum;
+  array<int, 1U> counts;
+  int firstBlockLength;
+  int xblockoffset;
+  if ((x.size(0) == 0) || (x.size(1) == 0)) {
+    y.set_size(x.size(0));
+    firstBlockLength = x.size(0);
+    counts.set_size(x.size(0));
+    for (xblockoffset = 0; xblockoffset < firstBlockLength; xblockoffset++) {
+      y[xblockoffset] = 0.0;
+      counts[xblockoffset] = 0;
+    }
+  } else {
+    int bvstride;
+    int ix;
+    int lastBlockLength;
+    int nblocks;
+    int vstride;
+    int xoffset;
+    vstride = x.size(0) - 1;
+    bvstride = x.size(0) << 10;
+    y.set_size(x.size(0));
+    counts.set_size(x.size(0));
+    bsum.set_size(x.size(0));
+    if (x.size(1) <= 1024) {
+      firstBlockLength = x.size(1);
+      lastBlockLength = 0;
+      nblocks = 1;
+    } else {
+      firstBlockLength = 1024;
+      nblocks = static_cast<int>(static_cast<unsigned int>(x.size(1)) >> 10);
+      lastBlockLength = x.size(1) - (nblocks << 10);
+      if (lastBlockLength > 0) {
+        nblocks++;
+      } else {
+        lastBlockLength = 1024;
+      }
+    }
+    for (int xj{0}; xj <= vstride; xj++) {
       if (std::isnan(x[xj])) {
         y[xj] = 0.0;
         counts[xj] = 0;
@@ -51,68 +112,86 @@ void mean(const ::coder::array<double, 2U> &x, double y[128])
         y[xj] = x[xj];
         counts[xj] = 1;
       }
+      bsum[xj] = 0.0;
     }
     for (int k{2}; k <= firstBlockLength; k++) {
-      xoffset = (k - 1) << 7;
-      for (int xj{0}; xj < 128; xj++) {
+      xoffset = (k - 1) * (vstride + 1);
+      for (int xj{0}; xj <= vstride; xj++) {
         ix = xoffset + xj;
         if (!std::isnan(x[ix])) {
-          y[xj] += x[ix];
-          counts[xj]++;
+          y[xj] = y[xj] + x[ix];
+          counts[xj] = counts[xj] + 1;
         }
       }
     }
     for (int ib{2}; ib <= nblocks; ib++) {
-      double bsum[128];
-      int hi;
-      firstBlockLength = (ib - 1) << 17;
-      for (int xj{0}; xj < 128; xj++) {
-        ix = firstBlockLength + xj;
+      xblockoffset = (ib - 1) * bvstride;
+      for (int xj{0}; xj <= vstride; xj++) {
+        ix = xblockoffset + xj;
         if (std::isnan(x[ix])) {
           bsum[xj] = 0.0;
         } else {
           bsum[xj] = x[ix];
-          counts[xj]++;
+          counts[xj] = counts[xj] + 1;
         }
       }
       if (ib == nblocks) {
-        hi = lastBlockLength;
+        firstBlockLength = lastBlockLength;
       } else {
-        hi = 1024;
+        firstBlockLength = 1024;
       }
-      for (int k{2}; k <= hi; k++) {
-        xoffset = firstBlockLength + ((k - 1) << 7);
-        for (int xj{0}; xj < 128; xj++) {
+      for (int k{2}; k <= firstBlockLength; k++) {
+        xoffset = xblockoffset + (k - 1) * (vstride + 1);
+        for (int xj{0}; xj <= vstride; xj++) {
           ix = xoffset + xj;
           if (!std::isnan(x[ix])) {
-            bsum[xj] += x[ix];
-            counts[xj]++;
+            bsum[xj] = bsum[xj] + x[ix];
+            counts[xj] = counts[xj] + 1;
           }
         }
       }
-      for (int xj{0}; xj < 128; xj++) {
-        y[xj] += bsum[xj];
+      for (int xj{0}; xj <= vstride; xj++) {
+        y[xj] = y[xj] + bsum[xj];
       }
     }
   }
-  for (firstBlockLength = 0; firstBlockLength < 128; firstBlockLength++) {
-    y[firstBlockLength] /= static_cast<double>(counts[firstBlockLength]);
+  if (y.size(0) == counts.size(0)) {
+    firstBlockLength = y.size(0);
+    for (xblockoffset = 0; xblockoffset < firstBlockLength; xblockoffset++) {
+      y[xblockoffset] =
+          y[xblockoffset] / static_cast<double>(counts[xblockoffset]);
+    }
+  } else {
+    b_binary_expand_op(y, counts);
   }
 }
 
-void mean(const ::coder::array<double, 3U> &x, double y[16384])
+void mean(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
 {
-  static double bsum[16384];
-  static int counts[16384];
+  array<double, 1U> bsum;
+  array<int, 2U> counts;
   int firstBlockLength;
-  if (x.size(2) == 0) {
-    std::memset(&y[0], 0, 16384U * sizeof(double));
-    std::memset(&counts[0], 0, 16384U * sizeof(int));
+  int xblockoffset;
+  if ((x.size(0) == 0) || (x.size(1) == 0) || (x.size(2) == 0)) {
+    y.set_size(x.size(0), x.size(1));
+    firstBlockLength = x.size(0) * x.size(1);
+    counts.set_size(x.size(0), x.size(1));
+    for (xblockoffset = 0; xblockoffset < firstBlockLength; xblockoffset++) {
+      y[xblockoffset] = 0.0;
+      counts[xblockoffset] = 0;
+    }
   } else {
+    int bvstride;
     int ix;
     int lastBlockLength;
     int nblocks;
+    int vstride;
     int xoffset;
+    vstride = x.size(0) * x.size(1);
+    bvstride = vstride << 10;
+    y.set_size(x.size(0), x.size(1));
+    counts.set_size(x.size(0), x.size(1));
+    bsum.set_size(vstride);
     if (x.size(2) <= 1024) {
       firstBlockLength = x.size(2);
       lastBlockLength = 0;
@@ -127,7 +206,7 @@ void mean(const ::coder::array<double, 3U> &x, double y[16384])
         lastBlockLength = 1024;
       }
     }
-    for (int xj{0}; xj < 16384; xj++) {
+    for (int xj{0}; xj < vstride; xj++) {
       if (std::isnan(x[xj])) {
         y[xj] = 0.0;
         counts[xj] = 0;
@@ -135,51 +214,57 @@ void mean(const ::coder::array<double, 3U> &x, double y[16384])
         y[xj] = x[xj];
         counts[xj] = 1;
       }
+      bsum[xj] = 0.0;
     }
     for (int k{2}; k <= firstBlockLength; k++) {
-      xoffset = (k - 1) << 14;
-      for (int xj{0}; xj < 16384; xj++) {
+      xoffset = (k - 1) * vstride;
+      for (int xj{0}; xj < vstride; xj++) {
         ix = xoffset + xj;
         if (!std::isnan(x[ix])) {
-          y[xj] += x[ix];
-          counts[xj]++;
+          y[xj] = y[xj] + x[ix];
+          counts[xj] = counts[xj] + 1;
         }
       }
     }
     for (int ib{2}; ib <= nblocks; ib++) {
-      int hi;
-      firstBlockLength = (ib - 1) << 24;
-      for (int xj{0}; xj < 16384; xj++) {
-        ix = firstBlockLength + xj;
+      xblockoffset = (ib - 1) * bvstride;
+      for (int xj{0}; xj < vstride; xj++) {
+        ix = xblockoffset + xj;
         if (std::isnan(x[ix])) {
           bsum[xj] = 0.0;
         } else {
           bsum[xj] = x[ix];
-          counts[xj]++;
+          counts[xj] = counts[xj] + 1;
         }
       }
       if (ib == nblocks) {
-        hi = lastBlockLength;
+        firstBlockLength = lastBlockLength;
       } else {
-        hi = 1024;
+        firstBlockLength = 1024;
       }
-      for (int k{2}; k <= hi; k++) {
-        xoffset = firstBlockLength + ((k - 1) << 14);
-        for (int xj{0}; xj < 16384; xj++) {
+      for (int k{2}; k <= firstBlockLength; k++) {
+        xoffset = xblockoffset + (k - 1) * vstride;
+        for (int xj{0}; xj < vstride; xj++) {
           ix = xoffset + xj;
           if (!std::isnan(x[ix])) {
-            bsum[xj] += x[ix];
-            counts[xj]++;
+            bsum[xj] = bsum[xj] + x[ix];
+            counts[xj] = counts[xj] + 1;
           }
         }
       }
-      for (int xj{0}; xj < 16384; xj++) {
-        y[xj] += bsum[xj];
+      for (int xj{0}; xj < vstride; xj++) {
+        y[xj] = y[xj] + bsum[xj];
       }
     }
   }
-  for (firstBlockLength = 0; firstBlockLength < 16384; firstBlockLength++) {
-    y[firstBlockLength] /= static_cast<double>(counts[firstBlockLength]);
+  if ((y.size(0) == counts.size(0)) && (y.size(1) == counts.size(1))) {
+    firstBlockLength = y.size(0) * y.size(1);
+    for (xblockoffset = 0; xblockoffset < firstBlockLength; xblockoffset++) {
+      y[xblockoffset] =
+          y[xblockoffset] / static_cast<double>(counts[xblockoffset]);
+    }
+  } else {
+    b_binary_expand_op(y, counts);
   }
 }
 

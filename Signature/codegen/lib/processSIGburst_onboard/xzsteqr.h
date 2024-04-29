@@ -13,6 +13,7 @@
 
 // Include files
 #include "rtwtypes.h"
+#include "coder_array.h"
 #include <cstddef>
 #include <cstdlib>
 
@@ -20,7 +21,8 @@
 namespace coder {
 namespace internal {
 namespace reflapack {
-int xzsteqr(double d[128], double e[127], double z[16384]);
+int xzsteqr(::coder::array<double, 1U> &d, ::coder::array<double, 1U> &e,
+            ::coder::array<double, 2U> &z);
 
 }
 } // namespace internal

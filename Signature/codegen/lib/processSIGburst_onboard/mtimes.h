@@ -21,11 +21,20 @@
 namespace coder {
 namespace internal {
 namespace blas {
+void b_mtimes(const ::coder::array<double, 2U> &A,
+              const ::coder::array<double, 2U> &B, double C[4]);
+
+void mtimes(const ::coder::array<double, 2U> &A,
+            const ::coder::array<double, 2U> &B, ::coder::array<double, 2U> &C);
+
 void mtimes(const ::coder::array<creal_T, 2U> &A,
             const ::coder::array<creal_T, 2U> &B,
             ::coder::array<creal_T, 2U> &C);
 
-}
+void mtimes(const ::coder::array<double, 2U> &A,
+            const ::coder::array<double, 2U> &B, double C[9]);
+
+} // namespace blas
 } // namespace internal
 } // namespace coder
 

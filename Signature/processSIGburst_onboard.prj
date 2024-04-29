@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.coder" plugin-version="R2023a">
-  <configuration build-checksum="682866128" file="C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\Signature\processSIGburst_onboard.prj" location="C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\Signature" name="processSIGburst_onboard" target="target.unifiedcoder" target-name="MATLAB Coder">
+  <configuration build-checksum="501782642" file="C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\Signature\processSIGburst_onboard.prj" location="C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\Signature" name="processSIGburst_onboard" target="target.unifiedcoder" target-name="MATLAB Coder">
     <profile key="profile.mex">
       <param.BuiltInstrumentedMex>false</param.BuiltInstrumentedMex>
       <param.RanInstrumentedMex>false</param.RanInstrumentedMex>
@@ -621,7 +621,7 @@
     <param.AutoInferUnboundedSizeThreshold>2048</param.AutoInferUnboundedSizeThreshold>
     <param.EnableFixedPointStep>false</param.EnableFixedPointStep>
     <param.EnableScreener>true</param.EnableScreener>
-    <param.AnnotationChecksum>3951230197</param.AnnotationChecksum>
+    <param.AnnotationChecksum>2933882351</param.AnnotationChecksum>
     <var.LegacyTarget />
     <var.MirrorOnOpen>false</var.MirrorOnOpen>
     <param.FixedPointEnabled>false</param.FixedPointEnabled>
@@ -631,13 +631,13 @@
     <param.hdlParamStorage />
     <var.gc.lastOutputRoot>codegen\lib\processSIGburst_onboard</var.gc.lastOutputRoot>
     <var.gc.lastOutputType>C_CODE</var.gc.lastOutputType>
-    <var.gc.preBuildChecksum>2394597952</var.gc.preBuildChecksum>
+    <var.gc.preBuildChecksum>3152119778</var.gc.preBuildChecksum>
     <var.cfi.lastOutputRoot>codegen\mex\processSIGburst_onboard</var.cfi.lastOutputRoot>
-    <var.cfi.preBuildChecksum>1914515860</var.cfi.preBuildChecksum>
+    <var.cfi.preBuildChecksum>3011497004</var.cfi.preBuildChecksum>
     <var.lastCfiTestSnippet>eps = processSIGburst_onboard(wraw,cs,dz,bz,neoflp,rmin,rmax,nzfit,avgtype,fittype)</var.lastCfiTestSnippet>
     <var.outdatedOnRestore>false</var.outdatedOnRestore>
-    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;C:\Users\kfitz\Dropbox\MATLAB\Functions\CTDProcessing\ctd_proc2\nanmean.m&lt;/file&gt;&lt;file&gt;C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\GeneralTools\eof.m&lt;/file&gt;&lt;file&gt;C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\Signature\processSIGburst_onboard.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;3950175173&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
-    <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;C:\Users\kfitz\Dropbox\MATLAB\Functions\CTDProcessing\ctd_proc2\nanmean.m&lt;/file&gt;&lt;file&gt;C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\GeneralTools\eof.m&lt;/file&gt;&lt;file&gt;C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\Signature\processSIGburst_onboard.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
+    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;C:\Users\kfitz\Dropbox\MATLAB\Functions\CTDProcessing\ctd_proc2\nanmean.m&lt;/file&gt;&lt;file&gt;C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\Signature\processSIGburst_onboard.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;381873819&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
+    <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;C:\Users\kfitz\Dropbox\MATLAB\Functions\CTDProcessing\ctd_proc2\nanmean.m&lt;/file&gt;&lt;file&gt;C:\Users\kfitz\Github\MATLAB\Functions\SWIFT-codes\Signature\processSIGburst_onboard.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
     <param.forceMexBuild>false</param.forceMexBuild>
     <param.NoDefaultJIT>false</param.NoDefaultJIT>
     <param.configImportActive>false</param.configImportActive>
@@ -889,7 +889,7 @@
     </unset>
     <fileset.entrypoints>
       <file custom-data-expanded="false" value="${PROJECT_ROOT}\processSIGburst_onboard.m">
-        <Marker>1714398300192</Marker>
+        <Marker>1714420967308</Marker>
       </file>
     </fileset.entrypoints>
     <fileset.testbench />
@@ -909,7 +909,7 @@
           <idpTable>
             <type typeId="0">
               <Class>double</Class>
-              <Size>128 x :inf</Size>
+              <Size>:inf x :inf</Size>
               <Value />
               <InitialValue />
               <UserDefined>true</UserDefined>

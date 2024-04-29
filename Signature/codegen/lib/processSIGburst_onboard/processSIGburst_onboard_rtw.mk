@@ -2,7 +2,7 @@
 ## Makefile generated for component 'processSIGburst_onboard'. 
 ## 
 ## Makefile     : processSIGburst_onboard_rtw.mk
-## Generated on : Mon Apr 29 06:47:27 2024
+## Generated on : Mon Apr 29 13:04:41 2024
 ## Final product: ./processSIGburst_onboard.lib
 ## Product type : static-library
 ## 
@@ -183,7 +183,7 @@ DEFINES = $(DEFINES_) $(DEFINES_CUSTOM) $(DEFINES_STANDARD)
 ## SOURCE FILES
 ###########################################################################
 
-SRCS = $(START_DIR)/codegen/lib/processSIGburst_onboard/rt_nonfinite.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/rtGetNaN.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/rtGetInf.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard_initialize.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard_terminate.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/nanmean.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/movmedian.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/interp1.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/combineVectorElements.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/eof.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/eig.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xnrm2.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlaev2.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlartg.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/eigStandard.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdladiv.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/sortLE.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/mtimes.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/mean.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/permute.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/std.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/mldivide.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlarfg.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlarf.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzsteqr.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzgehrd.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlahqr.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlanv2.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdtrevc3.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xaxpy.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xgemv.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/sort.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/sortIdx.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlascl.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzunghr.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzgebal.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlaln2.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/SortedBuffer.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard_rtwutil.cpp
+SRCS = $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard_data.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/rt_nonfinite.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/rtGetNaN.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/rtGetInf.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard_initialize.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard_terminate.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/movmedian.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/abs.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/find.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/interp1.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/combineVectorElements.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/mtimes.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/eig.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/eigHermitianStandard.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xnrm2.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlaev2.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlartg.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xgeev.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdladiv.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/sortLE.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/diff.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/mean.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/repmat.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/permute.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/std.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/mldivide.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/strcmp.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlarfg.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzungqr.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlarf.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzsteqr.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlahqr.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlanv2.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzgebal.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzunghr.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdtrevc3.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xaxpy.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xgemv.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/sort.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/sortIdx.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlascl.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlaln2.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/div.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/SortedBuffer.cpp $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard_rtwutil.cpp
 
 ALL_SRCS = $(SRCS)
 
@@ -191,7 +191,7 @@ ALL_SRCS = $(SRCS)
 ## OBJECTS
 ###########################################################################
 
-OBJS = rt_nonfinite.obj rtGetNaN.obj rtGetInf.obj processSIGburst_onboard_initialize.obj processSIGburst_onboard_terminate.obj processSIGburst_onboard.obj nanmean.obj movmedian.obj interp1.obj combineVectorElements.obj eof.obj eig.obj xnrm2.obj xdlaev2.obj xzlartg.obj eigStandard.obj xdladiv.obj sortLE.obj mtimes.obj mean.obj permute.obj std.obj mldivide.obj xzlarfg.obj xzlarf.obj xzsteqr.obj xzgehrd.obj xdlahqr.obj xdlanv2.obj xdtrevc3.obj xaxpy.obj xgemv.obj sort.obj sortIdx.obj xzlascl.obj xzunghr.obj xzgebal.obj xdlaln2.obj SortedBuffer.obj processSIGburst_onboard_rtwutil.obj
+OBJS = processSIGburst_onboard_data.obj rt_nonfinite.obj rtGetNaN.obj rtGetInf.obj processSIGburst_onboard_initialize.obj processSIGburst_onboard_terminate.obj processSIGburst_onboard.obj movmedian.obj abs.obj find.obj interp1.obj combineVectorElements.obj mtimes.obj eig.obj eigHermitianStandard.obj xnrm2.obj xdlaev2.obj xzlartg.obj xgeev.obj xdladiv.obj sortLE.obj diff.obj mean.obj repmat.obj permute.obj std.obj mldivide.obj strcmp.obj xzlarfg.obj xzungqr.obj xzlarf.obj xzsteqr.obj xdlahqr.obj xdlanv2.obj xzgebal.obj xzunghr.obj xdtrevc3.obj xaxpy.obj xgemv.obj sort.obj sortIdx.obj xzlascl.obj xdlaln2.obj div.obj SortedBuffer.obj processSIGburst_onboard_rtwutil.obj
 
 ALL_OBJS = $(OBJS)
 
@@ -221,17 +221,43 @@ SYSTEM_LIBS =
 # C Compiler
 #---------------
 
+CFLAGS_OPTS = -fopenmp
 CFLAGS_BASIC = $(DEFINES) $(INCLUDES) @$(COMPILER_COMMAND_FILE)
 
-CFLAGS += $(CFLAGS_BASIC)
+CFLAGS += $(CFLAGS_OPTS) $(CFLAGS_BASIC)
 
 #-----------------
 # C++ Compiler
 #-----------------
 
+CPPFLAGS_OPTS = -fopenmp
 CPPFLAGS_BASIC = $(DEFINES) $(INCLUDES) @$(COMPILER_COMMAND_FILE)
 
-CPPFLAGS += $(CPPFLAGS_BASIC)
+CPPFLAGS += $(CPPFLAGS_OPTS) $(CPPFLAGS_BASIC)
+
+#---------------
+# C++ Linker
+#---------------
+
+CPP_LDFLAGS_ = -fopenmp
+
+CPP_LDFLAGS += $(CPP_LDFLAGS_)
+
+#------------------------------
+# C++ Shared Library Linker
+#------------------------------
+
+CPP_SHAREDLIB_LDFLAGS_ = -fopenmp
+
+CPP_SHAREDLIB_LDFLAGS += $(CPP_SHAREDLIB_LDFLAGS_)
+
+#-----------
+# Linker
+#-----------
+
+LDFLAGS_ = -fopenmp
+
+LDFLAGS += $(LDFLAGS_)
 
 #---------------------
 # MEX C++ Compiler
@@ -248,6 +274,14 @@ MEX_CPPFLAGS += $(MEX_CPP_Compiler_BASIC)
 MEX_Compiler_BASIC =  @$(COMPILER_COMMAND_FILE)
 
 MEX_CFLAGS += $(MEX_Compiler_BASIC)
+
+#--------------------------
+# Shared Library Linker
+#--------------------------
+
+SHAREDLIB_LDFLAGS_ = -fopenmp
+
+SHAREDLIB_LDFLAGS += $(SHAREDLIB_LDFLAGS_)
 
 ###########################################################################
 ## INLINED COMMANDS
@@ -334,6 +368,10 @@ $(PRODUCT) : $(OBJS) $(PREBUILT_OBJS)
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
+processSIGburst_onboard_data.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/processSIGburst_onboard_data.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
 rt_nonfinite.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/rt_nonfinite.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
@@ -358,11 +396,15 @@ processSIGburst_onboard.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/p
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-nanmean.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/nanmean.cpp
+movmedian.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/movmedian.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-movmedian.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/movmedian.cpp
+abs.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/abs.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+find.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/find.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -374,11 +416,15 @@ combineVectorElements.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/com
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-eof.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/eof.cpp
+mtimes.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/mtimes.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
 eig.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/eig.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+eigHermitianStandard.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/eigHermitianStandard.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -394,7 +440,7 @@ xzlartg.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlartg.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-eigStandard.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/eigStandard.cpp
+xgeev.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xgeev.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -406,11 +452,15 @@ sortLE.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/sortLE.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-mtimes.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/mtimes.cpp
+diff.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/diff.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
 mean.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/mean.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+repmat.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/repmat.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -426,7 +476,15 @@ mldivide.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/mldivide.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
+strcmp.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/strcmp.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
 xzlarfg.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlarfg.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+xzungqr.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzungqr.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -438,15 +496,19 @@ xzsteqr.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzsteqr.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-xzgehrd.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzgehrd.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
-
-
 xdlahqr.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlahqr.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
 xdlanv2.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlanv2.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+xzgebal.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzgebal.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+xzunghr.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzunghr.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
@@ -474,15 +536,11 @@ xzlascl.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzlascl.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 
-xzunghr.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzunghr.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
-
-
-xzgebal.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xzgebal.cpp
-	$(CPP) $(CPPFLAGS) -o "$@" "$<"
-
-
 xdlaln2.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/xdlaln2.cpp
+	$(CPP) $(CPPFLAGS) -o "$@" "$<"
+
+
+div.obj : $(START_DIR)/codegen/lib/processSIGburst_onboard/div.cpp
 	$(CPP) $(CPPFLAGS) -o "$@" "$<"
 
 

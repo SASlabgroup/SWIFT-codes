@@ -11,8 +11,8 @@ function eps = processSIGburst_onboard(wraw,cs,dz,bz,neoflp,rmin,rmax,nzfit,avgt
 % Replace 'opt' structure input with variables
 % Burst variables are now inputs
 % No need to check dimensions as prespecified   
-% Don't interpolate through bad pings, as those are tossed before computing eps
-
+% Don't interpolate through bad pings 
+%  ---- bad pings are currently tossed before computing eps
 
 % N pings + N z-bins
 [nbin,nping] = size(wraw);
@@ -47,7 +47,19 @@ end
 badping = sum(ispike)./nbin > 0.5;% 
 
 % Compute EOFs from good pings
-[eofs,alpha,~,~] = eof(winterp(:,~badping)');
+%[eofs,alpha,~,~] = eof(winterp(:,~badping)');
+X = winterp(:,~badping)';
+% [nsamp,~] = size(X);
+Xm = nanmean(X);
+% X0 = repmat(Xm,nsamp,1);
+X = X - Xm;
+%inan = isnan(X);
+X(isnan(X)) = 0;
+R = X'*X;
+[EOFs,E] = eig(R,'vector');
+[~,s] = sort(E,'descend');
+eofs = EOFs(:,s);
+alpha = (X*eofs);
 
 % Reconstruct w/high-mode EOFs
 wpeof = NaN(size(winterp));
