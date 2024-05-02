@@ -111,7 +111,7 @@ eval(['!mv buoy*.mat ConcatProcessed/'])
 !rm payload
 
 %% apply QC and rename results (not telemetry)
-[flist removed] = SWIFT_QC( 25, 0.5, 2 );
+%[flist removed] = SWIFT_QC( 25, 0.5, 2 );
 
 if isfield(SWIFT(1),'ID')
     load(['SWIFT' SWIFT(1).ID '_telemetry.mat'])
