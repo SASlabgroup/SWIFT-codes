@@ -96,7 +96,7 @@ end
 
 %% Load/Save/Plot Toggles
 
-%Default
+% Plotting toggles
 opt.readraw = false;% read raw binary files
 opt.saveSWIFT = false;% save updated SWIFT structure
 opt.saveSIG = false; %save detailed sig data in separate SIG structure
@@ -116,15 +116,15 @@ if length(varargin) >= 1
     end
 end
 
-%% QC Toggles (broadband)
+%% Other QC params
 
+% QC Options (broadband)
 opt.QCcorr = false;% (NOT recommended) standard, QC removes any data below 'mincorr'
 opt.QCbin = false;% QC entire bins with greater than pbadmax perecent bad correlation
 opt.QCping = false; % QC entire ping with greater than pbadmax percent bad correlation
 opt.QCfish = true;% detects fish from highly skewed amplitude distributions in a depth bin
 opt.QCalt = false; % trim data based on altimeter
 
-%% Processing parameters
 % Config Parameters
 opt.xz = 0.2; % depth of transducer [m]
 
@@ -133,9 +133,13 @@ opt.mincorr = 40; % burst-avg correlation minimum
 opt.maxamp = 150; % burst-avg amplitude maximum
 opt.maxwvar = 0.2; % burst-avg HR velocity (percent) error maximum
 opt.pbadmax = 80; % maximum percent 'bad' amp/corr/err values per bin or ping allowed
-opt.nsumeof = 3;% Default 3? Number of lowest-mode EOFs to remove from turbulent velocity
+opt.nsumeof = 5;% Default 3? Number of lowest-mode EOFs to remove from turbulent velocity
 
-% Data type
+if opt.nsumeof~=3
+    warning(['EOF filter changed to ' num2str(opt.nsumeof)])
+end
+
+%% Data type to be read in
 if opt.readraw
     ftype = '.dat';
 else
@@ -185,7 +189,7 @@ end
 SIG = struct;
 isig = 1;
 
-% Populate list of burst files, favor 'partial' burst files
+% Populate list of burst files
 bfiles = dir([missiondir 'SIG' slash 'Raw' slash '*' slash '*' ftype]);
 if isempty(bfiles)
     error('   No burst files found    ')
@@ -193,18 +197,18 @@ end
 bfiles = bfiles(~contains({bfiles.name},'smoothwHR'));
 
 % Deal with 'partial' files (two options)
-bfiles = bfiles(~contains({bfiles.name},'partial'));
-% % Only delete partial files if the full file exists (WHY!?)
-% ipart = find(contains({bfiles.name},'partial'));
-% idel = false(size(ipart));
-% for ip = 1:length(ipart)
-%     pname = bfiles(ipart(ip)).name;
-%     pdir = bfiles(ipart(ip)).folder;
-%     if exist([pdir slash pname(1:end-12) '.mat'])
-%         idel(ip) = true;
-%     end
-% end
-% bfiles(ipart(idel)-1) = [];
+%bfiles = bfiles(~contains({bfiles.name},'partial'));
+ipart = find(contains({bfiles.name},'partial'));
+idel = [];
+for ip = 1:length(ipart)
+    pname = bfiles(ipart(ip)).name;
+    mname = [pname(1:end-12) '.mat'];
+    pdir = bfiles(ipart(ip)).folder;
+    if exist([pdir slash mname])
+        idel = [idel find(strcmp({bfiles.name}',bfiles(1).name))];
+    end
+end
+bfiles(idel) = [];
 nburst = length(bfiles);
 
 %% Loop through and process burst files
