@@ -68,9 +68,9 @@ void b_xzlarf(int m, int n, int iv0, double tau, ::coder::array<double, 2U> &C,
       }
       i = iv0;
       b_i = ic0 + ldc * (lastv - 1);
-      for (int iac{ic0}; ldc < 0 ? iac >= b_i : iac <= b_i; iac += ldc) {
+      for (int iac = ic0; ldc < 0 ? iac >= b_i : iac <= b_i; iac += ldc) {
         rowright = (iac + lastc) - 1;
-        for (int ia{iac}; ia <= rowright; ia++) {
+        for (int ia = iac; ia <= rowright; ia++) {
           ijA = ia - iac;
           work[ijA] = work[ijA] + C[ia - 1] * C[i - 1];
         }
@@ -147,7 +147,7 @@ void xzlarf(int m, int n, int iv0, double tau, ::coder::array<double, 2U> &C,
       }
       iy = 0;
       b_i = ic0 + ldc * lastc;
-      for (int iac{ic0}; ldc < 0 ? iac >= b_i : iac <= b_i; iac += ldc) {
+      for (int iac = ic0; ldc < 0 ? iac >= b_i : iac <= b_i; iac += ldc) {
         c = 0.0;
         i = (iac + lastv) - 1;
         for (ia = iac; ia <= i; ia++) {
@@ -164,7 +164,7 @@ void xzlarf(int m, int n, int iv0, double tau, ::coder::array<double, 2U> &C,
         if (c != 0.0) {
           c *= -tau;
           b_i = lastv + i;
-          for (int iac{i}; iac < b_i; iac++) {
+          for (int iac = i; iac < b_i; iac++) {
             C[iac - 1] = C[iac - 1] + C[((iv0 + iac) - i) - 1] * c;
           }
         }

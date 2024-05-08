@@ -20,8 +20,8 @@
 namespace coder {
 namespace internal {
 namespace reflapack {
-double xdlaev2(double a, double b, double c, double &rt2, double *cs1,
-               double &sn1);
+double xdlaev2(double a, double b, double c, double *rt2, double *cs1,
+               double *sn1);
 
 }
 } // namespace internal

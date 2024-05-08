@@ -41,7 +41,7 @@ void b_mldivide(const double A[4], const ::coder::array<double, 2U> &B,
     a22 = A[r2 + 2] - a21 * a22_tmp;
     nb = B.size(1);
     Y.set_size(2, B.size(1));
-    for (int k{0}; k < nb; k++) {
+    for (int k = 0; k < nb; k++) {
       double d;
       d = (B[r2 + 2 * k] - B[r1 + 2 * k] * a21) / a22;
       Y[2 * k + 1] = d;
@@ -91,7 +91,7 @@ void mldivide(const double A[9], const ::coder::array<double, 2U> &B,
   b_A[r3 + 6] -= b_A[r3 + 3] * b_A[r2 + 6];
   rtemp = B.size(1);
   Y.set_size(3, B.size(1));
-  for (int k{0}; k < rtemp; k++) {
+  for (int k = 0; k < rtemp; k++) {
     double d;
     maxval = B[r1 + 3 * k];
     a21 = B[r2 + 3 * k] - maxval * b_A[r2];

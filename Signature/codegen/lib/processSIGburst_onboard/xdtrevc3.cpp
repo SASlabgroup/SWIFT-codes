@@ -15,6 +15,7 @@
 #include "xdlaln2.h"
 #include "xgemv.h"
 #include "coder_array.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Definitions
@@ -27,7 +28,7 @@ void xdtrevc3(const ::coder::array<double, 2U> &T,
   array<double, 2U> work;
   double x[4];
   double bignum;
-  double emax;
+  double s;
   double smlnum;
   int i;
   int ii;
@@ -59,10 +60,11 @@ void xdtrevc3(const ::coder::array<double, 2U> &T,
   n2 = (T.size(0) << 1) + 1;
   np1 = T.size(0) + 1;
   ip = 0;
-  for (int ki{n}; ki >= 1; ki--) {
+  for (int ki = n; ki >= 1; ki--) {
     if (ip == -1) {
       ip = 1;
     } else {
+      double emax;
       double smin;
       double wi;
       double wr;
@@ -77,26 +79,31 @@ void xdtrevc3(const ::coder::array<double, 2U> &T,
         wi = std::sqrt(std::abs(T[(ki + T.size(0) * (ki - 2)) - 1])) *
              std::sqrt(std::abs(T[(ki + T.size(0) * (ki - 1)) - 2]));
       }
-      smin = std::fmax(2.2204460492503131E-16 * (std::abs(wr) + wi), smlnum);
+      emax = 2.2204460492503131E-16 * (std::abs(wr) + wi);
+      if (emax >= smlnum) {
+        smin = emax;
+      } else {
+        smin = smlnum;
+      }
       if (ip == 0) {
-        double scale;
         work[(ki + work.size(0) * 2) - 1] = 1.0;
-        for (int k{0}; k <= ki - 2; k++) {
+        for (int k = 0; k <= ki - 2; k++) {
           work[k + work.size(0) * 2] = -T[k + T.size(0) * (ki - 1)];
         }
         j = ki - 2;
         while (j + 1 >= 1) {
           if ((j + 1 == 1) || (T[j + T.size(0) * (j - 1)] == 0.0)) {
+            double scale;
             i = j * n;
             scale = xdlaln2(1, 1, smin, T, (i + j) + 1, n, work, j + n2, n, wr,
-                            0.0, x, emax);
-            if ((emax > 1.0) && (work[j] > bignum / emax)) {
-              x[0] /= emax;
-              scale /= emax;
+                            0.0, x, &s);
+            if ((s > 1.0) && (work[j] > bignum / s)) {
+              x[0] /= s;
+              scale /= s;
             }
             if (scale != 1.0) {
               ii = n2 + ki;
-              for (int k{n2}; k < ii; k++) {
+              for (int k = n2; k < ii; k++) {
                 work[k - 1] = scale * work[k - 1];
               }
             }
@@ -104,18 +111,26 @@ void xdtrevc3(const ::coder::array<double, 2U> &T,
             blas::xaxpy(j, -x[0], T, i + 1, work, n2);
             j--;
           } else {
+            double scale;
             i = (j - 1) * n;
             scale = xdlaln2(2, 1, smin, T, i + j, n, work, (n2 + j) - 1, n, wr,
-                            0.0, x, emax);
-            if ((emax > 1.0) &&
-                (std::fmax(work[j - 1], work[j]) > bignum / emax)) {
-              x[0] /= emax;
-              x[1] /= emax;
-              scale /= emax;
+                            0.0, x, &s);
+            if (s > 1.0) {
+              double u1;
+              emax = work[j - 1];
+              u1 = work[j];
+              if ((emax >= u1) || rtIsNaN(u1)) {
+                u1 = emax;
+              }
+              if (u1 > bignum / s) {
+                x[0] /= s;
+                x[1] /= s;
+                scale /= s;
+              }
             }
             if (scale != 1.0) {
               ii = n2 + ki;
-              for (int k{n2}; k < ii; k++) {
+              for (int k = n2; k < ii; k++) {
                 work[k - 1] = scale * work[k - 1];
               }
             }
@@ -137,34 +152,34 @@ void xdtrevc3(const ::coder::array<double, 2U> &T,
           ii = 1;
           if (n > 1) {
             emax = std::abs(vr[j]);
-            for (int k{2}; k <= n; k++) {
-              scale = std::abs(vr[(j + k) - 1]);
-              if (scale > emax) {
+            for (int k = 2; k <= n; k++) {
+              s = std::abs(vr[(j + k) - 1]);
+              if (s > emax) {
                 ii = k;
-                emax = scale;
+                emax = s;
               }
             }
           }
         }
         emax = 1.0 / std::abs(vr[(ii + vr.size(0) * (ki - 1)) - 1]);
         i = j + n;
-        for (int k{j + 1}; k <= i; k++) {
+        for (int k = j + 1; k <= i; k++) {
           vr[k - 1] = emax * vr[k - 1];
         }
       } else {
-        double scale;
+        double u1;
         emax = T[(ki + T.size(0) * (ki - 1)) - 2];
-        scale = T[(ki + T.size(0) * (ki - 2)) - 1];
-        if (std::abs(emax) >= std::abs(scale)) {
+        s = T[(ki + T.size(0) * (ki - 2)) - 1];
+        if (std::abs(emax) >= std::abs(s)) {
           work[(ki + work.size(0)) - 2] = 1.0;
           work[(ki + work.size(0) * 2) - 1] = wi / emax;
         } else {
-          work[(ki + work.size(0)) - 2] = -wi / scale;
+          work[(ki + work.size(0)) - 2] = -wi / s;
           work[(ki + work.size(0) * 2) - 1] = 1.0;
         }
         work[(ki + work.size(0)) - 1] = 0.0;
         work[(ki + work.size(0) * 2) - 2] = 0.0;
-        for (int k{0}; k <= ki - 3; k++) {
+        for (int k = 0; k <= ki - 3; k++) {
           work[k + work.size(0)] =
               -work[(ki + work.size(0)) - 2] * T[k + T.size(0) * (ki - 2)];
           work[k + work.size(0) * 2] =
@@ -173,21 +188,22 @@ void xdtrevc3(const ::coder::array<double, 2U> &T,
         j = ki - 3;
         while (j + 1 >= 1) {
           if ((j + 1 == 1) || (T[j + T.size(0) * (j - 1)] == 0.0)) {
+            double scale;
             i = j * n;
             scale = xdlaln2(1, 2, smin, T, (i + j) + 1, n, work, (j + n) + 1, n,
-                            wr, wi, x, emax);
-            if ((emax > 1.0) && (work[j] > bignum / emax)) {
-              x[0] /= emax;
-              x[2] /= emax;
-              scale /= emax;
+                            wr, wi, x, &s);
+            if ((s > 1.0) && (work[j] > bignum / s)) {
+              x[0] /= s;
+              x[2] /= s;
+              scale /= s;
             }
             if (scale != 1.0) {
               ii = n + ki;
-              for (int k{np1}; k <= ii; k++) {
+              for (int k = np1; k <= ii; k++) {
                 work[k - 1] = scale * work[k - 1];
               }
               ii = n2 + ki;
-              for (int k{n2}; k < ii; k++) {
+              for (int k = n2; k < ii; k++) {
                 work[k - 1] = scale * work[k - 1];
               }
             }
@@ -197,25 +213,32 @@ void xdtrevc3(const ::coder::array<double, 2U> &T,
             blas::xaxpy(j, -x[2], T, i + 1, work, n2);
             j--;
           } else {
+            double scale;
             i = (j - 1) * n;
-            scale = xdlaln2(2, 2, smin, T, i + j, n, work, j + n, n, wr, wi, x,
-                            emax);
-            if ((emax > 1.0) &&
-                (std::fmax(work[j - 1], work[j]) > bignum / emax)) {
-              emax = 1.0 / emax;
-              x[0] *= emax;
-              x[2] *= emax;
-              x[1] *= emax;
-              x[3] *= emax;
-              scale *= emax;
+            scale =
+                xdlaln2(2, 2, smin, T, i + j, n, work, j + n, n, wr, wi, x, &s);
+            if (s > 1.0) {
+              emax = work[j - 1];
+              u1 = work[j];
+              if ((emax >= u1) || rtIsNaN(u1)) {
+                u1 = emax;
+              }
+              if (u1 > bignum / s) {
+                emax = 1.0 / s;
+                x[0] *= emax;
+                x[2] *= emax;
+                x[1] *= emax;
+                x[3] *= emax;
+                scale *= emax;
+              }
             }
             if (scale != 1.0) {
               ii = n + ki;
-              for (int k{np1}; k <= ii; k++) {
+              for (int k = np1; k <= ii; k++) {
                 work[k - 1] = scale * work[k - 1];
               }
               ii = n2 + ki;
-              for (int k{n2}; k < ii; k++) {
+              for (int k = n2; k < ii; k++) {
                 work[k - 1] = scale * work[k - 1];
               }
             }
@@ -240,30 +263,33 @@ void xdtrevc3(const ::coder::array<double, 2U> &T,
           emax = work[work.size(0)];
           ii = (ki - 2) * n;
           i = ii + n;
-          for (int k{ii + 1}; k <= i; k++) {
+          for (int k = ii + 1; k <= i; k++) {
             vr[k - 1] = emax * vr[k - 1];
           }
           emax = work[(ki + work.size(0) * 2) - 1];
           ii = (ki - 1) * n;
           i = ii + n;
-          for (int k{ii + 1}; k <= i; k++) {
+          for (int k = ii + 1; k <= i; k++) {
             vr[k - 1] = emax * vr[k - 1];
           }
         }
         emax = 0.0;
-        for (int k{0}; k < n; k++) {
-          emax = std::fmax(emax, std::abs(vr[k + vr.size(0) * (ki - 2)]) +
-                                     std::abs(vr[k + vr.size(0) * (ki - 1)]));
+        for (int k = 0; k < n; k++) {
+          u1 = std::abs(vr[k + vr.size(0) * (ki - 2)]) +
+               std::abs(vr[k + vr.size(0) * (ki - 1)]);
+          if ((!(emax >= u1)) && (!rtIsNaN(u1))) {
+            emax = u1;
+          }
         }
         emax = 1.0 / emax;
         ii = (ki - 2) * n;
         i = ii + n;
-        for (int k{ii + 1}; k <= i; k++) {
+        for (int k = ii + 1; k <= i; k++) {
           vr[k - 1] = emax * vr[k - 1];
         }
         ii = (ki - 1) * n;
         i = ii + n;
-        for (int k{ii + 1}; k <= i; k++) {
+        for (int k = ii + 1; k <= i; k++) {
           vr[k - 1] = emax * vr[k - 1];
         }
       }

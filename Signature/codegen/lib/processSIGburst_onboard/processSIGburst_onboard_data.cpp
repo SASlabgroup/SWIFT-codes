@@ -15,6 +15,6 @@
 // Variable Definitions
 omp_nest_lock_t processSIGburst_onboard_nestLockGlobal;
 
-bool isInitialized_processSIGburst_onboard{false};
+bool isInitialized_processSIGburst_onboard = false;
 
 // End of code generation (processSIGburst_onboard_data.cpp)

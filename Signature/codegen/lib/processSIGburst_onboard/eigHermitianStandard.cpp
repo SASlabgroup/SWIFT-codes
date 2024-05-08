@@ -16,6 +16,7 @@
 #include "xzsteqr.h"
 #include "xzungqr.h"
 #include "coder_array.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Definitions
@@ -56,7 +57,7 @@ void eigHermitianStandard(const ::coder::array<double, 2U> &A,
           exitg1 = 0;
           if (b_i <= ntau) {
             absx = std::abs(A[b_i + A.size(0) * ntau]);
-            if (std::isnan(absx)) {
+            if (rtIsNaN(absx)) {
               anrm = rtNaN;
               exitg1 = 1;
             } else {
@@ -74,7 +75,7 @@ void eigHermitianStandard(const ::coder::array<double, 2U> &A,
           exitg2 = true;
         }
       }
-      if (std::isinf(anrm) || std::isnan(anrm)) {
+      if (rtIsInf(anrm) || rtIsNaN(anrm)) {
         W.set_size(A.size(0));
         ntau = A.size(0);
         for (i = 0; i < ntau; i++) {
@@ -133,7 +134,7 @@ void eigHermitianStandard(const ::coder::array<double, 2U> &A,
               for (ntau = b_i + 1; ntau <= n; ntau++) {
                 tau[ntau - 1] = 0.0;
               }
-              for (int jj{0}; jj < taui_tmp; jj++) {
+              for (int jj = 0; jj < taui_tmp; jj++) {
                 loop_ub_tmp = b_i + jj;
                 temp1 = taui * b_A[(loop_ub_tmp + b_A.size(0) * b_i) + 1];
                 absx = 0.0;
@@ -143,7 +144,7 @@ void eigHermitianStandard(const ::coder::array<double, 2U> &A,
                         b_A[(loop_ub_tmp + b_A.size(0) * (loop_ub_tmp + 1)) +
                             1];
                 i1 = jj + 2;
-                for (int ii{i1}; ii <= taui_tmp; ii++) {
+                for (int ii = i1; ii <= taui_tmp; ii++) {
                   tau_tmp = b_i + ii;
                   b_tau_tmp = b_A[tau_tmp + b_A.size(0) * (loop_ub_tmp + 1)];
                   tau[tau_tmp - 1] = tau[tau_tmp - 1] + temp1 * b_tau_tmp;
@@ -168,7 +169,7 @@ void eigHermitianStandard(const ::coder::array<double, 2U> &A,
                       tau[tau_tmp] + absx * b_A[(ntau + loop_ub_tmp) + 1];
                 }
               }
-              for (int jj{0}; jj < taui_tmp; jj++) {
+              for (int jj = 0; jj < taui_tmp; jj++) {
                 loop_ub_tmp = b_i + jj;
                 temp1 = b_A[(loop_ub_tmp + b_A.size(0) * b_i) + 1];
                 absx = tau[loop_ub_tmp];
@@ -178,7 +179,7 @@ void eigHermitianStandard(const ::coder::array<double, 2U> &A,
                      b_tau_tmp) -
                     b_tau_tmp;
                 i1 = jj + 2;
-                for (int ii{i1}; ii <= taui_tmp; ii++) {
+                for (int ii = i1; ii <= taui_tmp; ii++) {
                   ntau = b_i + ii;
                   b_A[ntau + b_A.size(0) * (loop_ub_tmp + 1)] =
                       (b_A[ntau + b_A.size(0) * (loop_ub_tmp + 1)] -

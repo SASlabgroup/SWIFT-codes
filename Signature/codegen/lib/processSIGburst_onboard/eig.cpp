@@ -18,7 +18,7 @@
 #include "xzlarfg.h"
 #include "xzungqr.h"
 #include "coder_array.h"
-#include <cmath>
+#include "rt_nonfinite.h"
 
 // Function Definitions
 namespace coder {
@@ -39,20 +39,20 @@ void eig(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 2U> &V,
     iajm1 = A.size(0) * A.size(1);
     p = true;
     for (ntau = 0; ntau < iajm1; ntau++) {
-      if ((!p) || (std::isinf(A[ntau]) || std::isnan(A[ntau]))) {
+      if ((!p) || (rtIsInf(A[ntau]) || rtIsNaN(A[ntau]))) {
         p = false;
       }
     }
     if (!p) {
       V.set_size(A.size(0), A.size(0));
       ntau = A.size(0) * A.size(0);
-      for (int i{0}; i < ntau; i++) {
+      for (int i = 0; i < ntau; i++) {
         V[i].re = rtNaN;
         V[i].im = 0.0;
       }
       D.set_size(A.size(0));
       ntau = A.size(0);
-      for (int i{0}; i < ntau; i++) {
+      for (int i = 0; i < ntau; i++) {
         D[i].re = rtNaN;
         D[i].im = 0.0;
       }

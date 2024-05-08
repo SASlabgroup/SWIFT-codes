@@ -57,8 +57,8 @@ static coder::array<char, 2U> argInit_1xUnbounded_char_T()
   // Change this size to the value that the application requires.
   result.set_size(1, 2);
   // Loop over the array to initialize each element.
-  for (int idx0{0}; idx0 < 1; idx0++) {
-    for (int idx1{0}; idx1 < result.size(1); idx1++) {
+  for (int idx0 = 0; idx0 < 1; idx0++) {
+    for (int idx1 = 0; idx1 < result.size(1); idx1++) {
       // Set the value of the array element.
       // Change this value to the value that the application requires.
       result[idx1] = argInit_char_T();
@@ -74,8 +74,8 @@ static coder::array<double, 2U> argInit_UnboundedxUnbounded_real_T()
   // Change this size to the value that the application requires.
   result.set_size(2, 2);
   // Loop over the array to initialize each element.
-  for (int idx0{0}; idx0 < result.size(0); idx0++) {
-    for (int idx1{0}; idx1 < result.size(1); idx1++) {
+  for (int idx0 = 0; idx0 < result.size(0); idx0++) {
+    for (int idx1 = 0; idx1 < result.size(1); idx1++) {
       // Set the value of the array element.
       // Change this value to the value that the application requires.
       result[idx0 + result.size(0) * idx1] = argInit_real_T();

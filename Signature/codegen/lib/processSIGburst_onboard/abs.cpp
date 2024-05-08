@@ -21,7 +21,7 @@ void b_abs(const ::coder::array<double, 2U> &x, ::coder::array<double, 2U> &y)
   int nx;
   nx = x.size(0) * x.size(1);
   y.set_size(x.size(0), x.size(1));
-  for (int k{0}; k < nx; k++) {
+  for (int k = 0; k < nx; k++) {
     y[k] = std::abs(x[k]);
   }
 }

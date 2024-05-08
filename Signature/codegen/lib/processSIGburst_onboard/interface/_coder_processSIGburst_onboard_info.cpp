@@ -20,7 +20,7 @@ static const mxArray *emlrtMexFcnResolvedFunctionsInfo();
 static const mxArray *emlrtMexFcnResolvedFunctionsInfo()
 {
   const mxArray *nameCaptureInfo;
-  const char_T *data[6]{
+  const char_T *data[6] = {
       "789ced55cd6e13311076a0fc5c8070e18ed41b2552222104b7909f76aba424ec160ab80a"
       "fbe3345676edd4f6d2949780c7e0c82370e0006fc0850b4fc26eec6d"
       "924dcd464a59a42a73d8f1e88bfd7d33138f41c168170000b781b4af77a5bfa5e2a2f257"
@@ -42,7 +42,7 @@ static const mxArray *emlrtMexFcnResolvedFunctionsInfo()
       "55e6b45af54e281baee7f3bcade7f3f9f9ace7b3b4f57cfe3b4f960ea089fff5f97f0091"
       "df4f67",
       ""};
-  nameCaptureInfo = nullptr;
+  nameCaptureInfo = NULL;
   emlrtNameCaptureMxArrayR2016a(&data[0], 4568U, &nameCaptureInfo);
   return nameCaptureInfo;
 }
@@ -52,10 +52,10 @@ mxArray *emlrtMexFcnProperties()
   mxArray *xEntryPoints;
   mxArray *xInputs;
   mxArray *xResult;
-  const char_T *propFieldName[7]{
+  const char_T *propFieldName[7] = {
       "Version",      "ResolvedFunctions", "Checksum",    "EntryPoints",
       "CoverageInfo", "IsPolymorphic",     "PropertyList"};
-  const char_T *epFieldName[6]{
+  const char_T *epFieldName[6] = {
       "Name",           "NumberOfInputs", "NumberOfOutputs",
       "ConstantInputs", "FullPath",       "TimeStamp"};
   xEntryPoints =
@@ -73,7 +73,7 @@ mxArray *emlrtMexFcnProperties()
       emlrtMxCreateString("C:\\Users\\kfitz\\Github\\MATLAB\\Functions\\SWIFT-"
                           "codes\\Signature\\processSIGburst_onboard.m"));
   emlrtSetField(xEntryPoints, 0, "TimeStamp",
-                emlrtMxCreateDoubleScalar(739371.53973379626));
+                emlrtMxCreateDoubleScalar(739371.5548611111));
   xResult =
       emlrtCreateStructMatrix(1, 1, 7, (const char_T **)&propFieldName[0]);
   emlrtSetField(xResult, 0, "Version",

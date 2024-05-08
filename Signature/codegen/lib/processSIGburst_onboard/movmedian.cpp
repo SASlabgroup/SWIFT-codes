@@ -13,6 +13,7 @@
 #include "SortedBuffer.h"
 #include "rt_nonfinite.h"
 #include "coder_array.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Definitions
@@ -52,7 +53,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
     y[i] = 0.0;
   }
   npages = x.size(1);
-  for (int p{0}; p < npages; p++) {
+  for (int p = 0; p < npages; p++) {
     int ny;
     int workspace_ixfirst_tmp;
     ny = x.size(0);
@@ -83,7 +84,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
       } else {
         iRightLast = kright + 1;
       }
-      for (int b_k{iLeftLast}; b_k <= iRightLast; b_k++) {
+      for (int b_k = iLeftLast; b_k <= iRightLast; b_k++) {
         s.insert(x[(workspace_ixfirst_tmp + b_k) - 1]);
       }
       if (s.nbuf == 0) {
@@ -94,7 +95,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
           y[workspace_ixfirst_tmp] = s.buf[mid];
         } else {
           d = s.buf[mid - 1];
-          if (((d < 0.0) != (s.buf[mid] < 0.0)) || std::isinf(d)) {
+          if (((d < 0.0) != (s.buf[mid] < 0.0)) || rtIsInf(d)) {
             y[workspace_ixfirst_tmp] = (d + s.buf[mid]) / 2.0;
           } else {
             y[workspace_ixfirst_tmp] = d + (s.buf[mid] - d) / 2.0;
@@ -102,7 +103,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
         }
       }
       if (k0 + 1 > nx) {
-        for (int b_k{2}; b_k <= ny; b_k++) {
+        for (int b_k = 2; b_k <= ny; b_k++) {
           int k1;
           bool b_remove;
           bool guard1;
@@ -140,7 +141,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
           if (guard1) {
             if (insert) {
               s.insert(xnew);
-            } else if (b_remove && (!std::isnan(xold))) {
+            } else if (b_remove && (!rtIsNaN(xold))) {
               if (s.nbuf == 1) {
                 if (xold == s.buf[0]) {
                   s.nbuf = 0;
@@ -168,7 +169,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
               y[i] = s.buf[mid];
             } else {
               d = s.buf[mid - 1];
-              if (((d < 0.0) != (s.buf[mid] < 0.0)) || std::isinf(d)) {
+              if (((d < 0.0) != (s.buf[mid] < 0.0)) || rtIsInf(d)) {
                 y[i] = (d + s.buf[mid]) / 2.0;
               } else {
                 y[i] = d + (s.buf[mid] - d) / 2.0;
@@ -182,7 +183,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
         k0 = kleft + 2;
         k1 = nx - kright;
         i = kleft + 1;
-        for (int b_k{2}; b_k <= i; b_k++) {
+        for (int b_k = 2; b_k <= i; b_k++) {
           s.insert(x[((workspace_ixfirst_tmp + b_k) + kright) - 1]);
           i1 = (workspace_ixfirst_tmp + b_k) - 1;
           if (s.nbuf == 0) {
@@ -193,7 +194,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
               y[i1] = s.buf[mid];
             } else {
               d = s.buf[mid - 1];
-              if (((d < 0.0) != (s.buf[mid] < 0.0)) || std::isinf(d)) {
+              if (((d < 0.0) != (s.buf[mid] < 0.0)) || rtIsInf(d)) {
                 y[i1] = (d + s.buf[mid]) / 2.0;
               } else {
                 y[i1] = d + (s.buf[mid] - d) / 2.0;
@@ -201,7 +202,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
             }
           }
         }
-        for (int b_k{k0}; b_k <= k1; b_k++) {
+        for (int b_k = k0; b_k <= k1; b_k++) {
           i = (workspace_ixfirst_tmp + b_k) - 1;
           s.replace(x[(i - kleft) - 1], x[i + kright]);
           if (s.nbuf == 0) {
@@ -212,7 +213,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
               y[i] = s.buf[mid];
             } else {
               d = s.buf[mid - 1];
-              if (((d < 0.0) != (s.buf[mid] < 0.0)) || std::isinf(d)) {
+              if (((d < 0.0) != (s.buf[mid] < 0.0)) || rtIsInf(d)) {
                 y[i] = (d + s.buf[mid]) / 2.0;
               } else {
                 y[i] = d + (s.buf[mid] - d) / 2.0;
@@ -221,10 +222,10 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
           }
         }
         i = k1 + 1;
-        for (int b_k{i}; b_k <= ny; b_k++) {
+        for (int b_k = i; b_k <= ny; b_k++) {
           i1 = workspace_ixfirst_tmp + b_k;
           k1 = (i1 - kleft) - 2;
-          if (!std::isnan(x[k1])) {
+          if (!rtIsNaN(x[k1])) {
             if (s.nbuf == 1) {
               if (x[k1] == s.buf[0]) {
                 s.nbuf = 0;
@@ -250,7 +251,7 @@ void movmedian(const ::coder::array<double, 2U> &x, double k,
               y[i1] = s.buf[mid];
             } else {
               d = s.buf[mid - 1];
-              if (((d < 0.0) != (s.buf[mid] < 0.0)) || std::isinf(d)) {
+              if (((d < 0.0) != (s.buf[mid] < 0.0)) || rtIsInf(d)) {
                 y[i1] = (d + s.buf[mid]) / 2.0;
               } else {
                 y[i1] = d + (s.buf[mid] - d) / 2.0;

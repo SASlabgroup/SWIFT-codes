@@ -30,32 +30,32 @@ void xzunghr(int n, int ilo, int ihi, ::coder::array<double, 2U> &A, int lda,
   int nh;
   nh = ihi - ilo;
   a = ilo + 1;
-  for (int j{ihi}; j >= a; j--) {
+  for (int j = ihi; j >= a; j--) {
     ia = (j - 1) * lda - 1;
-    for (int i{0}; i <= j - 2; i++) {
+    for (int i = 0; i <= j - 2; i++) {
       A[(ia + i) + 1] = 0.0;
     }
     iajm1 = ia - lda;
     b_i = j + 1;
-    for (int i{b_i}; i <= ihi; i++) {
+    for (int i = b_i; i <= ihi; i++) {
       A[ia + i] = A[iajm1 + i];
     }
     b_i = ihi + 1;
-    for (int i{b_i}; i <= n; i++) {
+    for (int i = b_i; i <= n; i++) {
       A[ia + i] = 0.0;
     }
   }
-  for (int j{0}; j < ilo; j++) {
+  for (int j = 0; j < ilo; j++) {
     ia = j * lda;
-    for (int i{0}; i < n; i++) {
+    for (int i = 0; i < n; i++) {
       A[ia + i] = 0.0;
     }
     A[ia + j] = 1.0;
   }
   b_i = ihi + 1;
-  for (int j{b_i}; j <= n; j++) {
+  for (int j = b_i; j <= n; j++) {
     ia = (j - 1) * lda;
-    for (int i{0}; i < n; i++) {
+    for (int i = 0; i < n; i++) {
       A[ia + i] = 0.0;
     }
     A[(ia + j) - 1] = 1.0;
@@ -63,9 +63,9 @@ void xzunghr(int n, int ilo, int ihi, ::coder::array<double, 2U> &A, int lda,
   ia0 = ilo + ilo * lda;
   if (nh >= 1) {
     b_i = nh - 1;
-    for (int j{nh}; j <= b_i; j++) {
+    for (int j = nh; j <= b_i; j++) {
       ia = ia0 + j * lda;
-      for (int i{0}; i <= b_i; i++) {
+      for (int i = 0; i <= b_i; i++) {
         A[ia + i] = 0.0;
       }
       A[ia + j] = 1.0;
@@ -78,7 +78,7 @@ void xzunghr(int n, int ilo, int ihi, ::coder::array<double, 2U> &A, int lda,
     for (b_i = 0; b_i < a; b_i++) {
       work[b_i] = 0.0;
     }
-    for (int i{nh}; i >= 1; i--) {
+    for (int i = nh; i >= 1; i--) {
       iajm1 = (ia0 + i) + (i - 1) * lda;
       if (i < nh) {
         A[iajm1 - 1] = 1.0;
@@ -86,12 +86,12 @@ void xzunghr(int n, int ilo, int ihi, ::coder::array<double, 2U> &A, int lda,
         xzlarf(b_i + 1, b_i, iajm1, tau[ia], A, iajm1 + lda, lda, work);
         a = iajm1 + 1;
         b_i = (iajm1 + nh) - i;
-        for (int j{a}; j <= b_i; j++) {
+        for (int j = a; j <= b_i; j++) {
           A[j - 1] = -tau[ia] * A[j - 1];
         }
       }
       A[iajm1 - 1] = 1.0 - tau[ia];
-      for (int j{0}; j <= i - 2; j++) {
+      for (int j = 0; j <= i - 2; j++) {
         A[(iajm1 - j) - 2] = 0.0;
       }
       ia--;

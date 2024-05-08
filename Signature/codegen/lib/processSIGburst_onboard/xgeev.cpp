@@ -21,6 +21,7 @@
 #include "xzlascl.h"
 #include "xzunghr.h"
 #include "coder_array.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Definitions
@@ -62,7 +63,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
       exitg1 = false;
       while ((!exitg1) && (k <= ntau - 1)) {
         absxk = std::abs(A[k]);
-        if (std::isnan(absxk)) {
+        if (rtIsNaN(absxk)) {
           anrm = rtNaN;
           exitg1 = true;
         } else {
@@ -73,7 +74,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
         }
       }
     }
-    if (std::isinf(anrm) || std::isnan(anrm)) {
+    if (rtIsInf(anrm) || rtIsNaN(anrm)) {
       W.set_size(A.size(0));
       ntau = A.size(0);
       for (i = 0; i < ntau; i++) {
@@ -105,7 +106,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
         cscale = 1.4885657073574029E+138;
         reflapack::xzlascl(anrm, cscale, A.size(0), A.size(0), b_A, A.size(0));
       }
-      ilo = reflapack::xzgebal(b_A, scale, ihi);
+      ilo = reflapack::xzgebal(b_A, scale, &ihi);
       b_n = b_A.size(0);
       if (b_A.size(0) < 1) {
         ntau = 0;
@@ -114,10 +115,10 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
       }
       wr.set_size(ntau);
       if ((ihi - ilo) + 1 > 1) {
-        for (int b_i{0}; b_i <= ilo - 2; b_i++) {
+        for (int b_i = 0; b_i <= ilo - 2; b_i++) {
           wr[b_i] = 0.0;
         }
-        for (int b_i{ihi}; b_i <= ntau; b_i++) {
+        for (int b_i = ihi; b_i <= ntau; b_i++) {
           wr[b_i - 1] = 0.0;
         }
         work.set_size(b_A.size(0));
@@ -126,7 +127,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
           work[i] = 0.0;
         }
         i = ihi - 1;
-        for (int b_i{ilo}; b_i <= i; b_i++) {
+        for (int b_i = ilo; b_i <= i; b_i++) {
           ntau = (b_i - 1) * b_n;
           in = b_i * b_n + 1;
           absxk = b_A[b_i + b_A.size(0) * (b_i - 1)];
@@ -157,7 +158,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
         b_n = vr.size(0);
         if ((vr.size(0) != 0) && (vr.size(1) != 0)) {
           if (ilo != ihi) {
-            for (int b_i{ilo}; b_i <= ihi; b_i++) {
+            for (int b_i = ilo; b_i <= ihi; b_i++) {
               if (b_n >= 1) {
                 i = b_i + b_n * (b_n - 1);
                 for (k = b_i; b_n < 0 ? k >= i : k <= i; k += b_n) {
@@ -167,7 +168,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
             }
           }
           i = ilo - 1;
-          for (int b_i{i}; b_i >= 1; b_i--) {
+          for (int b_i = i; b_i >= 1; b_i--) {
             s = scale[b_i - 1];
             if (static_cast<int>(s) != b_i) {
               for (k = 0; k < b_n; k++) {
@@ -181,7 +182,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
             }
           }
           i = ihi + 1;
-          for (int b_i{i}; b_i <= b_n; b_i++) {
+          for (int b_i = i; b_i <= b_n; b_i++) {
             s = scale[b_i - 1];
             if (static_cast<int>(s) != b_i) {
               for (k = 0; k < b_n; k++) {
@@ -195,10 +196,11 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
             }
           }
         }
-        for (int b_i{0}; b_i < n; b_i++) {
+        for (int b_i = 0; b_i < n; b_i++) {
           if (!(work[b_i] < 0.0)) {
             if ((b_i + 1 != n) && (work[b_i] > 0.0)) {
               double cs;
+              double f1;
               double g1;
               in = b_i * n;
               scl_tmp = (b_i + 1) * n;
@@ -228,49 +230,60 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
                   }
                 }
               }
-              s = vr[k + vr.size(0) * b_i];
+              f1 = vr[k + vr.size(0) * b_i];
               g1 = vr[k + vr.size(0) * (b_i + 1)];
               if (g1 == 0.0) {
                 cs = 1.0;
-                g1 = 0.0;
-              } else if (s == 0.0) {
+                f1 = 0.0;
+              } else if (f1 == 0.0) {
                 cs = 0.0;
-                g1 = 1.0;
+                f1 = 1.0;
               } else {
                 double b_scale_tmp;
                 double scale_tmp;
-                scale_tmp = std::abs(s);
+                scale_tmp = std::abs(f1);
                 b_scale_tmp = std::abs(g1);
-                absxk = std::fmax(scale_tmp, b_scale_tmp);
+                if ((scale_tmp >= b_scale_tmp) || rtIsNaN(b_scale_tmp)) {
+                  absxk = scale_tmp;
+                } else {
+                  absxk = b_scale_tmp;
+                }
                 ntau = 0;
                 if (absxk >= 7.4428285367870146E+137) {
                   do {
                     ntau++;
-                    s *= 1.3435752215134178E-138;
+                    f1 *= 1.3435752215134178E-138;
                     g1 *= 1.3435752215134178E-138;
-                  } while ((std::fmax(std::abs(s), std::abs(g1)) >=
-                            7.4428285367870146E+137) &&
-                           (ntau < 20));
-                  absxk = rt_hypotd_snf(s, g1);
-                  cs = s / absxk;
-                  g1 /= absxk;
+                    absxk = std::abs(f1);
+                    s = std::abs(g1);
+                    if ((absxk >= s) || rtIsNaN(s)) {
+                      s = absxk;
+                    }
+                  } while ((s >= 7.4428285367870146E+137) && (ntau < 20));
+                  absxk = rt_hypotd_snf(f1, g1);
+                  cs = f1 / absxk;
+                  f1 = g1 / absxk;
                 } else if (absxk <= 1.3435752215134178E-138) {
                   do {
-                    s *= 7.4428285367870146E+137;
+                    f1 *= 7.4428285367870146E+137;
                     g1 *= 7.4428285367870146E+137;
-                  } while (!!(std::fmax(std::abs(s), std::abs(g1)) <=
-                              1.3435752215134178E-138));
-                  absxk = rt_hypotd_snf(s, g1);
-                  cs = s / absxk;
-                  g1 /= absxk;
+                    absxk = std::abs(f1);
+                    s = std::abs(g1);
+                    if ((absxk >= s) || rtIsNaN(s)) {
+                      s = absxk;
+                    }
+                  } while (!!(s <= 1.3435752215134178E-138));
+                  absxk = rt_hypotd_snf(f1, g1);
+                  cs = f1 / absxk;
+                  f1 = g1 / absxk;
                 } else {
-                  absxk = rt_hypotd_snf(s, g1);
-                  cs = s / absxk;
-                  g1 /= absxk;
+                  absxk = rt_hypotd_snf(f1, g1);
+                  cs = f1 / absxk;
+                  f1 = g1 / absxk;
                 }
                 if ((scale_tmp > b_scale_tmp) && (cs < 0.0)) {
                   cs = -cs;
-                  g1 = -g1;
+                  f1 = -f1;
                 }
               }
               for (ihi = 0; ihi < n; ihi++) {
@@ -278,8 +291,8 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
                 absxk = vr[ntau];
                 u0 = in + ihi;
                 s = vr[u0];
-                vr[ntau] = cs * absxk - g1 * s;
-                vr[u0] = cs * s + g1 * absxk;
+                vr[ntau] = cs * absxk - f1 * s;
+                vr[u0] = cs * s + f1 * absxk;
               }
               vr[k + vr.size(0) * (b_i + 1)] = 0.0;
             } else {
@@ -300,7 +313,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
         }
         for (ntau = 2; ntau <= n; ntau++) {
           if ((work[ntau - 2] > 0.0) && (work[ntau - 1] < 0.0)) {
-            for (int b_i{0}; b_i < n; b_i++) {
+            for (int b_i = 0; b_i < n; b_i++) {
               absxk = VR[b_i + VR.size(0) * (ntau - 2)].re;
               s = VR[b_i + VR.size(0) * (ntau - 1)].re;
               VR[b_i + VR.size(0) * (ntau - 2)].re = absxk;
@@ -328,7 +341,7 @@ int xgeev(const ::coder::array<double, 2U> &A, ::coder::array<creal_T, 1U> &W,
         }
       }
       if (info != 0) {
-        for (int b_i{ilo}; b_i <= info; b_i++) {
+        for (int b_i = ilo; b_i <= info; b_i++) {
           wr[b_i - 1] = rtNaN;
           work[b_i - 1] = 0.0;
         }

@@ -18,7 +18,7 @@ namespace coder {
 namespace internal {
 bool b_strcmp(const ::coder::array<char, 2U> &a)
 {
-  static const char cv[4]{'m', 'e', 'a', 'n'};
+  static const char cv[4] = {'m', 'e', 'a', 'n'};
   bool b_bool;
   b_bool = false;
   if (a.size(1) == 4) {
@@ -44,7 +44,7 @@ bool b_strcmp(const ::coder::array<char, 2U> &a)
 
 bool c_strcmp(const ::coder::array<char, 2U> &a)
 {
-  static const char cv[7]{'l', 'o', 'g', 'm', 'e', 'a', 'n'};
+  static const char cv[7] = {'l', 'o', 'g', 'm', 'e', 'a', 'n'};
   bool b_bool;
   b_bool = false;
   if (a.size(1) == 7) {

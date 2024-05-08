@@ -20,7 +20,7 @@
 namespace coder {
 namespace internal {
 namespace reflapack {
-double xdladiv(double a, double b, double c, double d, double &q);
+double xdladiv(double a, double b, double c, double d, double *q);
 
 }
 } // namespace internal

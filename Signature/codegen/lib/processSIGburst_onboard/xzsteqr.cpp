@@ -16,6 +16,7 @@
 #include "xzlartg.h"
 #include "xzlascl.h"
 #include "coder_array.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Declarations
@@ -42,7 +43,7 @@ static void b_rotateRight(int m, int n, ::coder::array<double, 2U> &z, int iz0,
                           int ldz, const ::coder::array<double, 1U> &cs,
                           int ic0, int is0)
 {
-  for (int j{0}; j <= n - 2; j++) {
+  for (int j = 0; j <= n - 2; j++) {
     double ctemp;
     double stemp;
     int offsetj;
@@ -52,7 +53,7 @@ static void b_rotateRight(int m, int n, ::coder::array<double, 2U> &z, int iz0,
     offsetj = (j * ldz + iz0) - 2;
     offsetjp1 = ((j + 1) * ldz + iz0) - 2;
     if ((ctemp != 1.0) || (stemp != 0.0)) {
-      for (int i{0}; i < m; i++) {
+      for (int i = 0; i < m; i++) {
         double temp;
         int b_i;
         int temp_tmp;
@@ -72,7 +73,7 @@ static void rotateRight(int m, int n, ::coder::array<double, 2U> &z, int iz0,
 {
   int i;
   i = n - 1;
-  for (int j{i}; j >= 1; j--) {
+  for (int j = i; j >= 1; j--) {
     double ctemp;
     double stemp;
     int offsetj;
@@ -82,7 +83,7 @@ static void rotateRight(int m, int n, ::coder::array<double, 2U> &z, int iz0,
     offsetj = ((j - 1) * ldz + iz0) - 2;
     offsetjp1 = (j * ldz + iz0) - 2;
     if ((ctemp != 1.0) || (stemp != 0.0)) {
-      for (int b_i{0}; b_i < m; b_i++) {
+      for (int b_i = 0; b_i < m; b_i++) {
         double temp;
         int i1;
         int temp_tmp;
@@ -202,7 +203,7 @@ int xzsteqr(::coder::array<double, 1U> &d, ::coder::array<double, 1U> &e,
             while ((!exitg2) && (b_i <= iy - 2)) {
               lwork = l + b_i;
               tst = std::abs(d[lwork]);
-              if (std::isnan(tst)) {
+              if (rtIsNaN(tst)) {
                 anorm = rtNaN;
                 exitg2 = true;
               } else {
@@ -210,7 +211,7 @@ int xzsteqr(::coder::array<double, 1U> &d, ::coder::array<double, 1U> &e,
                   anorm = tst;
                 }
                 tst = std::abs(e[lwork]);
-                if (std::isnan(tst)) {
+                if (rtIsNaN(tst)) {
                   anorm = rtNaN;
                   exitg2 = true;
                 } else {
@@ -224,7 +225,7 @@ int xzsteqr(::coder::array<double, 1U> &d, ::coder::array<double, 1U> &e,
           }
           iscale = 0;
           if (!(anorm == 0.0)) {
-            if (std::isinf(anorm) || std::isnan(anorm)) {
+            if (rtIsInf(anorm) || rtIsNaN(anorm)) {
               lwork = d.size(0);
               d.set_size(lwork);
               for (i = 0; i < lwork; i++) {
@@ -283,7 +284,7 @@ int xzsteqr(::coder::array<double, 1U> &d, ::coder::array<double, 1U> &e,
                       exitg4 = 1;
                     }
                   } else if (m == l + 2) {
-                    d[l] = xdlaev2(d[l], e[l], d[l + 1], c, &work[l], tst);
+                    d[l] = xdlaev2(d[l], e[l], d[l + 1], &c, &work[l], &tst);
                     d[l + 1] = c;
                     lwork = n + l;
                     work[lwork - 1] = tst;
@@ -314,7 +315,7 @@ int xzsteqr(::coder::array<double, 1U> &d, ::coder::array<double, 1U> &e,
                       double b_tmp;
                       b_tmp = e[b_i - 1];
                       b = c * b_tmp;
-                      c = xzlartg(g, tst * b_tmp, s, r);
+                      c = xzlartg(g, tst * b_tmp, &s, &r);
                       tst = s;
                       if (b_i != m - 1) {
                         e[b_i] = r;
@@ -363,8 +364,8 @@ int xzsteqr(::coder::array<double, 1U> &d, ::coder::array<double, 1U> &e,
                       exitg3 = 1;
                     }
                   } else if (m == l) {
-                    d[l - 1] =
-                        xdlaev2(d[l - 1], e[l - 1], d[l], c, &work[m - 1], tst);
+                    d[l - 1] = xdlaev2(d[l - 1], e[l - 1], d[l], &c,
+                                       &work[m - 1], &tst);
                     d[l] = c;
                     lwork = n + m;
                     work[lwork - 2] = tst;
@@ -396,7 +397,7 @@ int xzsteqr(::coder::array<double, 1U> &d, ::coder::array<double, 1U> &e,
                       double b_tmp;
                       b_tmp = e[b_i - 1];
                       b = c * b_tmp;
-                      c = xzlartg(g, tst * b_tmp, s, r);
+                      c = xzlartg(g, tst * b_tmp, &s, &r);
                       tst = s;
                       if (b_i != m) {
                         e[b_i - 2] = r;

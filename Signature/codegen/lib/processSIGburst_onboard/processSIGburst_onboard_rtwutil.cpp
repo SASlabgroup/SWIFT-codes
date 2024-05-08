@@ -11,6 +11,7 @@
 // Include files
 #include "processSIGburst_onboard_rtwutil.h"
 #include "rt_nonfinite.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Definitions
@@ -27,7 +28,7 @@ double rt_hypotd_snf(double u0, double u1)
   } else if (a > b) {
     b /= a;
     y = a * std::sqrt(b * b + 1.0);
-  } else if (std::isnan(b)) {
+  } else if (rtIsNaN(b)) {
     y = rtNaN;
   } else {
     y = a * 1.4142135623730951;

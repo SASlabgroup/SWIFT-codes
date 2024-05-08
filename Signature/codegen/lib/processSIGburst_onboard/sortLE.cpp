@@ -14,6 +14,7 @@
 #include "rt_nonfinite.h"
 #include "coder_array.h"
 #include "rt_defines.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Declarations
@@ -23,9 +24,9 @@ static double rt_atan2d_snf(double u0, double u1);
 static double rt_atan2d_snf(double u0, double u1)
 {
   double y;
-  if (std::isnan(u0) || std::isnan(u1)) {
+  if (rtIsNaN(u0) || rtIsNaN(u1)) {
     y = rtNaN;
-  } else if (std::isinf(u0) && std::isinf(u1)) {
+  } else if (rtIsInf(u0) && rtIsInf(u1)) {
     int i;
     int i1;
     if (u0 > 0.0) {
@@ -58,9 +59,9 @@ namespace internal {
 bool sortLE(const ::coder::array<creal_T, 1U> &v, int idx1, int idx2)
 {
   bool p;
-  if (std::isnan(v[idx2 - 1].re) || std::isnan(v[idx2 - 1].im)) {
-    p = (std::isnan(v[idx1 - 1].re) || std::isnan(v[idx1 - 1].im));
-  } else if (std::isnan(v[idx1 - 1].re) || std::isnan(v[idx1 - 1].im)) {
+  if (rtIsNaN(v[idx2 - 1].re) || rtIsNaN(v[idx2 - 1].im)) {
+    p = (rtIsNaN(v[idx1 - 1].re) || rtIsNaN(v[idx1 - 1].im));
+  } else if (rtIsNaN(v[idx1 - 1].re) || rtIsNaN(v[idx1 - 1].im)) {
     p = true;
   } else {
     double x;

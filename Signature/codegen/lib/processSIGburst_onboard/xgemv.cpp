@@ -37,10 +37,10 @@ void xgemv(int m, int n, int lda, const ::coder::array<double, 2U> &x, int ix0,
     }
     iyend = ix0;
     iy = lda * (n - 1) + 1;
-    for (int iac{1}; lda < 0 ? iac >= iy : iac <= iy; iac += lda) {
+    for (int iac = 1; lda < 0 ? iac >= iy : iac <= iy; iac += lda) {
       int i;
       i = (iac + m) - 1;
-      for (int ia{iac}; ia <= i; ia++) {
+      for (int ia = iac; ia <= i; ia++) {
         int i1;
         i1 = ((iy0 + ia) - iac) - 1;
         y[i1] = y[i1] + y[ia - 1] * x[iyend - 1];

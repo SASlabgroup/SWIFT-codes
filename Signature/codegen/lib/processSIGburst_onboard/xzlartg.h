@@ -20,7 +20,7 @@
 namespace coder {
 namespace internal {
 namespace reflapack {
-double xzlartg(double f, double g, double &sn, double &r);
+double xzlartg(double f, double g, double *sn, double *r);
 
 }
 } // namespace internal

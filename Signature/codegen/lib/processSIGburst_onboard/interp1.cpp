@@ -13,7 +13,7 @@
 #include "rt_nonfinite.h"
 #include "coder_array.h"
 #include "omp.h"
-#include <cmath>
+#include "rt_nonfinite.h"
 
 // Function Declarations
 namespace coder {
@@ -50,7 +50,7 @@ static void interp1Linear(const ::coder::array<double, 1U> &y, int nyrows,
 
   for (int k = 0; k <= ub_loop; k++) {
     d = xi[k];
-    if (std::isnan(d)) {
+    if (rtIsNaN(d)) {
       yi[k] = rtNaN;
     } else if (d > maxx) {
       r = y[nyrows - 1];
@@ -125,7 +125,7 @@ void interp1(const ::coder::array<double, 1U> &varargin_1,
     do {
       exitg1 = 0;
       if (k <= nx) {
-        if (std::isnan(varargin_1[k])) {
+        if (rtIsNaN(varargin_1[k])) {
           exitg1 = 1;
         } else {
           k++;

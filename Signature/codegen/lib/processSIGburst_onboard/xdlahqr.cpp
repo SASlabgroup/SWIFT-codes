@@ -14,36 +14,10 @@
 #include "xdlanv2.h"
 #include "xzlarfg.h"
 #include "coder_array.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
-// Function Declarations
-static int div_nzp_s32(int numerator, int denominator);
-
 // Function Definitions
-static int div_nzp_s32(int numerator, int denominator)
-{
-  int quotient;
-  unsigned int tempAbsQuotient;
-  unsigned int u;
-  if (numerator < 0) {
-    tempAbsQuotient = ~static_cast<unsigned int>(numerator) + 1U;
-  } else {
-    tempAbsQuotient = static_cast<unsigned int>(numerator);
-  }
-  if (denominator < 0) {
-    u = ~static_cast<unsigned int>(denominator) + 1U;
-  } else {
-    u = static_cast<unsigned int>(denominator);
-  }
-  tempAbsQuotient /= u;
-  if ((numerator < 0) != (denominator < 0)) {
-    quotient = -static_cast<int>(tempAbsQuotient);
-  } else {
-    quotient = static_cast<int>(tempAbsQuotient);
-  }
-  return quotient;
-}
-
 namespace coder {
 namespace internal {
 namespace reflapack {
@@ -123,8 +97,8 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
           k = i;
           exitg3 = false;
           while ((!exitg3) && (k + 1 > l)) {
-            d = std::abs(h[k + h.size(0) * (k - 1)]);
-            if (d <= smlnum) {
+            h22 = std::abs(h[k + h.size(0) * (k - 1)]);
+            if (h22 <= smlnum) {
               exitg3 = true;
             } else {
               h12 = std::abs(h[k + h.size(0) * k]);
@@ -138,15 +112,34 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
                   tst += std::abs(h[(k + h.size(0) * k) + 1]);
                 }
               }
-              if (d <= 2.2204460492503131E-16 * tst) {
+              if (h22 <= 2.2204460492503131E-16 * tst) {
+                bool aa_tmp;
                 tr = std::abs(h[(k + h.size(0) * k) - 1]);
                 tst = std::abs(aa - h[k + h.size(0) * k]);
-                aa = std::fmax(h12, tst);
-                tst = std::fmin(h12, tst);
+                aa_tmp = rtIsNaN(tst);
+                if ((h12 >= tst) || aa_tmp) {
+                  aa = h12;
+                } else {
+                  aa = tst;
+                }
+                if ((h12 <= tst) || aa_tmp) {
+                  tst = h12;
+                }
                 s = aa + tst;
-                if (std::fmin(d, tr) * (std::fmax(d, tr) / s) <=
-                    std::fmax(smlnum,
-                              2.2204460492503131E-16 * (tst * (aa / s)))) {
+                tst = 2.2204460492503131E-16 * (tst * (aa / s));
+                aa_tmp = rtIsNaN(tr);
+                if ((h22 <= tr) || aa_tmp) {
+                  d = h22;
+                } else {
+                  d = tr;
+                }
+                if ((!(h22 >= tr)) && (!aa_tmp)) {
+                  h22 = tr;
+                }
+                if ((smlnum >= tst) || rtIsNaN(tst)) {
+                  tst = smlnum;
+                }
+                if (d * (h22 / s) <= tst) {
                   exitg3 = true;
                 } else {
                   k--;
@@ -167,14 +160,14 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
             double v[3];
             int m;
             kdefl++;
-            if (kdefl - div_nzp_s32(kdefl, 20) * 20 == 0) {
+            if (kdefl - kdefl / 20 * 20 == 0) {
               s = std::abs(h[i + h.size(0) * (i - 1)]) +
                   std::abs(h[(i + h.size(0) * (i - 2)) - 1]);
               tst = 0.75 * s + h[i + h.size(0) * i];
               h12 = -0.4375 * s;
               aa = s;
               h22 = tst;
-            } else if (kdefl - div_nzp_s32(kdefl, 10) * 10 == 0) {
+            } else if (kdefl - kdefl / 10 * 10 == 0) {
               s = std::abs(h[(k + h.size(0) * k) + 1]) +
                   std::abs(h[(k + h.size(0) * (k + 1)) + 2]);
               tst = 0.75 * s + h[k + h.size(0) * k];
@@ -249,7 +242,7 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
                 m--;
               }
             }
-            for (int b_k{m}; b_k <= i; b_k++) {
+            for (int b_k = m; b_k <= i; b_k++) {
               nh = (i - b_k) + 2;
               if (nh >= 3) {
                 nh = 3;
@@ -261,7 +254,7 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
                 }
               }
               tst = v[0];
-              tr = xzlarfg(nh, tst, v);
+              tr = xzlarfg(nh, &tst, v);
               if (b_k > m) {
                 h[(b_k + h.size(0) * (b_k - 2)) - 1] = tst;
                 h[b_k + h.size(0) * (b_k - 2)] = 0.0;
@@ -272,22 +265,22 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
                 h[(b_k + h.size(0) * (b_k - 2)) - 1] =
                     h[(b_k + h.size(0) * (b_k - 2)) - 1] * (1.0 - tr);
               }
-              d = v[1];
+              h22 = v[1];
               tst = tr * v[1];
               if (nh == 3) {
-                h22 = v[2];
+                rt2r = v[2];
                 aa = tr * v[2];
                 for (iy = b_k; iy <= n; iy++) {
-                  rt2r = h[(b_k + h.size(0) * (iy - 1)) - 1];
-                  rt1r = h[b_k + h.size(0) * (iy - 1)];
-                  s = h[(b_k + h.size(0) * (iy - 1)) + 1];
-                  h12 = (rt2r + d * rt1r) + h22 * s;
-                  rt2r -= h12 * tr;
-                  h[(b_k + h.size(0) * (iy - 1)) - 1] = rt2r;
-                  rt1r -= h12 * tst;
-                  h[b_k + h.size(0) * (iy - 1)] = rt1r;
-                  s -= h12 * aa;
-                  h[(b_k + h.size(0) * (iy - 1)) + 1] = s;
+                  rt1r = h[(b_k + h.size(0) * (iy - 1)) - 1];
+                  s = h[b_k + h.size(0) * (iy - 1)];
+                  d = h[(b_k + h.size(0) * (iy - 1)) + 1];
+                  h12 = (rt1r + h22 * s) + rt2r * d;
+                  rt1r -= h12 * tr;
+                  h[(b_k + h.size(0) * (iy - 1)) - 1] = rt1r;
+                  s -= h12 * tst;
+                  h[b_k + h.size(0) * (iy - 1)] = s;
+                  d -= h12 * aa;
+                  h[(b_k + h.size(0) * (iy - 1)) + 1] = d;
                 }
                 if (b_k + 3 <= i + 1) {
                   nh = b_k + 2;
@@ -295,56 +288,56 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
                   nh = i;
                 }
                 for (iy = 0; iy <= nh; iy++) {
+                  rt1r = h[iy + h.size(0) * (b_k - 1)];
+                  s = h[iy + h.size(0) * b_k];
+                  d = h[iy + h.size(0) * (b_k + 1)];
+                  h12 = (rt1r + h22 * s) + rt2r * d;
+                  rt1r -= h12 * tr;
+                  h[iy + h.size(0) * (b_k - 1)] = rt1r;
+                  s -= h12 * tst;
+                  h[iy + h.size(0) * b_k] = s;
+                  d -= h12 * aa;
+                  h[iy + h.size(0) * (b_k + 1)] = d;
+                }
+                for (iy = iloz; iy <= ihiz; iy++) {
+                  rt1r = z[(iy + z.size(0) * (b_k - 1)) - 1];
+                  s = z[(iy + z.size(0) * b_k) - 1];
+                  d = z[(iy + z.size(0) * (b_k + 1)) - 1];
+                  h12 = (rt1r + h22 * s) + rt2r * d;
+                  rt1r -= h12 * tr;
+                  z[(iy + z.size(0) * (b_k - 1)) - 1] = rt1r;
+                  s -= h12 * tst;
+                  z[(iy + z.size(0) * b_k) - 1] = s;
+                  d -= h12 * aa;
+                  z[(iy + z.size(0) * (b_k + 1)) - 1] = d;
+                }
+              } else if (nh == 2) {
+                for (iy = b_k; iy <= n; iy++) {
+                  rt2r = h[(b_k + h.size(0) * (iy - 1)) - 1];
+                  rt1r = h[b_k + h.size(0) * (iy - 1)];
+                  h12 = rt2r + h22 * rt1r;
+                  rt2r -= h12 * tr;
+                  h[(b_k + h.size(0) * (iy - 1)) - 1] = rt2r;
+                  rt1r -= h12 * tst;
+                  h[b_k + h.size(0) * (iy - 1)] = rt1r;
+                }
+                for (iy = 0; iy <= i; iy++) {
                   rt2r = h[iy + h.size(0) * (b_k - 1)];
                   rt1r = h[iy + h.size(0) * b_k];
-                  s = h[iy + h.size(0) * (b_k + 1)];
-                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  h12 = rt2r + h22 * rt1r;
                   rt2r -= h12 * tr;
                   h[iy + h.size(0) * (b_k - 1)] = rt2r;
                   rt1r -= h12 * tst;
                   h[iy + h.size(0) * b_k] = rt1r;
-                  s -= h12 * aa;
-                  h[iy + h.size(0) * (b_k + 1)] = s;
                 }
                 for (iy = iloz; iy <= ihiz; iy++) {
                   rt2r = z[(iy + z.size(0) * (b_k - 1)) - 1];
                   rt1r = z[(iy + z.size(0) * b_k) - 1];
-                  s = z[(iy + z.size(0) * (b_k + 1)) - 1];
-                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  h12 = rt2r + h22 * rt1r;
                   rt2r -= h12 * tr;
                   z[(iy + z.size(0) * (b_k - 1)) - 1] = rt2r;
                   rt1r -= h12 * tst;
                   z[(iy + z.size(0) * b_k) - 1] = rt1r;
-                  s -= h12 * aa;
-                  z[(iy + z.size(0) * (b_k + 1)) - 1] = s;
-                }
-              } else if (nh == 2) {
-                for (iy = b_k; iy <= n; iy++) {
-                  h22 = h[(b_k + h.size(0) * (iy - 1)) - 1];
-                  rt2r = h[b_k + h.size(0) * (iy - 1)];
-                  h12 = h22 + d * rt2r;
-                  h22 -= h12 * tr;
-                  h[(b_k + h.size(0) * (iy - 1)) - 1] = h22;
-                  rt2r -= h12 * tst;
-                  h[b_k + h.size(0) * (iy - 1)] = rt2r;
-                }
-                for (iy = 0; iy <= i; iy++) {
-                  h22 = h[iy + h.size(0) * (b_k - 1)];
-                  rt2r = h[iy + h.size(0) * b_k];
-                  h12 = h22 + d * rt2r;
-                  h22 -= h12 * tr;
-                  h[iy + h.size(0) * (b_k - 1)] = h22;
-                  rt2r -= h12 * tst;
-                  h[iy + h.size(0) * b_k] = rt2r;
-                }
-                for (iy = iloz; iy <= ihiz; iy++) {
-                  h22 = z[(iy + z.size(0) * (b_k - 1)) - 1];
-                  rt2r = z[(iy + z.size(0) * b_k) - 1];
-                  h12 = h22 + d * rt2r;
-                  h22 -= h12 * tr;
-                  z[(iy + z.size(0) * (b_k - 1)) - 1] = h22;
-                  rt2r -= h12 * tst;
-                  z[(iy + z.size(0) * b_k) - 1] = rt2r;
                 }
               }
             }
@@ -359,18 +352,18 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
             wr[i] = h[i + h.size(0) * i];
             wi[i] = 0.0;
           } else if (l == i) {
-            d = h[(i + h.size(0) * i) - 1];
-            h22 = h[i + h.size(0) * (i - 1)];
-            rt2r = h[i + h.size(0) * i];
-            aa = xdlanv2(&h[(i + h.size(0) * (i - 1)) - 1], d, h22, rt2r, tst,
-                         rt1r, s, h12, tr);
+            h22 = h[(i + h.size(0) * i) - 1];
+            rt2r = h[i + h.size(0) * (i - 1)];
+            rt1r = h[i + h.size(0) * i];
+            aa = xdlanv2(&h[(i + h.size(0) * (i - 1)) - 1], &h22, &rt2r, &rt1r,
+                         &tst, &s, &d, &h12, &tr);
             wi[i - 1] = tst;
             wr[i - 1] = aa;
-            wr[i] = rt1r;
-            wi[i] = s;
-            h[(i + h.size(0) * i) - 1] = d;
-            h[i + h.size(0) * (i - 1)] = h22;
-            h[i + h.size(0) * i] = rt2r;
+            wr[i] = s;
+            wi[i] = d;
+            h[(i + h.size(0) * i) - 1] = h22;
+            h[i + h.size(0) * (i - 1)] = rt2r;
+            h[i + h.size(0) * i] = rt1r;
             if (n > i + 1) {
               nh = (n - i) - 2;
               if (nh + 1 >= 1) {
@@ -496,8 +489,8 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
           k = i;
           exitg3 = false;
           while ((!exitg3) && (k + 1 > l)) {
-            d = std::abs(h[k + h.size(0) * (k - 1)]);
-            if (d <= smlnum) {
+            h22 = std::abs(h[k + h.size(0) * (k - 1)]);
+            if (h22 <= smlnum) {
               exitg3 = true;
             } else {
               h12 = std::abs(h[k + h.size(0) * k]);
@@ -511,15 +504,34 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
                   tst += std::abs(h[(k + h.size(0) * k) + 1]);
                 }
               }
-              if (d <= 2.2204460492503131E-16 * tst) {
+              if (h22 <= 2.2204460492503131E-16 * tst) {
+                bool aa_tmp;
                 tr = std::abs(h[(k + h.size(0) * k) - 1]);
                 tst = std::abs(aa - h[k + h.size(0) * k]);
-                aa = std::fmax(h12, tst);
-                tst = std::fmin(h12, tst);
+                aa_tmp = rtIsNaN(tst);
+                if ((h12 >= tst) || aa_tmp) {
+                  aa = h12;
+                } else {
+                  aa = tst;
+                }
+                if ((h12 <= tst) || aa_tmp) {
+                  tst = h12;
+                }
                 s = aa + tst;
-                if (std::fmin(d, tr) * (std::fmax(d, tr) / s) <=
-                    std::fmax(smlnum,
-                              2.2204460492503131E-16 * (tst * (aa / s)))) {
+                tst = 2.2204460492503131E-16 * (tst * (aa / s));
+                aa_tmp = rtIsNaN(tr);
+                if ((h22 <= tr) || aa_tmp) {
+                  d = h22;
+                } else {
+                  d = tr;
+                }
+                if ((!(h22 >= tr)) && (!aa_tmp)) {
+                  h22 = tr;
+                }
+                if ((smlnum >= tst) || rtIsNaN(tst)) {
+                  tst = smlnum;
+                }
+                if (d * (h22 / s) <= tst) {
                   exitg3 = true;
                 } else {
                   k--;
@@ -540,14 +552,14 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
             double v[3];
             int m;
             kdefl++;
-            if (kdefl - div_nzp_s32(kdefl, 20) * 20 == 0) {
+            if (kdefl - kdefl / 20 * 20 == 0) {
               s = std::abs(h[i + h.size(0) * (i - 1)]) +
                   std::abs(h[(i + h.size(0) * (i - 2)) - 1]);
               tst = 0.75 * s + h[i + h.size(0) * i];
               h12 = -0.4375 * s;
               aa = s;
               h22 = tst;
-            } else if (kdefl - div_nzp_s32(kdefl, 10) * 10 == 0) {
+            } else if (kdefl - kdefl / 10 * 10 == 0) {
               s = std::abs(h[(k + h.size(0) * k) + 1]) +
                   std::abs(h[(k + h.size(0) * (k + 1)) + 2]);
               tst = 0.75 * s + h[k + h.size(0) * k];
@@ -622,7 +634,7 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
                 m--;
               }
             }
-            for (int b_k{m}; b_k <= i; b_k++) {
+            for (int b_k = m; b_k <= i; b_k++) {
               u1 = (i - b_k) + 2;
               if (u1 >= 3) {
                 nr = 3;
@@ -636,7 +648,7 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
                 }
               }
               tst = v[0];
-              tr = xzlarfg(nr, tst, v);
+              tr = xzlarfg(nr, &tst, v);
               if (b_k > m) {
                 h[(b_k + h.size(0) * (b_k - 2)) - 1] = tst;
                 h[b_k + h.size(0) * (b_k - 2)] = 0.0;
@@ -647,22 +659,22 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
                 h[(b_k + h.size(0) * (b_k - 2)) - 1] =
                     h[(b_k + h.size(0) * (b_k - 2)) - 1] * (1.0 - tr);
               }
-              d = v[1];
+              h22 = v[1];
               tst = tr * v[1];
               if (nr == 3) {
-                h22 = v[2];
+                rt2r = v[2];
                 aa = tr * v[2];
                 for (iy = b_k; iy <= n; iy++) {
-                  rt2r = h[(b_k + h.size(0) * (iy - 1)) - 1];
-                  rt1r = h[b_k + h.size(0) * (iy - 1)];
-                  s = h[(b_k + h.size(0) * (iy - 1)) + 1];
-                  h12 = (rt2r + d * rt1r) + h22 * s;
-                  rt2r -= h12 * tr;
-                  h[(b_k + h.size(0) * (iy - 1)) - 1] = rt2r;
-                  rt1r -= h12 * tst;
-                  h[b_k + h.size(0) * (iy - 1)] = rt1r;
-                  s -= h12 * aa;
-                  h[(b_k + h.size(0) * (iy - 1)) + 1] = s;
+                  rt1r = h[(b_k + h.size(0) * (iy - 1)) - 1];
+                  s = h[b_k + h.size(0) * (iy - 1)];
+                  d = h[(b_k + h.size(0) * (iy - 1)) + 1];
+                  h12 = (rt1r + h22 * s) + rt2r * d;
+                  rt1r -= h12 * tr;
+                  h[(b_k + h.size(0) * (iy - 1)) - 1] = rt1r;
+                  s -= h12 * tst;
+                  h[b_k + h.size(0) * (iy - 1)] = s;
+                  d -= h12 * aa;
+                  h[(b_k + h.size(0) * (iy - 1)) + 1] = d;
                 }
                 if (b_k + 3 <= i + 1) {
                   nr = b_k + 2;
@@ -670,56 +682,56 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
                   nr = i;
                 }
                 for (iy = 0; iy <= nr; iy++) {
+                  rt1r = h[iy + h.size(0) * (b_k - 1)];
+                  s = h[iy + h.size(0) * b_k];
+                  d = h[iy + h.size(0) * (b_k + 1)];
+                  h12 = (rt1r + h22 * s) + rt2r * d;
+                  rt1r -= h12 * tr;
+                  h[iy + h.size(0) * (b_k - 1)] = rt1r;
+                  s -= h12 * tst;
+                  h[iy + h.size(0) * b_k] = s;
+                  d -= h12 * aa;
+                  h[iy + h.size(0) * (b_k + 1)] = d;
+                }
+                for (iy = 0; iy < ihiz; iy++) {
+                  rt1r = z[iy + z.size(0) * (b_k - 1)];
+                  s = z[iy + z.size(0) * b_k];
+                  d = z[iy + z.size(0) * (b_k + 1)];
+                  h12 = (rt1r + h22 * s) + rt2r * d;
+                  rt1r -= h12 * tr;
+                  z[iy + z.size(0) * (b_k - 1)] = rt1r;
+                  s -= h12 * tst;
+                  z[iy + z.size(0) * b_k] = s;
+                  d -= h12 * aa;
+                  z[iy + z.size(0) * (b_k + 1)] = d;
+                }
+              } else if (nr == 2) {
+                for (iy = b_k; iy <= n; iy++) {
+                  rt2r = h[(b_k + h.size(0) * (iy - 1)) - 1];
+                  rt1r = h[b_k + h.size(0) * (iy - 1)];
+                  h12 = rt2r + h22 * rt1r;
+                  rt2r -= h12 * tr;
+                  h[(b_k + h.size(0) * (iy - 1)) - 1] = rt2r;
+                  rt1r -= h12 * tst;
+                  h[b_k + h.size(0) * (iy - 1)] = rt1r;
+                }
+                for (iy = 0; iy <= i; iy++) {
                   rt2r = h[iy + h.size(0) * (b_k - 1)];
                   rt1r = h[iy + h.size(0) * b_k];
-                  s = h[iy + h.size(0) * (b_k + 1)];
-                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  h12 = rt2r + h22 * rt1r;
                   rt2r -= h12 * tr;
                   h[iy + h.size(0) * (b_k - 1)] = rt2r;
                   rt1r -= h12 * tst;
                   h[iy + h.size(0) * b_k] = rt1r;
-                  s -= h12 * aa;
-                  h[iy + h.size(0) * (b_k + 1)] = s;
                 }
                 for (iy = 0; iy < ihiz; iy++) {
                   rt2r = z[iy + z.size(0) * (b_k - 1)];
                   rt1r = z[iy + z.size(0) * b_k];
-                  s = z[iy + z.size(0) * (b_k + 1)];
-                  h12 = (rt2r + d * rt1r) + h22 * s;
+                  h12 = rt2r + h22 * rt1r;
                   rt2r -= h12 * tr;
                   z[iy + z.size(0) * (b_k - 1)] = rt2r;
                   rt1r -= h12 * tst;
                   z[iy + z.size(0) * b_k] = rt1r;
-                  s -= h12 * aa;
-                  z[iy + z.size(0) * (b_k + 1)] = s;
-                }
-              } else if (nr == 2) {
-                for (iy = b_k; iy <= n; iy++) {
-                  h22 = h[(b_k + h.size(0) * (iy - 1)) - 1];
-                  rt2r = h[b_k + h.size(0) * (iy - 1)];
-                  h12 = h22 + d * rt2r;
-                  h22 -= h12 * tr;
-                  h[(b_k + h.size(0) * (iy - 1)) - 1] = h22;
-                  rt2r -= h12 * tst;
-                  h[b_k + h.size(0) * (iy - 1)] = rt2r;
-                }
-                for (iy = 0; iy <= i; iy++) {
-                  h22 = h[iy + h.size(0) * (b_k - 1)];
-                  rt2r = h[iy + h.size(0) * b_k];
-                  h12 = h22 + d * rt2r;
-                  h22 -= h12 * tr;
-                  h[iy + h.size(0) * (b_k - 1)] = h22;
-                  rt2r -= h12 * tst;
-                  h[iy + h.size(0) * b_k] = rt2r;
-                }
-                for (iy = 0; iy < ihiz; iy++) {
-                  h22 = z[iy + z.size(0) * (b_k - 1)];
-                  rt2r = z[iy + z.size(0) * b_k];
-                  h12 = h22 + d * rt2r;
-                  h22 -= h12 * tr;
-                  z[iy + z.size(0) * (b_k - 1)] = h22;
-                  rt2r -= h12 * tst;
-                  z[iy + z.size(0) * b_k] = rt2r;
                 }
               }
             }
@@ -734,18 +746,18 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
             wr[i] = h[i + h.size(0) * i];
             wi[i] = 0.0;
           } else if (l == i) {
-            d = h[(i + h.size(0) * i) - 1];
-            h22 = h[i + h.size(0) * (i - 1)];
-            rt2r = h[i + h.size(0) * i];
-            aa = xdlanv2(&h[(i + h.size(0) * (i - 1)) - 1], d, h22, rt2r, tst,
-                         rt1r, s, h12, tr);
+            h22 = h[(i + h.size(0) * i) - 1];
+            rt2r = h[i + h.size(0) * (i - 1)];
+            rt1r = h[i + h.size(0) * i];
+            aa = xdlanv2(&h[(i + h.size(0) * (i - 1)) - 1], &h22, &rt2r, &rt1r,
+                         &tst, &s, &d, &h12, &tr);
             wi[i - 1] = tst;
             wr[i - 1] = aa;
-            wr[i] = rt1r;
-            wi[i] = s;
-            h[(i + h.size(0) * i) - 1] = d;
-            h[i + h.size(0) * (i - 1)] = h22;
-            h[i + h.size(0) * i] = rt2r;
+            wr[i] = s;
+            wi[i] = d;
+            h[(i + h.size(0) * i) - 1] = h22;
+            h[i + h.size(0) * (i - 1)] = rt2r;
+            h[i + h.size(0) * i] = rt1r;
             if (n > i + 1) {
               nr = (n - i) - 2;
               if (nr + 1 >= 1) {

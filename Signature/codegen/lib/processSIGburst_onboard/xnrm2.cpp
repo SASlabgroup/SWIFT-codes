@@ -65,7 +65,7 @@ double xnrm2(int n, const ::coder::array<double, 2U> &x, int ix0)
       int kend;
       scale = 3.3121686421112381E-170;
       kend = (ix0 + n) - 1;
-      for (int k{ix0}; k <= kend; k++) {
+      for (int k = ix0; k <= kend; k++) {
         double absxk;
         absxk = std::abs(x[k - 1]);
         if (absxk > scale) {

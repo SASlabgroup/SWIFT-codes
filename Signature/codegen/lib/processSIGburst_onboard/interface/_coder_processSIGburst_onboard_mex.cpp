@@ -27,8 +27,8 @@ void mexFunction(int32_T nlhs, mxArray *plhs[], int32_T nrhs,
 
 emlrtCTX mexFunctionCreateRootTLS()
 {
-  emlrtCreateRootTLSR2022a(&emlrtRootTLSGlobal, &emlrtContextGlobal, nullptr, 1,
-                           nullptr, "windows-1252", true);
+  emlrtCreateRootTLSR2022a(&emlrtRootTLSGlobal, &emlrtContextGlobal, NULL, 1,
+                           NULL, "windows-1252", true);
   return emlrtRootTLSGlobal;
 }
 
@@ -36,10 +36,10 @@ void unsafe_processSIGburst_onboard_mexFunction(int32_T nlhs, mxArray *plhs[1],
                                                 int32_T nrhs,
                                                 const mxArray *prhs[10])
 {
-  emlrtStack st{
-      nullptr, // site
-      nullptr, // tls
-      nullptr  // prev
+  emlrtStack st = {
+      NULL, // site
+      NULL, // tls
+      NULL  // prev
   };
   const mxArray *b_prhs[10];
   const mxArray *outputs;
@@ -54,7 +54,7 @@ void unsafe_processSIGburst_onboard_mexFunction(int32_T nlhs, mxArray *plhs[1],
                         "processSIGburst_onboard");
   }
   // Call the function.
-  for (int32_T i{0}; i < 10; i++) {
+  for (int32_T i = 0; i < 10; i++) {
     b_prhs[i] = prhs[i];
   }
   processSIGburst_onboard_api(b_prhs, &outputs);

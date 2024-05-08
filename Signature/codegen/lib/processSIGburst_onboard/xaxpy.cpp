@@ -23,7 +23,7 @@ void xaxpy(int n, double a, const ::coder::array<double, 2U> &x, int ix0,
   if ((n >= 1) && (!(a == 0.0))) {
     int i;
     i = n - 1;
-    for (int k{0}; k <= i; k++) {
+    for (int k = 0; k <= i; k++) {
       int i1;
       i1 = (iy0 + k) - 1;
       y[i1] = y[i1] + a * x[(ix0 + k) - 1];

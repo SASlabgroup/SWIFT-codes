@@ -14,7 +14,7 @@
 #include "sortIdx.h"
 #include "sortLE.h"
 #include "coder_array.h"
-#include <cmath>
+#include "rt_nonfinite.h"
 
 // Function Definitions
 namespace coder {
@@ -47,7 +47,7 @@ void sort(::coder::array<creal_T, 1U> &x, ::coder::array<int, 1U> &idx)
   for (k = 0; k <= dim; k++) {
     vstride *= x.size(0);
   }
-  for (int j{0}; j < vstride; j++) {
+  for (int j = 0; j < vstride; j++) {
     int i1;
     int n_tmp;
     for (k = 0; k <= vlen_tmp; k++) {
@@ -80,7 +80,7 @@ void sort(::coder::array<creal_T, 1U> &x, ::coder::array<int, 1U> &idx)
         int i2;
         i2 = dim << 1;
         b_j = 1;
-        for (int pEnd{dim + 1}; pEnd < i + 1; pEnd = qEnd + dim) {
+        for (int pEnd = dim + 1; pEnd < i + 1; pEnd = qEnd + dim) {
           int kEnd;
           int p;
           int q;
@@ -167,12 +167,12 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
   vwork.set_size(i);
   idx.set_size(x.size(0));
   vstride = 1;
-  for (int k{0}; k <= dim; k++) {
+  for (int k = 0; k <= dim; k++) {
     vstride *= x.size(0);
   }
-  for (int b_i{0}; b_i < 1; b_i++) {
-    for (int j{0}; j < vstride; j++) {
-      for (int k{0}; k <= vlen; k++) {
+  for (int b_i = 0; b_i < 1; b_i++) {
+    for (int j = 0; j < vstride; j++) {
+      for (int k = 0; k <= vlen; k++) {
         vwork[k] = x[j + k * vstride];
       }
       iidx.set_size(vwork.size(0));
@@ -212,8 +212,8 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
         }
         bLen = 0;
         dim = 0;
-        for (int k{0}; k < n; k++) {
-          if (std::isnan(vwork[k])) {
+        for (int k = 0; k < n; k++) {
+          if (rtIsNaN(vwork[k])) {
             iidx_tmp = (n - bLen) - 1;
             iidx[iidx_tmp] = k + 1;
             xwork[iidx_tmp] = vwork[k];
@@ -341,7 +341,7 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
             perm[2] = 1;
           }
           i = static_cast<unsigned char>(dim);
-          for (int k{0}; k < i; k++) {
+          for (int k = 0; k < i; k++) {
             iidx_tmp = perm[k] - 1;
             i1 = (wOffset_tmp - dim) + k;
             iidx[i1] = idx4[iidx_tmp];
@@ -349,7 +349,7 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
           }
         }
         dim = bLen >> 1;
-        for (int k{0}; k < dim; k++) {
+        for (int k = 0; k < dim; k++) {
           i1 = wOffset_tmp + k;
           i2 = iidx[i1];
           iidx_tmp = (n - k) - 1;
@@ -368,15 +368,15 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
             int nBlocks;
             nBlocks = wOffset_tmp >> 8;
             if (nBlocks > 0) {
-              for (int b{0}; b < nBlocks; b++) {
+              for (int b = 0; b < nBlocks; b++) {
                 double c_xwork[256];
                 int c_iwork[256];
                 i4 = (b << 8) - 1;
-                for (int b_b{0}; b_b < 6; b_b++) {
+                for (int b_b = 0; b_b < 6; b_b++) {
                   bLen = 1 << (b_b + 2);
                   n = bLen << 1;
                   i = 256 >> (b_b + 3);
-                  for (int k{0}; k < i; k++) {
+                  for (int k = 0; k < i; k++) {
                     i2 = (i4 + k * n) + 1;
                     for (i1 = 0; i1 < n; i1++) {
                       dim = i2 + i1;
@@ -438,7 +438,7 @@ void sort(::coder::array<double, 1U> &x, ::coder::array<int, 1U> &idx)
           merge_block(iidx, vwork, 0, wOffset_tmp, i1, b_iwork, b_xwork);
         }
       }
-      for (int k{0}; k <= vlen; k++) {
+      for (int k = 0; k <= vlen; k++) {
         i = j + k * vstride;
         x[i] = vwork[k];
         idx[i] = iidx[k];

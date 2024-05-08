@@ -28,10 +28,10 @@ void xzungqr(int m, int n, int k, ::coder::array<double, 2U> &A, int ia0,
     int iaii;
     int itau;
     i = n - 1;
-    for (int j{k}; j <= i; j++) {
+    for (int j = k; j <= i; j++) {
       ia = (ia0 + j * lda) - 1;
       iaii = m - 1;
-      for (int b_i{0}; b_i <= iaii; b_i++) {
+      for (int b_i = 0; b_i <= iaii; b_i++) {
         A[ia + b_i] = 0.0;
       }
       A[ia + j] = 1.0;
@@ -44,7 +44,7 @@ void xzungqr(int m, int n, int k, ::coder::array<double, 2U> &A, int ia0,
     for (i = 0; i < ia; i++) {
       work[i] = 0.0;
     }
-    for (int b_i{k}; b_i >= 1; b_i--) {
+    for (int b_i = k; b_i >= 1; b_i--) {
       iaii = ((ia0 + b_i) + (b_i - 1) * lda) - 1;
       if (b_i < n) {
         A[iaii - 1] = 1.0;
@@ -54,12 +54,12 @@ void xzungqr(int m, int n, int k, ::coder::array<double, 2U> &A, int ia0,
       if (b_i < m) {
         ia = iaii + 1;
         i = (iaii + m) - b_i;
-        for (int j{ia}; j <= i; j++) {
+        for (int j = ia; j <= i; j++) {
           A[j - 1] = -tau[itau] * A[j - 1];
         }
       }
       A[iaii - 1] = 1.0 - tau[itau];
-      for (int j{0}; j <= b_i - 2; j++) {
+      for (int j = 0; j <= b_i - 2; j++) {
         A[(iaii - j) - 2] = 0.0;
       }
       itau--;

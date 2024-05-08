@@ -17,8 +17,8 @@
 namespace coder {
 namespace internal {
 namespace reflapack {
-double xdlaev2(double a, double b, double c, double &rt2, double *cs1,
-               double &sn1)
+double xdlaev2(double a, double b, double c, double *rt2, double *cs1,
+               double *sn1)
 {
   double ab;
   double acmn;
@@ -56,14 +56,14 @@ double xdlaev2(double a, double b, double c, double &rt2, double *cs1,
   if (sm < 0.0) {
     rt1 = 0.5 * (sm - adf);
     sgn1 = -1;
-    rt2 = acmx / rt1 * acmn - b / rt1 * b;
+    *rt2 = acmx / rt1 * acmn - b / rt1 * b;
   } else if (sm > 0.0) {
     rt1 = 0.5 * (sm + adf);
     sgn1 = 1;
-    rt2 = acmx / rt1 * acmn - b / rt1 * b;
+    *rt2 = acmx / rt1 * acmn - b / rt1 * b;
   } else {
     rt1 = 0.5 * adf;
-    rt2 = -0.5 * adf;
+    *rt2 = -0.5 * adf;
     sgn1 = 1;
   }
   if (df >= 0.0) {
@@ -75,20 +75,20 @@ double xdlaev2(double a, double b, double c, double &rt2, double *cs1,
   }
   if (std::abs(adf) > ab) {
     adf = -tb / adf;
-    sn1 = 1.0 / std::sqrt(adf * adf + 1.0);
-    *cs1 = adf * sn1;
+    *sn1 = 1.0 / std::sqrt(adf * adf + 1.0);
+    *cs1 = adf * *sn1;
   } else if (ab == 0.0) {
     *cs1 = 1.0;
-    sn1 = 0.0;
+    *sn1 = 0.0;
   } else {
     adf = -adf / tb;
     *cs1 = 1.0 / std::sqrt(adf * adf + 1.0);
-    sn1 = adf * *cs1;
+    *sn1 = adf * *cs1;
   }
   if (sgn1 == sgn2) {
     adf = *cs1;
-    *cs1 = -sn1;
-    sn1 = adf;
+    *cs1 = -*sn1;
+    *sn1 = adf;
   }
   return rt1;
 }

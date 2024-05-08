@@ -11,20 +11,21 @@
 // Include files
 #include "xdladiv.h"
 #include "rt_nonfinite.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Definitions
 namespace coder {
 namespace internal {
 namespace reflapack {
-double xdladiv(double a, double b, double c, double d, double &q)
+double xdladiv(double a, double b, double c, double d, double *q)
 {
   double aa;
   double ab;
   double bb;
+  double br;
   double cc;
   double cd;
-  double cd_tmp;
   double dd;
   double p;
   double r;
@@ -33,10 +34,18 @@ double xdladiv(double a, double b, double c, double d, double &q)
   bb = b;
   cc = c;
   dd = d;
-  ab = std::fmax(std::abs(a), std::abs(b));
-  cd_tmp = std::abs(d);
+  br = std::abs(a);
+  ab = std::abs(b);
+  if ((br >= ab) || rtIsNaN(ab)) {
+    ab = br;
+  }
+  br = std::abs(d);
   r = std::abs(c);
-  cd = std::fmax(r, cd_tmp);
+  if ((r >= br) || rtIsNaN(br)) {
+    cd = r;
+  } else {
+    cd = br;
+  }
   s = 1.0;
   if (ab >= 8.9884656743115785E+307) {
     aa = 0.5 * a;
@@ -58,52 +67,52 @@ double xdladiv(double a, double b, double c, double d, double &q)
     dd *= 4.0564819207303341E+31;
     s *= 4.0564819207303341E+31;
   }
-  if (cd_tmp <= r) {
+  if (br <= r) {
     r = dd / cc;
     cd = 1.0 / (cc + dd * r);
     if (r != 0.0) {
-      ab = bb * r;
-      cd_tmp = bb * cd;
-      if (ab != 0.0) {
-        p = (aa + ab) * cd;
+      br = bb * r;
+      ab = bb * cd;
+      if (br != 0.0) {
+        p = (aa + br) * cd;
       } else {
-        p = aa * cd + cd_tmp * r;
+        p = aa * cd + ab * r;
       }
-      ab = -aa * r;
-      if (ab != 0.0) {
-        q = (bb + ab) * cd;
+      br = -aa * r;
+      if (br != 0.0) {
+        *q = (bb + br) * cd;
       } else {
-        q = cd_tmp + -aa * cd * r;
+        *q = ab + -aa * cd * r;
       }
     } else {
       p = (aa + dd * (bb / cc)) * cd;
-      q = (bb + dd * (-aa / cc)) * cd;
+      *q = (bb + dd * (-aa / cc)) * cd;
     }
   } else {
     r = cc / dd;
     cd = 1.0 / (dd + cc * r);
     if (r != 0.0) {
-      ab = aa * r;
-      cd_tmp = aa * cd;
-      if (ab != 0.0) {
-        p = (bb + ab) * cd;
+      br = aa * r;
+      ab = aa * cd;
+      if (br != 0.0) {
+        p = (bb + br) * cd;
       } else {
-        p = bb * cd + cd_tmp * r;
+        p = bb * cd + ab * r;
       }
-      ab = -bb * r;
-      if (ab != 0.0) {
-        q = (aa + ab) * cd;
+      br = -bb * r;
+      if (br != 0.0) {
+        *q = (aa + br) * cd;
       } else {
-        q = cd_tmp + -bb * cd * r;
+        *q = ab + -bb * cd * r;
       }
     } else {
       p = (bb + cc * (aa / dd)) * cd;
-      q = (aa + cc * (-bb / dd)) * cd;
+      *q = (aa + cc * (-bb / dd)) * cd;
     }
-    q = -q;
+    *q = -*q;
   }
   p *= s;
-  q *= s;
+  *q *= s;
   return p;
 }
 

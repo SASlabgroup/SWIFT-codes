@@ -29,6 +29,7 @@
 #include "std.h"
 #include "strcmp.h"
 #include "coder_array.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Declarations
@@ -56,6 +57,8 @@ static void minus(coder::array<double, 3U> &in1,
                   const coder::array<double, 3U> &in3);
 
 static double rt_powd_snf(double u0, double u1);
+
+static double rt_roundd_snf(double u);
 
 // Function Definitions
 static void b_binary_expand_op(coder::array<double, 2U> &in1,
@@ -91,7 +94,7 @@ static void b_binary_expand_op(coder::array<double, 2U> &in1,
   aux_2_1 = 0;
   for (i = 0; i < loop_ub; i++) {
     b_loop_ub = in1.size(0);
-    for (int i1{0}; i1 < b_loop_ub; i1++) {
+    for (int i1 = 0; i1 < b_loop_ub; i1++) {
       b_in1[i1 + b_in1.size(0) * i] =
           in1[i1 + in1.size(0) * aux_0_1] - in2[aux_1_1] / in3[aux_2_1];
     }
@@ -103,7 +106,7 @@ static void b_binary_expand_op(coder::array<double, 2U> &in1,
   loop_ub = b_in1.size(1);
   for (i = 0; i < loop_ub; i++) {
     b_loop_ub = b_in1.size(0);
-    for (int i1{0}; i1 < b_loop_ub; i1++) {
+    for (int i1 = 0; i1 < b_loop_ub; i1++) {
       in1[i1 + in1.size(0) * i] = b_in1[i1 + b_in1.size(0) * i];
     }
   }
@@ -138,8 +141,8 @@ static void b_binary_expand_op(coder::array<double, 2U> &in1,
   stride_1_1 = (in2.size(1) != 1);
   aux_0_1 = 0;
   aux_1_1 = 0;
-  for (int i{0}; i < b_loop_ub; i++) {
-    for (int i1{0}; i1 < loop_ub; i1++) {
+  for (int i = 0; i < b_loop_ub; i++) {
+    for (int i1 = 0; i1 < loop_ub; i1++) {
       b_in1[i1 + b_in1.size(0) * i] =
           (in1[i1 * stride_0_0 + in1.size(0) * aux_0_1] +
            in2[i1 * stride_1_0 + in2.size(0) * aux_1_1]) /
@@ -150,9 +153,9 @@ static void b_binary_expand_op(coder::array<double, 2U> &in1,
   }
   in1.set_size(b_in1.size(0), b_in1.size(1));
   loop_ub = b_in1.size(1);
-  for (int i{0}; i < loop_ub; i++) {
+  for (int i = 0; i < loop_ub; i++) {
     b_loop_ub = b_in1.size(0);
-    for (int i1{0}; i1 < b_loop_ub; i1++) {
+    for (int i1 = 0; i1 < b_loop_ub; i1++) {
       in1[i1 + in1.size(0) * i] = b_in1[i1 + b_in1.size(0) * i];
     }
   }
@@ -178,8 +181,8 @@ static void b_binary_expand_op(coder::array<double, 3U> &in1,
   stride_0_0 = (in2.size(0) != 1);
   in3_idx_0 = (in3_idx_0 != 1);
   b_loop_ub = in2.size(1);
-  for (int i{0}; i < b_loop_ub; i++) {
-    for (int i1{0}; i1 < loop_ub; i1++) {
+  for (int i = 0; i < b_loop_ub; i++) {
+    for (int i1 = 0; i1 < loop_ub; i1++) {
       b_in2[i1 + b_in2.size(0) * i] =
           in2[i1 * stride_0_0 + in2.size(0) * i] - in3[i1 * in3_idx_0];
     }
@@ -218,13 +221,13 @@ static void binary_expand_op(coder::array<bool, 3U> &in1,
   stride_1_0 = (in3_idx_0 != 1);
   in3_idx_1 = (in3_idx_1 != 1);
   c_loop_ub = in2.size(2);
-  for (int i{0}; i < c_loop_ub; i++) {
+  for (int i = 0; i < c_loop_ub; i++) {
     int aux_0_1;
     int aux_1_1;
     aux_0_1 = 0;
     aux_1_1 = 0;
-    for (int i1{0}; i1 < b_loop_ub; i1++) {
-      for (int i2{0}; i2 < loop_ub; i2++) {
+    for (int i1 = 0; i1 < b_loop_ub; i1++) {
+      for (int i2 = 0; i2 < loop_ub; i2++) {
         in1[(i2 + in1.size(0) * i1) + in1.size(0) * in1.size(1) * i] =
             (in2[(i2 * stride_0_0 + in2.size(0) * aux_0_1) +
                  in2.size(0) * in2.size(1) * i] >
@@ -265,8 +268,8 @@ static void c_binary_expand_op(coder::array<double, 2U> &in1,
   stride_1_1 = (in1.size(1) != 1);
   aux_0_1 = 0;
   aux_1_1 = 0;
-  for (int i{0}; i < b_loop_ub; i++) {
-    for (int i1{0}; i1 < loop_ub; i1++) {
+  for (int i = 0; i < b_loop_ub; i++) {
+    for (int i1 = 0; i1 < loop_ub; i1++) {
       b_in2[i1 + b_in2.size(0) * i] =
           in2[i1 * stride_0_0 + in2.size(0) * aux_0_1] -
           in1[i1 * stride_1_0 + in1.size(0) * aux_1_1];
@@ -318,13 +321,13 @@ static void minus(coder::array<double, 3U> &in1,
   stride_1_2 = (in3.size(2) != 1);
   aux_0_2 = 0;
   aux_1_2 = 0;
-  for (int i{0}; i < c_loop_ub; i++) {
+  for (int i = 0; i < c_loop_ub; i++) {
     int aux_0_1;
     int aux_1_1;
     aux_0_1 = 0;
     aux_1_1 = 0;
-    for (int i1{0}; i1 < b_loop_ub; i1++) {
-      for (int i2{0}; i2 < loop_ub; i2++) {
+    for (int i1 = 0; i1 < b_loop_ub; i1++) {
+      for (int i2 = 0; i2 < loop_ub; i2++) {
         in1[(i2 + in1.size(0) * i1) + in1.size(0) * in1.size(1) * i] =
             in2[(i2 * stride_0_0 + in2.size(0) * aux_0_1) +
                 in2.size(0) * in2.size(1) * aux_0_2] -
@@ -342,14 +345,14 @@ static void minus(coder::array<double, 3U> &in1,
 static double rt_powd_snf(double u0, double u1)
 {
   double y;
-  if (std::isnan(u0) || std::isnan(u1)) {
+  if (rtIsNaN(u0) || rtIsNaN(u1)) {
     y = rtNaN;
   } else {
     double d;
     double d1;
     d = std::abs(u0);
     d1 = std::abs(u1);
-    if (std::isinf(u1)) {
+    if (rtIsInf(u1)) {
       if (d == 1.0) {
         y = 1.0;
       } else if (d > 1.0) {
@@ -384,6 +387,23 @@ static double rt_powd_snf(double u0, double u1)
   return y;
 }
 
+static double rt_roundd_snf(double u)
+{
+  double y;
+  if (std::abs(u) < 4.503599627370496E+15) {
+    if (u >= 0.5) {
+      y = std::floor(u + 0.5);
+    } else if (u > -0.5) {
+      y = u * 0.0;
+    } else {
+      y = std::ceil(u - 0.5);
+    }
+  } else {
+    y = u;
+  }
+  return y;
+}
+
 void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
                              double dz, double bz, double neoflp, double rmin,
                              double rmax, double nzfit,
@@ -391,9 +411,9 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
                              const coder::array<char, 2U> &fittype,
                              coder::array<double, 2U> &eps)
 {
-  static const char cv1[6]{'l', 'i', 'n', 'e', 'a', 'r'};
-  static const char cv[5]{'c', 'u', 'b', 'i', 'c'};
-  static const char cv2[3]{'l', 'o', 'g'};
+  static const char cv1[6] = {'l', 'i', 'n', 'e', 'a', 'r'};
+  static const char cv[5] = {'c', 'u', 'b', 'i', 'c'};
+  static const char cv2[3] = {'l', 'o', 'g'};
   coder::array<creal_T, 2U> EOFs;
   coder::array<creal_T, 2U> alpha;
   coder::array<creal_T, 2U> b_X;
@@ -495,7 +515,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   //    Copyright 1993-2004 The MathWorks, Inc.
   //    $Revision: 2.13.4.3 $  $Date: 2004/07/28 04:38:41 $
   //  Find NaNs and set them to zero
-  nans = std::isnan(cs);
+  nans = rtIsNaN(cs);
   bsum = cs;
   if (nans) {
     bsum = 0.0;
@@ -507,14 +527,14 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   }
   //  prevent divideByZero warnings
   //  Sum up non-NaNs, and divide by the number of non-NaNs.
-  if (std::isnan(bsum)) {
+  if (rtIsNaN(bsum)) {
     bsum = 0.0;
   }
   bsum /= unnamed_idx_0;
   //  m/s
   //  1 m
   //  Identify Spikes
-  coder::movmedian(wraw, std::round(1.0 / dz), wfilt);
+  coder::movmedian(wraw, rt_roundd_snf(1.0 / dz), wfilt);
   //  was medfilt1
   if ((wraw.size(0) == wfilt.size(0)) && (wraw.size(1) == wfilt.size(1))) {
     Z0.set_size(wraw.size(0), wraw.size(1));
@@ -524,7 +544,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
     }
     nx = Z0.size(0) * Z0.size(1);
     wfilt.set_size(Z0.size(0), Z0.size(1));
-    for (int k{0}; k < nx; k++) {
+    for (int k = 0; k < nx; k++) {
       wfilt[k] = std::abs(Z0[k]);
     }
   } else {
@@ -631,7 +651,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   //  Find NaNs and set them to zero
   b_nans.set_size(X.size(0), X.size(1));
   for (i = 0; i < b_loop_ub_tmp; i++) {
-    b_nans[i] = std::isnan(X[i]);
+    b_nans[i] = rtIsNaN(X[i]);
   }
   npages = b_loop_ub_tmp - 1;
   for (hi = 0; hi <= npages; hi++) {
@@ -683,10 +703,10 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
         lastBlockLength = 1024;
       }
     }
-    for (int xi{0}; xi < npages; xi++) {
+    for (int xi = 0; xi < npages; xi++) {
       xpageoffset = xi * wfilt.size(0);
       x[xi] = wfilt[xpageoffset];
-      for (int k{2}; k <= nx; k++) {
+      for (int k = 2; k <= nx; k++) {
         x[xi] = x[xi] + wfilt[(xpageoffset + k) - 1];
       }
       for (ib = 2; ib <= nblocks; ib++) {
@@ -697,7 +717,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
         } else {
           hi = 1024;
         }
-        for (int k{2}; k <= hi; k++) {
+        for (int k = 2; k <= hi; k++) {
           bsum += wfilt[(xblockoffset + k) - 1];
         }
         x[xi] = x[xi] + bsum;
@@ -730,7 +750,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   xblockoffset = X.size(0) * X.size(1);
   npages = xblockoffset - 1;
   for (hi = 0; hi <= npages; hi++) {
-    if (std::isnan(X[hi])) {
+    if (rtIsNaN(X[hi])) {
       X[hi] = 0.0;
     }
   }
@@ -862,8 +882,8 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
     }
   }
   npages = X.size(0) * X.size(1);
-  for (int k{0}; k < npages; k++) {
-    X[k] = std::round(X[k]);
+  for (int k = 0; k < npages; k++) {
+    X[k] = rt_roundd_snf(X[k]);
   }
   for (i = 0; i < npages; i++) {
     X[i] = X[i] / 100.0;
@@ -935,7 +955,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   }
   nx = dW.size(0) * dW.size(1) * dW.size(2);
   r2.set_size(dW.size(0), dW.size(1), dW.size(2));
-  for (int k{0}; k < nx; k++) {
+  for (int k = 0; k < nx; k++) {
     r2[k] = std::abs(dW[k]);
   }
   if ((r2.size(0) == wfilt.size(0)) && (r2.size(1) == wfilt.size(1))) {
@@ -978,7 +998,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
       bsum = dW[i];
       dW[i] = bsum * bsum;
     }
-    for (int k{0}; k < b_loop_ub_tmp; k++) {
+    for (int k = 0; k < b_loop_ub_tmp; k++) {
       dW[k] = std::log10(dW[k]);
     }
     coder::mean(dW, wfilt);
@@ -1001,7 +1021,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
     n[i] = rtNaN;
   }
   i = z.size(1);
-  for (int xi{0}; xi < i; xi++) {
+  for (int xi = 0; xi < i; xi++) {
     // Find points in z0 bin
     npages = Z0.size(0) * Z0.size(1) - 1;
     xpageoffset = 0;
@@ -1046,7 +1066,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
       lastBlockLength = 0;
     } else {
       lastBlockLength = ((igood[0] <= rmax) && (igood[0] >= rmin));
-      for (int k{2}; k <= npages; k++) {
+      for (int k = 2; k <= npages; k++) {
         bsum = igood[k - 1];
         lastBlockLength += ((bsum <= rmax) && (bsum >= rmin));
       }
@@ -1056,7 +1076,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
       nx = 0;
     } else {
       nx = ((igood[0] <= rmax) && (igood[0] >= rmin));
-      for (int k{2}; k <= npages; k++) {
+      for (int k = 2; k <= npages; k++) {
         bsum = igood[k - 1];
         nx += ((bsum <= rmax) && (bsum >= rmin));
       }
@@ -1123,7 +1143,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
         C[0] = 0.0;
         C[1] = 0.0;
         C[2] = 0.0;
-        for (int k{0}; k < npages; k++) {
+        for (int k = 0; k < npages; k++) {
           nx = k * 3;
           for (hi = 0; hi < 3; hi++) {
             xpageoffset = 0;
@@ -1186,7 +1206,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
           npages = b_A.size(1);
           sz[0] = 0.0;
           sz[1] = 0.0;
-          for (int k{0}; k < npages; k++) {
+          for (int k = 0; k < npages; k++) {
             nx = k << 1;
             for (hi = 0; hi < 2; hi++) {
               xpageoffset = 0;
@@ -1256,7 +1276,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
               igood[ib] = b_wraw[ib];
             }
             nx = igood.size(0);
-            for (int k{0}; k < nx; k++) {
+            for (int k = 0; k < nx; k++) {
               igood[k] = std::log10(igood[k]);
             }
             b_G.set_size(igood.size(0), 2);
@@ -1282,7 +1302,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
             hi = r6.size(0);
             igood.set_size(r6.size(0));
             d_G.set_size(2, b_G.size(0));
-            for (int k{0}; k < hi; k++) {
+            for (int k = 0; k < hi; k++) {
               igood[k] = std::log10(b_z[r9[r6[k]]]);
               d_G[2 * k] = b_G[k];
               d_G[2 * k + 1] = b_G[k + b_G.size(0)];
@@ -1292,7 +1312,7 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
             coder::b_mldivide(dv1, d_G, b_A);
             npages = b_A.size(1);
             sz[1] = 0.0;
-            for (int k{0}; k < npages; k++) {
+            for (int k = 0; k < npages; k++) {
               sz[1] += b_A[(k << 1) + 1] * igood[k];
             }
             n[xi] = rt_powd_snf(10.0, sz[1]);

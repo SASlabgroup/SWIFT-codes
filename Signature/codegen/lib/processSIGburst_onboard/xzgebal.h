@@ -22,7 +22,7 @@ namespace coder {
 namespace internal {
 namespace reflapack {
 int xzgebal(::coder::array<double, 2U> &A, ::coder::array<double, 1U> &scale,
-            int &ihi);
+            int *ihi);
 
 }
 } // namespace internal

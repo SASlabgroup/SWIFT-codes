@@ -36,7 +36,7 @@ static void merge(::coder::array<int, 1U> &idx, ::coder::array<double, 1U> &x,
     int p;
     int q;
     n_tmp = np + nq;
-    for (int j{0}; j < n_tmp; j++) {
+    for (int j = 0; j < n_tmp; j++) {
       iout = offset + j;
       iwork[j] = idx[iout];
       xwork[j] = x[iout];
@@ -63,7 +63,7 @@ static void merge(::coder::array<int, 1U> &idx, ::coder::array<double, 1U> &x,
           q++;
         } else {
           q = iout - p;
-          for (int j{p + 1}; j <= np; j++) {
+          for (int j = p + 1; j <= np; j++) {
             iout = q + j;
             idx[iout] = iwork[j - 1];
             x[iout] = xwork[j - 1];

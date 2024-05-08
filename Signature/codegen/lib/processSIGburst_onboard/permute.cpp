@@ -54,31 +54,31 @@ static bool nomovement(const double perm[3],
 void b_permute(const ::coder::array<double, 3U> &a,
                ::coder::array<double, 3U> &b)
 {
-  static const double dv[3]{3.0, 1.0, 2.0};
+  static const double dv[3] = {3.0, 1.0, 2.0};
   int subsa_idx_1;
   int subsa_idx_2;
   if (nomovement(dv, a)) {
     int loop_ub;
     b.set_size(a.size(2), a.size(0), a.size(1));
     loop_ub = a.size(0) * a.size(2) * a.size(1);
-    for (int i{0}; i < loop_ub; i++) {
+    for (int i = 0; i < loop_ub; i++) {
       b[i] = a[i];
     }
   } else {
     int i;
     b.set_size(a.size(2), a.size(0), a.size(1));
     i = a.size(2);
-    for (int k{0}; k < i; k++) {
+    for (int k = 0; k < i; k++) {
       int loop_ub;
       loop_ub = a.size(1);
-      for (int b_k{0}; b_k < loop_ub; b_k++) {
+      for (int b_k = 0; b_k < loop_ub; b_k++) {
         int i1;
         i1 = a.size(0);
         if (a.size(0) - 1 >= 0) {
           subsa_idx_1 = b_k + 1;
           subsa_idx_2 = k + 1;
         }
-        for (int c_k{0}; c_k < i1; c_k++) {
+        for (int c_k = 0; c_k < i1; c_k++) {
           b[((subsa_idx_2 + b.size(0) * c_k) +
              b.size(0) * b.size(1) * (subsa_idx_1 - 1)) -
             1] = a[(c_k + a.size(0) * (subsa_idx_1 - 1)) +
@@ -91,31 +91,31 @@ void b_permute(const ::coder::array<double, 3U> &a,
 
 void permute(const ::coder::array<double, 3U> &a, ::coder::array<double, 3U> &b)
 {
-  static const double dv[3]{1.0, 3.0, 2.0};
+  static const double dv[3] = {1.0, 3.0, 2.0};
   int subsa_idx_1;
   int subsa_idx_2;
   if (nomovement(dv, a)) {
     int loop_ub;
     b.set_size(a.size(0), a.size(2), a.size(1));
     loop_ub = a.size(0) * a.size(2) * a.size(1);
-    for (int i{0}; i < loop_ub; i++) {
+    for (int i = 0; i < loop_ub; i++) {
       b[i] = a[i];
     }
   } else {
     int i;
     b.set_size(a.size(0), a.size(2), a.size(1));
     i = a.size(2);
-    for (int k{0}; k < i; k++) {
+    for (int k = 0; k < i; k++) {
       int loop_ub;
       loop_ub = a.size(1);
-      for (int b_k{0}; b_k < loop_ub; b_k++) {
+      for (int b_k = 0; b_k < loop_ub; b_k++) {
         int i1;
         i1 = a.size(0);
         if (a.size(0) - 1 >= 0) {
           subsa_idx_1 = b_k + 1;
           subsa_idx_2 = k + 1;
         }
-        for (int c_k{0}; c_k < i1; c_k++) {
+        for (int c_k = 0; c_k < i1; c_k++) {
           b[(c_k + b.size(0) * (subsa_idx_2 - 1)) +
             b.size(0) * b.size(1) * (subsa_idx_1 - 1)] =
               a[(c_k + a.size(0) * (subsa_idx_1 - 1)) +

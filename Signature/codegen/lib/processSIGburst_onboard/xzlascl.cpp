@@ -43,7 +43,7 @@ void xzlascl(double cfrom, double cto, int m, ::coder::array<double, 1U> &A,
       mul = ctoc / cfromc;
       notdone = false;
     }
-    for (int i{0}; i < m; i++) {
+    for (int i = 0; i < m; i++) {
       int b_i;
       b_i = (iA0 + i) - 1;
       A[b_i] = A[b_i] * mul;
@@ -76,10 +76,10 @@ void xzlascl(double cfrom, double cto, int m, int n,
       mul = ctoc / cfromc;
       notdone = false;
     }
-    for (int j{0}; j < n; j++) {
+    for (int j = 0; j < n; j++) {
       int offset;
       offset = j * lda - 1;
-      for (int i{0}; i < m; i++) {
+      for (int i = 0; i < m; i++) {
         int b_i;
         b_i = (offset + i) + 1;
         A[b_i] = A[b_i] * mul;

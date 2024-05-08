@@ -1,9 +1,8 @@
 /* Copyright 2019-2023 The MathWorks, Inc. */
-/* Copied from
- * fullfile(matlabroot,'extern','include','coder','coder_array','coder_array_rtw_cpp11.h') */
+/* Copied from fullfile(matlabroot,'extern','include','coder','coder_array','coder_array_rtw.h') */
 
-#ifndef _mw_coder_array_cpp11_h
-#define _mw_coder_array_cpp11_h
+#ifndef _mw_coder_array_h
+#define _mw_coder_array_h
 
 //  Usage:
 //
@@ -40,7 +39,7 @@
 //               : Compute the linear index from ND index (i1,i2,...)
 //  at(SizeType i1, SizeType i2, ...) : The element at index (i1,i2,...)
 
-#include <cassert>
+#include <algorithm>
 #include <cstring>
 #include <iterator>
 #include <string>
@@ -55,7 +54,7 @@ namespace coder {
 #endif
 
 #ifndef CODER_ARRAY_SIZE_TYPE_DEFINED
-using SizeType = int;
+typedef int SizeType;
 #endif
 
 namespace std = ::std;
@@ -66,11 +65,11 @@ namespace detail {
 template <typename T, typename SZ>
 class data_ptr {
   public:
-    using value_type = T;
-    using size_type = SZ;
+    typedef T value_type;
+    typedef SZ size_type;
 
     data_ptr()
-        : data_(nullptr)
+        : data_(NULL)
         , size_(0)
         , capacity_(0)
         , owner_(false) {
@@ -83,7 +82,7 @@ class data_ptr {
     }
 
     data_ptr(data_ptr const& _other)
-        : data_(_other.owner_ ? nullptr : _other.data_)
+        : data_(_other.owner_ ? NULL : _other.data_)
         , size_(_other.owner_ ? 0 : _other.size_)
         , capacity_(_other.owner_ ? 0 : _other.capacity_)
         , owner_(_other.owner_) {
@@ -103,11 +102,11 @@ class data_ptr {
     }
     void reserve(SZ _n) {
         if (_n > capacity_) {
-            T* const new_data{CODER_ALLOC(T, _n)};
+            T* const new_data(CODER_ALLOC(T, _n));
             construct_last_n(new_data, size_);
-            (void)std::move(data_, data_ + size_, new_data);
+            (void)std::copy(data_, data_ + size_, new_data);
             if (owner_) {
-                destroy_last_n(data_, size_);
+                destroy_last_n(data_, size_); 
                 CODER_DEALLOC(data_);
             }
             data_ = new_data;
@@ -117,7 +116,7 @@ class data_ptr {
     }
 
     void resize(SZ _n) {
-        SZ old_size{size_};
+        SZ old_size = size_;
         if (_n > old_size) {
             reserve(_n);
             size_ = _n;
@@ -133,20 +132,21 @@ class data_ptr {
     void operator=(data_ptr<T, SZ> const& _other);
 
     void construct_last_n(T *_data, SZ _n) {
-        if (_data == nullptr) {
+        if (_data == NULL) {
             return;
         }
         if (_n > size_) {
             _n = size_;
         }
         SZ i;
+
 #if defined(__cpp_exceptions)
         try {
             for (i = size_ - _n; i < size_; i++) {
                 new (&_data[i]) T();
             }
         } catch (...) {
-            for (SZ j{size_ - _n}; j < i; j++) {
+            for (SZ j = size_ - _n; j < i; j++) {
                 _data[j].~T();
             }
             throw;
@@ -160,13 +160,13 @@ class data_ptr {
     }
 
     void destroy_last_n(T *_data, SZ _n) {
-        if (_data == nullptr) {
+        if (_data == NULL) {
             return;
         }
         if (_n > size_) {
             _n = size_;
         }
-        for (SZ i{size_ - _n}; i < size_; i++) {
+        for (SZ i = size_ - _n; i < size_; i++) {
             _data[i].~T();
         }
     }
@@ -193,16 +193,15 @@ class data_ptr {
         (void)std::copy(_data, _data + _size, data_);
     }
 
+    void copy(data_ptr<T, SZ> const& _other) {
+        copy(_other.data_, _other.size_);
+    }
+
     void shallow_copy(data_ptr<T, SZ> const& _other){
         data_ = _other.data_;
         size_ = _other.size_;
         capacity_ = _other.capacity_;
         owner_ = false;
-    }
-
-
-    void copy(data_ptr<T, SZ> const& _other) {
-        copy(_other.data_, _other.size_);
     }
 
     operator T*() {
@@ -229,7 +228,7 @@ class data_ptr {
     }
 
     bool is_null() const {
-        return data_ == nullptr;
+        return data_ == NULL;
     }
 
     void clear() {
@@ -237,7 +236,7 @@ class data_ptr {
             destroy_last_n(data_, size_);
             CODER_DEALLOC(data_);
         }
-        data_ = nullptr;
+        data_ = NULL;
         size_ = 0;
         capacity_ = 0;
         owner_ = false;
@@ -269,7 +268,7 @@ class array_iterator : public std::iterator<std::random_access_iterator_tag,
                                             typename T::size_type> {
   public:
     array_iterator()
-        : arr_(nullptr)
+        : arr_(NULL)
         , i_(0) {
     }
     array_iterator(array_iterator<T> const& other)
@@ -296,12 +295,12 @@ class array_iterator : public std::iterator<std::random_access_iterator_tag,
         return *this;
     }
     array_iterator<T> operator++(int) {
-        array_iterator<T> cp{*this};
+        array_iterator<T> cp(*this);
         ++i_;
         return cp;
     }
     array_iterator<T> operator--(int) {
-        array_iterator<T> cp{*this};
+        array_iterator<T> cp(*this);
         --i_;
         return cp;
     }
@@ -328,7 +327,7 @@ class array_iterator : public std::iterator<std::random_access_iterator_tag,
         return i_ >= _other.i_;
     }
     array_iterator<T> operator+(typename T::size_type _add) const {
-        array_iterator<T> cp{*this};
+        array_iterator<T> cp(*this);
         cp.i_ += _add;
         return cp;
     }
@@ -337,7 +336,7 @@ class array_iterator : public std::iterator<std::random_access_iterator_tag,
         return *this;
     }
     array_iterator<T> operator-(typename T::size_type _subtract) const {
-        array_iterator<T> cp{*this};
+        array_iterator<T> cp(*this);
         cp.i_ -= _subtract;
         return cp;
     }
@@ -366,7 +365,7 @@ class const_array_iterator : public std::iterator<std::random_access_iterator_ta
                                                   typename T::size_type> {
   public:
     const_array_iterator()
-        : arr_(nullptr)
+        : arr_(NULL)
         , i_(0) {
     }
     const_array_iterator(const_array_iterator<T> const& other)
@@ -393,12 +392,12 @@ class const_array_iterator : public std::iterator<std::random_access_iterator_ta
         return *this;
     }
     const_array_iterator<T> operator++(int) {
-        const_array_iterator<T> copy{*this};
+        const_array_iterator<T> copy(*this);
         ++i_;
         return copy;
     }
     const_array_iterator<T> operator--(int) {
-        const_array_iterator copy{*this};
+        const_array_iterator copy(*this);
         --i_;
         return copy;
     }
@@ -425,7 +424,7 @@ class const_array_iterator : public std::iterator<std::random_access_iterator_ta
         return i_ >= _other.i_;
     }
     const_array_iterator<T> operator+(typename T::size_type _add) const {
-        const_array_iterator<T> cp{*this};
+        const_array_iterator<T> cp(*this);
         cp.i_ += _add;
         return cp;
     }
@@ -434,7 +433,7 @@ class const_array_iterator : public std::iterator<std::random_access_iterator_ta
         return *this;
     }
     const_array_iterator<T> operator-(typename T::size_type _subtract) const {
-        const_array_iterator<T> cp{*this};
+        const_array_iterator<T> cp(*this);
         cp.i_ -= _subtract;
         return cp;
     }
@@ -479,33 +478,13 @@ class numel<0> {
     }
 };
 
-// Compute the product for a set of numeric arguments: product<int32_t>(10, 20, 30, ...) =>
-// 10*20*30*...
-template <typename SZ, typename First, typename... Rest>
-struct product_i {
-    static SZ compute(First _f, Rest... _rest) {
-        return _f * product_i<SZ, Rest...>::compute(_rest...);
-    }
-};
-template <typename SZ, typename Last>
-struct product_i<SZ, Last> {
-    static SZ compute(Last _l) {
-        return _l;
-    }
-};
-
-template <typename SZ, typename... Args>
-SZ product(Args... args) {
-    return product_i<SZ, Args...>::compute(args...);
-}
-
 // Compute flat index from (column-major) ND size vector and a list of indices.
 template <int I>
 class index_nd {
   public:
     template <typename SZ>
     static SZ compute(SZ const _size[], SZ const _indices[]) {
-        SZ const weight{numel<I - 1>::compute(_size)};
+        SZ const weight = numel<I - 1>::compute(_size);
         return weight * _indices[I - 1] + index_nd<I - 1>::compute(_size, _indices);
     }
 };
@@ -536,30 +515,22 @@ struct match_dimensions<true> {
 template <typename T, typename SZ, int N>
 class array_base {
   public:
-    using value_type = T;
-    using size_type = SZ;
+    typedef T value_type;
+    typedef SZ size_type;
 
     array_base() {
         (void)::memset(size_, 0, sizeof(SZ) * N);
     }
 
-    array_base(std::initializer_list<T> _l) {
-        set_size_ones();
-        set_size_dim(static_cast<SZ>(N-1), static_cast<SZ>(_l.size()));
-        reserve(numel());
-        SZ i{0};
-        for (auto const &e : _l)  {
-            operator [](i) = e;
-            i++;
-        }
+    array_base(array_base const& _other)
+        : data_(_other.data_) {
+        (void)std::copy(_other.size_, _other.size_ + N, size_);
     }
 
     array_base(T* _data, SZ const* _sz)
         : data_(_data, coder::detail::numel<N>::compute(_sz)) {
         (void)std::copy(_sz, _sz + N, size_);
     }
-
-    array_base(array_base const&) = default;
 
     array_base& operator=(array_base const& _other) {
         if(_other.data_.is_owner()){
@@ -571,11 +542,110 @@ class array_base {
         return *this;
     }
 
-    template <typename... Dims>
-    void set(T* _data, Dims... dims) {
-        coder::detail::match_dimensions<N == sizeof...(dims)>::check();
-        data_.set(_data, coder::detail::product<SZ>(dims...));
-        set_size_i<0>(dims...);
+    void set(T* _data, SZ _n1) {
+        coder::detail::match_dimensions<N == 1>::check();
+        data_.set(_data, _n1);
+        size_[0] = _n1;
+    }
+
+    void set(T* _data, SZ _n1, SZ _n2) {
+        coder::detail::match_dimensions<N == 2>::check();
+        data_.set(_data, _n1 * _n2);
+        size_[0] = _n1;
+        size_[1] = _n2;
+    }
+
+    void set(T* _data, SZ _n1, SZ _n2, SZ _n3) {
+        coder::detail::match_dimensions<N == 3>::check();
+        data_.set(_data, _n1 * _n2 * _n3);
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+    }
+
+    void set(T* _data, SZ _n1, SZ _n2, SZ _n3, SZ _n4) {
+        coder::detail::match_dimensions<N == 4>::check();
+        data_.set(_data, _n1 * _n2 * _n3 * _n4);
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+    }
+
+    void set(T* _data, SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5) {
+        coder::detail::match_dimensions<N == 5>::check();
+        data_.set(_data, _n1 * _n2 * _n3 * _n4 * _n5);
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+    }
+
+    void set(T* _data, SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6) {
+        coder::detail::match_dimensions<N == 6>::check();
+        data_.set(_data, _n1 * _n2 * _n3 * _n4 * _n5 * _n6);
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+    }
+
+    void set(T* _data, SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7) {
+        coder::detail::match_dimensions<N == 7>::check();
+        data_.set(_data, _n1 * _n2 * _n3 * _n4 * _n5 * _n6 * _n7);
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        size_[6] = _n7;
+    }
+
+    void set(T* _data, SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8) {
+        coder::detail::match_dimensions<N == 8>::check();
+        data_.set(_data, _n1 * _n2 * _n3 * _n4 * _n5 * _n6 * _n7 * _n8);
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        size_[6] = _n7;
+        size_[7] = _n8;
+    }
+
+    void set(T* _data, SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8, SZ _n9) {
+        coder::detail::match_dimensions<N == 9>::check();
+        data_.set(_data, _n1 * _n2 * _n3 * _n4 * _n5 * _n6 * _n7 * _n8 * _n9);
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        size_[6] = _n7;
+        size_[7] = _n8;
+        size_[8] = _n9;
+    }
+
+    void
+    set(T* _data, SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8, SZ _n9, SZ _n10) {
+        coder::detail::match_dimensions<N == 10>::check();
+        data_.set(_data, _n1 * _n2 * _n3 * _n4 * _n5 * _n6 * _n7 * _n8 * _n9 * _n10);
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        size_[6] = _n7;
+        size_[7] = _n8;
+        size_[8] = _n9;
+        size_[9] = _n10;
     }
 
     bool is_owner() const {
@@ -590,48 +660,171 @@ class array_base {
         return data_.capacity();
     }
 
-  private:
-    template <SZ _i, typename First, typename... Rest>
-    void set_size_i(First f, Rest... rest) {
-        size_[_i] = f;
-        set_size_i<_i + 1, Rest...>(rest...);
-    }
-    template <SZ _i, typename Last>
-    void set_size_i(Last l) {
-        size_[_i] = l;
-    }
-
-    void set_size_ones() {
-        for (SZ i{0}; i < N; i++) {
-            size_[i] = 1;
-        }
-    }
-
-    void set_size_dim(SZ _dim, SZ _n) {
-        size_[_dim] = _n;
-    }
-
-  public:
     void reserve(SZ _n) {
         ensureCapacity(_n);
     }
 
-    template <typename... Dims>
-    void set_size(Dims... dims) {
-        coder::detail::match_dimensions<N == sizeof...(dims)>::check();
-        set_size_i<0>(dims...);
+    void set_size(SZ _n1) {
+        coder::detail::match_dimensions<N == 1>::check();
+        size_[0] = _n1;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2) {
+        coder::detail::match_dimensions<N == 2>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2, SZ _n3) {
+        coder::detail::match_dimensions<N == 3>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2, SZ _n3, SZ _n4) {
+        coder::detail::match_dimensions<N == 4>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5) {
+        coder::detail::match_dimensions<N == 5>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6) {
+        coder::detail::match_dimensions<N == 6>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7) {
+        coder::detail::match_dimensions<N == 7>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        size_[6] = _n7;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8) {
+        coder::detail::match_dimensions<N == 8>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        size_[6] = _n7;
+        size_[7] = _n8;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8, SZ _n9) {
+        coder::detail::match_dimensions<N == 9>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        size_[6] = _n7;
+        size_[7] = _n8;
+        size_[8] = _n9;
+        ensureCapacity(numel());
+    }
+
+    void set_size(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8, SZ _n9, SZ _n10) {
+        coder::detail::match_dimensions<N == 10>::check();
+        size_[0] = _n1;
+        size_[1] = _n2;
+        size_[2] = _n3;
+        size_[3] = _n4;
+        size_[4] = _n5;
+        size_[5] = _n6;
+        size_[6] = _n7;
+        size_[7] = _n8;
+        size_[8] = _n9;
+        size_[9] = _n10;
         ensureCapacity(numel());
     }
 
     template <size_t N1>
-    array_base<T, SZ, static_cast<SZ>(N1)> reshape_n(SZ const (&_ns)[N1]) const {
-        array_base<T, SZ, static_cast<SZ>(N1)> reshaped{const_cast<T*>(&data_[0]), _ns};
+    array_base<T, SZ, static_cast<SZ>(N1)> reshape_n(SZ const(&_ns)[N1]) const {
+        array_base<T, SZ, static_cast<SZ>(N1)> reshaped(const_cast<T*>(&data_[0]), _ns);
         return reshaped;
     }
 
-    template <typename... Dims>
-    array_base<T, SZ, static_cast<SZ>(sizeof...(Dims))> reshape(Dims... dims) const {
-        SZ const ns[]{static_cast<SZ>(dims)...};
+    array_base<T, SZ, 1> reshape(SZ _n1) const {
+        const SZ ns[] = {_n1};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 2> reshape(SZ _n1, SZ _n2) const {
+        const SZ ns[] = {_n1, _n2};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 3> reshape(SZ _n1, SZ _n2, SZ _n3) const {
+        const SZ ns[] = {_n1, _n2, _n3};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 4> reshape(SZ _n1, SZ _n2, SZ _n3, SZ _n4) const {
+        const SZ ns[] = {_n1, _n2, _n3, _n4};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 5> reshape(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5) const {
+        const SZ ns[] = {_n1, _n2, _n3, _n4, _n5};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 6> reshape(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6) const {
+        const SZ ns[] = {_n1, _n2, _n3, _n4, _n5, _n6};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 7> reshape(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7) const {
+        const SZ ns[] = {_n1, _n2, _n3, _n4, _n5, _n6, _n7};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 8> reshape(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8)
+        const {
+        const SZ ns[] = {_n1, _n2, _n3, _n4, _n5, _n6, _n7, _n8};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 9>
+    reshape(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8, SZ _n9) const {
+        const SZ ns[] = {_n1, _n2, _n3, _n4, _n5, _n6, _n7, _n8, _n9};
+        return reshape_n(ns);
+    }
+
+    array_base<T, SZ, 10>
+    reshape(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8, SZ _n9, SZ _n10) const {
+        const SZ ns[] = {_n1, _n2, _n3, _n4, _n5, _n6, _n7, _n8, _n9, _n10};
         return reshape_n(ns);
     }
 
@@ -658,7 +851,7 @@ class array_base {
     SZ* size() {
         return &size_[0];
     }
-
+    
     SZ const* size() const {
         return &size_[0];
     }
@@ -671,23 +864,139 @@ class array_base {
         return coder::detail::numel<N>::compute(size_);
     }
 
-    template <typename... Dims>
-    SZ index(Dims... _dims) const {
-        coder::detail::match_dimensions<N == sizeof...(_dims)>::check();
-        SZ const indices[]{static_cast<SZ>(_dims)...};
-        return coder::detail::index_nd<static_cast<SZ>(sizeof...(_dims))>::compute(size_, indices);
+    SZ index(SZ _n1) const {
+        coder::detail::match_dimensions<N == 1>::check();
+        const SZ indices[] = {_n1};
+        return coder::detail::index_nd<1>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2) const {
+        coder::detail::match_dimensions<N == 2>::check();
+        const SZ indices[] = {_n1, _n2};
+        return coder::detail::index_nd<2>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2, SZ _n3) const {
+        coder::detail::match_dimensions<N == 3>::check();
+        const SZ indices[] = {_n1, _n2, _n3};
+        return coder::detail::index_nd<3>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2, SZ _n3, SZ _n4) const {
+        coder::detail::match_dimensions<N == 4>::check();
+        const SZ indices[] = {_n1, _n2, _n3, _n4};
+        return coder::detail::index_nd<4>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5) const {
+        coder::detail::match_dimensions<N == 5>::check();
+        const SZ indices[] = {_n1, _n2, _n3, _n4, _n5};
+        return coder::detail::index_nd<5>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6) const {
+        coder::detail::match_dimensions<N == 6>::check();
+        const SZ indices[] = {_n1, _n2, _n3, _n4, _n5, _n6};
+        return coder::detail::index_nd<6>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7) const {
+        coder::detail::match_dimensions<N == 7>::check();
+        const SZ indices[] = {_n1, _n2, _n3, _n4, _n5, _n6, _n7};
+        return coder::detail::index_nd<7>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8) const {
+        coder::detail::match_dimensions<N == 8>::check();
+        const SZ indices[] = {_n1, _n2, _n3, _n4, _n5, _n6, _n7, _n8};
+        return coder::detail::index_nd<8>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8, SZ _n9) const {
+        coder::detail::match_dimensions<N == 9>::check();
+        const SZ indices[] = {_n1, _n2, _n3, _n4, _n5, _n6, _n7, _n8, _n9};
+        return coder::detail::index_nd<9>::compute(size_, indices);
+    }
+    SZ index(SZ _n1, SZ _n2, SZ _n3, SZ _n4, SZ _n5, SZ _n6, SZ _n7, SZ _n8, SZ _n9, SZ _n10)
+        const {
+        coder::detail::match_dimensions<N == 10>::check();
+        const SZ indices[] = {_n1, _n2, _n3, _n4, _n5, _n6, _n7, _n8, _n9, _n10};
+        return coder::detail::index_nd<10>::compute(size_, indices);
     }
 
-    template <typename... Dims>
-    T& at(Dims... _i) {
-        coder::detail::match_dimensions<N == sizeof...(_i)>::check();
-        return data_[index(_i...)];
+    T& at(SZ _i1) {
+        coder::detail::match_dimensions<N == 1>::check();
+        return data_[_i1];
+    }
+    T& at(SZ _i1, SZ _i2) {
+        coder::detail::match_dimensions<N == 2>::check();
+        return data_[index(_i1, _i2)];
+    }
+    T& at(SZ _i1, SZ _i2, SZ _i3) {
+        coder::detail::match_dimensions<N == 3>::check();
+        return data_[index(_i1, _i2, _i3)];
+    }
+    T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4) {
+        coder::detail::match_dimensions<N == 4>::check();
+        return data_[index(_i1, _i2, _i3, _i4)];
+    }
+    T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5) {
+        coder::detail::match_dimensions<N == 5>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5)];
+    }
+    T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6) {
+        coder::detail::match_dimensions<N == 6>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6)];
+    }
+    T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6, SZ _i7) {
+        coder::detail::match_dimensions<N == 7>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6, _i7)];
+    }
+    T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6, SZ _i7, SZ _i8) {
+        coder::detail::match_dimensions<N == 8>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)];
+    }
+    T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6, SZ _i7, SZ _i8, SZ _i9) {
+        coder::detail::match_dimensions<N == 9>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)];
+    }
+    T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6, SZ _i7, SZ _i8, SZ _i9, SZ _i10) {
+        coder::detail::match_dimensions<N == 10>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9, _i10)];
     }
 
-    template <typename... Dims>
-    T const& at(Dims... _i) const {
-        coder::detail::match_dimensions<N == sizeof...(_i)>::check();
-        return data_[index(_i...)];
+    const T& at(SZ _i1) const {
+        coder::detail::match_dimensions<N == 1>::check();
+        return data_[_i1];
+    }
+    const T& at(SZ _i1, SZ _i2) const {
+        coder::detail::match_dimensions<N == 2>::check();
+        return data_[index(_i1, _i2)];
+    }
+    const T& at(SZ _i1, SZ _i2, SZ _i3) const {
+        coder::detail::match_dimensions<N == 3>::check();
+        return data_[index(_i1, _i2, _i3)];
+    }
+    const T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4) const {
+        coder::detail::match_dimensions<N == 4>::check();
+        return data_[index(_i1, _i2, _i3, _i4)];
+    }
+    const T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5) const {
+        coder::detail::match_dimensions<N == 5>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5)];
+    }
+    const T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6) const {
+        coder::detail::match_dimensions<N == 6>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6)];
+    }
+    const T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6, SZ _i7) const {
+        coder::detail::match_dimensions<N == 7>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6, _i7)];
+    }
+    const T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6, SZ _i7, SZ _i8) const {
+        coder::detail::match_dimensions<N == 8>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)];
+    }
+    const T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6, SZ _i7, SZ _i8, SZ _i9) const {
+        coder::detail::match_dimensions<N == 9>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)];
+    }
+    const T& at(SZ _i1, SZ _i2, SZ _i3, SZ _i4, SZ _i5, SZ _i6, SZ _i7, SZ _i8, SZ _i9, SZ _i10)
+        const {
+        coder::detail::match_dimensions<N == 10>::check();
+        return data_[index(_i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9, _i10)];
     }
 
     array_iterator<array_base<T, SZ, N> > begin() {
@@ -710,7 +1019,7 @@ class array_base {
   private:
     void ensureCapacity(SZ _newNumel) {
         if (_newNumel > data_.capacity()) {
-            SZ i{data_.capacity()};
+            SZ i = data_.capacity();
             if (i < 16) {
                 i = 16;
             }
@@ -732,7 +1041,7 @@ class array_base {
 template <typename T, int N>
 class array : public array_base<T, SizeType, N> {
   private:
-    using Base = array_base<T, SizeType, N>;
+    typedef array_base<T, SizeType, N> Base;
 
   public:
     array()
@@ -747,22 +1056,13 @@ class array : public array_base<T, SizeType, N> {
     array(T* _data, SizeType const* _sz)
         : Base(_data, _sz) {
     }
-
-    array(std::initializer_list<T> _l)
-        : Base(_l) {
-    }
-
-    array & operator = (array<T,N> const& _other) {
-        Base::operator = (_other);
-        return *this;
-    }
 };
 
 // Specialize on char (row vector) for better support on strings.
 template <>
 class array<char, 2> : public array_base<char, SizeType, 2> {
   private:
-    using Base = array_base<char, SizeType, 2>;
+    typedef array_base<char, SizeType, 2> Base;
 
   public:
     array()
@@ -771,8 +1071,11 @@ class array<char, 2> : public array_base<char, SizeType, 2> {
     array(array<char, 2> const& _other)
         : Base(_other) {
     }
-
-    array& operator=(const array<char, 2>&) = default;
+    
+    array& operator=(const array<char, 2>&_other) {
+        Base::operator=(_other);
+        return *this;
+    }
 
     array(Base const& _other)
         : Base(_other) {
@@ -780,10 +1083,6 @@ class array<char, 2> : public array_base<char, SizeType, 2> {
 
     array(char* _data, SizeType const* _sz)
         : Base(_data, _sz) {
-    }
-
-    array(std::initializer_list<char> _l)
-        : Base(_l) {
     }
 
     array(std::string const& _str) {
@@ -795,20 +1094,20 @@ class array<char, 2> : public array_base<char, SizeType, 2> {
     }
 
     array(std::vector<char> const& _vec) {
-        SizeType const n{static_cast<SizeType>(_vec.size())};
+        SizeType const n = static_cast<SizeType>(_vec.size());
         set_size(1, n);
         data_.copy(&_vec[0], n);
     }
 
     array& operator=(std::string const& _str) {
-        SizeType const n{static_cast<SizeType>(_str.size())};
+        SizeType const n = static_cast<SizeType>(_str.size());
         set_size(1, n);
         data_.copy(_str.c_str(), n);
         return *this;
     }
 
     array& operator=(char const* const _str) {
-        SizeType const n{static_cast<SizeType>(strlen(_str))};
+        SizeType const n = static_cast<SizeType>(strlen(_str));
         set_size(1, n);
         data_.copy(_str, n);
         return *this;
@@ -824,7 +1123,7 @@ class array<char, 2> : public array_base<char, SizeType, 2> {
 template <typename T>
 class array<T, 2> : public array_base<T, SizeType, 2> {
   private:
-    using Base = array_base<T, SizeType, 2>;
+    typedef array_base<T, SizeType, 2> Base;
 
   public:
     array()
@@ -833,30 +1132,29 @@ class array<T, 2> : public array_base<T, SizeType, 2> {
     array(array<T, 2> const& _other)
         : Base(_other) {
     }
-    array& operator=(const array<T, 2>& _other) = default;
+    array& operator=(const array<T, 2>& _other) {
+        Base::operator=(_other);
+        return *this;
+    }
     array(Base const& _other)
         : Base(_other) {
     }
     array(T* _data, SizeType const* _sz)
         : Base(_data, _sz) {
     }
-    array(std::initializer_list<T> _l)
-        : Base(_l) {
-    }
-
     array(std::vector<T> const& _vec) {
         operator=(_vec);
     }
 
     array& operator=(std::vector<T> const& _vec) {
-        SizeType n{static_cast<SizeType>(_vec.size())};
+        SizeType n = static_cast<SizeType>(_vec.size());
         Base::set_size(1, n);
         Base::data_.copy(&_vec[0], n);
         return *this;
     }
 
     operator std::vector<T>() const {
-        T const* p{&Base::data_[0]};
+        T const* p = &Base::data_[0];
         return std::vector<T>(p, p + Base::numel());
     }
 };
@@ -866,7 +1164,7 @@ class array<T, 2> : public array_base<T, SizeType, 2> {
 template <typename T>
 class array<T, 1> : public array_base<T, SizeType, 1> {
   private:
-    using Base = array_base<T, SizeType, 1>;
+    typedef array_base<T, SizeType, 1> Base;
 
   public:
     array()
@@ -875,29 +1173,29 @@ class array<T, 1> : public array_base<T, SizeType, 1> {
     array(array<T, 1> const& _other)
         : Base(_other) {
     }
-    array& operator=(const array<T, 1>& _other) = default;
+    array& operator=(const array<T, 1>& _other) {
+        Base::operator=(_other);
+        return *this;
+    }
     array(Base const& _other)
         : Base(_other) {
     }
     array(T* _data, SizeType const* _sz)
         : Base(_data, _sz) {
     }
-    array(std::initializer_list<T> _l)
-        : Base(_l) {
-    }
     array(std::vector<T> const& _vec) {
         operator=(_vec);
     }
 
     array& operator=(std::vector<T> const& _vec) {
-        SizeType n{static_cast<SizeType>(_vec.size())};
+        SizeType n = static_cast<SizeType>(_vec.size());
         Base::set_size(n);
         Base::data_.copy(&_vec[0], n);
         return *this;
     }
 
     operator std::vector<T>() const {
-        T const* p{&Base::data_[0]};
+        T const* p = &Base::data_[0];
         return std::vector<T>(p, p + Base::numel());
     }
 };

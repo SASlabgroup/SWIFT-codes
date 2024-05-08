@@ -12,7 +12,7 @@
 #include "SortedBuffer.h"
 #include "rt_nonfinite.h"
 #include "coder_array.h"
-#include <cmath>
+#include "rt_nonfinite.h"
 
 // Function Definitions
 namespace coder {
@@ -28,7 +28,7 @@ void SortedBuffer::insert(double x)
       buf[i + i1] = 0.0;
     }
   }
-  if (!std::isnan(x)) {
+  if (!rtIsNaN(x)) {
     if (nbuf == 0) {
       buf[0] = x;
       nbuf = 1;
@@ -37,7 +37,7 @@ void SortedBuffer::insert(double x)
       b_i = locateElement(x);
       if (b_i == 0) {
         i = nbuf;
-        for (int k{i}; k >= 1; k--) {
+        for (int k = i; k >= 1; k--) {
           buf[k] = buf[k - 1];
         }
         buf[0] = x;
@@ -48,7 +48,7 @@ void SortedBuffer::insert(double x)
       } else {
         i = nbuf;
         i1 = b_i + 1;
-        for (int k{i}; k >= i1; k--) {
+        for (int k = i; k >= i1; k--) {
           buf[k] = buf[k - 1];
         }
         buf[b_i] = x;
@@ -87,9 +87,9 @@ int SortedBuffer::locateElement(double x) const
 
 void SortedBuffer::replace(double xold, double xnew)
 {
-  if (std::isnan(xold)) {
+  if (rtIsNaN(xold)) {
     insert(xnew);
-  } else if (std::isnan(xnew)) {
+  } else if (rtIsNaN(xnew)) {
     if (nbuf == 1) {
       if (xold == buf[0]) {
         nbuf = 0;
@@ -101,7 +101,7 @@ void SortedBuffer::replace(double xold, double xnew)
         int i;
         i = iold + 1;
         iold = nbuf;
-        for (int k{i}; k <= iold; k++) {
+        for (int k = i; k <= iold; k++) {
           buf[k - 2] = buf[k - 1];
         }
         nbuf--;
@@ -116,7 +116,7 @@ void SortedBuffer::replace(double xold, double xnew)
       if (iold <= inew) {
         int i;
         i = inew - 1;
-        for (int k{iold}; k <= i; k++) {
+        for (int k = iold; k <= i; k++) {
           buf[k - 1] = buf[k];
         }
         buf[inew - 1] = xnew;
@@ -125,7 +125,7 @@ void SortedBuffer::replace(double xold, double xnew)
       } else {
         int i;
         i = inew + 2;
-        for (int k{iold}; k >= i; k--) {
+        for (int k = iold; k >= i; k--) {
           buf[k - 1] = buf[k - 2];
         }
         buf[inew] = xnew;

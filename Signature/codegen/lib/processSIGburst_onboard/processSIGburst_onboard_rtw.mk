@@ -2,7 +2,7 @@
 ## Makefile generated for component 'processSIGburst_onboard'. 
 ## 
 ## Makefile     : processSIGburst_onboard_rtw.mk
-## Generated on : Mon Apr 29 13:04:41 2024
+## Generated on : Wed May 08 13:57:16 2024
 ## Final product: ./processSIGburst_onboard.lib
 ## Product type : static-library
 ## 
@@ -25,7 +25,7 @@ MATLAB_ROOT               = C:/PROGRA~1/MATLAB/R2023a
 MATLAB_BIN                = C:/PROGRA~1/MATLAB/R2023a/bin
 MATLAB_ARCH_BIN           = $(MATLAB_BIN)/win64
 START_DIR                 = C:/Users/kfitz/Github/MATLAB/Functions/SWIFT-codes/Signature
-TGT_FCN_LIB               = ISO_C++11
+TGT_FCN_LIB               = ISO_C++
 SOLVER_OBJ                = 
 CLASSIC_INTERFACE         = 0
 MODEL_HAS_DYNAMICALLY_LOADED_SFCNS = 

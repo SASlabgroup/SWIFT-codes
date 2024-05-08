@@ -13,7 +13,7 @@
 #include "div.h"
 #include "rt_nonfinite.h"
 #include "coder_array.h"
-#include <cmath>
+#include "rt_nonfinite.h"
 
 // Function Definitions
 namespace coder {
@@ -41,10 +41,10 @@ double mean(const ::coder::array<double, 2U> &x)
       }
     }
     y = x[0];
-    for (int k{2}; k <= firstBlockLength; k++) {
+    for (int k = 2; k <= firstBlockLength; k++) {
       y += x[k - 1];
     }
-    for (int ib{2}; ib <= nblocks; ib++) {
+    for (int ib = 2; ib <= nblocks; ib++) {
       double bsum;
       int hi;
       firstBlockLength = (ib - 1) << 10;
@@ -54,7 +54,7 @@ double mean(const ::coder::array<double, 2U> &x)
       } else {
         hi = 1024;
       }
-      for (int k{2}; k <= hi; k++) {
+      for (int k = 2; k <= hi; k++) {
         bsum += x[(firstBlockLength + k) - 1];
       }
       y += bsum;
@@ -104,8 +104,8 @@ void mean(const ::coder::array<double, 2U> &x, ::coder::array<double, 1U> &y)
         lastBlockLength = 1024;
       }
     }
-    for (int xj{0}; xj <= vstride; xj++) {
-      if (std::isnan(x[xj])) {
+    for (int xj = 0; xj <= vstride; xj++) {
+      if (rtIsNaN(x[xj])) {
         y[xj] = 0.0;
         counts[xj] = 0;
       } else {
@@ -114,21 +114,21 @@ void mean(const ::coder::array<double, 2U> &x, ::coder::array<double, 1U> &y)
       }
       bsum[xj] = 0.0;
     }
-    for (int k{2}; k <= firstBlockLength; k++) {
+    for (int k = 2; k <= firstBlockLength; k++) {
       xoffset = (k - 1) * (vstride + 1);
-      for (int xj{0}; xj <= vstride; xj++) {
+      for (int xj = 0; xj <= vstride; xj++) {
         ix = xoffset + xj;
-        if (!std::isnan(x[ix])) {
+        if (!rtIsNaN(x[ix])) {
           y[xj] = y[xj] + x[ix];
           counts[xj] = counts[xj] + 1;
         }
       }
     }
-    for (int ib{2}; ib <= nblocks; ib++) {
+    for (int ib = 2; ib <= nblocks; ib++) {
       xblockoffset = (ib - 1) * bvstride;
-      for (int xj{0}; xj <= vstride; xj++) {
+      for (int xj = 0; xj <= vstride; xj++) {
         ix = xblockoffset + xj;
-        if (std::isnan(x[ix])) {
+        if (rtIsNaN(x[ix])) {
           bsum[xj] = 0.0;
         } else {
           bsum[xj] = x[ix];
@@ -140,17 +140,17 @@ void mean(const ::coder::array<double, 2U> &x, ::coder::array<double, 1U> &y)
       } else {
         firstBlockLength = 1024;
       }
-      for (int k{2}; k <= firstBlockLength; k++) {
+      for (int k = 2; k <= firstBlockLength; k++) {
         xoffset = xblockoffset + (k - 1) * (vstride + 1);
-        for (int xj{0}; xj <= vstride; xj++) {
+        for (int xj = 0; xj <= vstride; xj++) {
           ix = xoffset + xj;
-          if (!std::isnan(x[ix])) {
+          if (!rtIsNaN(x[ix])) {
             bsum[xj] = bsum[xj] + x[ix];
             counts[xj] = counts[xj] + 1;
           }
         }
       }
-      for (int xj{0}; xj <= vstride; xj++) {
+      for (int xj = 0; xj <= vstride; xj++) {
         y[xj] = y[xj] + bsum[xj];
       }
     }
@@ -206,8 +206,8 @@ void mean(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
         lastBlockLength = 1024;
       }
     }
-    for (int xj{0}; xj < vstride; xj++) {
-      if (std::isnan(x[xj])) {
+    for (int xj = 0; xj < vstride; xj++) {
+      if (rtIsNaN(x[xj])) {
         y[xj] = 0.0;
         counts[xj] = 0;
       } else {
@@ -216,21 +216,21 @@ void mean(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
       }
       bsum[xj] = 0.0;
     }
-    for (int k{2}; k <= firstBlockLength; k++) {
+    for (int k = 2; k <= firstBlockLength; k++) {
       xoffset = (k - 1) * vstride;
-      for (int xj{0}; xj < vstride; xj++) {
+      for (int xj = 0; xj < vstride; xj++) {
         ix = xoffset + xj;
-        if (!std::isnan(x[ix])) {
+        if (!rtIsNaN(x[ix])) {
           y[xj] = y[xj] + x[ix];
           counts[xj] = counts[xj] + 1;
         }
       }
     }
-    for (int ib{2}; ib <= nblocks; ib++) {
+    for (int ib = 2; ib <= nblocks; ib++) {
       xblockoffset = (ib - 1) * bvstride;
-      for (int xj{0}; xj < vstride; xj++) {
+      for (int xj = 0; xj < vstride; xj++) {
         ix = xblockoffset + xj;
-        if (std::isnan(x[ix])) {
+        if (rtIsNaN(x[ix])) {
           bsum[xj] = 0.0;
         } else {
           bsum[xj] = x[ix];
@@ -242,17 +242,17 @@ void mean(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
       } else {
         firstBlockLength = 1024;
       }
-      for (int k{2}; k <= firstBlockLength; k++) {
+      for (int k = 2; k <= firstBlockLength; k++) {
         xoffset = xblockoffset + (k - 1) * vstride;
-        for (int xj{0}; xj < vstride; xj++) {
+        for (int xj = 0; xj < vstride; xj++) {
           ix = xoffset + xj;
-          if (!std::isnan(x[ix])) {
+          if (!rtIsNaN(x[ix])) {
             bsum[xj] = bsum[xj] + x[ix];
             counts[xj] = counts[xj] + 1;
           }
         }
       }
-      for (int xj{0}; xj < vstride; xj++) {
+      for (int xj = 0; xj < vstride; xj++) {
         y[xj] = y[xj] + bsum[xj];
       }
     }

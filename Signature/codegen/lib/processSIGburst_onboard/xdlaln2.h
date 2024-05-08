@@ -23,7 +23,7 @@ namespace internal {
 namespace reflapack {
 double xdlaln2(int na, int nw, double smin, const ::coder::array<double, 2U> &A,
                int ia0, int lda, const ::coder::array<double, 2U> &B, int ib0,
-               int ldb, double wr, double wi, double X[4], double &xnorm);
+               int ldb, double wr, double wi, double X[4], double *xnorm);
 
 }
 } // namespace internal

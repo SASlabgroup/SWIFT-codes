@@ -22,14 +22,14 @@ void b_mtimes(const ::coder::array<double, 2U> &A,
 {
   int inner;
   inner = A.size(0);
-  for (int j{0}; j < 2; j++) {
+  for (int j = 0; j < 2; j++) {
     int boffset;
     int coffset;
     coffset = j << 1;
     boffset = j * B.size(0);
     C[coffset] = 0.0;
     C[coffset + 1] = 0.0;
-    for (int k{0}; k < inner; k++) {
+    for (int k = 0; k < inner; k++) {
       double bkj;
       bkj = B[boffset + k];
       C[coffset] += A[k] * bkj;
@@ -48,18 +48,18 @@ void mtimes(const ::coder::array<double, 2U> &A,
   inner = A.size(0);
   nc = B.size(1);
   C.set_size(A.size(1), B.size(1));
-  for (int j{0}; j < nc; j++) {
+  for (int j = 0; j < nc; j++) {
     int boffset;
     int coffset;
     coffset = j * mc;
     boffset = j * B.size(0);
-    for (int i{0}; i < mc; i++) {
+    for (int i = 0; i < mc; i++) {
       C[coffset + i] = 0.0;
     }
-    for (int k{0}; k < inner; k++) {
+    for (int k = 0; k < inner; k++) {
       double bkj;
       bkj = B[boffset + k];
-      for (int i{0}; i < mc; i++) {
+      for (int i = 0; i < mc; i++) {
         int b_i;
         b_i = coffset + i;
         C[b_i] = C[b_i] + A[i * A.size(0) + k] * bkj;
@@ -79,10 +79,10 @@ void mtimes(const ::coder::array<creal_T, 2U> &A,
   inner = A.size(1);
   n = B.size(0);
   C.set_size(A.size(0), B.size(0));
-  for (int j{0}; j < n; j++) {
+  for (int j = 0; j < n; j++) {
     int coffset;
     coffset = j * m;
-    for (int i{0}; i < m; i++) {
+    for (int i = 0; i < m; i++) {
       double s_im;
       double s_re;
       int k;
@@ -112,7 +112,7 @@ void mtimes(const ::coder::array<double, 2U> &A,
 {
   int inner;
   inner = A.size(0);
-  for (int j{0}; j < 3; j++) {
+  for (int j = 0; j < 3; j++) {
     int boffset;
     int coffset;
     coffset = j * 3;
@@ -120,7 +120,7 @@ void mtimes(const ::coder::array<double, 2U> &A,
     C[coffset] = 0.0;
     C[coffset + 1] = 0.0;
     C[coffset + 2] = 0.0;
-    for (int k{0}; k < inner; k++) {
+    for (int k = 0; k < inner; k++) {
       double bkj;
       bkj = B[boffset + k];
       C[coffset] += A[k] * bkj;

@@ -12,6 +12,7 @@
 #include "std.h"
 #include "rt_nonfinite.h"
 #include "coder_array.h"
+#include "rt_nonfinite.h"
 #include <cmath>
 
 // Function Definitions
@@ -37,15 +38,15 @@ void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
     loop_ub = x.size(2);
     n = x.size(2);
   }
-  for (int j{0}; j < stride; j++) {
+  for (int j = 0; j < stride; j++) {
     int nn;
     xv.set_size(outsize_idx_0);
-    for (int k{0}; k < loop_ub; k++) {
+    for (int k = 0; k < loop_ub; k++) {
       xv[k] = x[j + k * stride];
     }
     nnans = 0;
-    for (int k{0}; k < n; k++) {
-      if (std::isnan(xv[k])) {
+    for (int k = 0; k < n; k++) {
+      if (rtIsNaN(xv[k])) {
         nnans++;
       } else {
         xv[k - nnans] = xv[k];
@@ -55,7 +56,7 @@ void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
     if (nn == 0) {
       y[j] = rtNaN;
     } else if (nn == 1) {
-      if ((!std::isinf(xv[0])) && (!std::isnan(xv[0]))) {
+      if ((!rtIsInf(xv[0])) && (!rtIsNaN(xv[0]))) {
         y[j] = 0.0;
       } else {
         y[j] = rtNaN;
@@ -74,7 +75,7 @@ void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
           nblocks = 1;
         } else {
           firstBlockLength = 1024;
-          nblocks = nn >> 10;
+          nblocks = nn / 1024;
           lastBlockLength = nn - (nblocks << 10);
           if (lastBlockLength > 0) {
             nblocks++;
@@ -83,10 +84,10 @@ void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
           }
         }
         xbar = xv[0];
-        for (int k{2}; k <= firstBlockLength; k++) {
+        for (int k = 2; k <= firstBlockLength; k++) {
           xbar += xv[k - 1];
         }
-        for (int ib{2}; ib <= nblocks; ib++) {
+        for (int ib = 2; ib <= nblocks; ib++) {
           nnans = (ib - 1) << 10;
           bsum = xv[nnans];
           if (ib == nblocks) {
@@ -94,7 +95,7 @@ void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
           } else {
             firstBlockLength = 1024;
           }
-          for (int k{2}; k <= firstBlockLength; k++) {
+          for (int k = 2; k <= firstBlockLength; k++) {
             bsum += xv[(nnans + k) - 1];
           }
           xbar += bsum;
@@ -102,7 +103,7 @@ void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
       }
       xbar /= static_cast<double>(nn);
       absdiff.set_size(xv.size(0));
-      for (int k{0}; k < nn; k++) {
+      for (int k = 0; k < nn; k++) {
         absdiff[k] = std::abs(xv[k] - xbar);
       }
       xbar = 0.0;
@@ -111,7 +112,7 @@ void b_std(const ::coder::array<double, 3U> &x, ::coder::array<double, 2U> &y)
           xbar = absdiff[0];
         } else {
           bsum = 3.3121686421112381E-170;
-          for (int k{0}; k < nn; k++) {
+          for (int k = 0; k < nn; k++) {
             if (absdiff[k] > bsum) {
               double t;
               t = bsum / absdiff[k];
