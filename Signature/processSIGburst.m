@@ -1,9 +1,9 @@
 function [HRprofile,fh] = processSIGburst(burst,opt)
     
-%     % Default values
-%     opt.xz = 0.2;
-%     opt.nsumeof = 5;
-%     opt.plotburst = true;
+% Default values
+opt.xz = 0.2;
+opt.nsumeof = 5;
+opt.plotburst = true;
 
 %    Check to make sure dimensions correct
     if length(size(burst.VelocityData)) > 2
@@ -107,28 +107,34 @@ function [HRprofile,fh] = processSIGburst(burst,opt)
         clear c
         MP = get(0,'monitorposition');
         set(gcf,'outerposition',MP(1,:).*[1 1 1 1]);
-        subplot(4,1,1)
+        subplot(5,1,1)
         imagesc(amp)
         caxis([50 160]); cmocean('amp')
         title('HR Data');
         ylabel('Bin #')
         c = colorbar;c.Label.String = 'A (dB)';
-        subplot(4,1,2)
+        subplot(5,1,2)
         imagesc(corr)
         caxis([35 100]);cmocean('amp')
         ylabel('Bin #')
         c = colorbar;c.Label.String = 'C (%)';
-        subplot(4,1,3)
+        subplot(5,1,3)
         imagesc(w)
         caxis([-0.5 0.5]);cmocean('balance');
         ylabel('Bin #')
-        c = colorbar;c.Label.String = 'U_r(m/s)';
-        subplot(4,1,4)
+        c = colorbar;c.Label.String = 'W_r (m/s)';
+        subplot(5,1,4)
         imagesc(ispike)
         caxis([0 2]);colormap(gca,[rgb('white'); rgb('black')])
         ylabel('Bin #')
         c = colorbar;c.Ticks = [0.5 1.5];
         c.TickLabels = {'Good','Spike'};
+        subplot(5,1,5)
+        imagesc(wpeof)
+        ylabel('Bin #')
+        caxis([-0.05 0.05]);cmocean('balance')
+        c = colorbar;c.Label.String = 'W_hp (m/s)';
+
         xlabel('Ping #')
         drawnow
 
