@@ -1,4 +1,3 @@
-processSIGburst_onboard_data.obj
 rt_nonfinite.obj
 rtGetNaN.obj
 rtGetInf.obj

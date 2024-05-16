@@ -21,8 +21,6 @@
 #include "movmedian.h"
 #include "mtimes.h"
 #include "permute.h"
-#include "processSIGburst_onboard_data.h"
-#include "processSIGburst_onboard_initialize.h"
 #include "repmat.h"
 #include "rt_nonfinite.h"
 #include "sort.h"
@@ -457,7 +455,6 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   double unnamed_idx_0;
   int b_loop_ub_tmp;
   int hi;
-  int i;
   int ib;
   int lastBlockLength;
   int loop_ub_tmp;
@@ -467,9 +464,6 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   int xblockoffset;
   int xpageoffset;
   bool nans;
-  if (!isInitialized_processSIGburst_onboard) {
-    processSIGburst_onboard_initialize();
-  }
   //  w = nbin x nping HR velocity data
   //  cs = 1 x nping sound speed, from HR data
   //  dz = 1 x 1 bin size (m);
@@ -488,15 +482,15 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
     z.set_size(1, 0);
   } else {
     z.set_size(1, wraw.size(0));
-    hi = wraw.size(0) - 1;
-    for (i = 0; i <= hi; i++) {
-      z[i] = static_cast<double>(i) + 1.0;
+    lastBlockLength = wraw.size(0) - 1;
+    for (ib = 0; ib <= lastBlockLength; ib++) {
+      z[ib] = static_cast<double>(ib) + 1.0;
     }
   }
   b_z.set_size(z.size(1));
-  hi = z.size(1);
-  for (i = 0; i < hi; i++) {
-    b_z[i] = (bz + 0.2) + dz * z[i];
+  lastBlockLength = z.size(1);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    b_z[ib] = (bz + 0.2) + dz * z[ib];
   }
   // %%%%%% Despike %%%%%%%
   //  Find Spikes (phase-shift threshold, Shcherbina 2018)
@@ -538,9 +532,9 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   //  was medfilt1
   if ((wraw.size(0) == wfilt.size(0)) && (wraw.size(1) == wfilt.size(1))) {
     Z0.set_size(wraw.size(0), wraw.size(1));
-    hi = wraw.size(0) * wraw.size(1);
-    for (i = 0; i < hi; i++) {
-      Z0[i] = wraw[i] - wfilt[i];
+    lastBlockLength = wraw.size(0) * wraw.size(1);
+    for (ib = 0; ib < lastBlockLength; ib++) {
+      Z0[ib] = wraw[ib] - wfilt[ib];
     }
     nx = Z0.size(0) * Z0.size(1);
     wfilt.set_size(Z0.size(0), Z0.size(1));
@@ -554,48 +548,48 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   bsum = bsum * bsum /
          (4.0E+6 * (bz + dz * static_cast<double>(wraw.size(0)))) / 2.0;
   loop_ub_tmp = wfilt.size(0) * wfilt.size(1);
-  for (i = 0; i < loop_ub_tmp; i++) {
-    ispike[i] = (wfilt[i] > bsum);
+  for (ib = 0; ib < loop_ub_tmp; ib++) {
+    ispike[ib] = (wfilt[ib] > bsum);
   }
   //  Fill with linear interpolation
   winterp.set_size(wraw.size(0), wraw.size(1));
-  hi = wraw.size(0) * wraw.size(1);
-  for (i = 0; i < hi; i++) {
-    winterp[i] = rtNaN;
+  lastBlockLength = wraw.size(0) * wraw.size(1);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    winterp[ib] = rtNaN;
   }
-  i = wraw.size(1);
-  for (nx = 0; nx < i; nx++) {
-    hi = ispike.size(0);
+  ib = wraw.size(1);
+  for (nx = 0; nx < ib; nx++) {
+    lastBlockLength = ispike.size(0);
     ifit.set_size(ispike.size(0));
-    for (ib = 0; ib < hi; ib++) {
-      ifit[ib] = !ispike[ib + ispike.size(0) * nx];
+    for (hi = 0; hi < lastBlockLength; hi++) {
+      ifit[hi] = !ispike[hi + ispike.size(0) * nx];
     }
     coder::eml_find(ifit, iidx);
     igood.set_size(iidx.size(0));
-    hi = iidx.size(0);
-    for (ib = 0; ib < hi; ib++) {
-      igood[ib] = iidx[ib];
+    lastBlockLength = iidx.size(0);
+    for (hi = 0; hi < lastBlockLength; hi++) {
+      igood[hi] = iidx[hi];
     }
     if (igood.size(0) > 3) {
       if (npages < 1) {
         n.set_size(1, 0);
       } else {
         n.set_size(1, npages);
-        hi = npages - 1;
-        for (ib = 0; ib <= hi; ib++) {
-          n[ib] = static_cast<double>(ib) + 1.0;
+        lastBlockLength = npages - 1;
+        for (hi = 0; hi <= lastBlockLength; hi++) {
+          n[hi] = static_cast<double>(hi) + 1.0;
         }
       }
       b_wraw.set_size(igood.size(0));
-      hi = igood.size(0);
-      for (ib = 0; ib < hi; ib++) {
-        b_wraw[ib] =
-            wraw[(static_cast<int>(igood[ib]) + wraw.size(0) * nx) - 1];
+      lastBlockLength = igood.size(0);
+      for (hi = 0; hi < lastBlockLength; hi++) {
+        b_wraw[hi] =
+            wraw[(static_cast<int>(igood[hi]) + wraw.size(0) * nx) - 1];
       }
       coder::interp1(igood, b_wraw, n, x);
-      hi = winterp.size(0);
-      for (ib = 0; ib < hi; ib++) {
-        winterp[ib + winterp.size(0) * nx] = x[ib];
+      lastBlockLength = winterp.size(0);
+      for (hi = 0; hi < lastBlockLength; hi++) {
+        winterp[hi + winterp.size(0) * nx] = x[hi];
       }
     }
   }
@@ -623,18 +617,18 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
     }
   }
   X.set_size(r1.size(1), winterp.size(0));
-  hi = winterp.size(0);
-  for (i = 0; i < hi; i++) {
+  lastBlockLength = winterp.size(0);
+  for (ib = 0; ib < lastBlockLength; ib++) {
     nblocks = r1.size(1);
-    for (ib = 0; ib < nblocks; ib++) {
-      X[ib + X.size(0) * i] = winterp[i + winterp.size(0) * r1[ib]];
+    for (hi = 0; hi < nblocks; hi++) {
+      X[hi + X.size(0) * ib] = winterp[ib + winterp.size(0) * r1[hi]];
     }
   }
   //  [nsamp,~] = size(X);
   wfilt.set_size(X.size(0), X.size(1));
   b_loop_ub_tmp = X.size(0) * X.size(1);
-  for (i = 0; i < b_loop_ub_tmp; i++) {
-    wfilt[i] = X[i];
+  for (ib = 0; ib < b_loop_ub_tmp; ib++) {
+    wfilt[ib] = X[ib];
   }
   // NANMEAN Mean value, ignoring NaNs.
   //    M = NANMEAN(X) returns the sample mean of X, treating NaNs as missing
@@ -650,8 +644,8 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   //    $Revision: 2.13.4.3 $  $Date: 2004/07/28 04:38:41 $
   //  Find NaNs and set them to zero
   b_nans.set_size(X.size(0), X.size(1));
-  for (i = 0; i < b_loop_ub_tmp; i++) {
-    b_nans[i] = rtIsNaN(X[i]);
+  for (ib = 0; ib < b_loop_ub_tmp; ib++) {
+    b_nans[ib] = rtIsNaN(X[ib]);
   }
   npages = b_loop_ub_tmp - 1;
   for (hi = 0; hi <= npages; hi++) {
@@ -662,14 +656,14 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   //  let sum deal with figuring out which dimension to use
   //  Count up non-NaNs.
   c_nans.set_size(b_nans.size(0), b_nans.size(1));
-  for (i = 0; i < b_loop_ub_tmp; i++) {
-    c_nans[i] = !b_nans[i];
+  for (ib = 0; ib < b_loop_ub_tmp; ib++) {
+    c_nans[ib] = !b_nans[ib];
   }
   coder::combineVectorElements(c_nans, r);
   n.set_size(1, r.size(1));
-  hi = r.size(1);
-  for (i = 0; i < hi; i++) {
-    n[i] = r[i];
+  lastBlockLength = r.size(1);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    n[ib] = r[ib];
   }
   npages = n.size(1) - 1;
   for (hi = 0; hi <= npages; hi++) {
@@ -680,10 +674,10 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   //  prevent divideByZero warnings
   //  Sum up non-NaNs, and divide by the number of non-NaNs.
   if ((wfilt.size(0) == 0) || (wfilt.size(1) == 0)) {
-    hi = wfilt.size(1);
+    lastBlockLength = wfilt.size(1);
     x.set_size(1, wfilt.size(1));
-    for (i = 0; i < hi; i++) {
-      x[i] = 0.0;
+    for (ib = 0; ib < lastBlockLength; ib++) {
+      x[ib] = 0.0;
     }
   } else {
     npages = wfilt.size(1);
@@ -726,22 +720,22 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   }
   //  X0 = repmat(Xm,nsamp,1);
   if (x.size(1) == 1) {
-    i = n.size(1);
+    xblockoffset = n.size(1);
   } else {
-    i = x.size(1);
+    xblockoffset = x.size(1);
   }
-  if ((x.size(1) == n.size(1)) && (X.size(1) == i)) {
+  if ((x.size(1) == n.size(1)) && (X.size(1) == xblockoffset)) {
     Z0.set_size(X.size(0), X.size(1));
-    hi = X.size(1);
-    for (i = 0; i < hi; i++) {
+    lastBlockLength = X.size(1);
+    for (ib = 0; ib < lastBlockLength; ib++) {
       nblocks = X.size(0);
-      for (ib = 0; ib < nblocks; ib++) {
-        Z0[ib + Z0.size(0) * i] = X[ib + X.size(0) * i] - x[i] / n[i];
+      for (hi = 0; hi < nblocks; hi++) {
+        Z0[hi + Z0.size(0) * ib] = X[hi + X.size(0) * ib] - x[ib] / n[ib];
       }
     }
     X.set_size(Z0.size(0), Z0.size(1));
-    for (i = 0; i < b_loop_ub_tmp; i++) {
-      X[i] = Z0[i];
+    for (ib = 0; ib < b_loop_ub_tmp; ib++) {
+      X[ib] = Z0[ib];
     }
   } else {
     b_binary_expand_op(X, x, n);
@@ -758,55 +752,54 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   coder::eig(b_wfilt, EOFs, E);
   coder::internal::sort(E, iidx);
   eofs.set_size(EOFs.size(0), iidx.size(0));
-  hi = iidx.size(0);
-  for (i = 0; i < hi; i++) {
+  lastBlockLength = iidx.size(0);
+  for (ib = 0; ib < lastBlockLength; ib++) {
     nblocks = EOFs.size(0);
-    for (ib = 0; ib < nblocks; ib++) {
-      eofs[ib + eofs.size(0) * i] = EOFs[ib + EOFs.size(0) * (iidx[i] - 1)];
+    for (hi = 0; hi < nblocks; hi++) {
+      eofs[hi + eofs.size(0) * ib] = EOFs[hi + EOFs.size(0) * (iidx[ib] - 1)];
     }
   }
   b_X.set_size(X.size(0), X.size(1));
-  for (i = 0; i < xblockoffset; i++) {
-    b_X[i].re = X[i];
-    b_X[i].im = 0.0;
+  for (ib = 0; ib < xblockoffset; ib++) {
+    b_X[ib].re = X[ib];
+    b_X[ib].im = 0.0;
   }
   alpha.set_size(b_X.size(0), eofs.size(1));
-  hi = b_X.size(0);
-  for (i = 0; i < hi; i++) {
+  lastBlockLength = b_X.size(0);
+  for (ib = 0; ib < lastBlockLength; ib++) {
     nblocks = eofs.size(1);
-    for (ib = 0; ib < nblocks; ib++) {
-      alpha[i + alpha.size(0) * ib].re = 0.0;
-      alpha[i + alpha.size(0) * ib].im = 0.0;
+    for (hi = 0; hi < nblocks; hi++) {
+      alpha[ib + alpha.size(0) * hi].re = 0.0;
+      alpha[ib + alpha.size(0) * hi].im = 0.0;
       npages = b_X.size(1);
       for (xpageoffset = 0; xpageoffset < npages; xpageoffset++) {
         double X_re_tmp;
         double b_X_re_tmp;
-        bsum = b_X[i + b_X.size(0) * xpageoffset].re;
-        unnamed_idx_0 = eofs[xpageoffset + eofs.size(0) * ib].im;
-        X_re_tmp = b_X[i + b_X.size(0) * xpageoffset].im;
-        b_X_re_tmp = eofs[xpageoffset + eofs.size(0) * ib].re;
-        alpha[i + alpha.size(0) * ib].re =
-            alpha[i + alpha.size(0) * ib].re +
+        bsum = b_X[ib + b_X.size(0) * xpageoffset].re;
+        unnamed_idx_0 = eofs[xpageoffset + eofs.size(0) * hi].im;
+        X_re_tmp = b_X[ib + b_X.size(0) * xpageoffset].im;
+        b_X_re_tmp = eofs[xpageoffset + eofs.size(0) * hi].re;
+        alpha[ib + alpha.size(0) * hi].re =
+            alpha[ib + alpha.size(0) * hi].re +
             (bsum * b_X_re_tmp - X_re_tmp * unnamed_idx_0);
-        alpha[i + alpha.size(0) * ib].im =
-            alpha[i + alpha.size(0) * ib].im +
+        alpha[ib + alpha.size(0) * hi].im =
+            alpha[ib + alpha.size(0) * hi].im +
             (bsum * unnamed_idx_0 + X_re_tmp * b_X_re_tmp);
       }
     }
   }
   //  Reconstruct w/high-mode EOFs
-  hi = winterp.size(0);
   wfilt.set_size(winterp.size(0), winterp.size(1));
-  nblocks = winterp.size(0) * winterp.size(1);
-  for (i = 0; i < nblocks; i++) {
-    wfilt[i] = rtNaN;
+  lastBlockLength = winterp.size(0) * winterp.size(1);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    wfilt[ib] = rtNaN;
   }
   if (neoflp + 1.0 > iidx.size(0)) {
-    i = 0;
     ib = 0;
+    hi = 0;
   } else {
-    i = static_cast<int>(neoflp + 1.0) - 1;
-    ib = iidx.size(0);
+    ib = static_cast<int>(neoflp + 1.0) - 1;
+    hi = iidx.size(0);
   }
   if (neoflp + 1.0 > alpha.size(1)) {
     xpageoffset = 0;
@@ -816,38 +809,32 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
     nx = alpha.size(1);
   }
   iidx.set_size(r1.size(1));
-  nblocks = r1.size(1);
-  for (lastBlockLength = 0; lastBlockLength < nblocks; lastBlockLength++) {
-    iidx[lastBlockLength] = r1[lastBlockLength];
+  lastBlockLength = r1.size(1);
+  for (nblocks = 0; nblocks < lastBlockLength; nblocks++) {
+    iidx[nblocks] = r1[nblocks];
   }
   npages = EOFs.size(0);
-  b_loop_ub_tmp = ib - i;
-  for (ib = 0; ib < b_loop_ub_tmp; ib++) {
-    for (lastBlockLength = 0; lastBlockLength < npages; lastBlockLength++) {
-      eofs[lastBlockLength + npages * ib] =
-          eofs[lastBlockLength + eofs.size(0) * (i + ib)];
+  b_loop_ub_tmp = hi - ib;
+  for (hi = 0; hi < b_loop_ub_tmp; hi++) {
+    for (nblocks = 0; nblocks < npages; nblocks++) {
+      eofs[nblocks + npages * hi] = eofs[nblocks + eofs.size(0) * (ib + hi)];
     }
   }
   eofs.set_size(EOFs.size(0), b_loop_ub_tmp);
   npages = alpha.size(0);
   b_loop_ub_tmp = nx - xpageoffset;
-  for (i = 0; i < b_loop_ub_tmp; i++) {
-    for (ib = 0; ib < npages; ib++) {
-      alpha[ib + npages * i] = alpha[ib + alpha.size(0) * (xpageoffset + i)];
+  for (ib = 0; ib < b_loop_ub_tmp; ib++) {
+    for (hi = 0; hi < npages; hi++) {
+      alpha[hi + npages * ib] = alpha[hi + alpha.size(0) * (xpageoffset + ib)];
     }
   }
   alpha.set_size(alpha.size(0), b_loop_ub_tmp);
   coder::internal::blas::mtimes(eofs, alpha, EOFs);
-  Z0.set_size(EOFs.size(0), EOFs.size(1));
-  nblocks = EOFs.size(0) * EOFs.size(1);
-  for (i = 0; i < nblocks; i++) {
-    Z0[i] = EOFs[i].re;
-  }
-  npages = winterp.size(0);
-  nblocks = iidx.size(0);
-  for (i = 0; i < nblocks; i++) {
-    for (ib = 0; ib < hi; ib++) {
-      wfilt[ib + wfilt.size(0) * iidx[i]] = Z0[ib + npages * i];
+  lastBlockLength = EOFs.size(1);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    nblocks = EOFs.size(0);
+    for (hi = 0; hi < nblocks; hi++) {
+      wfilt[hi + wfilt.size(0) * iidx[ib]] = EOFs[hi + EOFs.size(0) * ib].re;
     }
   }
   //  Remove spikes
@@ -862,36 +849,36 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   //  corresponding mean vertical position (Z0)
   z.set_size(1, z.size(1));
   loop_ub_tmp = z.size(1) - 1;
-  for (i = 0; i <= loop_ub_tmp; i++) {
-    z[i] = (bz + 0.2) + dz * z[i];
+  for (ib = 0; ib <= loop_ub_tmp; ib++) {
+    z[ib] = (bz + 0.2) + dz * z[ib];
   }
   n.set_size(1, b_z.size(0));
-  hi = b_z.size(0);
-  for (i = 0; i < hi; i++) {
-    n[i] = b_z[i];
+  lastBlockLength = b_z.size(0);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    n[ib] = b_z[ib];
   }
   coder::diff(n, x);
   dz = coder::mean(x);
   // R = round(R,2);
   X.set_size(z.size(1), z.size(1));
-  hi = z.size(1);
-  for (i = 0; i < hi; i++) {
+  lastBlockLength = z.size(1);
+  for (ib = 0; ib < lastBlockLength; ib++) {
     nblocks = z.size(1);
-    for (ib = 0; ib < nblocks; ib++) {
-      X[ib + X.size(0) * i] = (z[i] - z[ib]) * 100.0;
+    for (hi = 0; hi < nblocks; hi++) {
+      X[hi + X.size(0) * ib] = (z[ib] - z[hi]) * 100.0;
     }
   }
   npages = X.size(0) * X.size(1);
   for (int k = 0; k < npages; k++) {
     X[k] = rt_roundd_snf(X[k]);
   }
-  for (i = 0; i < npages; i++) {
-    X[i] = X[i] / 100.0;
+  for (ib = 0; ib < npages; ib++) {
+    X[ib] = X[ib] / 100.0;
   }
   n.set_size(1, b_z.size(0));
-  hi = b_z.size(0);
-  for (i = 0; i < hi; i++) {
-    n[i] = b_z[i];
+  lastBlockLength = b_z.size(0);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    n[ib] = b_z[ib];
   }
   nx = n.size(1) - 1;
   Z0.set_size(n.size(1), n.size(1));
@@ -905,9 +892,9 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
     }
   }
   if ((Z0.size(0) == winterp.size(0)) && (Z0.size(1) == winterp.size(1))) {
-    hi = Z0.size(0) * Z0.size(1);
-    for (i = 0; i < hi; i++) {
-      Z0[i] = (Z0[i] + winterp[i]) / 2.0;
+    lastBlockLength = Z0.size(0) * Z0.size(1);
+    for (ib = 0; ib < lastBlockLength; ib++) {
+      Z0[ib] = (Z0[ib] + winterp[ib]) / 2.0;
     }
   } else {
     b_binary_expand_op(Z0, winterp);
@@ -916,20 +903,20 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   coder::mean(wfilt, igood);
   if (wfilt.size(0) == igood.size(0)) {
     b_wfilt.set_size(wfilt.size(0), wfilt.size(1));
-    hi = wfilt.size(1);
-    for (i = 0; i < hi; i++) {
+    lastBlockLength = wfilt.size(1);
+    for (ib = 0; ib < lastBlockLength; ib++) {
       nblocks = wfilt.size(0);
-      for (ib = 0; ib < nblocks; ib++) {
-        b_wfilt[ib + b_wfilt.size(0) * i] =
-            wfilt[ib + wfilt.size(0) * i] - igood[ib];
+      for (hi = 0; hi < nblocks; hi++) {
+        b_wfilt[hi + b_wfilt.size(0) * ib] =
+            wfilt[hi + wfilt.size(0) * ib] - igood[hi];
       }
     }
     wfilt.set_size(b_wfilt.size(0), b_wfilt.size(1));
-    hi = b_wfilt.size(1);
-    for (i = 0; i < hi; i++) {
+    lastBlockLength = b_wfilt.size(1);
+    for (ib = 0; ib < lastBlockLength; ib++) {
       nblocks = b_wfilt.size(0);
-      for (ib = 0; ib < nblocks; ib++) {
-        wfilt[ib + wfilt.size(0) * i] = b_wfilt[ib + b_wfilt.size(0) * i];
+      for (hi = 0; hi < nblocks; hi++) {
+        wfilt[hi + wfilt.size(0) * ib] = b_wfilt[hi + b_wfilt.size(0) * ib];
       }
     }
     coder::repmat(wfilt, static_cast<double>(wraw.size(0)), dW);
@@ -941,17 +928,17 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   if ((r2.size(0) == r3.size(0)) && (r2.size(1) == r3.size(1)) &&
       (r2.size(2) == r3.size(2))) {
     dW.set_size(r2.size(0), r2.size(1), r2.size(2));
-    hi = r2.size(0) * r2.size(1) * r2.size(2);
-    for (i = 0; i < hi; i++) {
-      dW[i] = r2[i] - r3[i];
+    lastBlockLength = r2.size(0) * r2.size(1) * r2.size(2);
+    for (ib = 0; ib < lastBlockLength; ib++) {
+      dW[ib] = r2[ib] - r3[ib];
     }
   } else {
     minus(dW, r2, r3);
   }
   coder::b_std(dW, wfilt);
-  hi = wfilt.size(0) * wfilt.size(1);
-  for (i = 0; i < hi; i++) {
-    wfilt[i] = 5.0 * wfilt[i];
+  lastBlockLength = wfilt.size(0) * wfilt.size(1);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    wfilt[ib] = 5.0 * wfilt[ib];
   }
   nx = dW.size(0) * dW.size(1) * dW.size(2);
   r2.set_size(dW.size(0), dW.size(1), dW.size(2));
@@ -961,15 +948,15 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   if ((r2.size(0) == wfilt.size(0)) && (r2.size(1) == wfilt.size(1))) {
     nx = wfilt.size(0);
     r4.set_size(r2.size(0), r2.size(1), r2.size(2));
-    hi = r2.size(2);
-    for (i = 0; i < hi; i++) {
+    lastBlockLength = r2.size(2);
+    for (ib = 0; ib < lastBlockLength; ib++) {
       nblocks = r2.size(1);
-      for (ib = 0; ib < nblocks; ib++) {
+      for (hi = 0; hi < nblocks; hi++) {
         npages = r2.size(0);
         for (xpageoffset = 0; xpageoffset < npages; xpageoffset++) {
-          r4[(xpageoffset + r4.size(0) * ib) + r4.size(0) * r4.size(1) * i] =
-              (r2[(xpageoffset + r2.size(0) * ib) +
-                  r2.size(0) * r2.size(1) * i] > wfilt[xpageoffset + nx * ib]);
+          r4[(xpageoffset + r4.size(0) * hi) + r4.size(0) * r4.size(1) * ib] =
+              (r2[(xpageoffset + r2.size(0) * hi) +
+                  r2.size(0) * r2.size(1) * ib] > wfilt[xpageoffset + nx * hi]);
         }
       }
     }
@@ -986,42 +973,42 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
   //  get D(z,r)
   if (coder::internal::b_strcmp(avgtype)) {
     r2.set_size(dW.size(0), dW.size(1), dW.size(2));
-    hi = dW.size(0) * dW.size(1) * dW.size(2);
-    for (i = 0; i < hi; i++) {
-      bsum = dW[i];
-      r2[i] = bsum * bsum;
+    lastBlockLength = dW.size(0) * dW.size(1) * dW.size(2);
+    for (ib = 0; ib < lastBlockLength; ib++) {
+      bsum = dW[ib];
+      r2[ib] = bsum * bsum;
     }
     coder::mean(r2, D);
   } else if (coder::internal::c_strcmp(avgtype)) {
     b_loop_ub_tmp = dW.size(0) * dW.size(1) * dW.size(2);
-    for (i = 0; i < b_loop_ub_tmp; i++) {
-      bsum = dW[i];
-      dW[i] = bsum * bsum;
+    for (ib = 0; ib < b_loop_ub_tmp; ib++) {
+      bsum = dW[ib];
+      dW[ib] = bsum * bsum;
     }
     for (int k = 0; k < b_loop_ub_tmp; k++) {
       dW[k] = std::log10(dW[k]);
     }
     coder::mean(dW, wfilt);
     D.set_size(wfilt.size(0), wfilt.size(1));
-    hi = wfilt.size(0) * wfilt.size(1);
-    for (i = 0; i < hi; i++) {
-      bsum = wfilt[i];
-      D[i] = rt_powd_snf(10.0, bsum);
+    lastBlockLength = wfilt.size(0) * wfilt.size(1);
+    for (ib = 0; ib < lastBlockLength; ib++) {
+      bsum = wfilt[ib];
+      D[ib] = rt_powd_snf(10.0, bsum);
     }
   }
   // Fit structure function to theoretical curve
   eps.set_size(1, b_z.size(0));
-  hi = b_z.size(0);
-  for (i = 0; i < hi; i++) {
-    eps[i] = rtNaN;
+  lastBlockLength = b_z.size(0);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    eps[ib] = rtNaN;
   }
   n.set_size(1, b_z.size(0));
-  hi = b_z.size(0);
-  for (i = 0; i < hi; i++) {
-    n[i] = rtNaN;
+  lastBlockLength = b_z.size(0);
+  for (ib = 0; ib < lastBlockLength; ib++) {
+    n[ib] = rtNaN;
   }
-  i = z.size(1);
-  for (int xi = 0; xi < i; xi++) {
+  ib = z.size(1);
+  for (int xi = 0; xi < ib; xi++) {
     // Find points in z0 bin
     npages = Z0.size(0) * Z0.size(1) - 1;
     xpageoffset = 0;
@@ -1044,22 +1031,22 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
         nblocks++;
       }
     }
-    hi = r5.size(0);
+    lastBlockLength = r5.size(0);
     igood.set_size(r5.size(0));
-    for (ib = 0; ib < hi; ib++) {
-      igood[ib] = X[r5[ib]];
+    for (hi = 0; hi < lastBlockLength; hi++) {
+      igood[hi] = X[r5[hi]];
     }
     coder::internal::sort(igood, iidx);
     b_z.set_size(iidx.size(0));
-    hi = iidx.size(0);
-    for (ib = 0; ib < hi; ib++) {
-      b_z[ib] = D[r5[iidx[ib] - 1]];
+    lastBlockLength = iidx.size(0);
+    for (hi = 0; hi < lastBlockLength; hi++) {
+      b_z[hi] = D[r5[iidx[hi] - 1]];
     }
     // Select points within specified separation scale range
     ifit.set_size(igood.size(0));
-    hi = igood.size(0);
-    for (ib = 0; ib < hi; ib++) {
-      ifit[ib] = ((igood[ib] <= rmax) && (igood[ib] >= rmin));
+    lastBlockLength = igood.size(0);
+    for (hi = 0; hi < lastBlockLength; hi++) {
+      ifit[hi] = ((igood[hi] <= rmax) && (igood[hi] >= rmin));
     }
     npages = igood.size(0);
     if (igood.size(0) == 0) {
@@ -1121,20 +1108,20 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
         double C[3];
         //  Fit structure function to D(z,r) = Br^2 + Ar^(2/3) + N
         G.set_size(xpageoffset, 3);
-        for (ib = 0; ib < xpageoffset; ib++) {
-          bsum = igood[ib];
-          G[ib] = rt_powd_snf(bsum, 3.0);
-          G[ib + G.size(0)] = igood[ib];
+        for (hi = 0; hi < xpageoffset; hi++) {
+          bsum = igood[hi];
+          G[hi] = rt_powd_snf(bsum, 3.0);
+          G[hi + G.size(0)] = igood[hi];
         }
-        for (ib = 0; ib < lastBlockLength; ib++) {
-          G[ib + G.size(0) * 2] = 1.0;
+        for (hi = 0; hi < lastBlockLength; hi++) {
+          G[hi + G.size(0) * 2] = 1.0;
         }
         c_G.set_size(3, G.size(0));
-        hi = G.size(0);
-        for (ib = 0; ib < hi; ib++) {
-          c_G[3 * ib] = G[ib];
-          c_G[3 * ib + 1] = G[ib + G.size(0)];
-          c_G[3 * ib + 2] = G[ib + G.size(0) * 2];
+        lastBlockLength = G.size(0);
+        for (hi = 0; hi < lastBlockLength; hi++) {
+          c_G[3 * hi] = G[hi];
+          c_G[3 * hi + 1] = G[hi + G.size(0)];
+          c_G[3 * hi + 2] = G[hi + G.size(0) * 2];
         }
         double dv[9];
         coder::internal::blas::mtimes(G, G, dv);
@@ -1188,17 +1175,17 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
           double sz[2];
           //  Fit structure function to D(z,r) = Ar^(2/3) + N
           b_G.set_size(xpageoffset, 2);
-          for (ib = 0; ib < xpageoffset; ib++) {
-            b_G[ib] = igood[ib];
+          for (hi = 0; hi < xpageoffset; hi++) {
+            b_G[hi] = igood[hi];
           }
-          for (ib = 0; ib < lastBlockLength; ib++) {
-            b_G[ib + b_G.size(0)] = 1.0;
+          for (hi = 0; hi < lastBlockLength; hi++) {
+            b_G[hi + b_G.size(0)] = 1.0;
           }
           d_G.set_size(2, b_G.size(0));
-          hi = b_G.size(0);
-          for (ib = 0; ib < hi; ib++) {
-            d_G[2 * ib] = b_G[ib];
-            d_G[2 * ib + 1] = b_G[ib + b_G.size(0)];
+          lastBlockLength = b_G.size(0);
+          for (hi = 0; hi < lastBlockLength; hi++) {
+            d_G[2 * hi] = b_G[hi];
+            d_G[2 * hi + 1] = b_G[hi + b_G.size(0)];
           }
           double dv1[4];
           coder::internal::blas::b_mtimes(b_G, b_G, dv1);
@@ -1265,25 +1252,25 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
                 nblocks++;
               }
             }
-            hi = r6.size(0);
+            lastBlockLength = r6.size(0);
             b_wraw.set_size(r6.size(0));
-            for (ib = 0; ib < hi; ib++) {
-              b_wraw[ib] = igood[r6[ib]];
+            for (hi = 0; hi < lastBlockLength; hi++) {
+              b_wraw[hi] = igood[r6[hi]];
             }
             igood.set_size(b_wraw.size(0));
-            hi = b_wraw.size(0);
-            for (ib = 0; ib < hi; ib++) {
-              igood[ib] = b_wraw[ib];
+            lastBlockLength = b_wraw.size(0);
+            for (hi = 0; hi < lastBlockLength; hi++) {
+              igood[hi] = b_wraw[hi];
             }
             nx = igood.size(0);
             for (int k = 0; k < nx; k++) {
               igood[k] = std::log10(igood[k]);
             }
             b_G.set_size(igood.size(0), 2);
-            hi = igood.size(0);
-            for (ib = 0; ib < hi; ib++) {
-              b_G[ib] = igood[ib];
-              b_G[ib + b_G.size(0)] = 1.0;
+            lastBlockLength = igood.size(0);
+            for (hi = 0; hi < lastBlockLength; hi++) {
+              b_G[hi] = igood[hi];
+              b_G[hi + b_G.size(0)] = 1.0;
             }
             xpageoffset = 0;
             for (hi = 0; hi <= xblockoffset; hi++) {
@@ -1299,10 +1286,10 @@ void processSIGburst_onboard(const coder::array<double, 2U> &wraw, double cs,
                 nblocks++;
               }
             }
-            hi = r6.size(0);
+            lastBlockLength = r6.size(0);
             igood.set_size(r6.size(0));
             d_G.set_size(2, b_G.size(0));
-            for (int k = 0; k < hi; k++) {
+            for (int k = 0; k < lastBlockLength; k++) {
               igood[k] = std::log10(b_z[r9[r6[k]]]);
               d_G[2 * k] = b_G[k];
               d_G[2 * k + 1] = b_G[k + b_G.size(0)];
