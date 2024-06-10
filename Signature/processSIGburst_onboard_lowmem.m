@@ -15,8 +15,11 @@ function eps = processSIGburst_onboard_lowmem(w,cs,dz,bz,neoflp,rmin,rmax,nzfit,
 %  ---- bad pings are currently tossed before computing eps
 
 % LOW MEMORY VERSION NOTES:
-% Everytime I create a new version of w, its 4 MB. Should remove at end
-% Vast majority is in structure function matrix nbin x nbin x nping
+% Vast majority of memory suck is in structure function matrix nbin x nbin x nping
+% Replaced linear algebra method w/loops -- saved 530+ MB 
+
+% M0 = memory;
+% M0 = M0.MemUsedMATLAB;
 
 % N pings + N z-bins
 [nbin,nping] = size(w);
@@ -32,19 +35,15 @@ Vr = cs.^2./(4*F0*L);% m/s
 nfilt = round(1/dz);% 1 m
 
 % Identify Spikes
-wfilt = movmedian(w,nfilt,'omitnan');
-ispike = abs(w - wfilt) > Vr/2;% was medfilt1
-clear wfilt
+ispike = abs(w - movmedian(w,nfilt,'omitnan')) > Vr/2;% was medfilt1
 
-% Fill with linear interpolation
-% winterp = NaN(size(w));
+% Linearly interpolate through spikes
 for iping = 1:nping    
     igood = find(~ispike(:,iping));
     if length(igood) > 3
     w(:,iping) = interp1(igood,w(igood,iping),1:nbin,'linear','extrap'); 
     end
 end
-clear igood
 
 %% Peform EOF High-pass
 
@@ -61,7 +60,7 @@ R = X'*X;
 [~,s] = sort(E,'descend');
 eofs = EOFs(:,s);
 alpha = (X*eofs);
-clear X Xm R
+%clear X Xm R
 
 % Reconstruct w/high-mode EOFs
 wp = NaN(size(w));
@@ -169,3 +168,9 @@ end
 
 % Remove unphysical values
 eps(A<0) = NaN;
+
+%% Memory
+% MF = memory;
+% MF = MF.MemUsedMATLAB;
+% memused = MF-M0;
+% disp(['Function used ' num2str(memused*10^(-6)) ' MB'])

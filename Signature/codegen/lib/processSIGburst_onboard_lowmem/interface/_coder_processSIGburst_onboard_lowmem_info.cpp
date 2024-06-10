@@ -68,7 +68,7 @@ mxArray *emlrtMexFcnProperties()
                     "Zeiden\\GitHub\\MATLAB\\SWIFT-"
                     "codes\\Signature\\processSIGburst_onboard_lowmem.m"));
   emlrtSetField(xEntryPoints, 0, "TimeStamp",
-                emlrtMxCreateDoubleScalar(739413.41054398147));
+                emlrtMxCreateDoubleScalar(739413.53901620372));
   xResult =
       emlrtCreateStructMatrix(1, 1, 7, (const char_T **)&propFieldName[0]);
   emlrtSetField(xResult, 0, "Version",

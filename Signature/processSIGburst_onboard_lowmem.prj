@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.coder" plugin-version="R2023a">
-  <configuration build-checksum="2881666526" file="C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\processSIGburst_onboard_lowmem.prj" location="C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature" name="processSIGburst_onboard_lowmem" target="target.unifiedcoder" target-name="MATLAB Coder">
+  <configuration build-checksum="2455602705" file="C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\processSIGburst_onboard_lowmem.prj" location="C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature" name="processSIGburst_onboard_lowmem" target="target.unifiedcoder" target-name="MATLAB Coder">
     <profile key="profile.mex">
       <param.BuiltInstrumentedMex />
       <param.RanInstrumentedMex>false</param.RanInstrumentedMex>
@@ -307,16 +307,16 @@
       <param.HardwareSizeLongLong.Production>64</param.HardwareSizeLongLong.Production>
       <param.HardwareSizeFloat.Production>32</param.HardwareSizeFloat.Production>
       <param.HardwareSizeDouble.Production>64</param.HardwareSizeDouble.Production>
-      <param.HardwareSizeWord.Production>32</param.HardwareSizeWord.Production>
-      <param.HardwareSizePointer.Production>32</param.HardwareSizePointer.Production>
-      <param.HardwareSizeSizeT.Production>32</param.HardwareSizeSizeT.Production>
-      <param.HardwareSizePtrDiffT.Production>32</param.HardwareSizePtrDiffT.Production>
-      <param.HardwareEndianness.Production>option.HardwareEndianness.Unspecified</param.HardwareEndianness.Production>
+      <param.HardwareSizeWord.Production>64</param.HardwareSizeWord.Production>
+      <param.HardwareSizePointer.Production>64</param.HardwareSizePointer.Production>
+      <param.HardwareSizeSizeT.Production>64</param.HardwareSizeSizeT.Production>
+      <param.HardwareSizePtrDiffT.Production>64</param.HardwareSizePtrDiffT.Production>
+      <param.HardwareEndianness.Production>option.HardwareEndianness.Little</param.HardwareEndianness.Production>
       <param.HardwareArithmeticRightShift.Production>true</param.HardwareArithmeticRightShift.Production>
-      <param.HardwareLongLongMode.Production>false</param.HardwareLongLongMode.Production>
+      <param.HardwareLongLongMode.Production>true</param.HardwareLongLongMode.Production>
       <param.HardwareAtomicIntegerSize.Production>option.HardwareAtomicIntegerSize.Char</param.HardwareAtomicIntegerSize.Production>
       <param.HardwareAtomicFloatSize.Production>option.HardwareAtomicFloatSize.None</param.HardwareAtomicFloatSize.Production>
-      <param.HardwareDivisionRounding.Production>option.HardwareDivisionRounding.Undefined</param.HardwareDivisionRounding.Production>
+      <param.HardwareDivisionRounding.Production>option.HardwareDivisionRounding.Zero</param.HardwareDivisionRounding.Production>
       <param.HardwareVendor.Target>Generic</param.HardwareVendor.Target>
       <param.HardwareType.Target>Unspecified (assume 32-bit Generic)</param.HardwareType.Target>
       <param.HWDeviceType.Target>Generic-&gt;Unspecified (assume 32-bit Generic)</param.HWDeviceType.Target>
@@ -328,16 +328,16 @@
       <param.HardwareSizeLongLong.Target>64</param.HardwareSizeLongLong.Target>
       <param.HardwareSizeFloat.Target>32</param.HardwareSizeFloat.Target>
       <param.HardwareSizeDouble.Target>64</param.HardwareSizeDouble.Target>
-      <param.HardwareSizeWord.Target>32</param.HardwareSizeWord.Target>
-      <param.HardwareSizePointer.Target>32</param.HardwareSizePointer.Target>
-      <param.HardwareSizeSizeT.Target>32</param.HardwareSizeSizeT.Target>
-      <param.HardwareSizePtrDiffT.Target>32</param.HardwareSizePtrDiffT.Target>
-      <param.HardwareEndianness.Target>option.HardwareEndianness.Unspecified</param.HardwareEndianness.Target>
+      <param.HardwareSizeWord.Target>64</param.HardwareSizeWord.Target>
+      <param.HardwareSizePointer.Target>64</param.HardwareSizePointer.Target>
+      <param.HardwareSizeSizeT.Target>64</param.HardwareSizeSizeT.Target>
+      <param.HardwareSizePtrDiffT.Target>64</param.HardwareSizePtrDiffT.Target>
+      <param.HardwareEndianness.Target>option.HardwareEndianness.Little</param.HardwareEndianness.Target>
       <param.HardwareArithmeticRightShift.Target>true</param.HardwareArithmeticRightShift.Target>
-      <param.HardwareLongLongMode.Target>false</param.HardwareLongLongMode.Target>
+      <param.HardwareLongLongMode.Target>true</param.HardwareLongLongMode.Target>
       <param.HardwareAtomicIntegerSize.Target>option.HardwareAtomicIntegerSize.Char</param.HardwareAtomicIntegerSize.Target>
       <param.HardwareAtomicFloatSize.Target>option.HardwareAtomicFloatSize.None</param.HardwareAtomicFloatSize.Target>
-      <param.HardwareDivisionRounding.Target>option.HardwareDivisionRounding.Undefined</param.HardwareDivisionRounding.Target>
+      <param.HardwareDivisionRounding.Target>option.HardwareDivisionRounding.Zero</param.HardwareDivisionRounding.Target>
       <var.SuppressHardwareChange>false</var.SuppressHardwareChange>
       <param.CastingMode>option.CastingMode.Nominal</param.CastingMode>
       <param.IndentStyle>option.IndentStyle.K&amp;R</param.IndentStyle>
@@ -518,14 +518,9 @@
         <param.HardwareSizeLongLong.Production />
         <param.HardwareSizeFloat.Production />
         <param.HardwareSizeDouble.Production />
-        <param.HardwareSizeWord.Production />
-        <param.HardwareSizePointer.Production />
-        <param.HardwareSizeSizeT.Production />
-        <param.HardwareSizePtrDiffT.Production />
-        <param.HardwareLongLongMode.Production />
+        <param.HardwareEndianness.Production />
         <param.HardwareAtomicIntegerSize.Production />
         <param.HardwareAtomicFloatSize.Production />
-        <param.HardwareDivisionRounding.Production />
         <param.HardwareVendor.Target />
         <param.HWDeviceType.Target />
         <var.instance.enabled.Target />
@@ -536,14 +531,9 @@
         <param.HardwareSizeLongLong.Target />
         <param.HardwareSizeFloat.Target />
         <param.HardwareSizeDouble.Target />
-        <param.HardwareSizeWord.Target />
-        <param.HardwareSizePointer.Target />
-        <param.HardwareSizeSizeT.Target />
-        <param.HardwareSizePtrDiffT.Target />
-        <param.HardwareLongLongMode.Target />
+        <param.HardwareEndianness.Target />
         <param.HardwareAtomicIntegerSize.Target />
         <param.HardwareAtomicFloatSize.Target />
-        <param.HardwareDivisionRounding.Target />
         <var.SuppressHardwareChange />
         <param.CastingMode />
         <param.IndentStyle />
@@ -629,12 +619,12 @@
     <param.hdlParamStorage />
     <var.gc.lastOutputRoot>codegen\lib\processSIGburst_onboard_lowmem</var.gc.lastOutputRoot>
     <var.gc.lastOutputType>C_CODE</var.gc.lastOutputType>
-    <var.gc.preBuildChecksum>2749355130</var.gc.preBuildChecksum>
+    <var.gc.preBuildChecksum>2078808336</var.gc.preBuildChecksum>
     <var.cfi.lastOutputRoot>codegen\mex\processSIGburst_onboard_lowmem</var.cfi.lastOutputRoot>
     <var.cfi.preBuildChecksum>2519353065</var.cfi.preBuildChecksum>
     <var.lastCfiTestSnippet>eps = processSIGburst_onboard_lowmem(w,cs,dz,bz,neoflp,rmin,rmax,nzfit,avgtype,fittype)</var.lastCfiTestSnippet>
     <var.outdatedOnRestore>false</var.outdatedOnRestore>
-    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\processSIGburst_onboard_lowmem.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;2379457085&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
+    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\processSIGburst_onboard_lowmem.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;2858802247&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
     <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\processSIGburst_onboard_lowmem.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
     <param.forceMexBuild>false</param.forceMexBuild>
     <param.NoDefaultJIT>false</param.NoDefaultJIT>

@@ -28,7 +28,7 @@ extern "C" {
  *                       long:  32
  *                       native word size:  32
  *   Byte ordering: Unspecified
- *   Signed integer division rounds to: Undefined
+ *   Signed integer division rounds to: Zero
  *   Shift right on a signed integer as arithmetic shift: on
  *=======================================================================*/
 

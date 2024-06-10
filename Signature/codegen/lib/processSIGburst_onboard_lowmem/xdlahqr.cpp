@@ -17,34 +17,7 @@
 #include "rt_nonfinite.h"
 #include <cmath>
 
-// Function Declarations
-static int div_nzp_s32(int numerator, int denominator);
-
 // Function Definitions
-static int div_nzp_s32(int numerator, int denominator)
-{
-  int quotient;
-  unsigned int tempAbsQuotient;
-  unsigned int u;
-  if (numerator < 0) {
-    tempAbsQuotient = ~static_cast<unsigned int>(numerator) + 1U;
-  } else {
-    tempAbsQuotient = static_cast<unsigned int>(numerator);
-  }
-  if (denominator < 0) {
-    u = ~static_cast<unsigned int>(denominator) + 1U;
-  } else {
-    u = static_cast<unsigned int>(denominator);
-  }
-  tempAbsQuotient /= u;
-  if ((numerator < 0) != (denominator < 0)) {
-    quotient = -static_cast<int>(tempAbsQuotient);
-  } else {
-    quotient = static_cast<int>(tempAbsQuotient);
-  }
-  return quotient;
-}
-
 namespace coder {
 namespace internal {
 namespace reflapack {
@@ -187,14 +160,14 @@ int xdlahqr(int ilo, int ihi, ::coder::array<double, 2U> &h, int iloz, int ihiz,
             double v[3];
             int m;
             kdefl++;
-            if (kdefl - div_nzp_s32(kdefl, 20) * 20 == 0) {
+            if (kdefl - kdefl / 20 * 20 == 0) {
               s = std::abs(h[i + h.size(0) * (i - 1)]) +
                   std::abs(h[(i + h.size(0) * (i - 2)) - 1]);
               tst = 0.75 * s + h[i + h.size(0) * i];
               h12 = -0.4375 * s;
               aa = s;
               h22 = tst;
-            } else if (kdefl - div_nzp_s32(kdefl, 10) * 10 == 0) {
+            } else if (kdefl - kdefl / 10 * 10 == 0) {
               s = std::abs(h[(k + h.size(0) * k) + 1]) +
                   std::abs(h[(k + h.size(0) * (k + 1)) + 2]);
               tst = 0.75 * s + h[k + h.size(0) * k];
@@ -579,14 +552,14 @@ int xdlahqr(int ihi, ::coder::array<double, 2U> &h, int ihiz,
             double v[3];
             int m;
             kdefl++;
-            if (kdefl - div_nzp_s32(kdefl, 20) * 20 == 0) {
+            if (kdefl - kdefl / 20 * 20 == 0) {
               s = std::abs(h[i + h.size(0) * (i - 1)]) +
                   std::abs(h[(i + h.size(0) * (i - 2)) - 1]);
               tst = 0.75 * s + h[i + h.size(0) * i];
               h12 = -0.4375 * s;
               aa = s;
               h22 = tst;
-            } else if (kdefl - div_nzp_s32(kdefl, 10) * 10 == 0) {
+            } else if (kdefl - kdefl / 10 * 10 == 0) {
               s = std::abs(h[(k + h.size(0) * k) + 1]) +
                   std::abs(h[(k + h.size(0) * (k + 1)) + 2]);
               tst = 0.75 * s + h[k + h.size(0) * k];

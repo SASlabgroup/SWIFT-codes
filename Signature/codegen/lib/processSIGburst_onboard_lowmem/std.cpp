@@ -62,7 +62,7 @@ double b_std(const ::coder::array<double, 2U> &x)
         nblocks = 1;
       } else {
         nnans = 1024;
-        nblocks = nn >> 10;
+        nblocks = nn / 1024;
         lastBlockLength = nn - (nblocks << 10);
         if (lastBlockLength > 0) {
           nblocks++;
