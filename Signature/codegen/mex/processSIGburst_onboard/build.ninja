@@ -1,0 +1,85 @@
+# CompilerName=mingw64
+# Mode=optim
+ninja_required_version = 1.3
+
+# Basic folders
+root = .
+builddir = $root/build/win64
+matlabdir = C:/Program Files/MATLAB/R2023a
+startdir = C:/Users/Kristin Zeiden/GitHub/MATLAB/SWIFT-codes/Signature
+
+# Toolchain information
+cc = C:\ProgramData\MATLAB\SupportPackages\R2023a\3P.instrset\mingw_w64.instrset\bin\gcc
+cxx = C:\ProgramData\MATLAB\SupportPackages\R2023a\3P.instrset\mingw_w64.instrset\bin\g++
+linker = C:\ProgramData\MATLAB\SupportPackages\R2023a\3P.instrset\mingw_w64.instrset\bin\gcc
+linkerxx = C:\ProgramData\MATLAB\SupportPackages\R2023a\3P.instrset\mingw_w64.instrset\bin\g++
+
+cflags =  -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c99 -I "C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\codegen\mex\processSIGburst_onboard" -I "C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature" -I "C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\codegen\mex\processSIGburst_onboard\interface" -I "C:\Program Files\MATLAB\R2023a\extern\include" -I "." -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp 
+
+cxxflags =  -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I "C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\codegen\mex\processSIGburst_onboard" -I "C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature" -I "C:\Users\Kristin Zeiden\GitHub\MATLAB\SWIFT-codes\Signature\codegen\mex\processSIGburst_onboard\interface" -I "C:\Program Files\MATLAB\R2023a\extern\include" -I "." -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp 
+
+ldflags =  -m64 -Wl,--no-undefined -shared -static -L"C:\Program Files\MATLAB\R2023a\extern\lib\win64\mingw64" -llibmx -llibmex -llibmat -lm -llibmwlapack -llibmwblas -llibMatlabDataArray -llibMatlabEngine  -o "processSIGburst_onboard_mex.mexw64" -L"$matlabdir\extern\lib\win64\mingw64" -llibmwblas -llibmwlapack -llibemlrt -llibcovrt -llibut -llibmwmathutil -fopenmp
+
+linkobjs = 
+
+# Build Rules
+rule cc
+    command = $cc $cflags $in -o $out
+
+rule cxx
+    command = $cxx $cxxflags $in -o $out
+
+rule link
+    command = $linker @$out.rsp $linkobjs $ldflags
+    rspfile = $out.rsp
+    rspfile_content = $in
+
+rule linkxx
+    command = $linkerxx $in $linkobjs $ldflags
+
+# Build
+build $builddir/processSIGburst_onboard_data.o : cxx $root/processSIGburst_onboard_data.cpp
+build $builddir/rt_nonfinite.o : cxx $root/rt_nonfinite.cpp
+build $builddir/processSIGburst_onboard_initialize.o : cxx $root/processSIGburst_onboard_initialize.cpp
+build $builddir/processSIGburst_onboard_terminate.o : cxx $root/processSIGburst_onboard_terminate.cpp
+build $builddir/processSIGburst_onboard.o : cxx $root/processSIGburst_onboard.cpp
+build $builddir/nanmean.o : cxx $root/nanmean.cpp
+build $builddir/movmedian.o : cxx $root/movmedian.cpp
+build $builddir/movsortfun.o : cxx $root/movsortfun.cpp
+build $builddir/abs.o : cxx $root/abs.cpp
+build $builddir/find.o : cxx $root/find.cpp
+build $builddir/indexShapeCheck.o : cxx $root/indexShapeCheck.cpp
+build $builddir/interp1.o : cxx $root/interp1.cpp
+build $builddir/combineVectorElements.o : cxx $root/combineVectorElements.cpp
+build $builddir/sumMatrixIncludeNaN.o : cxx $root/sumMatrixIncludeNaN.cpp
+build $builddir/eml_mtimes_helper.o : cxx $root/eml_mtimes_helper.cpp
+build $builddir/mtimes.o : cxx $root/mtimes.cpp
+build $builddir/eig.o : cxx $root/eig.cpp
+build $builddir/anyNonFinite.o : cxx $root/anyNonFinite.cpp
+build $builddir/warning.o : cxx $root/warning.cpp
+build $builddir/eigSkewHermitianStandard.o : cxx $root/eigSkewHermitianStandard.cpp
+build $builddir/sortLE.o : cxx $root/sortLE.cpp
+build $builddir/diff.o : cxx $root/diff.cpp
+build $builddir/mean.o : cxx $root/mean.cpp
+build $builddir/meshgrid.o : cxx $root/meshgrid.cpp
+build $builddir/repmat.o : cxx $root/repmat.cpp
+build $builddir/permute.o : cxx $root/permute.cpp
+build $builddir/std.o : cxx $root/std.cpp
+build $builddir/error.o : cxx $root/error.cpp
+build $builddir/power.o : cxx $root/power.cpp
+build $builddir/mldivide.o : cxx $root/mldivide.cpp
+build $builddir/_coder_processSIGburst_onboard_api.o : cxx $root/interface/_coder_processSIGburst_onboard_api.cpp
+build $builddir/_coder_processSIGburst_onboard_mex.o : cxx $root/interface/_coder_processSIGburst_onboard_mex.cpp
+build $builddir/strcmp.o : cxx $root/strcmp.cpp
+build $builddir/eml_int_forloop_overflow_check.o : cxx $root/eml_int_forloop_overflow_check.cpp
+build $builddir/sort.o : cxx $root/sort.cpp
+build $builddir/round.o : cxx $root/round.cpp
+build $builddir/log10.o : cxx $root/log10.cpp
+build $builddir/sortIdx.o : cxx $root/sortIdx.cpp
+build $builddir/div.o : cxx $root/div.cpp
+build $builddir/SortedBuffer.o : cxx $root/SortedBuffer.cpp
+build $builddir/_coder_processSIGburst_onboard_info.o : cxx $root/interface/_coder_processSIGburst_onboard_info.cpp
+build $builddir/cpp_mexapi_version.o : cxx $matlabdir/extern/version/cpp_mexapi_version.cpp
+
+# Link
+build $root\processSIGburst_onboard_mex.mexw64 : linkxx $builddir/processSIGburst_onboard_data.o $builddir/rt_nonfinite.o $builddir/processSIGburst_onboard_initialize.o $builddir/processSIGburst_onboard_terminate.o $builddir/processSIGburst_onboard.o $builddir/nanmean.o $builddir/movmedian.o $builddir/movsortfun.o $builddir/abs.o $builddir/find.o $builddir/indexShapeCheck.o $builddir/interp1.o $builddir/combineVectorElements.o $builddir/sumMatrixIncludeNaN.o $builddir/eml_mtimes_helper.o $builddir/mtimes.o $builddir/eig.o $builddir/anyNonFinite.o $builddir/warning.o $builddir/eigSkewHermitianStandard.o $builddir/sortLE.o $builddir/diff.o $builddir/mean.o $builddir/meshgrid.o $builddir/repmat.o $builddir/permute.o $builddir/std.o $builddir/error.o $builddir/power.o $builddir/mldivide.o $builddir/_coder_processSIGburst_onboard_api.o $builddir/_coder_processSIGburst_onboard_mex.o $builddir/strcmp.o $builddir/eml_int_forloop_overflow_check.o $builddir/sort.o $builddir/round.o $builddir/log10.o $builddir/sortIdx.o $builddir/div.o $builddir/SortedBuffer.o $builddir/_coder_processSIGburst_onboard_info.o $builddir/cpp_mexapi_version.o 
