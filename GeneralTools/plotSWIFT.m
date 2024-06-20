@@ -600,4 +600,15 @@ if isfield(SWIFT,'FDOM') && any(~isnan([SWIFT.FDOM])) && any(~isempty([SWIFT.FDO
 end
 
 
+%% Figure 10: SST radiometers (CT15)
+
+if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mean]))
+    figure(10), hold off
+    plot([SWIFT.time],[SWIFT.radiometertemp1mean],[SWIFT.time],[SWIFT.radiometertemp2mean])
+    datetick
+    ylabel('Brightness Temperature [C]')
+    legend('T1','T2')
+    print('-dpng',[wd '_radiometer.png'])
+end
+
 end %function
