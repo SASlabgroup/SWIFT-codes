@@ -25,6 +25,7 @@ function [] = plotSWIFT(SWIFT)
 %   figure 7: Rain and humidity
 %   figure 8: Wind spectra
 %   figure 9: oxygen concentration and FDOM (fluorometer dissolved organic matter?)
+%   figure 10: radiometers
 
 
 %% Initialize 
@@ -603,12 +604,23 @@ end
 %% Figure 10: SST radiometers (CT15)
 
 if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mean]))
+    nrad = length( SWIFT(1).radiometertemp1mean );
+    RadT1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT));
+    RadT2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT));
+    RadR1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
+    RadR2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
+    
     figure(10), hold off
-    plot([SWIFT.time],[SWIFT.radiometertemp1mean],[SWIFT.time],[SWIFT.radiometertemp2mean])
+    subplot(2,1,1)
+    plot([SWIFT.time],RadT1,[SWIFT.time],RadT2)
     datetick
     ylabel('Brightness Temperature [C]')
-    legend('T1','T2')
+    subplot(2,1,2)
+    plot([SWIFT.time],RadR1,[SWIFT.time],RadR2)
+    datetick
+    ylabel('Radiance?')
     print('-dpng',[wd '_radiometer.png'])
+
 end
 
 end %function
