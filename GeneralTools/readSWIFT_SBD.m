@@ -1,4 +1,4 @@
-function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
+function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 % Matlab readin of SWIFT Iridum SBD (short burst data) messages
 % which are binary files with onboard processed results
 % see Sutron documentation for message format
@@ -105,6 +105,7 @@ if firstchar == '7'
 
 %%
 CTcounter = 0; % count the number of CT sensors in the file
+Radcounter = 0; % count the number of radiometers in the file
 picflag = false; % initialize picture binary flag
 
 while 1
@@ -370,14 +371,17 @@ while 1
         disp('reading SeaOWl results')
         SWIFT.FDOM = fread(fid,1,'float');
         
-    elseif type == 14 & size > 0, % CT15 radiometer
-        disp('reading CT15 Radiometer results')
-        SWIFT.radiometertemp1mean = fread(fid,1,'float');
-        SWIFT.radiometertemp1std = fread(fid,1,'float');
-        SWIFT.radiometertemp2mean = fread(fid,1,'float');
-        SWIFT.radiometertemp2std = fread(fid,1,'float');
+    elseif type == 14 & size == 24, % CT15 radiometer, documentation says size should be 16, but it's always 24 bytes?
+        disp(['reading CT15 Radiometer results, size = ' num2str(size)])
+        SWIFT.radiometertemp1mean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiometertemp1std(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiometertemp2mean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiometertemp2std(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiometerrad1(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiometerrad2(Radcounter + 1) = fread(fid,1,'float');
+        Radcounter = Radcounter + 1;
         
-    elseif type == 50 & size > 0, % microSWIFT, size should be 1228 bytes
+    elseif type == 50 & size ==1228, % microSWIFT, size should be 1228 bytes
         disp('reading microSWIFT')
         SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
         SWIFT.peakwaveperiod = fread(fid,1,'float'); % dominant period
@@ -409,7 +413,7 @@ while 1
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
         
-    elseif type == 51 & size > 0, % microSWIFT, size should be 237 bytes
+    elseif type == 51 & size == 237, % microSWIFT, size should be 237 bytes
         disp('reading microSWIFT (light)')
         SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
         SWIFT.peakwaveperiod = fread(fid,1,'float'); % dominant period
@@ -443,7 +447,7 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
-    elseif type == 52 & size > 0, % microSWIFT, size should be 327 bytes
+    elseif type == 52 & size == 327, % microSWIFT, size should be 327 bytes
         disp('reading microSWIFT (compact)')
         replacedrawvalues = port*10 % microSWIFTs do not give com port, so we are using a diagnostic for raw data QC (and replacement)
         SWIFT.replacedrawvalues = replacedrawvalues;
