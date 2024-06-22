@@ -64,6 +64,8 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %
 %   J. Thomson, 6/2023  use com port field in microSWIFT payload type (52) 
 %                       to report number of raw GPS velocities replaced before processing 
+%   K. Zeiden, 6/2024  change default signature profile size to 128, when
+%                       empty and filling w/NaN
 %
 
 recip = true; % binary flag to change wave direction to FROM
@@ -316,8 +318,8 @@ while 1
         SWIFT.signature.profile.z = blanking + res./2 + [0:(cells-1)]*res;
     elseif type == 9 & size == 0, % Nortek Signature present, but empty results
         disp('Signature results are empty!')
-        SWIFT.signature.HRprofile.tkedissipationrate = NaN(64,1);
-        SWIFT.signature.HRprofile.z = NaN(1,64);
+        SWIFT.signature.HRprofile.tkedissipationrate = NaN(128,1);
+        SWIFT.signature.HRprofile.z = NaN(1,128);
         SWIFT.signature.profile.east = NaN(40,1);
         SWIFT.signature.profile.north = NaN(40,1);
         SWIFT.signature.profile.z = NaN(1,40);
