@@ -373,7 +373,7 @@ while 1
         disp('reading SeaOWl results')
         SWIFT.FDOM = fread(fid,1,'float');
         
-    elseif type == 14 & size == 24, % CT15 radiometer, documentation says size should be 16, but it's always 24 bytes?
+    elseif type == 14 & size == 24, % CT15 radiometer with radiance (newer)
         disp(['reading CT15 Radiometer results, size = ' num2str(size)])
         SWIFT.radiometertemp1mean(Radcounter + 1) = fread(fid,1,'float');
         SWIFT.radiometertemp1std(Radcounter + 1) = fread(fid,1,'float');
@@ -381,6 +381,14 @@ while 1
         SWIFT.radiometertemp2std(Radcounter + 1) = fread(fid,1,'float');
         SWIFT.radiometerrad1(Radcounter + 1) = fread(fid,1,'float');
         SWIFT.radiometerrad2(Radcounter + 1) = fread(fid,1,'float');
+        Radcounter = Radcounter + 1;
+
+    elseif type == 14 & size == 16, % CT15 radiometer without radiance (older)
+        disp(['reading CT15 Radiometer results, size = ' num2str(size)])
+        SWIFT.radiometertemp1mean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiometertemp1std(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiometertemp2mean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiometertemp2std(Radcounter + 1) = fread(fid,1,'float');
         Radcounter = Radcounter + 1;
         
     elseif type == 50 & size ==1228, % microSWIFT, size should be 1228 bytes

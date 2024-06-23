@@ -607,8 +607,13 @@ if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mea
     nrad = length( SWIFT(1).radiometertemp1mean );
     RadT1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT));
     RadT2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT));
-    RadR1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
-    RadR2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
+    if isfield(SWIFT, 'radiometerrad1')
+        RadR1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
+        RadR2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
+    else
+        RadR1 = NaN;
+        RadR2 = NaN;  
+    end
     
     figure(10), hold off
     subplot(2,1,1)
