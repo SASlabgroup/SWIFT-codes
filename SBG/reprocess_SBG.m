@@ -7,6 +7,8 @@
 %                   and replace SWIFT data structure results.
 clear all, close all
 
+saveraw = false;
+
 plotflag = false;
 
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
@@ -251,7 +253,11 @@ if ~isempty(SWIFT)
 
     %% save a big file with raw displacements and dir spectra
 
+    if saveraw
+
     save([ wd '_reprocessedSBG_displacements.mat'],'SWIFT')%,'Etheta','theta','f')
+
+    end
 
 
     %% save a small file with stats only
