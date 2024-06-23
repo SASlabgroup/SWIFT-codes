@@ -60,10 +60,11 @@ end
 % Radiometer
 if isfield(SWIFT,'radiometertemp1mean')
     nrad = length(SWIFT(1).radiometertemp1mean);
-    swift.radtemp1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT))';
-    swift.radtemp2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT))';
-    swift.rad1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT))';
-    swift.rad2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT))';
+    swift.radtemp = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT))';
+end
+if isfield(SWIFT,'radiometerrad1')
+    nrad = length(SWIFT(1).radiometerrad1);
+    swift.rad = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT))';
 end
 
 % Drift velocity
