@@ -29,9 +29,9 @@ maxquality = 0.6;  % usually 0.6, something like 1 would let everything thru
 
 %% Apply Quality control
 
-if applyQC
-
 bad = false(length(SWIFT),1);
+
+if applyQC
 
 uvratio = [SWIFT.windmeanu] ./ abs( [SWIFT.windmeanv] );
 
