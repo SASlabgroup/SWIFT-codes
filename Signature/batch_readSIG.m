@@ -3,7 +3,7 @@
 %       expdir\mission\SIG\Raw\YYYYMMDD\rawfile.dat
 
 % Experiment to process
-expdir = 'S:\NORSE\2023\';
+expdir = 'C:\Users\Kristin Zeiden\Desktop\POCARI-0\SWIFT_raw\';% must end in slash
 missions = dir([expdir 'SWIFT2*']);
 
 %% Run through each mission

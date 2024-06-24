@@ -133,7 +133,7 @@ opt.mincorr = 40; % burst-avg correlation minimum
 opt.maxamp = 150; % burst-avg amplitude maximum
 opt.maxwvar = 0.2; % burst-avg HR velocity (percent) error maximum
 opt.pbadmax = 80; % maximum percent 'bad' amp/corr/err values per bin or ping allowed
-opt.nsumeof = 5;% Default 3? Number of lowest-mode EOFs to remove from turbulent velocity
+opt.nsumeof = 3;% Default 3? Number of lowest-mode EOFs to remove from turbulent velocity
 
 if opt.nsumeof~=3
     warning(['EOF filter changed to ' num2str(opt.nsumeof)])
@@ -306,13 +306,13 @@ for iburst = 1:nburst
         if opt.saveplots && ~isempty(fh)
             figure(fh(1))
             set(gcf,'Name',[bname '_bband_data'])
-            figname = [savedir SNprocess slash get(gcf,'Name')];
+            figname = [bfiles(iburst).folder slash SNprocess slash get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
             
             figure(fh(2))
             set(gcf,'Name',[bname '_bband_profiles'])
-            figname = [savedir SNprocess slash get(gcf,'Name')];
+            figname = [bfiles(iburst).folder slash SNprocess slash get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
         end
@@ -329,7 +329,7 @@ for iburst = 1:nburst
            if opt.saveplots && ~isempty(fh)
             figure(fh(1))
             set(gcf,'Name',[bname '_HR_data'])
-            figname = [savedir SNprocess slash get(gcf,'Name')];
+            figname = [bfiles(iburst).folder slash SNprocess slash get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
             
