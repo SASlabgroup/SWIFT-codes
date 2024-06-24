@@ -37,6 +37,7 @@ if isfield(SIG,'time')
     sig.hrw = sig.hrcorr;
     sig.hrwvar = sig.hrcorr;
     sig.eps = sig.hrcorr;
+    sig.epsnf = sig.hrcorr;
     sig.mspe = sig.hrcorr;
     sig.slope = sig.hrcorr;
     sig.pspike = sig.hrcorr;
@@ -65,6 +66,7 @@ if isfield(SIG,'time')
         sig.hrw(1:nz,it) = SIG(it).HRprofile.w;
         sig.hrwvar(1:nz,it) = SIG(it).HRprofile.wvar;
         sig.eps(1:nz,it) = SIG(it).HRprofile.eps;
+        sig.epsnf(1:nz,it) = SIG(it).HRprofile.QC.epsNF;
         sig.mspe(1:nz,it) = SIG(it).HRprofile.QC.qualEOF.mspe;
         sig.slope(1:nz,it) = SIG(it).HRprofile.QC.qualEOF.slope;
         
@@ -89,6 +91,7 @@ if isfield(SIG,'time')
         sig.hrw(:,badburst) = [];
         sig.hrwvar(:,badburst) = [];
         sig.eps(:,badburst) = [];
+        sig.epsnf(:,badburst) = [];
         sig.mspe(:,badburst) = [];
         sig.slope(:,badburst) = [];  
         sig.pspike(:,badburst) = [];
