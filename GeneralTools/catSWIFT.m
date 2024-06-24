@@ -84,7 +84,7 @@ swift.driftv = driftv;
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
-    swift.depth = SWIFT(round(nt/2)).signature.profile.z';
+    swift.depth = SWIFT(end).signature.profile.z';
     nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
@@ -116,7 +116,7 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
         end
     end
 elseif isfield(SWIFT,'downlooking')
-    swift.depth = SWIFT(1).downlooking.z';
+    swift.depth = SWIFT(end).downlooking.z';
     nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
@@ -125,7 +125,7 @@ elseif isfield(SWIFT,'downlooking')
     swift.relverr = NaN(nz,nt);
     swift.relwerr = NaN(nz,nt);       
 elseif isfield(SWIFT,'uplooking')
-    swift.depth = SWIFT(1).uplooking.z;
+    swift.depth = SWIFT(end).uplooking.z;
     nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
@@ -215,7 +215,7 @@ swift.wavepeakT = 1./(waveweight./wavevar);
 
 % TKE Dissipation Rate and HR vertical velocity
 if isfield(SWIFT,'signature')
-    swift.surfz = SWIFT(round(nt/2)).signature.HRprofile.z';
+    swift.surfz = SWIFT(end).signature.HRprofile.z';
     nz = length(swift.surfz);
     swift.surftke = NaN(nz,nt);
     for it = 1:nt
