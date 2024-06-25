@@ -329,7 +329,7 @@ for iburst = 1:nburst
            if opt.saveplots && ~isempty(fh)
             figure(fh(1))
             set(gcf,'Name',[bname '_HR_data'])
-            figname = [bfiles(iburst).folder slash SNprocess slash get(gcf,'Name')];
+            figname = [bfiles(iburst).folder slash get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
             
