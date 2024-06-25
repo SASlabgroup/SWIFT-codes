@@ -316,6 +316,7 @@ for iburst = 1:nburst
             print(figname,'-dpng')
             close gcf
         end
+       
 
 
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
@@ -339,6 +340,28 @@ for iburst = 1:nburst
 %             print(figname,'-dpng')
 %             close gcf
            end
+
+    %%%%%%%% Process Echo data %%%%%%%%%%%
+
+   if ~empty(echo)
+
+       if ~isempty(SWIFT)
+        S =mean([SWIFT.salinity],'omitnan');
+       else
+           S = 25;
+       end
+       [echogram,fh] = processSIGecho(echo,S);
+       echogram.z = opt.xz + echogram.r;
+
+        if opt.saveplots && ~isempty(fh)
+            figure(fh)
+            set(gcf,'Name',[bname '_Echogram'])
+            figname = [bfiles(iburst).folder slash SNprocess slash get(gcf,'Name')];
+            print(figname,'-dpng')
+            close gcf
+        end
+       
+   end
     
     %%%%%%%% Save detailed signature data in SIG structure %%%%%%%%
 
@@ -350,6 +373,10 @@ for iburst = 1:nburst
     SIG(isig).watertemp = profile.temp;
     % Broadband data
     SIG(isig).profile = profile;
+    % Echogram data
+    if ~isempty(echo)
+    SIG(isig).echogram = echogram;
+    end
     % Motion
     SIG(isig).motion.pitch = mean(avg.Pitch,'omitnan');
     SIG(isig).motion.roll = mean(avg.Roll,'omitnan');
@@ -400,6 +427,9 @@ for iburst = 1:nburst
             SWIFT(tindex).signature.profile.vvar = profile.vvar;
             SWIFT(tindex).signature.profile.wvar = profile.wvar;
             SWIFT(tindex).signature.profile.z = profile.z;
+            if ~isempty(echo)
+                SWIFT(tindex).signature.echogram = echogram;
+            end
             % Altimeter & Out-of-Water Flag
             SWIFT(tindex).signature.altimeter = maxz;
             % Temperaure
