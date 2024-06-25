@@ -227,7 +227,7 @@ for iburst = 1:nburst
     if opt.readraw
    [burst,avg,~,~] = readSWIFTv4_SIG([bfiles(iburst).folder slash bfiles(iburst).name]);
     else
-        load([bfiles(iburst).folder slash bfiles(iburst).name],'burst','avg')
+        load([bfiles(iburst).folder slash bfiles(iburst).name],'burst','avg','echo')
     end
     
     % Skip burst if empty
@@ -342,21 +342,20 @@ for iburst = 1:nburst
            end
 
     %%%%%%%% Process Echo data %%%%%%%%%%%
-
-   if ~empty(echo)
+   if ~isempty(echo)
 
        if ~isempty(SWIFT)
         S =mean([SWIFT.salinity],'omitnan');
        else
            S = 25;
        end
-       [echogram,fh] = processSIGecho(echo,S);
+       [echogram,fh] = processSIGecho(echo,S,opt);
        echogram.z = opt.xz + echogram.r;
 
         if opt.saveplots && ~isempty(fh)
             figure(fh)
             set(gcf,'Name',[bname '_Echogram'])
-            figname = [bfiles(iburst).folder slash SNprocess slash get(gcf,'Name')];
+            figname = [bfiles(iburst).folder slash get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
         end
@@ -474,6 +473,9 @@ for iburst = 1:nburst
             SWIFT(tindex).signature.profile.vvar = profile.vvar;
             SWIFT(tindex).signature.profile.wvar = profile.wvar;
             SWIFT(tindex).signature.profile.z = profile.z;
+            if ~isempty(echo)
+                SWIFT(tindex).signature.echogram = echogram;
+            end
             % Altimeter
             SWIFT(tindex).signature.altimeter = maxz;
             % Temperaure

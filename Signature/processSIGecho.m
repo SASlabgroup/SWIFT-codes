@@ -1,4 +1,4 @@
-function [echogram,fh] = processSIGecho(echo,S)
+function [echogram,fh] = processSIGecho(echo,S,opt)
 % Adaptation of A. Shcherbina 'Nortek_CorrectEcho.m' and 
 % C. Bassett 'sigecho_vol.m' by K. Zeiden (10/2023)
 
@@ -84,38 +84,34 @@ r = r/cos(bangle*pi/180);
 echoc = echo0 + Sp + At;% + Nfc - Ens + PL + Gint;
 
 % Save in structure
-echogram.echo0 = echo0;
-echogram.echoc = echoc;
+echogram.echo0 = mean(echo0,2,'omitnan');
+echogram.echoc = mean(echoc,2,'omitnan');
 echogram.r = r;
 
-%%% Save terms
-cterms.Sp = Sp;
-cterms.At = At;
-cterms.Nfc = Nfc;
-cterms.Ens = Ens;
-cterms.PL = PL;
-cterms.Gint = Gint;
 
-% Plot
+% Plot Burst 
+if opt.plotburst
+    
+     % Visualize Data
+    fh(1) = figure('color','w');
+    clear c
+    MP = get(0,'monitorposition');
+    set(gcf,'outerposition',MP(1,:).*[1 1 1 1]);
+    subplot(2,1,1)
+    imagesc(echo0)
+    clim([40 150]); cmocean('thermal')
+    title('Raw Echogram Data');
+    ylabel('Bin #')
+    c = colorbar;c.Label.String = 'E (dB)';
+    subplot(2,1,2)
+    imagesc(echoc)
+    clim([40 150]); cmocean('thermal')
+    ylabel('Bin #')
+    c = colorbar;c.Label.String = 'E (dB)';
+    xlabel('Ping #')
+    title('Range Corrected');
+    drawnow
 
- % Visualize Data
-fh(1) = figure('color','w');
-clear c
-MP = get(0,'monitorposition');
-set(gcf,'outerposition',MP(1,:).*[1 1 1 1]);
-subplot(2,1,1)
-imagesc(echo0)
-clim([40 150]); cmocean('thermal')
-title('Raw Echogram Data');
-ylabel('Bin #')
-c = colorbar;c.Label.String = 'E (dB)';
-subplot(2,1,2)
-imagesc(echoc)
-clim([40 150]); cmocean('thermal')
-ylabel('Bin #')
-c = colorbar;c.Label.String = 'E (dB)';
-xlabel('Ping #')
-title('Range Corrected');
-drawnow
-
-
+else
+    fh = [];
+end
