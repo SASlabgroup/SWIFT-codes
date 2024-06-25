@@ -18,14 +18,14 @@ if ~strcmp(expdir(end),slash)
     expdir = [expdir slash];
 end
 
-for im = 1%:length(missions)
+for im = 1:length(missions)
     
     bfiles = dir([expdir missions(im).name slash 'SIG' slash 'Raw' slash '*' slash '*.dat']);
     if length(bfiles)<1
         disp(['Warning: No burst files found for ' missions(im).name])
     end
 
-    for iburst = 11:length(bfiles)
+    for iburst = 1:length(bfiles)
 
         disp(['Burst ' num2str(iburst) ' : ' bfiles(iburst).name(1:end-4)])
 

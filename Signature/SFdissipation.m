@@ -130,7 +130,7 @@ for ibin = 1:length(z)
     d = Di(ifit);
     derr = mean(Dierr(ifit),'omitnan');
     
-    %Best-fit power-law to the structure function
+    %Best-fit power-law to the structure function % THIS IS WRONG!!!!
     ilog = x1 > 0 & d > 0;% log(0) = -Inf
     x1log = log10(x1(ilog));
     dlog = log10(d(ilog));

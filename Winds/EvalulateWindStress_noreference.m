@@ -12,7 +12,7 @@
 
 %% QC limits 
 
-applyQC = false; % binary flag
+applyQC = true; % binary flag
 
 % alignment: u is aligned and negative when head-to-wind, so a big negative number means head to wind
 % this is by far the most important screen; it removes about 70% for the Southern Ocean 2017 dataset
@@ -20,7 +20,7 @@ maxuvratio = 10;  % usually -0.6, which is +/- 60 deg from head-to-wind, somethi
 
 % spectra: this is the ratio of horizontal TKE to vertical in the inertial sub-range
 % this is almost always greater than one.  
-maxanisotropy = 1.5; % usually 2, something like 5 would let everything thru
+maxanisotropy = 5; % usually 2, something like 5 would let everything thru
 
 % fit quality: this is the relative error in fitting to f^-5/3 slopes
 % typical values are 0.5, lower values are better... sort of
@@ -106,7 +106,7 @@ U10rmserror = rms( [SWIFT(good).U10] - [SWIFT(good).referenceU10] - U10bias)
 %% bin-averaged spectra
 
 dw = 2;
-windbins = [0:dw:18];
+windbins = [2:dw:18];
 
 f = SWIFT(1).windspectra.freq;
 spectra = zeros( length(windbins),length(f) );
@@ -135,8 +135,8 @@ xlabel('Frequency [Hz]')
 for wi=1:length(windbins),
     text(1.01*max(f), min(meanspectra(wi,:)), [num2str(windbins(wi)+dw/2) ' m/s'],'fontweight','demi','fontsize',12)
 end
-hold on, loglog([1.5 3],3*[1.5 3].^(-5/3),'k--','linewidth',1.5)
-text(2.2,2.2,'f^{-5/3}','fontweight','demi','fontsize',14)
+hold on, loglog([2 4],3*[2 4].^(-5/3),'k--','linewidth',1.5)
+text(2.5,2.,'f^{-5/3}','fontweight','demi','fontsize',14)
 
 %% recalc ustar from spectra
 
