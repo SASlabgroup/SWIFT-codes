@@ -617,13 +617,17 @@ if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mea
     
     figure(10), hold off
     subplot(2,1,1)
-    plot([SWIFT.time],RadT1,[SWIFT.time],RadT2)
+    plot([SWIFT.time],RadT1)
+    hold on
+    plot([SWIFT.time],RadT2,'color',rgb('lightgrey'))
     datetick
-    ylabel('Brightness Temperature [C]')
+    ylabel('Temperature [C]')
     subplot(2,1,2)
-    plot([SWIFT.time],RadR1,[SWIFT.time],RadR2)
+    plot([SWIFT.time],RadR1)
+    hold on
+    plot([SWIFT.time],RadR2,'color',rgb('lightgrey'))
     datetick
-    ylabel('Radiance?')
+    ylabel('Radiance [mV]')
     print('-dpng',[wd '_radiometer.png'])
 
 end
