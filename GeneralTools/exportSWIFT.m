@@ -5,7 +5,7 @@
 
 clear all, close all
 
-type='txt'
+type='kml'
 
 flist = dir('./*.mat');
 
@@ -48,7 +48,7 @@ save([filename '_b2_energy.txt'],'b2output','-ascii', '-tabs')
 %% kml export
 elseif type=='kml',
   
-    gescatter([ filename '.kml' ],[SWIFT.lon],[SWIFT.lat],[SWIFT.driftspd],'time',[SWIFT.time])
+    gescatter([ filename '.kml' ],[SWIFT.lon],[SWIFT.lat],[SWIFT.time],'time',[SWIFT.time])
     
 end
 
