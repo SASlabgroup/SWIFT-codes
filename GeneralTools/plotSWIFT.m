@@ -410,6 +410,7 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         set(gca,'YDir','reverse');
         ylabel('z [m]');
         xlabel('East [m/s]');
+        set(gca,'XLim',[-1 1])
         
         % Plot north velocity profiles
         axes('position',[0.1 0.1 0.2 0.35]);
@@ -417,6 +418,7 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         set(gca,'YDir','reverse');
         ylabel('z [m]');
         xlabel('North [m/s]');
+        set(gca,'XLim',[-1 1])
         
         if size(east_array,2) > 1
         % Plot east velocity Hovmueller-type plot
@@ -427,6 +429,8 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         datetick; 
         colorbar;
         title('East [m/s]')
+        cmocean('balance')
+        caxis([-1 1])
         
         % Plot north velocity Hovmueller-type plot
         axes('position',[0.35 0.1 0.6 0.35])
@@ -436,6 +440,9 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         datetick; 
         colorbar;
         title('North [m/s]')
+        cmocean('balance')
+        caxis([-1 1])
+
         end %if
         
     catch
