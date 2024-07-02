@@ -5,7 +5,7 @@
 
 % Experiment to process
 % expdir = 'C:\Users\Kristin Zeiden\Desktop\POCARI-0\SWIFT_raw\';% must end in slash
-expdir = 'S:\SEAFAC\June2024\';% must end in slash
+expdir = 'C:\Users\Kristin Zeiden\Desktop\POCARI-0\SWIFT_offload\NorthMooring\';% must end in slash
 missions = dir([expdir 'SWIFT2*']);
 
 %% Run through each mission

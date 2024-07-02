@@ -16,11 +16,12 @@
 clear all; close all
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 tic
-saverawdisplacements = true; % logical flag to increase speed by not saving the raw displacements.
+saverawdisplacements = false; % logical flag to increase speed by not saving the raw displacements.
 
 %% choose a prefilter
 %prefilter = {'no'}; %prefilter = str2cell('no')
-prefilter = str2cell('RC'), RC = 3.5;
+prefilter = str2cell('RC');
+RC = 3.5;
 %prefilter = str2cell('elliptic'),  dB = 5; % lower is strong filter??
     %note that dB is set seperately (again) within rawdisplacements.m
 
@@ -74,11 +75,11 @@ for di = 1:length(dirlist),
                 
                 % sampling rates and frequency bands
                 dt = median(diff(AHRS.Timestamp_sec));  % time step of raw IMU data
-                if isnan(dt),
+                if isnan(dt)
                     dt = 600 ./ length(AHRS.Accel);
                 else
                 end
-                fs_ahrs = 1/dt % should be 25 Hz
+                fs_ahrs = 1/dt; % should be 25 Hz
                 fs_gps = 1000./median(diff(GPS.UTC.mSec)); % should be 4 Hz
                 f_original = SWIFT(tindex).wavespectra.freq;  % original frequency bands from onboard processing
                 

@@ -43,50 +43,50 @@ for ai = 1:length(refnames),
    
     disp([ num2str(ai) ' of ' num2str(length(refnames)) ])
     
-ID = refnames(ai).name(1:7);
-date = refnames(ai).name(13:21);
-hour = refnames(ai).name(23:24);
-burst = refnames(ai).name(26:27);
-
-%AQtype = AQnames(ai).name(11);
-
-payloadtype = '7'; % v3.3 (2015) and up 
-
-fid = fopen('payload','wb');
-fwrite(fid,payloadtype,'uint8');
-fclose(fid);
-
-%% look for multiple ACS fils (on different com ports)
-eval(['!cp -r ' dirpath sourcedir '/COM-7/Processed/*/' ID '_ACS_' date '_' hour '_' burst '_PRC.dat  '   ID '_ACStop_' date '_' hour '_' burst '_PRC.dat' ])
-eval(['!cp -r ' dirpath sourcedir '/COM-8/Processed/*/' ID '_ACS_' date '_' hour '_' burst '_PRC.dat  '   ID '_ACSmid_' date '_' hour '_' burst '_PRC.dat' ])
-eval(['!cp -r ' dirpath sourcedir '/COM-9/Processed/*/' ID '_ACS_' date '_' hour '_' burst '_PRC.dat  '   ID '_ACSbottom_' date '_' hour '_' burst '_PRC.dat' ])
-
-
-%% concatenate files (to make fake SBD telemetry files)
-
-AQHfile = [ID '_AQH_' date '_' hour '_' burst '_PRC.dat'];
-AQDfile = [ID '_AQD_' date '_' hour '_' burst '_PRC.dat'];
-Metfile = [ID '_PB2_' date '_' hour '_' burst '_PRC.dat'];
-%Metfile = [ID '_536_' date '_' hour '_' burst '_PRC.dat'];
-IMUfile = [ID '_IMU_' date '_' hour '_' burst '_PRC.dat'];
-SBGfile = [ID '_SBG_' date '_' hour '_' burst '_PRC.dat'];
-%ACSfile = [ID '_ACS_' date '_' hour '_' burst '_PRC.dat'];
-ACSfiletop = [ID '_ACStop_' date '_' hour '_' burst '_PRC.dat'];
-ACSfilemid = [ID '_ACSmid_' date '_' hour '_' burst '_PRC.dat'];
-ACSfilebottom = [ID '_ACSbottom_' date '_' hour '_' burst '_PRC.dat'];
-Y81file = [ID '_Y81_' date '_' hour '_' burst '_PRC.dat'];
-SIGfile = [ID '_SIG_' date '_' hour '_' burst '_PRC.dat'];
-ACOfile = [ID '_ACO_' date '_' hour '_' burst '_PRC.dat'];
-SWLfile = [ID '_SWL_' date '_' hour '_' burst '_PRC.dat'];
-
-
-minute = num2str( (str2num(burst(2))-1) * burstinterval );
-if length(minute)==1, minute = ['0' minute]; else end
-outputfile = ['buoy-SWIFT_' ID(6:7) '-' date '_' hour  minute '000.sbd']; % name concat file same as if pulled from swiftserver
-
-%eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile '  ' ACSfilemid '  > ' outputfile]) % create the file
-eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile ' ' ACSfiletop '  ' ACSfilemid ' ' ACSfilebottom ' ' ACOfile ' ' SWLfile ' > ' outputfile]) % create the file
-%eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile '  ' ACSfilemid ' ' ACSfilebottom ' > ' outputfile]) % create the file
+    ID = refnames(ai).name(1:7);
+    date = refnames(ai).name(13:21);
+    hour = refnames(ai).name(23:24);
+    burst = refnames(ai).name(26:27);
+    
+    %AQtype = AQnames(ai).name(11);
+    
+    payloadtype = '7'; % v3.3 (2015) and up 
+    
+    fid = fopen('payload','wb');
+    fwrite(fid,payloadtype,'uint8');
+    fclose(fid);
+    
+    %% look for multiple ACS fils (on different com ports)
+    eval(['!cp -r ' dirpath sourcedir '/COM-7/Processed/*/' ID '_ACS_' date '_' hour '_' burst '_PRC.dat  '   ID '_ACStop_' date '_' hour '_' burst '_PRC.dat' ])
+    eval(['!cp -r ' dirpath sourcedir '/COM-8/Processed/*/' ID '_ACS_' date '_' hour '_' burst '_PRC.dat  '   ID '_ACSmid_' date '_' hour '_' burst '_PRC.dat' ])
+    eval(['!cp -r ' dirpath sourcedir '/COM-9/Processed/*/' ID '_ACS_' date '_' hour '_' burst '_PRC.dat  '   ID '_ACSbottom_' date '_' hour '_' burst '_PRC.dat' ])
+    
+    
+    %% concatenate files (to make fake SBD telemetry files)
+    
+    AQHfile = [ID '_AQH_' date '_' hour '_' burst '_PRC.dat'];
+    AQDfile = [ID '_AQD_' date '_' hour '_' burst '_PRC.dat'];
+    Metfile = [ID '_PB2_' date '_' hour '_' burst '_PRC.dat'];
+    %Metfile = [ID '_536_' date '_' hour '_' burst '_PRC.dat'];
+    IMUfile = [ID '_IMU_' date '_' hour '_' burst '_PRC.dat'];
+    SBGfile = [ID '_SBG_' date '_' hour '_' burst '_PRC.dat'];
+    %ACSfile = [ID '_ACS_' date '_' hour '_' burst '_PRC.dat'];
+    ACSfiletop = [ID '_ACStop_' date '_' hour '_' burst '_PRC.dat'];
+    ACSfilemid = [ID '_ACSmid_' date '_' hour '_' burst '_PRC.dat'];
+    ACSfilebottom = [ID '_ACSbottom_' date '_' hour '_' burst '_PRC.dat'];
+    Y81file = [ID '_Y81_' date '_' hour '_' burst '_PRC.dat'];
+    SIGfile = [ID '_SIG_' date '_' hour '_' burst '_PRC.dat'];
+    ACOfile = [ID '_ACO_' date '_' hour '_' burst '_PRC.dat'];
+    SWLfile = [ID '_SWL_' date '_' hour '_' burst '_PRC.dat'];
+    
+    
+    minute = num2str( (str2num(burst(2))-1) * burstinterval );
+    if length(minute)==1, minute = ['0' minute]; else end
+    outputfile = ['buoy-SWIFT_' ID(6:7) '-' date '_' hour  minute '000.sbd']; % name concat file same as if pulled from swiftserver
+    
+    %eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile '  ' ACSfilemid '  > ' outputfile]) % create the file
+    eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile ' ' ACSfiletop '  ' ACSfilemid ' ' ACSfilebottom ' ' ACOfile ' ' SWLfile ' > ' outputfile]) % create the file
+    %eval(['!cat payload ' AQHfile ' ' AQDfile ' ' Metfile ' ' IMUfile ' ' SBGfile ' ' Y81file ' ' SIGfile '  ' ACSfilemid ' ' ACSfilebottom ' > ' outputfile]) % create the file
 
 
 end % close

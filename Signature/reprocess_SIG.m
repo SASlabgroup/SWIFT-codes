@@ -235,6 +235,12 @@ for iburst = 1:nburst
         disp('Failed to read, skipping burst...')
         continue
     end
+
+    % Skip burst if file is too small...
+    if bfiles(iburst).bytes < 1e6 % 2e6,
+        disp('Bad file (small), skipping burst...')
+        continue
+    end
     
     %%%%%%% FLAGS %%%%%%
     
@@ -244,14 +250,6 @@ for iburst = 1:nburst
         disp('   WARNING: File name time disagrees with recorded time. Using recorded time...   ')
     else
         t0 = btime;
-    end
-
-    % Flag if file is too small
-    if bfiles(iburst).bytes < 1e6 % 2e6,
-        disp('   FLAG: Bad file (small)...')
-        smallfile = true;
-    else
-        smallfile = false;
     end
 
     % Flag if coming in/out of the water
@@ -278,14 +276,6 @@ for iburst = 1:nburst
         badcorr = false;
     end
 
-%     % Flag out of water based on bursts with high velocity variance
-%     if  mean(std(burst.VelocityData,[],2,'omitnan')) > opt.maxwvar
-%         disp('   FLAG: Bad Vel (high along-beam variance)...')
-%         badvel = true;
-%     else
-%         badvel = false;
-%     end
-
     % Determine Altimeter Distance
     if isfield(avg,'AltimeterDistance')
         maxz = median(avg.AltimeterDistance);
@@ -293,7 +283,7 @@ for iburst = 1:nburst
         maxz = inf;
     end
 
-    badburst = smallfile | outofwater | badamp | badcorr;% | badvel;
+    badburst = outofwater | badamp | badcorr;% | badvel;
 
     %%%%%%% Process Broadband velocity data ('avg' structure) %%%%%%
 
@@ -306,18 +296,17 @@ for iburst = 1:nburst
         if opt.saveplots && ~isempty(fh)
             figure(fh(1))
             set(gcf,'Name',[bname '_bband_data'])
-            figname = [bfiles(iburst).folder slash SNprocess slash get(gcf,'Name')];
+            figname = [bfiles(iburst).folder slash get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
             
             figure(fh(2))
             set(gcf,'Name',[bname '_bband_profiles'])
-            figname = [bfiles(iburst).folder slash SNprocess slash get(gcf,'Name')];
+            figname = [bfiles(iburst).folder slash get(gcf,'Name')];
             print(figname,'-dpng')
             close gcf
         end
        
-
 
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
     
@@ -386,7 +375,6 @@ for iburst = 1:nburst
     % Badburst & flags
     SIG(isig).badburst = badburst;
     SIG(isig).flag.altimeter = maxz;
-    SIG(isig).flag.smallfile = smallfile;
     SIG(isig).flag.outofwater = outofwater;
     SIG(isig).flag.badamp = badamp;
     SIG(isig).flag.badcorr = badcorr;

@@ -1,9 +1,5 @@
 function [profile,fh] = processSIGavg(avg,opt)
 
-%   Force no plot
-    opt.plotburst = false;
-    opt.saveplots = false;
-
 %    Check to make sure dimensions correct
     if size(avg.VelocityData,3) ~= 4
         disp('   Broadband data dimensions bad')

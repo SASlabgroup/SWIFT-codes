@@ -60,11 +60,31 @@ end
 % Radiometer
 if isfield(SWIFT,'radiometertemp1mean')
     nrad = length(SWIFT(1).radiometertemp1mean);
-    swift.radtemp = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT))';
+    swift.radtemp1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT));
+    if size(swift.radtemp1,2)~= nt
+        swift.radtemp1 = swift.radtemp1';
+    end
 end
 if isfield(SWIFT,'radiometerrad1')
     nrad = length(SWIFT(1).radiometerrad1);
-    swift.rad = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT))';
+    swift.rad1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
+    if size(swift.rad1,2)~= nt
+        swift.rad1 = swift.rad1';
+    end
+end
+if isfield(SWIFT,'radiometertemp2mean')
+    nrad = length(SWIFT(1).radiometertemp2mean);
+    swift.radtemp2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT));
+    if size(swift.radtemp2,2)~= nt
+        swift.radtemp2 = swift.radtemp2';
+    end
+end
+if isfield(SWIFT,'radiometerrad1')
+    nrad = length(SWIFT(1).radiometerrad2);
+    swift.rad2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
+    if size(swift.rad2,2)~= nt
+        swift.rad2 = swift.rad2';
+    end
 end
 
 % Drift velocity
@@ -134,7 +154,7 @@ elseif isfield(SWIFT,'uplooking')
     swift.relverr = NaN(nz,nt);
     swift.relwerr = NaN(nz,nt); 
 else
-    swift.depth = [0:0.5:20]';
+    swift.depth = (0:0.5:20)';
     nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
@@ -163,7 +183,7 @@ for it = 1:nt
     end
 end
 swift.wavepower(swift.wavepower<0) = 0;
-swift.wavefreq = mean(swift.wavefreq,2,'omitnan');
+swift.wavefreq = median(swift.wavefreq,2,'omitnan');
 swift.wavesigH = [SWIFT.sigwaveheight];
 swift.wavepeakT = [SWIFT.peakwaveperiod];
 swift.wavepeakdir = [SWIFT.peakwavedirT];
@@ -199,19 +219,27 @@ swift.wavepeakT = 1./(waveweight./wavevar);
  else
      swift.winddir = NaN(size(swift.driftspd));
  end
- if isfield(SWIFT,'windspectra')
-    swift.windfreq = SWIFT(1).windspectra.freq;
-    nf = length(swift.windfreq);
-    swift.windpower = NaN(nf,nt);
-    for it = 1:nt
-        if ~isempty(SWIFT(it).windspectra.energy)
-     swift.windpower(:,it) = SWIFT(it).windspectra.energy;
+ if isfield(SWIFT,'windspectra') 
+     for it = 1:nt
+        windpower = SWIFT(it).windspectra.energy;
+        windfreq = SWIFT(it).windspectra.freq;
+        if length(windpower) ~= length(windfreq)
+            windpower = NaN(size(windfreq));
         end
-    end
+        if isempty(windpower) || isempty(windfreq)
+            swift.windpower(:,it) = 0;
+            swift.windfreq(:,it) = NaN;
+        else
+         swift.windpower(:,it) = windpower;
+         swift.windfreq(:,it) = windfreq;
+        end
+     end
+
  else
     swift.windfreq = NaN(116,1);
     swift.windpower = NaN(116,nt);
  end
+ swift.windfreq = median(swift.windfreq,2,'omitnan');
 
 % TKE Dissipation Rate and HR vertical velocity
 if isfield(SWIFT,'signature')
@@ -240,4 +268,20 @@ elseif isfield(SWIFT,'uplooking')
     swift.surftke(1:4,:) = NaN;% Deepest three bins are bad 
 end
 
-
+% Echograms
+if isfield(SWIFT,'signature')
+    if isfield(SWIFT(1).signature,'echogram')
+    swift.echoz = SWIFT(1).signature.echogram.z;
+    nz = length(swift.echoz);
+    swift.echo = NaN(nz,nt);
+    for it = 1:nt
+        if isfield(SWIFT(it).signature,'echogram')
+            echo = SWIFT(it).signature.echogram.echoc;
+            swift.echo(1:length(echo),it) = echo;
+        else 
+            swift.echo(:,it) = NaN(nz,1);
+        end
+    end
+    end
+end
+  

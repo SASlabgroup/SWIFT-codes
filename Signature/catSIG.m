@@ -42,7 +42,6 @@ if isfield(SIG,'time')
     sig.slope = sig.hrcorr;
     sig.pspike = sig.hrcorr;
     sig.pbadping = NaN(1,nt);
-    
     sig.wpeofmag = sig.hrcorr;
     sig.eofs = NaN(nzhr,nzhr,nt);
     sig.eofsvar = sig.hrcorr;
