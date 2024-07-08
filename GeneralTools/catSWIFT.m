@@ -2,13 +2,6 @@
 function swift = catSWIFT(SWIFT)
 % Returns concatenated swift data in structure format
 
-% ID
-swift.ID = SWIFT(1).ID;
-
-% Met Height + CT depth
-swift.metheight = SWIFT(1).metheight;
-swift.ctdepth = SWIFT(1).CTdepth;
-
 %Time, lat, lon, battery
 swift.time = [SWIFT.time];
 nt = length(swift.time);
@@ -178,12 +171,22 @@ for it = 1:nt
         swift.wavepower(:,it) = 0;
         swift.wavefreq(:,it) = NaN;
     else
- swift.wavepower(:,it) = wavepower;
- swift.wavefreq(:,it) = wavefreq;
+ swift.wavepower(1:length(wavepower),it) = wavepower;
+ swift.wavefreq(1:length(wavepower),it) = wavefreq;
     end
 end
 swift.wavepower(swift.wavepower<0) = 0;
-swift.wavefreq = median(swift.wavefreq,2,'omitnan');
+wavefreq = median(swift.wavefreq,2,'omitnan');
+wavepower = NaN(length(wavefreq),nt);
+% Interpolate to median frequency
+for it = 1:nt
+    ireal = ~isnan(swift.wavepower(:,it)) & swift.wavepower(:,it)~=0;
+    if ireal > 3
+    wavepower(:,it) = interp1(swift.wavefreq(ireal,it),swift.wavepower(ireal,it),wavefreq);
+    end
+end
+swift.wavepower = wavepower;
+swift.wavefreq = wavefreq;
 swift.wavesigH = [SWIFT.sigwaveheight];
 swift.wavepeakT = [SWIFT.peakwaveperiod];
 swift.wavepeakdir = [SWIFT.peakwavedirT];

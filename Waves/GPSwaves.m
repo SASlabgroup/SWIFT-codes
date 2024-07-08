@@ -1,4 +1,4 @@
-function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs) 
+function [Hs,Tp,Dp,E,f,a1,b1,a2,b2,check] = GPSwaves(u,v,z,fs) 
 
 % matlab function to read and process GPS data
 %   to estimate wave height, period, direction, and spectral moments
