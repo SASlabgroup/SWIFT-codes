@@ -16,13 +16,13 @@ for fi = 1:length(flist)
     original = length(SWIFT);
 
     if isfield(SWIFT,'salinity')
-        badsal = [SWIFT.salinity] < minsalinity;  % this will break if multiple salinity values (salty SWIFTs)
+        badsal = [SWIFT.salinity] < minsalinity | [SWIFT.salinity]>=9999;  % this will break if multiple salinity values (salty SWIFTs)
         SWIFT(badsal) = [];
     end
 
 
     if isfield(SWIFT,'sigwaveheight')
-        badwave = [SWIFT.sigwaveheight] < minwave; 
+        badwave = [SWIFT.sigwaveheight] < minwave | [SWIFT.sigwaveheight]>=9999; 
         SWIFT(badwave) = [];
     end
 
