@@ -45,6 +45,12 @@ if isfield(SIG,'time')
     sig.wpeofmag = sig.hrcorr;
     sig.eofs = NaN(nzhr,nzhr,nt);
     sig.eofsvar = sig.hrcorr;
+    sig.pitch = NaN(1,nt);
+    sig.roll = NaN(1,nt);
+    sig.head = NaN(1,nt);
+    sig.pitchvar = NaN(1,nt);
+    sig.rollvar = NaN(1,nt);
+    sig.headvar = NaN(1,nt);
 
     for it = 1:length(sig.time)
         %Broadband
@@ -72,6 +78,14 @@ if isfield(SIG,'time')
         sig.wpeofmag(1:nz,it) = SIG(it).HRprofile.QC.wpeofmag;
         sig.eofs(1:nz,1:nz,it) = SIG(it).HRprofile.QC.eofs;
         sig.eofsvar(1:nz,it) = SIG(it).HRprofile.QC.eofsvar;
+
+        % Motion
+        sig.pitch(it) = SIG(it).motion.pitch;
+        sig.roll(it) = SIG(it).motion.roll;
+        sig.head(it) = SIG(it).motion.head;
+        sig.pitchvar(it) = SIG(it).motion.pitchvar;
+        sig.rollvar(it) = SIG(it).motion.rollvar;
+        sig.headvar(it) = SIG(it).motion.headvar;
     end
 
     %QC
@@ -96,10 +110,15 @@ if isfield(SIG,'time')
         sig.pspike(:,badburst) = [];
         sig.pbadping(badburst) = [];
         sig.time(badburst) = [];
-        
         sig.wpeofmag(:,badburst) = [];
         sig.eofs(:,:,badburst) = [];
         sig.eofsvar(:,badburst) = [];
+        sig.pitch(badburst) = SIG(badburst).motion.pitch;
+        sig.roll(badburst) = SIG(badburst).motion.roll;
+        sig.head(badburst) = SIG(badburst).motion.head;
+        sig.pitchvar(badburst) = SIG(badburst).motion.pitchvar;
+        sig.rollvar(badburst) = SIG(badburst).motion.rollvar;
+        sig.headvar(badburst) = SIG(badburst).motion.headvar;
     else
         sig.badburst = badburst;
     end

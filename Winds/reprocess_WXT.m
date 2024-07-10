@@ -4,9 +4,10 @@ function [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw)
 % loop thru raw data for a given SWIFT deployment, then
 % replace values in the SWIFT data structure of results
 % (assuming concatSWIFTv3_processed.m has already been run.
-%
-%
+
 % J. Thomson, 4/2020 (derived from reprocess_AQD.m)
+% K. Zeiden 07/2024 reformatted for symmetry with bulk post processing
+%    postprocess_SWIFT.m
 
 if ispc 
     slash = '\';

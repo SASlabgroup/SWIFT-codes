@@ -5,7 +5,7 @@
 
 % K. Zeiden 07/2024
 
-expdir = 'S:\SEAFAC\June2024';
+expdir = 'S:\SEAFAC\June2024\NorthMooring';
 cd(expdir)
 
 if ispc
@@ -19,8 +19,7 @@ missions = missions([missions.isdir]);
 
 %% Loop through missions and reprocess
 
-%for im = 1:length(missions)
-im = 1;
+for im = 1:length(missions)
 
     disp(['Post-processing ' missions(im).name])
 
@@ -80,42 +79,29 @@ im = 1;
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_WXT_*.dat']))
         disp('Reprocessing Vaisala WXT data...')
         readraw = false;
-        [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw);
+        [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw);
     end
 
     %% Reprocess Y81
 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_Y81_*.dat']))
-        disp('Reprocessing Y81 Sonic Anemometer data...')
-        [SWIFT,sinfo] = reprocess_Y81(missiondir);
-    end
-    %% Reprocess ACS
-
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_ACS_*.dat']))
-        disp('Reprocessing ACS CT data...')
+        disp('Reprocessing Young Sonic Anemommetr data...')
         readraw = false;
-        [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw);
+        [SWIFT,sinfo] = reprocess_SIG(missiondir);
     end
 
-    %% Reprocess PB2
+    % Reprocess ACS
 
-    % does not exist
+    % Reprocess PB2
 
-    %%
+    % Reprocess IMU
 
-    %% Reprocess AQD
+    % Reprocess AQD
 
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.dat']))
-        disp('Reprocessing Aquadopp data...')
-        readraw = false;
-        [SWIFT,sinfo] = reprocess_AQD(missiondir,readraw);
-    end
+    % Reprocess AQH
 
-    %% Reprocess AQH
-
-    %% Reprocess 536
-
-%end
+    % clear SWIFT sinfo
+end
 
 
 

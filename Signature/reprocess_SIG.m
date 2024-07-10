@@ -201,12 +201,6 @@ for iburst = 1:nburst
         continue
     end
 
-    % Skip burst if file is too small...
-    if bfiles(iburst).bytes < 1e6 % 2e6,
-        disp('Bad file (small), skipping burst...')
-        continue
-    end
-
     % Burst time
     t0 = min(avg.time);
     if abs(btime - t0) > 12/(60*24)
@@ -229,6 +223,14 @@ for iburst = 1:nburst
         outofwater = true;
     else
         outofwater = false;
+    end
+
+    % Flag burst if file is too small...
+    if bfiles(iburst).bytes < 1e6 % 2e6,
+        disp('FLAG: Small file...')
+        smallfile = true;
+    else
+        smallfile = false;
     end
 
     % Flag out of water based on bursts w/anomalously high amplitude
@@ -330,17 +332,18 @@ for iburst = 1:nburst
     SIG(isig).motion.rollvar = var(avg.Roll,'omitnan');
     SIG(isig).motion.headvar = var(unwrap(avg.Heading),'omitnan');
     % Badburst & flags
-    SIG(isig).badburst = outofwater | badamp | badcorr;
+    SIG(isig).badburst = outofwater | badamp | badcorr | smallfile;
     SIG(isig).flag.outofwater = outofwater;
     SIG(isig).flag.badamp = badamp;
     SIG(isig).flag.badcorr = badcorr;
+    SIG(isig).flag.smallfile = smallfile;
     SIG(isig).flag.notimematch = false; % Updated below
 
     isig = isig+1;
 
    %%%%%%%% Match burst time to existing SWIFT fields and replace data %%%%%%%%
 
-   badburst = outofwater | badamp | badcorr;% | badvel;
+   badburst = outofwater | badamp | badcorr | smallfile;
 
    if ~isempty(fieldnames(SWIFT)) && ~isempty(SWIFT)
 
@@ -503,6 +506,7 @@ sinfo.postproc(ip).params = params;
 save([sfile.folder slash sfile.name(1:end-7) '_L2.mat'],'SWIFT','sinfo')
 
 %% Save SIG Structure + Plot %%%%%%%%
+
 if opt.saveSIG
    save([sfile.folder slash sfile.name(1:end-7) '_burstavgSIG.mat'],'SIG')
 end

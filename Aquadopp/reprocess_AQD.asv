@@ -46,7 +46,7 @@ else %  Exit reprocessing if no L1 or L2 product exists
     return
 end
 
-burstreplaced = NaN(length(SWIFT),1);
+burstreplaced = NaN(
 
 %% Loop through raw burst files and reprocess
 
@@ -56,7 +56,7 @@ for iburst = 1:length(bfiles)
 
      disp(['Burst ' num2str(iburst) ' : ' bfiles(iburst).name(1:end-4)])
     
-    % Read or load raw data
+    % read or load raw data
     if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
         [~,VelE,VelN,VelU,Amp1,Amp2,~,~,~,~,~] = readSWIFTv3_AQD([bfiles(iburst).folder slash bfiles(iburst).name]);
     else
@@ -104,8 +104,7 @@ for iburst = 1:length(bfiles)
     [tdiff,tindex] = min(abs([SWIFT.time]-time));
 
    if tdiff > 12/(60*24)
-        disp('No time match...')
-        continue
+        disp('No time match. Skippping...')
    else
        burstreplaced(tindex) = true;
     end
@@ -117,7 +116,7 @@ for iburst = 1:length(bfiles)
     SWIFT(tindex).downlooking.velocityerror = Hori_error;
     SWIFT(tindex).downlooking.vertvel = nanmean(VelU,1);
     
-    if nansum(SWIFT(tindex).downlooking.velocityprofile) > 0
+    if nansum(SWIFT(tindex).downlooking.velocityprofile) > 0 && tdiff < 0.04
         SWIFT(tindex).downlooking.velocityprofile = Vel';
     else
         SWIFT(tindex).downlooking.velocityprofile = NaN(40,1);      
@@ -125,17 +124,6 @@ for iburst = 1:length(bfiles)
      
 end
 
-%% If SWIFT structure elements not replaced, fill variables with NaNs
-
-for iburst = 1:length(SWIFT)
-    if ~burstreplaced(iburst)
-        SWIFT(iburst).downlooking.velocitydirection = NaN(40,1);
-        SWIFT(iburst).downlooking.amplitude = NaN(40,1);
-        SWIFT(iburst).downlooking.z = 0.25:0.5:19.75;
-        SWIFT(iburst).downlooking.velocityerror = NaN(40,1);
-        SWIFT(iburst).downlooking.velocityprofile = NaN(40,1);
-    end
-end
 
 %% Log reprocessing and flags, then save new L2 file or overwrite existing one
 
