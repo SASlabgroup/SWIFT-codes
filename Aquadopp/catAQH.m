@@ -28,6 +28,7 @@ if isfield(AQH,'time')
     aqh.hrw = aqh.hrcorr;
     aqh.hrwvar = aqh.hrcorr;
     aqh.eps = aqh.hrcorr;
+    aqh.epseof = aqh.hrcorr;
     aqh.epsnf = aqh.hrcorr;
     aqh.mspe = aqh.hrcorr;
     aqh.slope = aqh.hrcorr;
@@ -54,6 +55,7 @@ if isfield(AQH,'time')
         aqh.hrw(1:nz,it) = AQH(it).HRprofile.w;
         aqh.hrwvar(1:nz,it) = AQH(it).HRprofile.wvar;
         aqh.eps(1:nz,it) = AQH(it).HRprofile.eps;
+        aqh.epseof(1:nz,it) = AQH(it).HRprofile.QC.epsEOF;
         aqh.epsnf(1:nz,it) = AQH(it).HRprofile.QC.epsNF;
         aqh.mspe(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.mspe;
         aqh.slope(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.slope;
@@ -80,6 +82,7 @@ if isfield(AQH,'time')
         aqh.hrw(:,badburst) = [];
         aqh.hrwvar(:,badburst) = [];
         aqh.eps(:,badburst) = [];
+        aqh.epseof(:,badburst) = [];
         aqh.epsnf(:,badburst) = [];
         aqh.mspe(:,badburst) = [];
         aqh.slope(:,badburst) = [];  

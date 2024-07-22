@@ -53,13 +53,13 @@ else
 end        
 
 %%%%%%%%% 3) Estimate dissipation rate from velocity structure functions
-ibad = ispike | repmat(badping,nbin,1);
 rmin = dz;
 rmax = 4*dz;
 nzfit = 1;
-w(ibad) = NaN;
-wpeof(ibad) = NaN;
-wphp(ibad) = NaN;
+% ibad = ispike | repmat(badping,nbin,1);
+% w(ibad) = NaN;
+% wpeof(ibad) = NaN;
+% wphp(ibad) = NaN;
 
 warning('off','all')
 % No filter, no analytic wave fit (D ~ r^{-2/3})

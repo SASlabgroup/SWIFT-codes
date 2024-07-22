@@ -160,7 +160,7 @@ end
 swift.subu = swift.relu + swift.driftu;
 swift.subv = swift.relv + swift.driftv;
 
-%Waves
+% Wave Spectra
 for it = 1:nt
     wavepower = SWIFT(it).wavespectra.energy;
     wavefreq = SWIFT(it).wavespectra.freq;
@@ -171,8 +171,8 @@ for it = 1:nt
         swift.wavepower(:,it) = 0;
         swift.wavefreq(:,it) = NaN;
     else
- swift.wavepower(1:length(wavepower),it) = wavepower;
- swift.wavefreq(1:length(wavepower),it) = wavefreq;
+     swift.wavepower(1:length(wavepower),it) = wavepower;
+     swift.wavefreq(1:length(wavepower),it) = wavefreq;
     end
 end
 swift.wavepower(swift.wavepower<0) = 0;
@@ -181,15 +181,18 @@ wavepower = NaN(length(wavefreq),nt);
 % Interpolate to median frequency
 for it = 1:nt
     ireal = ~isnan(swift.wavepower(:,it)) & swift.wavepower(:,it)~=0;
-    if ireal > 3
+    if sum(ireal)>3
     wavepower(:,it) = interp1(swift.wavefreq(ireal,it),swift.wavepower(ireal,it),wavefreq);
     end
 end
 swift.wavepower = wavepower;
 swift.wavefreq = wavefreq;
+
+% Wave Bulk Variables
 swift.wavesigH = [SWIFT.sigwaveheight];
 swift.wavepeakT = [SWIFT.peakwaveperiod];
 swift.wavepeakdir = [SWIFT.peakwavedirT];
+
 % Calculate new Stokes drift (Us = omega*k*(Hs/4)^2)
 om = 2*pi./swift.wavepeakT;
 k = om.^2./9.81;
@@ -269,6 +272,9 @@ elseif isfield(SWIFT,'uplooking')
         swift.surftke(:,it) = SWIFT(it).uplooking.tkedissipationrate;
     end
     swift.surftke(1:4,:) = NaN;% Deepest three bins are bad 
+else
+    swift.surfz = (0.1+0.2+0.04*(0:127));
+    swift.surftke = NaN(128,nt);
 end
 
 % Echograms

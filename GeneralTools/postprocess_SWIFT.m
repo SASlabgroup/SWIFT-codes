@@ -14,12 +14,21 @@ else
     slash = '/';
 end
 
-missions = dir([expdir slash 'SWIFT*']);
+missions = dir([expdir slash 'SWIFT1*']);
 missions = missions([missions.isdir]);
+
+rpIMU = false; % Waves
+rpSBG = false; % Waves
+rpWXT = false; % MET
+rpY81 = false; % MET
+rpACS = false; % CT
+rpSIG = false; % TKE
+rpAQH = true; % TKE
+rpAQD = false; % TKE
 
 %% Loop through missions and reprocess
 
-for im = 5:length(missions)
+for im = 1:length(missions)
 
     disp(['Post-processing ' missions(im).name])
 
@@ -47,7 +56,7 @@ for im = 5:length(missions)
     end
     
     % Reprocess IMU
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_IMU_*.dat']))
+    if rpIMU && ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_IMU_*.dat']))
         disp('Reprocessing IMU data...')
         calctype = 'IMUandGPS';
         filtertype = 'RC';
@@ -58,7 +67,7 @@ for im = 5:length(missions)
     end
 
     % Reprocess SBG
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SBG_*.dat']))
+    if rpSBG && ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SBG_*.dat']))
         disp('Reprocessing SBG data...')
         saveraw = false;
         useGPS = false;
@@ -69,7 +78,7 @@ for im = 5:length(missions)
     end
 
     % Reprocess WXT
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_WXT_*.dat']))
+    if rpSBG && ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_WXT_*.dat']))
         disp('Reprocessing Vaisala WXT data...')
         readraw = false;
         [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw);
@@ -78,7 +87,7 @@ for im = 5:length(missions)
     end
 
     % Reprocess Y81
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_Y81_*.dat']))
+    if rpY81 && ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_Y81_*.dat']))
         disp('Reprocessing Y81 Sonic Anemometer data...')
         [SWIFT,sinfo] = reprocess_Y81(missiondir);
     else
@@ -86,7 +95,7 @@ for im = 5:length(missions)
     end
 
     % Reprocess ACS
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_ACS_*.dat']))
+    if rpACS && ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_ACS_*.dat']))
         disp('Reprocessing ACS CT data...')
         readraw = false;
         [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw);
@@ -98,7 +107,7 @@ for im = 5:length(missions)
     % does not exist
 
     % Reprocess SIG
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
+    if rpSIG && ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
         disp('Reprocessing Signature1000 data...')
         plotburst = false; 
         readraw = false;
@@ -108,7 +117,7 @@ for im = 5:length(missions)
     end
 
     % Reprocess AQD
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.dat']))
+    if rpAQD && ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.dat']))
         disp('Reprocessing Aquadopp (AQD) data...')
         readraw = true;
         [SWIFT,sinfo] = reprocess_AQD(missiondir,readraw);
@@ -117,10 +126,10 @@ for im = 5:length(missions)
     end
 
     % Reprocess AQH
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQH_*.dat']))
+    if rpAQH && ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQH_*.dat']))
         disp('Reprocessing Aquadopp (AQH) data...')
         readraw = true;
-        plotburst = true;
+        plotburst = false;
         [SWIFT,sinfo] = reprocess_AQH(missiondir,readraw,plotburst);
     else
         disp('No AQH data...')
