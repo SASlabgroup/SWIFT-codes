@@ -19,8 +19,7 @@ missions = missions([missions.isdir]);
 
 %% Loop through missions and reprocess
 
-%for im = 1:length(missions)
-im = 1;
+for im = 5:length(missions)
 
     disp(['Post-processing ' missions(im).name])
 
@@ -39,7 +38,7 @@ im = 1;
             sinfo.ID = SWIFT(1).ID;
             sinfo.CTdepth = SWIFT(1).CTdepth;
             sinfo.metheight = SWIFT(1).metheight;
-            SWIFT = rmfield(SWIFT,{'ID','CTdepth','metheight'});
+           SWIFT = rmfield(SWIFT,{'ID','CTdepth','metheight'});
             disp('Saving new L1 product...')
             save([l1file.folder slash l1file.name],'SWIFT','sinfo')
         else
@@ -47,7 +46,7 @@ im = 1;
         end
     end
     
-    %% Reprocess IMU
+    % Reprocess IMU
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_IMU_*.dat']))
         disp('Reprocessing IMU data...')
         calctype = 'IMUandGPS';
@@ -58,64 +57,80 @@ im = 1;
         disp('No IMU data...')
     end
 
-    %% Reprocess SBG
+    % Reprocess SBG
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SBG_*.dat']))
         disp('Reprocessing SBG data...')
         saveraw = false;
         useGPS = false;
         interpf = false;
         [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf);
+    else
+        disp('No SBG data...')
     end
 
-    %% Reprocess SIG
+    % Reprocess WXT
+    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_WXT_*.dat']))
+        disp('Reprocessing Vaisala WXT data...')
+        readraw = false;
+        [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw);
+    else
+        disp('No WXT data...')
+    end
+
+    % Reprocess Y81
+    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_Y81_*.dat']))
+        disp('Reprocessing Y81 Sonic Anemometer data...')
+        [SWIFT,sinfo] = reprocess_Y81(missiondir);
+    else
+        disp('No Y81 data...')
+    end
+
+    % Reprocess ACS
+    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_ACS_*.dat']))
+        disp('Reprocessing ACS CT data...')
+        readraw = false;
+        [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw);
+    else
+        disp('No ACS data...')
+    end
+
+    % Reprocess PB2
+    % does not exist
+
+    % Reprocess SIG
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
         disp('Reprocessing Signature1000 data...')
         plotburst = false; 
         readraw = false;
         [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst);
+    else
+        disp('No SIG data...')
     end
 
-    %% Reprocess WXT
-
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_WXT_*.dat']))
-        disp('Reprocessing Vaisala WXT data...')
-        readraw = false;
-        [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw);
-    end
-
-    %% Reprocess Y81
-
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_Y81_*.dat']))
-        disp('Reprocessing Y81 Sonic Anemometer data...')
-        [SWIFT,sinfo] = reprocess_Y81(missiondir);
-    end
-    %% Reprocess ACS
-
-    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_ACS_*.dat']))
-        disp('Reprocessing ACS CT data...')
-        readraw = false;
-        [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw);
-    end
-
-    %% Reprocess PB2
-
-    % does not exist
-
-    %%
-
-    %% Reprocess AQD
-
+    % Reprocess AQD
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.dat']))
-        disp('Reprocessing Aquadopp data...')
-        readraw = false;
+        disp('Reprocessing Aquadopp (AQD) data...')
+        readraw = true;
         [SWIFT,sinfo] = reprocess_AQD(missiondir,readraw);
+    else
+        disp('No AQD data...')
     end
 
-    %% Reprocess AQH
+    % Reprocess AQH
+    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQH_*.dat']))
+        disp('Reprocessing Aquadopp (AQH) data...')
+        readraw = true;
+        plotburst = true;
+        [SWIFT,sinfo] = reprocess_AQH(missiondir,readraw,plotburst);
+    else
+        disp('No AQH data...')
+    end
 
-    %% Reprocess 536
+    % Reprocess 536
+    % Heitronics CT15 ?
+    % Does not exist
 
-%end
+end
 
 
 

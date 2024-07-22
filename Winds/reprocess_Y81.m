@@ -49,18 +49,20 @@ for iburst = 1:length(bfiles)
             temp = NaN(1000,1);
         end
         windspd = mean((uvw(:,1).^2 + uvw(:,2).^2 + uvw(:,3).^2).^.5);
+        u = uvw(:,1);
+        v = uvw(:,2);
+        w = uvw(:,3);
+
         
         % Recalculate friction velocity
         z = sinfo.metheight;
         fs = 10;
-        [ustar,~,~,~,~,~,~,~,~,~] = inertialdissipation(uvw(:,1),uvw(:,2),uvw(:,3),temp,z,fs);
+        [ustar,~,~,~,~,~,~,~,~,~] = inertialdissipation(u,v,w,temp,z,fs);
         
-     
         % Find matching time
         time = datenum(bfiles(iburst).name(13:21)) + str2double(bfiles(iburst).name(23:24))./24 ...
             + str2double(bfiles(iburst).name(26:27))./(24*6);
         [tdiff,tindex] = min(abs([SWIFT.time]-time));
-
 
         % Replace wind speed, NaN out wind direction and replace ustar
         if ~isempty(tdiff) && tdiff < 12/(24*60)

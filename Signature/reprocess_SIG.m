@@ -147,13 +147,10 @@ else %  Exit reprocessing if no L1 or L2 product exists
     return
 end
 burstreplaced = false(length(SWIFT),1);
+badsig = false(1,length(SWIFT));
 
 SIG = struct;
 isig = 1;
-
-%% Flag bad Signature data
-
-badsig = false(1,length(SWIFT));
 
 %% List of burst files
 

@@ -40,10 +40,7 @@ bad = [u == 0 | v == 0 | w == 0 | temp == 0];
  v( bad ) = [];
  w( bad ) = [];
  temp( bad ) = [];
-%u = u( ~bad );
-%v = v( ~bad );
-%w = w( ~bad );
-%temp = temp( ~bad );
+
 
 %% means
 meanu = mean(u);
@@ -54,18 +51,20 @@ meantemp = mean(temp);
 %% begin processing, if data sufficient
 pts = length(u);       % record length in data points
 
-if pts >= 2*wsecs  &  fs>1  &  sum(bad) < 0.1*pts,  % minimum length and quality for processing
+if pts >= 2*wsecs  &&  fs>1  &&  sum(bad) < 0.1*pts  % minimum length and quality for processing
 
 
 %% break into windows (use 75 percent overlap)
-if rem(windowlength,2)~=0, windowlength = windowlength-1; else end  % make w an even number
+if rem(windowlength,2)~=0
+    windowlength = windowlength-1;
+end  % make w an even number
 windows = floor( 4*(pts/windowlength - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
 dof = 2*windows*merge; % degrees of freedom
 % loop to create a matrix of time series, where COLUMN = WINDOW 
 uwindow = zeros(windowlength,windows);
 vwindow = zeros(windowlength,windows);
 wwindow = zeros(windowlength,windows);
-for q=1:windows, 
+for q=1:windows
 	uwindow(:,q) = u(  (q-1)*(.25*windowlength)+1  :  (q-1)*(.25*windowlength)+windowlength  );  
 	vwindow(:,q) = v(  (q-1)*(.25*windowlength)+1  :  (q-1)*(.25*windowlength)+windowlength  );  
   	wwindow(:,q) = w(  (q-1)*(.25*windowlength)+1  :  (q-1)*(.25*windowlength)+windowlength  );  
@@ -184,17 +183,17 @@ qualitywindow = (inertiallevel-inertialstd)./ inertiallevel; % quality of fit in
 
 %% ensemble average windows together
 % take the average of all windows at each freq-band
-UU = mean( UUwindowmerged.' ) ;
-VV = mean( VVwindowmerged.' ) ;
-WW = mean( WWwindowmerged.' ) ;
-UV = mean( UVwindowmerged.' ) ; 
-UW = mean( UWwindowmerged.' ) ; 
-VW = mean( VWwindowmerged.' ) ;
+UU = mean( UUwindowmerged',1,'omitnan') ;
+VV = mean( VVwindowmerged',1,'omitnan') ;
+WW = mean( WWwindowmerged',1,'omitnan') ;
+UV = mean( UVwindowmerged',1,'omitnan') ; 
+UW = mean( UWwindowmerged',1,'omitnan') ; 
+VW = mean( VWwindowmerged',1,'omitnan') ;
 
 % find the windows with stable mean in the streamwise direction, use only those for ustar and epsilon ensembles
 good = abs(mean(uwindow)) > std(uwindow); %disp('stable windows'), sum(good) % debug
 
-if sum(good) >= 2,
+if sum(good) >= 2
     epsilon = mean(epsilonwindow(good));
     ustar = mean(ustarwindow(good));
     quality = mean(qualitywindow(good));

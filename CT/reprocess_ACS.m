@@ -38,7 +38,12 @@ for iburst = 1:length(bfiles)
 
         % Read mat file or load raw data
     if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
+        try
         [~,~,Salinity,~,~] = readSWIFTv3_ACS([bfiles(iburst).folder slash bfiles(iburst).name]);
+        catch
+            disp(['Cannot read ' bfiles(iburst).name '. Skipping...'])
+        continue
+        end
     else
          load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
     end

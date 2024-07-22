@@ -21,14 +21,13 @@ end
 
 %% Parameters
 
-% QC parameters
 minamp = 30; % amplitude cutoff, usually 30 or 40
 minn = 50; % number of cells averaged for each depth
 z = 1.25:0.5:20.75;
 
 % Raw Doppler velocity precision of 1 MHz Aquadopp
-Vert_prec =  .074; %m/s
-Hori_prec = .224; %m/s
+Vert_prec =  .074; % m/s
+Hori_prec = .224; % m/s
 
 %% Load existing L2 product, or L1 product if does not exist. If no L1 product, return to function
 
@@ -76,7 +75,7 @@ for iburst = 1:length(bfiles)
     N_error = E_error;
     Hori_error = sqrt((E_error.^2) + (N_error.^2));
     Hori_error(n < minn) = NaN;
-    Amp = nanmean(Amp,1);
+    Amp = mean(Amp,1,'omitnan');
     Amp(n < minn) = NaN;
     
     % Average velocities first for "net" velocity + direction
@@ -84,8 +83,8 @@ for iburst = 1:length(bfiles)
     VelN(Amp2<minamp) = NaN;
     VelE(exclude) = NaN; 
     VelN(exclude) = NaN;
-    VelE = nanmean(VelE,1); 
-    VelN = nanmean(VelN,1);
+    VelE = mean(VelE,1,'omitnan'); 
+    VelN = mean(VelN,1,'omitnan');
     Vel = sqrt(VelE.^2 + VelN.^2);
     Vel(n < minn) = NaN;
     
@@ -115,9 +114,9 @@ for iburst = 1:length(bfiles)
     SWIFT(tindex).downlooking.amplitude = Amp';
     SWIFT(tindex).downlooking.z = z;
     SWIFT(tindex).downlooking.velocityerror = Hori_error;
-    SWIFT(tindex).downlooking.vertvel = nanmean(VelU,1);
+    SWIFT(tindex).downlooking.vertvel = mean(VelU,1,'omitnan');
     
-    if nansum(SWIFT(tindex).downlooking.velocityprofile) > 0
+    if sum(SWIFT(tindex).downlooking.velocityprofile,'omitnan') > 0
         SWIFT(tindex).downlooking.velocityprofile = Vel';
     else
         SWIFT(tindex).downlooking.velocityprofile = NaN(40,1);      
