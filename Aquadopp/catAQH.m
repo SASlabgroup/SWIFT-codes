@@ -27,9 +27,13 @@ if isfield(AQH,'time')
     aqh.hramp = aqh.hrcorr;
     aqh.hrw = aqh.hrcorr;
     aqh.hrwvar = aqh.hrcorr;
-    aqh.eps = aqh.hrcorr;
+    aqh.epshp = aqh.hrcorr;
     aqh.epseof = aqh.hrcorr;
     aqh.epsnf = aqh.hrcorr;
+    aqh.epswv = aqh.hrcorr;
+    aqh.A = aqh.hrcorr;
+    aqh.B = aqh.hrcorr;
+    aqh.N = aqh.hrcorr;
     aqh.mspe = aqh.hrcorr;
     aqh.slope = aqh.hrcorr;
     aqh.pspike = aqh.hrcorr;
@@ -54,9 +58,13 @@ if isfield(AQH,'time')
         aqh.pbadping(it) = AQH(it).HRprofile.QC.pbadping;
         aqh.hrw(1:nz,it) = AQH(it).HRprofile.w;
         aqh.hrwvar(1:nz,it) = AQH(it).HRprofile.wvar;
-        aqh.eps(1:nz,it) = AQH(it).HRprofile.eps;
+        aqh.epshp(1:nz,it) = AQH(it).HRprofile.QC.epsHP;
         aqh.epseof(1:nz,it) = AQH(it).HRprofile.QC.epsEOF;
         aqh.epsnf(1:nz,it) = AQH(it).HRprofile.QC.epsNF;
+        aqh.epswv(1:nz,it) = AQH(it).HRprofile.QC.epsWV;
+        aqh.A(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.A;
+        aqh.B(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.B;
+        aqh.N(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.N;
         aqh.mspe(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.mspe;
         aqh.slope(1:nz,it) = AQH(it).HRprofile.QC.qualEOF.slope;
         
@@ -81,9 +89,13 @@ if isfield(AQH,'time')
         aqh.hramp(:,badburst) = [];
         aqh.hrw(:,badburst) = [];
         aqh.hrwvar(:,badburst) = [];
-        aqh.eps(:,badburst) = [];
+        aqh.epshp(:,badburst) = [];
         aqh.epseof(:,badburst) = [];
         aqh.epsnf(:,badburst) = [];
+        aqh.epswv(:,badburst) = [];
+        aqh.A(:,badburst) = [];
+        aqh.B(:,badburst) = [];
+        aqh.N(:,badburst) = [];
         aqh.mspe(:,badburst) = [];
         aqh.slope(:,badburst) = [];  
         aqh.pspike(:,badburst) = [];
@@ -107,7 +119,7 @@ if isfield(AQH,'time')
 
         figure('color','w')
         MP = get(0,'monitorposition');
-        set(gcf,'outerposition',MP(1,:).*[1 1 0.5 1]);
+        set(gcf,'outerposition',MP(1,:).*[1 1 1 1]);
         clear b
 
         % HR
@@ -147,7 +159,7 @@ if isfield(AQH,'time')
         xlim([min(aqh.time) max(aqh.time)])
         datetick('x','KeepLimits')
         h(8) = subplot(4,2,4);% Dissipation Rate
-        pcolor(aqh.time,-aqh.hrz,log10(aqh.eps));shading flat
+        pcolor(aqh.time,-aqh.hrz,log10(aqh.epseof));shading flat
         caxis([-6 -3]);colormap(gca,'jet')
         ylabel('Depth (m)');title('Dissipation Rate')
         c = colorbar;c.Label.String = 'log_{10}(m^3s^{-2})';
