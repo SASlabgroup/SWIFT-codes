@@ -1,14 +1,15 @@
 % [SWIFT,sinfo] = postprocess_SWIFT(expdir)
 
 % Master post-processing function, that calls sub-functions to reprocess
-% raw SWIFT data.
-% L1 product must have been created prior to running this script, by
-% calling
+% each different type of raw SWIFT data.
+% L1 product must have been created prior to running this script,
+% by running 'concatSWIFT_offloadedSDcard.m' in the mission directory
+% Note: concatSWIFT in turn runs 'compileSWIFT_SBDservertelemetry.m',
+%       which in turn calls the function 'readSWIFT_SBD.m'
+% Currently no reprocessing option for Airmar (PB2) 
+%       nor Heitronics CTs (536?)
 
 % K. Zeiden 07/2024
-
-expdir = 'S:\SEAFAC\June2024';
-cd(expdir)
 
 if ispc
     slash = '\';
@@ -16,9 +17,11 @@ else
     slash = '/';
 end
 
-missions = dir([expdir slash 'SWIFT*']);
-missions = missions([missions.isdir]);
+%% User defined experiment directory (to be later converted to function inputs)
 
+expdir = 'S:\SEAFAC\June2024';
+
+% Processing toggles
 rpIMU = false; % Waves
 rpSBG = false; % Waves
 rpWXT = false; % MET
@@ -29,6 +32,9 @@ rpAQH = false; % TKE
 rpAQD = false; % TKE
 
 %% Loop through missions and reprocess
+cd(expdir)
+missions = dir([expdir slash 'SWIFT*']);
+missions = missions([missions.isdir]);
 
 for im = 1%:length(missions)
 
@@ -59,7 +65,6 @@ for im = 1%:length(missions)
             save([l1file.folder slash l1file.name],'SWIFT','sinfo')
         end
     end
-    SWIFTL1 = SWIFT;
     
     % Reprocess IMU
     if rpIMU
@@ -119,9 +124,6 @@ for im = 1%:length(missions)
         end
     end
 
-    % Reprocess PB2
-    % does not exist
-
     % Reprocess SIG
     if rpSIG 
         if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
@@ -157,21 +159,25 @@ for im = 1%:length(missions)
         end
     end
 
-    % Reprocess 536
-    % Heitronics CT15 ?
-    % Does not exist
-
-    l2file = dir([missiondir slash '*L2.mat']);
+    % Re-load L1 and L2 product and plot each for comparison
     load([l1file.folder slash l1file.name],'SWIFT');
+    SWIFTL1 = SWIFT;
+    l2file = dir([missiondir slash '*L2.mat']);
+    load([l2file.folder slash l2file.name],'SWIFT','sinfo');
     SWIFTL2 = SWIFT;
 
-    % Plot Results
-    plotSWIFTV3(SWIFTL1)
-    set(gcf,'Name',l1file.name(1:end-4))
-    plotSWIFTV3(SWIFTL2)
-    set(gcf,'Name',l1file.name(1:end-4))
+    if strcmp(sinfo.type,'V3')
+    fh1 = plotSWIFTV3(SWIFTL1);
+    fh2 = plotSWIFTV3(SWIFTL2);
+    else
+        fh1 = plotSWIFTV4(SWIFTL1);
+        fh2 = plotSWIFTV4(SWIFTL2);
+    end
+    print(fh1,[l1file.folder slash l1file.name(1:end-4)],'-dpng')
+    print(fh2,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
 
 end
+
 
 
 
