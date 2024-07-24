@@ -200,9 +200,22 @@ for iburst = 1:nburst
 
     % Burst time
     t0 = min(avg.time);
-    if abs(btime - t0) > 12/(60*24)
+    if abs(btime - t0) > 15/(60*24)
         disp('   WARNING: File name disagrees with recorded time. Using recorded time...   ')
         btime = t0;
+    end
+
+    % Time match
+    [tdiff,tindex] = min(abs([SWIFT.time]-btime));
+    if tdiff > 12/(60*24)% must be within 15 min
+        disp('   NO time index match...')
+        timematch = false;
+    elseif tdiff < 12/(60*24)
+        timematch = true;
+        burstreplaced(tindex) = true;
+    elseif isempty(tdiff)
+        disp('   NO time index match...')
+        timematch = false;
     end
 
     % Altimeter Distance
@@ -267,6 +280,9 @@ for iburst = 1:nburst
             print(figname,'-dpng')
             close gcf
         end
+
+        % Flag bad bursts
+        badburst = badamp | badcorr | smallfile;
        
 
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
@@ -329,32 +345,18 @@ for iburst = 1:nburst
     SIG(isig).motion.rollvar = var(avg.Roll,'omitnan');
     SIG(isig).motion.headvar = var(unwrap(avg.Heading),'omitnan');
     % Badburst & flags
-    SIG(isig).badburst = outofwater | badamp | badcorr | smallfile;
-    SIG(isig).flag.outofwater = outofwater;
+    SIG(isig).badburst = badburst;
+    SIG(isig).timematch = timematch;
+    SIG(isig).outofwater = outofwater;
     SIG(isig).flag.badamp = badamp;
     SIG(isig).flag.badcorr = badcorr;
     SIG(isig).flag.smallfile = smallfile;
-    SIG(isig).flag.notimematch = false; % Updated below
 
     isig = isig+1;
 
    %%%%%%%% Match burst time to existing SWIFT fields and replace data %%%%%%%%
 
-   badburst = outofwater | badamp | badcorr | smallfile;
-
    if ~isempty(fieldnames(SWIFT)) && ~isempty(SWIFT)
-
-        [tdiff,tindex] = min(abs([SWIFT.time]-btime));
-        if tdiff > 12/(60*24)% must be within 10 min
-            disp('   NO time index match...')
-            timematch = false;
-        elseif tdiff < 12/(60*24)
-            timematch = true;
-            burstreplaced(tindex) = true;
-        elseif isempty(tdiff)
-            disp('   NO time index match...')
-            timematch = false;
-        end
 
         if  timematch && ~badburst % time match, good burst
             % HR data
@@ -378,7 +380,7 @@ for iburst = 1:nburst
                 SWIFT(tindex).signature.echo = echogram.echoc;
                 SWIFT(tindex).signature.echoz = echogram.r + opt.xz;
             end
-            % Altimeter & Out-of-Water Flag
+            % Altimeter
             SWIFT(tindex).signature.altimeter = maxz;
             % Temperaure
             SWIFT(tindex).watertemp = profile.temp;
@@ -410,8 +412,7 @@ for iburst = 1:nburst
 
         elseif ~timematch && ~badburst % Good burst, no time match
             disp('   ALERT: Burst good, but no time match...')
-            SIG(isig-1).flag.notimematch = true;
-
+            
             % tindex = length(SWIFT)+1;
             % burstreplaced = [burstreplaced; true]; %#ok<AGROW>
             % % Copy fields from SWIFT(1);

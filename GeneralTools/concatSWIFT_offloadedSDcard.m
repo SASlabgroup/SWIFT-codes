@@ -115,7 +115,7 @@ eval(['!mv buoy*.mat ConcatProcessed/'])
 
 if isfield(SWIFT(1),'ID')
     load(['SWIFT' SWIFT(1).ID '_telemetry.mat'])
-    save(['SWIFT' SWIFT(1).ID '_' datestr(min([SWIFT.time]),'ddmmmyyyy') '-' datestr(max([SWIFT.time]),'ddmmmyyyy') '_L1.mat'  ], 'SWIFT')
+    save(['SWIFT' SWIFT(1).ID '_' datestr(min([SWIFT.time]),'ddmmmyyyy') '_L1.mat'  ], 'SWIFT')
     eval(['!rm *telemetry.mat'])
 else
 end
