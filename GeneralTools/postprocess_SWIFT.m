@@ -19,7 +19,7 @@ end
 
 %% User defined experiment directory (to be later converted to function inputs)
 
-expdir = 'S:\SEAFAC\June2024';
+expdir = ['S:' slash 'SEAFAC' slash 'June2024' slash 'NorthMooring'];
 
 % Processing toggles
 rpIMU = false; % Waves
@@ -27,9 +27,11 @@ rpSBG = false; % Waves
 rpWXT = false; % MET
 rpY81 = false; % MET
 rpACS = false; % CT
-rpSIG = false; % TKE
+rpSIG = true; % TKE
 rpAQH = false; % TKE
 rpAQD = false; % TKE
+
+plotL1L2 = true;
 
 %% Loop through missions and reprocess
 cd(expdir)
@@ -48,6 +50,7 @@ for im = 1%:length(missions)
     l1file = dir([missiondir slash '*L1.mat']);
     if isempty(l1file)
         disp(['No L1 product found for ' missiondir(end-16:end) '. Skipping...'])
+        continue
     else
         load([l1file.folder slash l1file.name],'SWIFT');
         if isfield(SWIFT,'ID')
@@ -63,16 +66,18 @@ for im = 1%:length(missions)
             SWIFT = rmfield(SWIFT,{'ID','CTdepth','metheight'});
             disp('Saving new L1 product...')
             save([l1file.folder slash l1file.name],'SWIFT','sinfo')
-        end
-        % One time, will remove later
-        if isfield(SWIFT,'signature')
-            sinfo.type = 'V4';
-            save([l1file.folder slash l1file.name],'sinfo','-append')
-            else
-                sinfo.type = 'V3';
-                save([l1file.folder slash l1file.name],'sinfo','-append')
+        else
+            load([l1file.folder slash l1file.name],'sinfo');
         end
     end
+
+    % Save SWIFT type (one time, remove later)
+    if isfield(SWIFT,'signature')
+        sinfo.type = 'V4';
+    else
+        sinfo.type = 'V3';
+    end
+    save([l1file.folder slash l1file.name],'SWIFT','sinfo')
     
     % Reprocess IMU
     if rpIMU
@@ -81,7 +86,8 @@ for im = 1%:length(missions)
             calctype = 'IMUandGPS';
             filtertype = 'RC';
             saveraw = false;
-            [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw);
+            interpf = false;
+            [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw,interpf);
         else 
             disp('No IMU data...')
         end
@@ -92,7 +98,7 @@ for im = 1%:length(missions)
         if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SBG_*.dat']))
             disp('Reprocessing SBG data...')
             saveraw = false;
-            useGPS = false;
+            useGPS = true;
             interpf = false;
             [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf);
         else
@@ -168,10 +174,10 @@ for im = 1%:length(missions)
     end
 
     % Re-load L1 and L2 product and plot each for comparison
-    load([l1file.folder slash l1file.name],'SWIFT');
+    load([l1file.folder slash l1file.name],'SWIFT','sinfo');
     SWIFTL1 = SWIFT;
     l2file = dir([missiondir slash '*L2.mat']);
-    load([l2file.folder slash l2file.name],'SWIFT','sinfo');
+    load([l2file.folder slash l2file.name],'SWIFT');
     SWIFTL2 = SWIFT;
 
     if plotL1L2
@@ -182,6 +188,8 @@ for im = 1%:length(missions)
             fh1 = plotSWIFTV4(SWIFTL1);
             fh2 = plotSWIFTV4(SWIFTL2);
         end
+        set(fh1,'Name',l1file.name(1:end-4))
+        set(fh2,'Name',l2file.name(1:end-4))
         print(fh1,[l1file.folder slash l1file.name(1:end-4)],'-dpng')
         print(fh2,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
     end
@@ -189,5 +197,4 @@ for im = 1%:length(missions)
 end
 
 
-
-
+% end

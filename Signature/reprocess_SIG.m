@@ -198,6 +198,12 @@ for iburst = 1:nburst
         continue
     end
 
+    % Skip burst if way too small
+    if length(burst.time) < 500
+        disp('Not enough data, skipping burst...')
+        continue
+    end
+
     % Burst time
     t0 = min(avg.time);
     if abs(btime - t0) > 15/(60*24)
@@ -383,7 +389,7 @@ for iburst = 1:nburst
             % Altimeter
             SWIFT(tindex).signature.altimeter = maxz;
             % Temperaure
-            SWIFT(tindex).watertemp = profile.temp;
+            SWIFT(tindex).watertemp2 = profile.temp;
 
         elseif timematch && badburst % time match, bad burst
             % HR data
@@ -407,6 +413,10 @@ for iburst = 1:nburst
                 SWIFT(tindex).signature.echo = NaN(size(echogram.echoc));
                 SWIFT(tindex).signature.echo = echogram.r + opt.xz;
             end
+             % Altimeter
+            SWIFT(tindex).signature.altimeter = NaN;
+            % Temperaure
+            SWIFT(tindex).watertemp2 = NaN;
             % Flag
             badsig(tindex) = true;
 

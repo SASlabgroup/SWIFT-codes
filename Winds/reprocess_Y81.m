@@ -48,7 +48,7 @@ for iburst = 1:length(bfiles)
             uvw = NaN(1000,3);
             temp = NaN(1000,1);
         end
-        windspd = mean((uvw(:,1).^2 + uvw(:,2).^2 + uvw(:,3).^2).^.5);
+        windspd = mean((uvw(:,1).^2 + uvw(:,2).^2 + uvw(:,3).^2).^.5,'omitnan');
         u = uvw(:,1);
         v = uvw(:,2);
         w = uvw(:,3);
