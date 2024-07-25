@@ -56,13 +56,21 @@ for im = 1%:length(missions)
             sinfo.CTdepth = SWIFT(1).CTdepth;
             sinfo.metheight = SWIFT(1).metheight;
             if isfield(SWIFT,'signature')
-            sinfo.type = 'V4';
-            else
+                sinfo.type = 'V4';
+            else 
                 sinfo.type = 'V3';
             end
             SWIFT = rmfield(SWIFT,{'ID','CTdepth','metheight'});
             disp('Saving new L1 product...')
             save([l1file.folder slash l1file.name],'SWIFT','sinfo')
+        end
+        % One time, will remove later
+        if isfield(SWIFT,'signature')
+            sinfo.type = 'V4';
+            save([l1file.folder slash l1file.name],'sinfo','-append')
+            else
+                sinfo.type = 'V3';
+                save([l1file.folder slash l1file.name],'sinfo','-append')
         end
     end
     
@@ -166,15 +174,17 @@ for im = 1%:length(missions)
     load([l2file.folder slash l2file.name],'SWIFT','sinfo');
     SWIFTL2 = SWIFT;
 
-    if strcmp(sinfo.type,'V3')
-    fh1 = plotSWIFTV3(SWIFTL1);
-    fh2 = plotSWIFTV3(SWIFTL2);
-    else
-        fh1 = plotSWIFTV4(SWIFTL1);
-        fh2 = plotSWIFTV4(SWIFTL2);
+    if plotL1L2
+        if strcmp(sinfo.type,'V3')
+        fh1 = plotSWIFTV3(SWIFTL1);
+        fh2 = plotSWIFTV3(SWIFTL2);
+        else
+            fh1 = plotSWIFTV4(SWIFTL1);
+            fh2 = plotSWIFTV4(SWIFTL2);
+        end
+        print(fh1,[l1file.folder slash l1file.name(1:end-4)],'-dpng')
+        print(fh2,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
     end
-    print(fh1,[l1file.folder slash l1file.name(1:end-4)],'-dpng')
-    print(fh2,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
 
 end
 
