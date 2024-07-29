@@ -212,6 +212,7 @@ swift.wavepeakT = 1./(waveweight./wavevar);
 %     [swift.dirwavepower(:,:,it),~,~,~,~,~,~,~] = SWIFTdirectionalspectra(SWIFT(it),0);
 % end
 
+
  % Wind
  if isfield(SWIFT,'windspd')
     swift.windu = [SWIFT.windspd];
@@ -246,6 +247,9 @@ swift.wavepeakT = 1./(waveweight./wavevar);
     swift.windpower = NaN(116,nt);
  end
  swift.windfreq = median(swift.windfreq,2,'omitnan');
+ if isfield(SWIFT,'windustar')
+     swift.windustar = [SWIFT.windustar];
+ end
 
 % TKE Dissipation Rate and HR vertical velocity
 if isfield(SWIFT,'signature')

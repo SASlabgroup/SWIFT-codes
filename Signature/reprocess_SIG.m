@@ -198,6 +198,12 @@ for iburst = 1:nburst
         continue
     end
 
+    % Skip if any of the burst fields are 3D
+    if ndims(burst.VelocityData)>2 || ndims(burst.CorrelationData)>2 || ndims(burst.AmplitudeData)>2
+        disp('Burst fields have more than 2 dimensions, skipping burst...')
+        continue
+    end
+
     % Burst time
     t0 = min(avg.time);
     if abs(btime - t0) > 15/(60*24)

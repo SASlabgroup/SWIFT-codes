@@ -19,15 +19,15 @@ end
 
 %% User defined experiment directory (to be later converted to function inputs)
 
-expdir = 'S:\SEAFAC\June2024\NorthMooring';
+expdir = 'S:\SEAFAC\June2024';
 
 % Processing toggles
-rpIMU = false; % Waves
-rpSBG = false; % Waves
+rpIMU = true; % Waves
+rpSBG = true; % Waves
 rpWXT = false; % MET
 rpY81 = false; % MET
 rpACS = false; % CT
-rpSIG = true; % TKE
+rpSIG = false; % TKE
 rpAQH = false; % TKE
 rpAQD = false; % TKE
 
