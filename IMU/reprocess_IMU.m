@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw)
+function [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw,interpf)
 
 % reprocess SWIFT v3 wave results using a surface reconstruction
 % and acounting for listing or capsizing during icing conditions
@@ -150,18 +150,22 @@ for iburst = 1:length(bfiles)
     [Hs,Tp,Dp,E,f,a1,b1,a2,b2,check] = XYZwaves(x(igood),y(igood),z(igood),fs_ahrs);
         
     % Interpolate back to the original frequency bands
-    E = interp1(f,E,f_original);
-    a1 = interp1(f,a1,f_original);
-    b1 = interp1(f,b1,f_original);
-    a2 = interp1(f,a2,f_original);
-    b2 = interp1(f,b2,f_original);
-    check = interp1(f,check,f_original);
+    if interpf
+        E = interp1(f,E,f_original);
+        a1 = interp1(f,a1,f_original);
+        b1 = interp1(f,b1,f_original);
+        a2 = interp1(f,a2,f_original);
+        b2 = interp1(f,b2,f_original);
+        check = interp1(f,check,f_original);
+        f = f_original;
+    end
         
     % Replace scalar values
     SWIFT(tindex).sigwaveheight = Hs;
     SWIFT(tindex).peakwaveperiod = Tp;
     SWIFT(tindex).peakwavedirT = Dp;
     SWIFT(tindex).wavespectra.energy = E;
+    SWIFT(tindex).wavespectra.freq = f;
     SWIFT(tindex).wavespectra.a1 = a1;
     SWIFT(tindex).wavespectra.b1 = b1;
     SWIFT(tindex).wavespectra.a2 = a2;
@@ -176,18 +180,22 @@ for iburst = 1:length(bfiles)
 
             [Hs,Tp,Dp,E,f,a1,b1,a2,b2,check] = GPSandIMUwaves(u(igood),v(igood),az(igood),[],[],fs_gps);
             
+            if interpf
             % Interpolate to the original freq bands
-            E = interp1(f,E,f_original);
-            a1 = interp1(f,a1,f_original);
-            b1 = interp1(f,b1,f_original);
-            a2 = interp1(f,a2,f_original);
-            b2 = interp1(f,b2,f_original);
+                E = interp1(f,E,f_original);
+                a1 = interp1(f,a1,f_original);
+                b1 = interp1(f,b1,f_original);
+                a2 = interp1(f,a2,f_original);
+                b2 = interp1(f,b2,f_original);
+                f = f_original;
+            end
             
             % Replace scalar values, but not directional moments
             SWIFT(tindex).sigwaveheight = Hs;
             SWIFT(tindex).peakwaveperiod = Tp;
             SWIFT(tindex).peakwavedirT = Dp;
             SWIFT(tindex).wavespectra.energy = E;
+            SWIFT(tindex).wavespectra.freq = f;
             SWIFT(tindex).wavespectra.a1 = a1;
             SWIFT(tindex).wavespectra.b1 = b1;
             SWIFT(tindex).wavespectra.a2 = a2;
@@ -202,30 +210,48 @@ for iburst = 1:length(bfiles)
         [Hs,Tp,Dp,E,f,a1,b1,a2,b2,check] = GPSwaves(u,v,z_gps,fs_gps);
         
         % interp to the original freq bands
-        E = interp1(f,E,f_original);
-        a1 = interp1(f,a1,f_original);
-        b1 = interp1(f,b1,f_original);
-        a2 = interp1(f,a2,f_original);
-        b2 = interp1(f,b2,f_original);
+        if interpf
+            E = interp1(f,E,f_original);
+            a1 = interp1(f,a1,f_original);
+            b1 = interp1(f,b1,f_original);
+            a2 = interp1(f,a2,f_original);
+            b2 = interp1(f,b2,f_original);
+            f = f_original;
+        end
         
         % replace scalar values, but not directional moments
         SWIFT(tindex).sigwaveheight = Hs;
         SWIFT(tindex).peakwaveperiod = Tp;
         SWIFT(tindex).peakwavedirT = Dp;
         SWIFT(tindex).wavespectra.energy = E;
+        SWIFT(tindex).wavespectra.freq = f;
         SWIFT(tindex).wavespectra.a1 = a1;
         SWIFT(tindex).wavespectra.b1 = b1;
         SWIFT(tindex).wavespectra.a2 = a2;
         SWIFT(tindex).wavespectra.b2 = b2;
         SWIFT(tindex).wavespectra.check = check;
 
+
     end
         
     %% Flag bad results
     
     if Hs == 9999 || isnan(Hs) % invalid wave result
-        disp('Bad waves. Flagging...')
+        disp('Bad wave height. Flagging...')
         badwaves(tindex) = true;
+        SWIFT(tindex).sigwaveheight = NaN;
+    end
+
+    if Tp == 9999 || isnan(Tp) % invalid wave result
+        disp('Bad wave period. Flagging...')
+        badwaves(tindex) = true;
+        SWIFT(tindex).peakwaveperiod = NaN;
+    end
+
+    if Dp == 9999 || isnan(Dp) % invalid wave result
+        disp('Bad wave direction. Flagging...')
+        badwaves(tindex) = true;
+        SWIFT(tindex).peakwavedirT = NaN;
     end
 
     %% Save raw displacements to SWIFT structure and burst file if specified
