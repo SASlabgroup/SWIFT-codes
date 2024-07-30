@@ -19,17 +19,20 @@ end
 
 %% User defined experiment directory (to be later converted to function inputs)
 
-expdir = ['S:' slash 'SEAFAC' slash 'June2024' slash 'NorthMooring'];
+expdir = ['S:' slash 'SEAFAC' slash 'June2024' slash 'SouthMooring'];
 
 % Processing toggles
-rpIMU = false; % Waves
+rpIMU = true; % Waves
 rpSBG = false; % Waves
-rpWXT = false; % MET
+rpWXT = true; % MET
 rpY81 = false; % MET
 rpACS = false; % CT
-rpSIG = true; % TKE
+rpSIG = false; % TKE
 rpAQH = false; % TKE
 rpAQD = false; % TKE
+
+% Plotting toggle
+plotL1L2 = true;
 
 %% Loop through missions and reprocess
 cd(expdir)
@@ -65,13 +68,13 @@ for im = 1:length(missions)
             save([l1file.folder slash l1file.name],'SWIFT','sinfo')
         end
         % One time, will remove later
-        % if isfield(SWIFT,'signature')
-        %     sinfo.type = 'V4';
-        %     save([l1file.folder slash l1file.name],'sinfo','-append')
-        %     else
-        %         sinfo.type = 'V3';
-        %         save([l1file.folder slash l1file.name],'sinfo','-append')
-        % end
+        if isfield(SWIFT,'signature')
+            sinfo.type = 'V4';
+            save([l1file.folder slash l1file.name],'sinfo','-append')
+            else
+                sinfo.type = 'V3';
+                save([l1file.folder slash l1file.name],'sinfo','-append')
+        end
     end
     
     %% Reprocess IMU
@@ -81,7 +84,8 @@ for im = 1:length(missions)
             calctype = 'IMUandGPS';
             filtertype = 'RC';
             saveraw = false;
-            [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw);
+            interpf = false;
+            [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw,interpf);
         else 
             disp('No IMU data...')
         end
@@ -100,12 +104,14 @@ for im = 1:length(missions)
         end
     end
 
-    %% Reprocess WXT
+    %% Reprocess WXT (536!!!)
     if rpWXT
-        if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_WXT_*.dat']))
+        if ~isempty(dir([missiondir slash 'WXT' slash 'Raw' slash '*' slash '*_536_*.dat']))
             disp('Reprocessing Vaisala WXT data...')
             readraw = false;
-            [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw);
+            usewind = false;
+
+            [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw,usewind);
         else
             disp('No WXT data...')
         end
@@ -168,10 +174,10 @@ for im = 1:length(missions)
     end
 
     % Re-load L1 and L2 product and plot each for comparison
-    load([l1file.folder slash l1file.name],'SWIFT');
+    load([l1file.folder slash l1file.name],'SWIFT','sinfo');
     SWIFTL1 = SWIFT;
     l2file = dir([missiondir slash '*L2.mat']);
-    load([l2file.folder slash l2file.name],'SWIFT','sinfo');
+    load([l2file.folder slash l2file.name],'SWIFT');
     SWIFTL2 = SWIFT;
 
     if plotL1L2

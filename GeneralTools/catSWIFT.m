@@ -51,21 +51,21 @@ else
 end
 
 % Radiometer
-if isfield(SWIFT,'radiometertemp1mean')
+if isfield(SWIFT,'radiometertemp1mean')% This is the brightness (target) temperature
     nrad = length(SWIFT(1).radiometertemp1mean);
     swift.radtemp1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT));
     if size(swift.radtemp1,2)~= nt
         swift.radtemp1 = swift.radtemp1';
     end
 end
-if isfield(SWIFT,'radiometerrad1')
+if isfield(SWIFT,'radiometerrad1')% This is derived from brightness temp using stefan boltzman
     nrad = length(SWIFT(1).radiometerrad1);
     swift.rad1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
     if size(swift.rad1,2)~= nt
         swift.rad1 = swift.rad1';
     end
 end
-if isfield(SWIFT,'radiometertemp2mean')
+if isfield(SWIFT,'radiometertemp2mean')% This is the jacket temperature
     nrad = length(SWIFT(1).radiometertemp2mean);
     swift.radtemp2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT));
     if size(swift.radtemp2,2)~= nt
@@ -73,7 +73,7 @@ if isfield(SWIFT,'radiometertemp2mean')
     end
 end
 if isfield(SWIFT,'radiometerrad1')
-    nrad = length(SWIFT(1).radiometerrad2);
+    nrad = length(SWIFT(1).radiometerrad2);% This is derived from jacket temp using stefan boltzman
     swift.rad2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
     if size(swift.rad2,2)~= nt
         swift.rad2 = swift.rad2';

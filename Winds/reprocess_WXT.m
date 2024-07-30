@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw)
+function [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw,usewind)
 
 % reprocess SWIFT Vaisala WXT files
 % loop thru raw data for a given SWIFT deployment, then
@@ -32,14 +32,16 @@ else %  Exit reprocessing if no L1 or L2 product exists
 end
 
 %% Loop through raw burst files and reprocess
+burstreplaced = false(length(SWIFT),1);
 
-bfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*WXT*.dat']);
+bfiles = dir([missiondir slash 'WXT' slash 'Raw' slash '*' slash '*536*.dat']);
+disp(['Found ' num2str(length(bfiles)) ' burst files...'])
 
 for iburst = 1:length(bfiles)
 
    disp(['Burst ' num2str(iburst) ' : ' bfiles(iburst).name(1:end-4)])
         
-        if bfiles(iburst).bytes > 0
+        if bfiles(iburst).bytes   == 0
             disp('Burst file is empty. Skippping ...')
         end
             
@@ -61,10 +63,12 @@ for iburst = 1:length(bfiles)
             continue
         end
         
+        if usewind
         SWIFT(tindex).winddirR = nanmean(winddirR); %#ok<*NANMEAN> % mean wind direction (deg relative)
-        SWIFT(tindex).winddirRstddev =  nanstd(winddirR); % std dev of wind direction (deg)
         SWIFT(tindex).windspd = nanmean(windspd); % mean wind speed (m/s)
+        SWIFT(tindex).winddirRstddev =  nanstd(winddirR); % std dev of wind direction (deg)
         SWIFT(tindex).windspdstddev = nanstd(windspd);  % std dev of wind spd (m/s)
+        end
         SWIFT(tindex).airtemp = nanmean(airtemp); % deg C
         SWIFT(tindex).airtempstddev = nanstd(airtemp); % deg C
         SWIFT(tindex).relhumidity = nanmean(relhumidity); % percent
@@ -73,6 +77,7 @@ for iburst = 1:length(bfiles)
         SWIFT(tindex).airpresstddev = nanstd(airpres); % millibars
         SWIFT(tindex).rainaccum = nanmean(rainaccum); % millimeters
         SWIFT(tindex).rainint = nanmean(rainint); % millimeters_per_hour
+        burstreplaced(tindex) = true;
 
 end
 
@@ -80,11 +85,11 @@ end
 %% If SWIFT structure elements not replaced, fill variables with NaNs
 
 for i = 1:length(SWIFT)
-    if ~isfield(SWIFT(i),'windspd') || isempty(SWIFT(i).windspd)
-        disp(['bad data at index ' num2str(i)])
-        SWIFT(i).winddirR = NaN;
+    if ~isfield(SWIFT(i),'relhumidity') || isempty(SWIFT(i).relhumidity)
+        disp(['No data at index ' num2str(i)])
+        % SWIFT(i).winddirR = NaN;
         SWIFT(i).winddirRstddev =  NaN;
-        SWIFT(i).windspd = NaN;
+        % SWIFT(i).windspd = NaN;
         SWIFT(i).windspdstddev = NaN;
         SWIFT(i).airtemp = NaN;
         SWIFT(i).airtempstddev = NaN;
