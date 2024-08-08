@@ -86,7 +86,7 @@ function [NS,NE] = MEM_directionalestimator(a1,a2,b1,b2,en,convert);
 % so that the integral of S(theta:f) is 1. Sn is the normalized directional
 % distribution
 %
-    tot=sum(S,2)*dtheta;
+    tot=sum(S,2)*dtheta*dr;
     for ii=1:length(en) %each frequency
       Sn(ii,:)=S(ii,:)/tot(ii);
     end;
