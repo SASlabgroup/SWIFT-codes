@@ -16,7 +16,7 @@
 clear all; close all
 parentdir = pwd;  % change this to be the parent directory of all raw raw data (CF card offload from SWIFT)
 tic
-saverawdisplacements = false; % logical flag to increase speed by not saving the raw displacements.
+saverawdisplacements = true; % logical flag to increase speed by not saving the raw displacements.
 
 %% choose a prefilter
 %prefilter = {'no'}; %prefilter = str2cell('no')
