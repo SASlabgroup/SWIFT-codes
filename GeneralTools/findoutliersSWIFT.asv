@@ -83,10 +83,9 @@ for q = 1:length(fields)
             outliersSWIFT(k).time = SWIFT(k).time;
             if booloutSWIFTstruct.(fields{q})(k) == 1;
                 outliersSWIFT(k).(fields{q}) = SWIFT(k).(fields{q});
-                nonoutliersSWIFT(k).(fields{q}) = nan(size(SWIFT(k).(fields{q})));
+                nonoutliersSWIFT(k).(fields{q}) = NaN;
             else
                 nonoutliersSWIFT(k).(fields{q}) = SWIFT(k).(fields{q});
-                outliersSWIFT(k).(fields{q}) = nan(size(SWIFT(k).(fields{q})));
             end
         end
         
