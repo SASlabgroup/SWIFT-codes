@@ -11,7 +11,7 @@ function [SWIFT,outliersSWIFT,booloutSWIFT] = findoutliersSWIFT(SWIFT, method, p
 %       defined as percent used in percentile method, write as "~" or leave blank for
 %       movmedian
 % varargin defined as string / value dictionary pairs. List below:
-%       'plot_results' ; true/false bool
+%       'plot_results' ; true/false bool (IN DEVELOPMENT)
 %       'window' ; float (this is a window for "movmedian")
 % 7_23_2024
 % Scoped down to per SWIFT variable so can be run in created loop
@@ -53,6 +53,7 @@ end
 
 if string(method) == "percentile" 
     if 0<pct<100
+    else
         error("Percent should be 0<pct<100")
     end
 end
