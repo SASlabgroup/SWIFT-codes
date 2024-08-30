@@ -610,32 +610,27 @@ end
 
 %% Figure 10: SST radiometers (CT15)
 
-if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mean]))
-    nrad = length( SWIFT(1).radiometertemp1mean );
-    RadT1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT));
-    RadT2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT));
-    if isfield(SWIFT, 'radiometerrad1')
-        RadR1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
-        RadR2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
+if isfield(SWIFT, 'infraredtempmean') && any(~isnan([SWIFT.infraredtempmean]))
+    nrad = length( SWIFT(1).infraredtempmean );
+    IRT = reshape([SWIFT.infraredtempmean],nrad,length(SWIFT));
+    if isfield(SWIFT, 'radiancemean')
+        radiance = reshape([SWIFT.radiancemean],nrad,length(SWIFT));
     else
-        RadR1 = NaN;
-        RadR2 = NaN;  
+        radiance = NaN; 
     end
     
     figure(10), hold off
     subplot(2,1,1)
-    plot([SWIFT.time],RadT1)
+    plot([SWIFT.time],IRT)
     hold on
-    plot([SWIFT.time],RadT2,'color',rgb('lightgrey'))
     datetick
-    ylabel('Temperature [C]')
+    ylabel('IR Temperature [C]')
     subplot(2,1,2)
-    plot([SWIFT.time],RadR1)
+    plot([SWIFT.time],radiance)
     hold on
-    plot([SWIFT.time],RadR2,'color',rgb('lightgrey'))
     datetick
     ylabel('Radiance [mV]')
-    print('-dpng',[wd '_radiometer.png'])
+    print('-dpng',[wd '_infraredradiometer.png'])
 
 end
 

@@ -375,20 +375,20 @@ while 1
         
     elseif type == 14 & size == 24, % CT15 radiometer with radiance (newer)
         disp(['reading CT15 Radiometer results, size = ' num2str(size)])
-        SWIFT.radiometertemp1mean(Radcounter + 1) = fread(fid,1,'float');
-        SWIFT.radiometertemp1std(Radcounter + 1) = fread(fid,1,'float');
-        SWIFT.radiometertemp2mean(Radcounter + 1) = fread(fid,1,'float');
-        SWIFT.radiometertemp2std(Radcounter + 1) = fread(fid,1,'float');
-        SWIFT.radiometerrad1(Radcounter + 1) = fread(fid,1,'float');
-        SWIFT.radiometerrad2(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.infraredtempmean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.infraredtempstd(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.ambienttempmean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.ambienttempstd(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiancemean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiancestd(Radcounter + 1) = fread(fid,1,'float');
         Radcounter = Radcounter + 1;
 
     elseif type == 14 & size == 16, % CT15 radiometer without radiance (older)
         disp(['reading CT15 Radiometer results, size = ' num2str(size)])
-        SWIFT.radiometertemp1mean(Radcounter + 1) = fread(fid,1,'float');
-        SWIFT.radiometertemp1std(Radcounter + 1) = fread(fid,1,'float');
-        SWIFT.radiometertemp2mean(Radcounter + 1) = fread(fid,1,'float');
-        SWIFT.radiometertemp2std(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.infraredtempmean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.infraredtempstd(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.ambienttempmean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.ambienttempstd(Radcounter + 1) = fread(fid,1,'float');
         Radcounter = Radcounter + 1;
         
     elseif type == 50 & size ==1228, % microSWIFT, size should be 1228 bytes
