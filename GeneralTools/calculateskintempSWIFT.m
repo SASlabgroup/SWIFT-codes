@@ -56,8 +56,8 @@ k.Tbb_from_RAD = [-58.88762553221061
 -8.088049022835674e-17];
 
 % Linear fit of correction term [m,b] in terms of y = mx+b
-Terrorcoeff = [-0.4487941719733867
-0.07601486369602617];
+Terrorcoeff = [0.07601486369602617
+    -0.4487941719733867];
 
 % Choose emmissivity value
 em = 0.97515589; % 45 degree
@@ -79,10 +79,10 @@ for i = 1:length(SWIFT)
 
     % Apply self-emmision correction term from lab calibration 
     % difference of downlooking case temp and calculated Tskin dependent
-    Tdiff = SWIFT(i).ambienttempmean(1) - skinTEMfromRAD(i)
+    Tdiff = SWIFT(i).ambienttempmean(1) - skinTEMfromRAD(i);
     Terror = Terrorcoeff(1)*(Tdiff) +Terrorcoeff(2);
-
-    SWIFT(i).Tskin = skinTEMfromRAD(i) - Terror;
+    Terrorcat(i) = Terror; Tdiffcat(i) = Tdiff; %disp for debug
+    SWIFT(i).Tskin = skinTEMfromRAD(i) + Terror;
 end;
 
 Tskin_noselfcorrect = skinTEMfromRAD;
