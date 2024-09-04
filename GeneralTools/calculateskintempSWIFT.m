@@ -80,9 +80,11 @@ for i = 1:length(SWIFT)
     % Apply self-emmision correction term from lab calibration 
     % difference of downlooking case temp and calculated Tskin dependent
     Tdiff = SWIFT(i).ambienttempmean(1) - skinTEMfromRAD(i);
+    amb(i) = SWIFT(i).ambienttempmean(1);
+    inf(i) = SWIFT(i).infraredtempmean(1);
     Terror = Terrorcoeff(1)*(Tdiff) +Terrorcoeff(2);
     Terrorcat(i) = Terror; Tdiffcat(i) = Tdiff; %disp for debug
-    SWIFT(i).Tskin = skinTEMfromRAD(i) + Terror;
+    SWIFT(i).Tskin = skinTEMfromRAD(i) - Terror;
 end;
 
 Tskin_noselfcorrect = skinTEMfromRAD;
