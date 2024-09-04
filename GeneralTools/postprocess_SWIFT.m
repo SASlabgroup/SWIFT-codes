@@ -19,7 +19,7 @@ end
 
 %% User defined experiment directory (to be later converted to function inputs)
 
-expdir = ['S:' slash 'SEAFAC' slash 'June2024' slash 'SouthMooring'];
+expdir = ['S:' slash 'SEAFAC' slash 'June2024'];
 
 % Processing toggles
 rpIMU = true; % Waves

@@ -34,7 +34,6 @@ wsecs = 256;   % window length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
 maxf = .5;       % frequency cutoff for telemetry Hz
    
-
 %% begin processing, if data sufficient
 pts = length(z);       % record length in data points
 
