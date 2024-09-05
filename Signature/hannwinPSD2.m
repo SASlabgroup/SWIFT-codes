@@ -1,4 +1,4 @@
-function [PX,F,Ph,err] = hannwinPSD2(datax,nwin,fs,norm)
+function [PX,F,Ph,err,PXstd] = hannwinPSD2(datax,nwin,fs,norm)
 % hannwinPSD2 Computes spectra via windowing
 % PS is either unitless (if normalized to integrate to 1) or units of
 % variance of data (e.g. m^2/s^2 for velocity (m/s)).
@@ -48,14 +48,17 @@ for i = 1:M
 end
 
 % Average
+PXstd = std(PX,[],1,'omitnan');
 PX = mean(PX,'omitnan');
 Ph = mean(Ph,'omitnan');
 
 % Normalize to satisfy Parsevals Theorem or produce PSD
 if strcmp(norm,'psd')
+    PXstd = PXstd./sum(PX);
     PX = PX/sum(PX);
 elseif strcmp(norm,'par')
     PX = PX/(df*nwin^2);
+    PXstd = PXstd/(df*nwin^2);
     vard = mean(var(DX,[],2,'omitnan'),'omitnan');
     varPS = sum(PX,'omitnan').*df;
     pvardiff = 100*(varPS-vard)/vard;
