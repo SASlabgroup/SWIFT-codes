@@ -1,4 +1,4 @@
-function [fluxes Qnet] = runCOAREonSWIFT( SWIFT );
+function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % function to run the COARE flux algoritm on a SWIFT data structure
 % using whatever fields are available
 % (and making assumptions about the rest)
@@ -19,10 +19,13 @@ function [fluxes Qnet] = runCOAREonSWIFT( SWIFT );
 % M. James 9/2024
 % Added in reference to new COARE algorithm; Key for output, included new
 % required inputs
+% 
+% Notes:
+% run in fixed albedo mode to keep results in fixed lat lon scenario.
 
 %% Time in Julian Day
 time = [SWIFT.time];
-jd = time;
+jd = time(1);
 
 %% wind speed and height
 if isfield(SWIFT,'windspd') && any(~isnan([SWIFT.windspd])),
@@ -133,12 +136,12 @@ end
 % Option to set local variables to default values if input is NaN... can do
 % single value or fill each individual. Warning... this will fill arrays
 % with the dummy values and produce results where no input data are valid
-ii=find(isnan(P)); P(ii)=1013;    % pressure
-ii=find(isnan(sw_dn)); sw_dn(ii)=200;   % incident shortwave radiation
-ii=find(isnan(lat)); lat(ii)=45;  % latitude
-ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); % incident longwave radiation
+% ii=find(isnan(P)); P(ii)=1013;    % pressure
+% ii=find(isnan(sw_dn)); sw_dn(ii)=200;   % incident shortwave radiation
+% ii=find(isnan(lat)); lat(ii)=nanmean(lat);  % latitude
+% ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); % incident longwave radiation
 ii=find(isnan(zi)); zi(ii)=600;   % PBL height
-ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
+% ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
 
 %% run COARE
 
