@@ -97,10 +97,14 @@ for iburst = 1:nburst
     else
         load([bfiles(iburst).folder '\' bfiles(iburst).name],...
             'Vel','Cor','Amp','Pressure','pitch','roll','heading','time')
+        if exist('Vel','var')
         vel = Vel;
         cor = Cor;
         amp = Amp;
         press = Pressure';
+        else
+            continue
+        end
     end
 
     % Skip burst if empty

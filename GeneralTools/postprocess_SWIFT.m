@@ -11,23 +11,23 @@
 
 % K. Zeiden 07/2024
 
+%% User defined experiment directory (to be later converted to function inputs)
+
 if ispc
     slash = '\';
 else
     slash = '/';
 end
 
-%% User defined experiment directory (to be later converted to function inputs)
-
-expdir = ['S:' slash 'SEAFAC' slash 'June2024'];
+expdir = ['S:' slash 'NORSE' slash '2023'];
 
 % Processing toggles
-rpIMU = true; % Waves
+rpIMU = false; % Waves
 rpSBG = false; % Waves
-rpWXT = true; % MET
+rpWXT = false; % MET
 rpY81 = false; % MET
 rpACS = false; % CT
-rpSIG = false; % TKE
+rpSIG = true; % TKE
 rpAQH = false; % TKE
 rpAQD = false; % TKE
 
@@ -39,7 +39,7 @@ cd(expdir)
 missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
-for im = 1:length(missions)
+for im = 17
 
     disp(['Post-processing ' missions(im).name])
 
@@ -57,13 +57,14 @@ for im = 1:length(missions)
             disp('Create information structure ''sinfo''')
             sinfo.ID = SWIFT(1).ID;
             sinfo.CTdepth = SWIFT(1).CTdepth;
+            if isfield(SWIFT,'metheight')
             sinfo.metheight = SWIFT(1).metheight;
+            end
             if isfield(SWIFT,'signature')
                 sinfo.type = 'V4';
             else 
                 sinfo.type = 'V3';
             end
-            SWIFT = rmfield(SWIFT,{'ID','CTdepth','metheight'});
             disp('Saving new L1 product...')
             save([l1file.folder slash l1file.name],'SWIFT','sinfo')
         end
@@ -142,7 +143,7 @@ for im = 1:length(missions)
     if rpSIG 
         if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
             disp('Reprocessing Signature1000 data...')
-            plotburst = false; 
+            plotburst = true; 
             readraw = false;
             [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst);
         else
@@ -165,7 +166,7 @@ for im = 1:length(missions)
     if rpAQH 
         if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQH_*.dat']))
             disp('Reprocessing Aquadopp (AQH) data...')
-            readraw = true;
+            readraw = false;
             plotburst = false;
             [SWIFT,sinfo] = reprocess_AQH(missiondir,readraw,plotburst);
         else
@@ -173,7 +174,7 @@ for im = 1:length(missions)
         end
     end
 
-    % Re-load L1 and L2 product and plot each for comparison
+    %% Re-load L1 and L2 product and plot each for comparison
     load([l1file.folder slash l1file.name],'SWIFT','sinfo');
     SWIFTL1 = SWIFT;
     l2file = dir([missiondir slash '*L2.mat']);

@@ -125,14 +125,14 @@ for ibin = 1:length(z)
     end
     xN = ones(nfit,1);
     x = Ri(ifit);
-    x1 = Ri(ifit).^(2/3);
-    x3 = x1.^3;
+    x23 = Ri(ifit).^(2/3);
+    x3 = x23.^3;
     d = Di(ifit);
     derr = mean(Dierr(ifit),'omitnan');
     
     %Best-fit power-law to the structure function % THIS IS WRONG!!!!
-    ilog = x1 > 0 & d > 0;% log(0) = -Inf
-    x1log = log10(x1(ilog));
+    ilog = x23 > 0 & d > 0;% log(0) = -Inf
+    x1log = log10(x23(ilog));
     dlog = log10(d(ilog));
     xNlog = xN(ilog);
 %     xlog = log10(x(ilog));
@@ -145,7 +145,7 @@ for ibin = 1:length(z)
     if strcmp(fittype,'cubic')
         
         % Fit structure function to D(z,r) = Br^2 + Ar^(2/3) + N
-        G = [x3(:) x1(:) xN(:)];
+        G = [x3(:) x23(:) xN(:)];
         Gg = (G'*G)\G';
         m = Gg*d(:);
         B(ibin) = m(1);
@@ -153,7 +153,7 @@ for ibin = 1:length(z)
         
         %Remove model shear term & fit Ar^(2/3) to residual (to get mspe)
         dmod = d-B(ibin)*x3;
-        G = [x1(:) xN(:)];
+        G = [x23(:) xN(:)];
         Gg = (G'*G)\G';
         m = Gg*dmod(:);
         dm = G*m;
@@ -168,8 +168,8 @@ for ibin = 1:length(z)
         Aerr(ibin) = merr(1);
         
         % update w/slope of residual structure function
-        ilog = x1 > 0 & dmod > 0;% log(0) = -Inf
-        x1log = log10(x1(ilog));
+        ilog = x23 > 0 & dmod > 0;% log(0) = -Inf
+        x1log = log10(x23(ilog));
         dlog = log10(dmod(ilog));
         xNlog = xN(ilog);
         G = [x1log(:) xNlog(:)];
@@ -180,7 +180,7 @@ for ibin = 1:length(z)
     elseif strcmp(fittype,'linear')
         
             % Fit structure function to D(z,r) = Ar^(2/3) + N
-            G = [x1(:) xN(:)];
+            G = [x23(:) xN(:)];
             Gg = (G'*G)\G';
             m = Gg*d(:);
             dm = G*m;
@@ -194,10 +194,10 @@ for ibin = 1:length(z)
     elseif strcmp(fittype,'log')
         
             % Don't presume a slope
-            d = d(x1>0);
-            xN = xN(x1>0);
-            x1 = x1(x1>0);
-            x1log = log10(x1);
+            d = d(x23>0);
+            xN = xN(x23>0);
+            x23 = x23(x23>0);
+            x1log = log10(x23);
             dlog = log10(d);
             G = [x1log(:) xN(:)];
             Gg = (G'*G)\G';
