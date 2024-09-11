@@ -124,18 +124,17 @@ for ibin = 1:length(z)
         
     end
     xN = ones(nfit,1);
-    x = Ri(ifit);
+    x1 = Ri(ifit);
     x23 = Ri(ifit).^(2/3);
-    x3 = x23.^3;
+    x2 = x23.^3;
     d = Di(ifit);
     derr = mean(Dierr(ifit),'omitnan');
     
     %Best-fit power-law to the structure function % THIS IS WRONG!!!!
-    ilog = x23 > 0 & d > 0;% log(0) = -Inf
-    x1log = log10(x23(ilog));
+    ilog = x1 > 0 & d > 0;% log(0) = -Inf
+    x1log = log10(x1(ilog));
     dlog = log10(d(ilog));
     xNlog = xN(ilog);
-%     xlog = log10(x(ilog));
     G = [x1log(:) xNlog(:)];
     Gg = (G'*G)\G';
     m = Gg*dlog(:);
@@ -145,14 +144,14 @@ for ibin = 1:length(z)
     if strcmp(fittype,'cubic')
         
         % Fit structure function to D(z,r) = Br^2 + Ar^(2/3) + N
-        G = [x3(:) x23(:) xN(:)];
+        G = [x2(:) x23(:) xN(:)];
         Gg = (G'*G)\G';
         m = Gg*d(:);
         B(ibin) = m(1);
         A(ibin) = m(2);
         
-        %Remove model shear term & fit Ar^(2/3) to residual (to get mspe)
-        dmod = d-B(ibin)*x3;
+        % Remove model shear term & fit Ar^(2/3) to residual (to get mspe)
+        dmod = d-B(ibin)*x2;
         G = [x23(:) xN(:)];
         Gg = (G'*G)\G';
         m = Gg*dmod(:);
@@ -168,8 +167,8 @@ for ibin = 1:length(z)
         Aerr(ibin) = merr(1);
         
         % update w/slope of residual structure function
-        ilog = x23 > 0 & dmod > 0;% log(0) = -Inf
-        x1log = log10(x23(ilog));
+        ilog = x1 > 0 & dmod > 0;% log(0) = -Inf
+        x1log = log10(x1(ilog));
         dlog = log10(dmod(ilog));
         xNlog = xN(ilog);
         G = [x1log(:) xNlog(:)];

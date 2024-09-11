@@ -283,7 +283,7 @@ end
 
 % Echograms
 if isfield(SWIFT,'signature')
-    if isfield(SWIFT(1).signature,'echogram')
+    if isfield(SWIFT(floor(end/2)).signature,'echogram')
     swift.echoz = SWIFT(1).signature.echogram.z;
     nz = length(swift.echoz);
     swift.echo = NaN(nz,nt);

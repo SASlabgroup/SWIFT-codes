@@ -39,7 +39,7 @@ cd(expdir)
 missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
-for im = 17
+for im = 14
 
     disp(['Post-processing ' missions(im).name])
 

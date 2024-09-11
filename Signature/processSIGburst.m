@@ -55,19 +55,20 @@ else
 end        
 
 % 3) Estimate dissipation rate from velocity structure functions
+wnf = w;
 ibad = ispike | repmat(badping,nbin,1);
 rmin = dz;
 rmax = 4*dz;
 nzfit = 1;
-w(ibad) = NaN;
+wnf(ibad) = NaN;
 wpeof(ibad) = NaN;
 wphp(ibad) = NaN;
 
 warning('off','all')
 % No filter, no analytic wave fit (D ~ r^{-2/3})
-[epsNF,qualNF] = SFdissipation(w,z,rmin,2*rmax,nzfit,'linear','mean');
+[epsNF,qualNF] = SFdissipation(wnf,z,rmin,2*rmax,nzfit,'linear','mean');
 % Analytic wave fit  (D ~ Ar^{-2/3} + Br^2)
-[epsWV,qualWV] = SFdissipation(w,z,rmin,2*rmax,nzfit,'cubic','mean');
+[epsWV,qualWV] = SFdissipation(wnf,z,rmin,2*rmax,nzfit,'cubic','mean');
 % EOF filter (D ~ r^{-2/3})
 [epsEOF,qualEOF] = SFdissipation(wpeof,z,rmin,rmax,nzfit,'linear','mean');
 % High-pass filter (D ~ r^{-2/3})

@@ -59,13 +59,13 @@ if strcmp(norm,'psd')
 elseif strcmp(norm,'par')
     PX = PX/(df*nwin^2);
     PXstd = PXstd/(df*nwin^2);
-    vard = mean(var(DX,[],2,'omitnan'),'omitnan');
-    varPS = sum(PX,'omitnan').*df;
-    pvardiff = 100*(varPS-vard)/vard;
-    if abs(pvardiff) > 5
-        warning('Parseval''s Theorom not satisifed to within 5%')
-    else
-    end
+    % vard = mean(var(DX,[],2,'omitnan'),'omitnan');
+    % varPS = sum(PX,'omitnan').*df;
+    % pvardiff = 100*(varPS-vard)/vard;
+    % if abs(pvardiff) > 5
+    %     warning('Parseval''s Theorom not satisifed to within 5%')
+    % else
+    % end
 end
     
 % Confidence Intervals
