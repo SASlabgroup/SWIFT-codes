@@ -28,10 +28,10 @@ for i = 1:M
     
     % Remove mean, trend and apply hanning window
     inan = isnan(dataxi);
-    if sum(inan)/length(dataxi) > 0.2
-        dataxi = NaN(size(dataxi));% NaN out entire window if too many NaNs
-    end
-    dataxi(isnan(dataxi)) = mean(dataxi,'omitnan'); % Replace NaN w/mean
+    % if sum(inan)/length(dataxi) > 0.2
+    %     dataxi = NaN(size(dataxi));% NaN out entire window if too many NaNs
+    % end
+    dataxi(inan) = mean(dataxi,'omitnan'); % Replace NaN w/mean
     dataxi = dataxi - mean(dataxi,'omitnan'); % Remove mean
     dataxi = detrend(dataxi); % Remove trend
     dataxi = h.*dataxi'; % Window using normalized hanning window

@@ -37,7 +37,7 @@ if isfield(SIG,'time')
     sig.hrw = sig.hrcorr;
     sig.hrwvar = sig.hrcorr;
     sig.eps = sig.hrcorr;
-    sig.epsnf = sig.hrcorr;
+    sig.N = sig.hrcorr;
     sig.mspe = sig.hrcorr;
     sig.slope = sig.hrcorr;
     sig.pspike = sig.hrcorr;
@@ -63,21 +63,22 @@ if isfield(SIG,'time')
         sig.avgvvar(:,it) = SIG(it).profile.vvar;
         sig.avgwvar(:,it) = SIG(it).profile.wvar;
         %HR
-        nz = length(SIG(it).HRprofile.w);
-        sig.hrcorr(1:nz,it) = SIG(it).HRprofile.QC.hrcorr;
-        sig.hramp(1:nz,it) = SIG(it).HRprofile.QC.hramp;
-        sig.pspike(1:nz,it) = SIG(it).HRprofile.QC.pspike;
+     
+        sig.hrcorr(1:nzhr,it) = SIG(it).HRprofile.QC.hrcorr(1:nzhr);
+        sig.hramp(1:nzhr,it) = SIG(it).HRprofile.QC.hramp(1:nzhr);
+        sig.pspike(1:nzhr,it) = SIG(it).HRprofile.QC.pspike(1:nzhr);
         sig.pbadping(it) = SIG(it).HRprofile.QC.pbadping;
-        sig.hrw(1:nz,it) = SIG(it).HRprofile.w;
-        sig.hrwvar(1:nz,it) = SIG(it).HRprofile.wvar;
-        sig.eps(1:nz,it) = SIG(it).HRprofile.eps;
-        sig.epsnf(1:nz,it) = SIG(it).HRprofile.QC.epsNF;
-        sig.mspe(1:nz,it) = SIG(it).HRprofile.QC.qualEOF.mspe;
-        sig.slope(1:nz,it) = SIG(it).HRprofile.QC.qualEOF.slope;
+        sig.hrw(1:nzhr,it) = SIG(it).HRprofile.w(1:nzhr);
+        sig.hrwvar(1:nzhr,it) = SIG(it).HRprofile.wvar(1:nzhr);
+        sig.eps(1:nzhr,it) = SIG(it).HRprofile.eps(1:nzhr);
+        sig.N(1:nzhr,it) = SIG(it).HRprofile.QC.qualEOF.N(1:nzhr);
+        sig.mspe(1:nzhr,it) = SIG(it).HRprofile.QC.qualEOF.mspe(1:nzhr);
+        sig.slope(1:nzhr,it) = SIG(it).HRprofile.QC.qualEOF.slope(1:nzhr);
         
-        sig.wpeofmag(1:nz,it) = SIG(it).HRprofile.QC.wpeofmag;
-        sig.eofs(1:nz,1:nz,it) = SIG(it).HRprofile.QC.eofs;
-        sig.eofsvar(1:nz,it) = SIG(it).HRprofile.QC.eofsvar;
+        sig.wpeofmag(1:nzhr,it) = SIG(it).HRprofile.QC.wpeofmag(1:nzhr);
+        sig.eofs(1:nzhr,1:nzhr,it) = SIG(it).HRprofile.QC.eofs(1:nzhr,1:nzhr,:);
+        sig.eofvar(1:nzhr,it) = SIG(it).HRprofile.QC.eofsvar(1:nzhr);
+        sig.eofamp()
 
         % Motion
         sig.pitch(it) = SIG(it).motion.pitch;
@@ -104,7 +105,6 @@ if isfield(SIG,'time')
         sig.hrw(:,badburst) = [];
         sig.hrwvar(:,badburst) = [];
         sig.eps(:,badburst) = [];
-        sig.epsnf(:,badburst) = [];
         sig.mspe(:,badburst) = [];
         sig.slope(:,badburst) = [];  
         sig.pspike(:,badburst) = [];

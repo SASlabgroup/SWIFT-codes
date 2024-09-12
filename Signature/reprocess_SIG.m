@@ -459,7 +459,7 @@ for iburst = 1:nburst
 % End burst loop
 end
 
-%% Clean up and save
+%% Clean up
 
 % NaN out SWIFT sig fields which were not matched to bursts
 if ~isempty(fieldnames(SWIFT))

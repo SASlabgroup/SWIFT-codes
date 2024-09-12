@@ -19,7 +19,7 @@ else
     slash = '/';
 end
 
-expdir = ['S:' slash 'NORSE' slash '2023'];
+expdir = ['S:' slash 'SEAFAC' slash 'June2024' slash 'NorthMooring'];
 
 % Processing toggles
 rpIMU = false; % Waves
@@ -34,12 +34,14 @@ rpAQD = false; % TKE
 % Plotting toggle
 plotL1L2 = true;
 
-%% Loop through missions and reprocess
+%% List of missions
+
 cd(expdir)
 missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
-for im = 14
+%% Loop through missions and reprocess
+for im = 1
 
     disp(['Post-processing ' missions(im).name])
 
@@ -143,7 +145,7 @@ for im = 14
     if rpSIG 
         if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
             disp('Reprocessing Signature1000 data...')
-            plotburst = true; 
+            plotburst = false; 
             readraw = false;
             [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst);
         else
