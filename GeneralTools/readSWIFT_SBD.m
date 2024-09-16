@@ -606,7 +606,20 @@ else
     SWIFT.peakwavedirT = NaN;
 end
 
+%% change indicator for no conductivity - temperature
 
+% use NaN instead of 9999 for no data
+if isfield(SWIFT,'salinity')
+    if all(SWIFT.salinity >= 9999),
+        SWIFT.salinity = NaN;
+    end
+end
+
+if isfield(SWIFT,'watertemp')
+    if all(SWIFT.watertemp >= 9999),
+        SWIFT.watertemp = NaN;
+    end
+end
 
 %% fill in time if none read (time is a required field)
 
