@@ -212,8 +212,10 @@ swift.wavepeakT = 1./(waveweight./wavevar);
 %     [swift.dirwavepower(:,:,it),~,~,~,~,~,~,~] = SWIFTdirectionalspectra(SWIFT(it),0);
 % end
 
-
  % Wind
+ if isfield(SWIFT,'windustar')
+     swift.windustar = [SWIFT.windustar];
+ end
  if isfield(SWIFT,'windspd')
     swift.windu = [SWIFT.windspd];
  else
