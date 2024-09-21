@@ -1,4 +1,4 @@
-function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
+function [fluxes Qnet] = runCOAREonSWIFT( SWIFT );
 % function to run the COARE flux algoritm on a SWIFT data structure
 % using whatever fields are available
 % (and making assumptions about the rest)
@@ -18,18 +18,32 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 %
 % M. James 9/2024
 % Added in reference to new COARE algorithm; Key for output, included new
-% required inputs
-% 
-% Notes:
-% run in fixed albedo mode to keep results in fixed lat lon scenario.
+% required inputs; reference and comment toggle between "Warm" and base
+% scripts
+% Added in drift to correct wind spd
+% Added input plots
+%
 
 %% Time in Julian Day
 time = [SWIFT.time];
-jd = time(1);
+jd = time;
 
 %% wind speed and height
 if isfield(SWIFT,'windspd') && any(~isnan([SWIFT.windspd])),
     u = [SWIFT.windspd]; % vector
+    if isfield(SWIFT, 'driftspd') && any(~isnan([SWIFT.driftspd])),
+        
+        windxyvec = [cosd([SWIFT.winddirR]'), sind([SWIFT.winddirR]')].*[SWIFT.windspd]';
+        drifxyvec = [cosd([SWIFT.driftdirT]'), sind([SWIFT.driftdirT]')].*[SWIFT.driftspd]';
+                
+        for k=1:length(drifxyvec);
+            driftspdrel2wind(k) = dot(drifxyvec(k,:),windxyvec(k,:)/norm(windxyvec(k,:)));
+        end
+
+        
+        u(~isnan(driftspdrel2wind)) = u(~isnan(driftspdrel2wind)) - driftspdrel2wind(~isnan(driftspdrel2wind)); %Only corrects for which there is data
+        % clear windxyvec drifxyvec driftspdrel2wind
+    end
 else
     disp('missing wind spd, COARE will skip most results')
     u = NaN; % required parameter, setting to zero remove most results
@@ -43,6 +57,14 @@ end
 
 zrf_u = 0; %reference height
 
+% Plot input
+figure
+plot(time, u,'x'); legend(sprintf('reference height = %g', zu));grid on;
+datetick
+ylabel('Wind [m/s]')
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputwind.jpeg',SWIFT(1).ID)])
+
 %% air temp and height
 if isfield(SWIFT,'airtemp') && any(~isnan([SWIFT.airtemp])),
     t = [SWIFT.airtemp];
@@ -52,6 +74,15 @@ else
 end
 zt = zu; % air temp height is same as wind height
 zrf_t = zrf_u; %same reference
+
+% Plot input
+figure
+plot(time, t,'x'); legend(sprintf('reference height = %g', zt));grid on;
+datetick
+ylabel('Air temp [deg C]')
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputairtemp.jpeg',SWIFT(1).ID)])
+
 %% relative humidity and height
 if isfield(SWIFT,'relhumidity') && any(~isnan([SWIFT.relhumidity])),
     rh = [SWIFT.relhumidity];
@@ -60,6 +91,15 @@ else
 end
 zq = zu; % rh height is same as wind height
 zrf_q = zrf_u; %same reference
+
+% Plot input
+figure
+plot(time, rh,'x'); legend(sprintf('reference height = %g', zq));grid on;
+datetick
+ylabel('Humidity [%]')
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputhumidity.jpeg',SWIFT(1).ID)])
+
 %% air pressure
 if isfield(SWIFT,'airpres') && any(~isnan([SWIFT.airpres])),
     P = [SWIFT.airpres];
@@ -67,8 +107,16 @@ else
     P = NaN;
 end
 
+% Plot input
+figure
+plot(time, P,'x'); legend(sprintf('reference height = %g', zt));grid on;
+datetick
+ylabel('Air pressure [mbar]')
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputairpressure.jpeg',SWIFT(1).ID)])
+
 %% water temp
-if isfield(SWIFT,'watertemp') && any(~isnan([SWIFT.airtemp])),
+if isfield(SWIFT,'watertemp') && any(~isnan([SWIFT.watertemp])),
     if length(SWIFT(1).watertemp) == 1,
         disp('one water temp depth')
         ts = [SWIFT.watertemp];
@@ -88,8 +136,38 @@ else
     ts = NaN; % required parameter, setting to zero remove most results
 end
 
+if isfield(SWIFT,'CTdepth') && any(~isnan([SWIFT.CTdepth])),
+    ts_depth = [SWIFT.CTdepth];
+    if mean(ts_depth) == ts_depth(1)
+        ts_depth = ts_depth(1);
+    end;
+else 
+    ts_depth = NaN;
+end
+
+
+% Plot input
+figure
+plot(time, ts,'x'); legend(sprintf('reference depth = %g', ts_depth(1)));grid on;
+datetick
+ylabel('Water temp [deg C]')
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputwatertemp.jpeg',SWIFT(1).ID)])
+
 %% Water Salinity
-Ss = [SWIFT.salinity];
+if isfield(SWIFT,'salinity') && any(~isnan([SWIFT.salinity])),
+    Ss = [SWIFT.salinity];
+else
+    Ss = NaN;
+end;
+
+% Plot input
+figure
+plot(time, Ss,'x'); legend(sprintf('reference depth = %g', ts_depth(1)));grid on;
+datetick
+ylabel('Salinity [PSU]')
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputsalinity.jpeg',SWIFT(1).ID)])
 
 %% downwelling radiation
 if isfield(SWIFT,'SWrad') && any(~isnan([SWIFT.SWrad])),
@@ -104,9 +182,31 @@ else
     lw_dn = NaN;
 end
 
+% Plot input
+figure
+yyaxis left
+plot(time, lw_dn,'x');
+ylabel('LW Radiation Downwelling [W/m^2]');
+datetick; set(gca,'XGrid', 'on')
+yyaxis right
+plot(time,sw_dn,'o')
+ylabel('SW Radiation Downwelling [W/m^2]');
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputraddwnwell.jpeg',SWIFT(1).ID)])
 %% latitude and lon
-lat = nanmean([SWIFT.lat]); % single value, not vector
-lon = nanmean([SWIFT.lon]); % single value, not vector
+% lat = nanmean([SWIFT.lat]); % single value, not vector
+% lon = nanmean([SWIFT.lon]); % single value, not vector
+lat = [SWIFT.lat]; % vector
+lon = [SWIFT.lon]; % vector
+
+%fill in NaN with nanmean
+lat(isnan(lat)) = nanmean(lat);
+lon(isnan(lon)) = nanmean(lon);
+
+
+
+geoplot(lat, lon);
+print('-djpeg',[cd '\' sprintf('%s_COAREinputlatlon.jpeg',SWIFT(1).ID)])
 
 %% atmospheric PBL height
 zi = NaN;
@@ -117,6 +217,13 @@ if isfield(SWIFT,'rainint') && any(~isnan([SWIFT.rainint])),
 else
     rain = 0; % cannot be NaN, must have a value
 end
+
+figure
+plot(time, rain,'x'); grid on;
+datetick
+ylabel('Rain Rate')
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputrain.jpeg',SWIFT(1).ID)])
 
 %% waves
 if isfield(SWIFT,'peakwaveperiod') && any(~isnan([SWIFT.peakwaveperiod])),
@@ -131,21 +238,31 @@ else
     sigH = NaN;
 end
 
+sigH(sigH ==0) = nanmean(sigH); % Setting blank "0" wh to NaN
+
+figure
+plot(time, sigH,'x'); grid on;
+datetick
+ylabel('Wave Height [m]')
+
+print('-djpeg',[cd '\' sprintf('%s_COAREinputwaveheight.jpeg',SWIFT(1).ID)])
+
 %% Default val fill (Moved from the COARE algorithm to here for better reference)
 
 % Option to set local variables to default values if input is NaN... can do
 % single value or fill each individual. Warning... this will fill arrays
 % with the dummy values and produce results where no input data are valid
-% ii=find(isnan(P)); P(ii)=1013;    % pressure
-% ii=find(isnan(sw_dn)); sw_dn(ii)=200;   % incident shortwave radiation
-% ii=find(isnan(lat)); lat(ii)=nanmean(lat);  % latitude
-% ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); % incident longwave radiation
+ii=find(isnan(P)); P(ii)=1013;    % pressure
+ii=find(isnan(sw_dn)); sw_dn(ii)=200;   % incident shortwave radiation
+ii=find(isnan(lat)); lat(ii)=45;  % latitude
+ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); % incident longwave radiation
 ii=find(isnan(zi)); zi(ii)=600;   % PBL height
-% ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
+ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
 
 %% run COARE
 
-fluxes = coare36vn_zrf_et(u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',jd,zi,rain',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
+fluxes = coare36vn_zrf_et(u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',jd',zi,rain',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
+% fluxes = coare36vnWarm_et(jd',u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',zi,rain',ts_depth',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
 
 validcolumns = find( nansum( fluxes, 1 ) ~= 0  & ~isnan(nansum( fluxes, 1 )) );
 
@@ -225,7 +342,7 @@ Qnet = netrad - hsb - hlh;
 %% plot key values as time series
 rtime = max(time) - min(time);
 
-figure(1), clf
+figure, clf
 ax(1) = subplot(3,1,1);
 plot(time,t,'kx',time,ts,'md');
 legend('air temp','water temp')
@@ -258,18 +375,20 @@ else
 end
 
 
-figure(2), clf
+figure, clf
 ax(1) = subplot(3,1,1);
-plot(time,sw_dn,'x',time,lw_dn,'rx');
-legend('SW down','LW down')
-ylabel('[W/m^2]')
+yyaxis left
+plot(time,sw_dn,'x');ylabel('SW down [W/m^2]')
+yyaxis right
+plot(time,lw_dn,'rx');ylabel('LW down [W/m^2]')
 datetick, set(gca,'XLim',[min(time) max(time)+0.3*rtime])
 if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
 ax(2) = subplot(3,1,2);
-plot(time,SWradup,'x',time,LWradup,'rx');
-legend('SW up','LW up')
+yyaxis left
+plot(time,SWradup,'x'); ylabel('SW up [W/m^2]')
+yyaxis right
+plot(time,LWradup,'rx');ylabel('LW up [W/m^2]')
 datetick
-ylabel('[W/m^2]')
 ax(3) = subplot(3,1,3);
 plot(time,netrad,'go',time,Qnet,'ks'); hold on
 plot([min(time) max(time)],[ 0 0],'k:')
@@ -285,7 +404,7 @@ end
 
 
 if isfield(SWIFT,'windustar') && length(ustar) == length([SWIFT.windustar]),
-    figure(3), clf
+    figure, clf
     plot(u,ustar,'kx',u,[SWIFT.windustar],'ro'), 
     legend('COARE','inertial')
     if isfield(SWIFT,'windustar_directcovar') && length(ustar) == length([SWIFT.windustar_directcovar]),
