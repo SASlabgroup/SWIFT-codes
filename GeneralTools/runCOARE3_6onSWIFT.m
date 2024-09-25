@@ -22,6 +22,7 @@ function [fluxes Qnet] = runCOAREonSWIFT( SWIFT );
 % scripts
 % Added in drift to correct wind spd
 % Added input plots
+% Added in table conversion (no more manual indexing)
 %
 
 savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
@@ -245,6 +246,11 @@ end
 
 sigH(sigH ==0) = nanmean(sigH); % Setting blank "0" wh to NaN
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Comment OUT unless you
+% want no waves
+% sigH = repmat(nan,[1 573]);
+% cp = repmat(nan,[1 573]);
+
 figure
 subplot(211)
 plot(time, sigH,'x'); grid on;
@@ -286,6 +292,17 @@ Cd = fluxes(:,13);
 LWrad = fluxes(:,28); 
 U10 = fluxes(:,33);
 U10N = fluxes(:,34);
+
+% Convert to labeled table
+
+fluxes = array2table(fluxes, ...
+     'VariableNames',{ ...
+    'usr' 'tau' 'hsb' 'hlb' 'hbb' 'hsbb' 'hlwebb' 'tsr' 'qsr' 'zo'  'zot'...
+    'zoq' 'Cd' 'Ch' 'Ce'  'L'  'zeta' 'dT_skinx' 'dq_skinx' 'dz_skin' 'Urf'...
+    'Trf' 'Qrf' 'RHrf' 'UrfN' 'TrfN' 'QrfN'  'lw_net' 'sw_net' 'Le' 'rhoa'...
+    'UN' 'U10' 'U10N' 'Cdn_10' 'Chn_10' 'Cen_10' 'hrain' 'Qs' 'Evap' 'T10'...
+    'T10N' 'Q10' 'Q10N'  'RH10' 'P10' 'rhoa10' 'gust' 'wc_frac' 'Edis'
+    })
 % KEY for flux indexing
 %1    usr = friction velocity that includes gustiness (m/s), u*
 %2    tau = wind stress that includes gustiness (N/m^2)
