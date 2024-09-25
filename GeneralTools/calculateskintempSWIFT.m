@@ -77,13 +77,14 @@ for i = 1:length(SWIFT)
         + (k.Tbb_from_RAD(3)*RAD_skin.^2) + (k.Tbb_from_RAD(4)*RAD_skin.^3) ...
         + (k.Tbb_from_RAD(5)*RAD_skin.^4);
 
-    % Apply self-emmision correction term from lab calibration 
+    % % Apply self-emmision correction term from lab calibration NEED ROSR
+    % DATA
     % difference of downlooking case temp and calculated Tskin dependent
-    Tdiff = SWIFT(i).ambienttempmean(1) - skinTEMfromRAD(i);
+    Tdiff = SWIFT(i).ambienttempmean(1) - skinTEMfromRAD(i); %AMB temp - Tbb
     amb(i) = SWIFT(i).ambienttempmean(1);
     inf(i) = SWIFT(i).infraredtempmean(1);
-    Terror = Terrorcoeff(1)*(Tdiff) +Terrorcoeff(2);
-    Terrorcat(i) = Terror; Tdiffcat(i) = Tdiff; %disp for debug
+    Terror = Terrorcoeff(1)*(Tdiff) +Terrorcoeff(2); %apply to curve
+    Terrorcat(i) = Terror; Tdiffcat(i) = Tdiff; %disp for debu
     SWIFT(i).Tskin = skinTEMfromRAD(i) - Terror;
 end;
 

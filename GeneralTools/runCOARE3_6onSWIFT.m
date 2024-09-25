@@ -24,6 +24,8 @@ function [fluxes Qnet] = runCOAREonSWIFT( SWIFT );
 % Added input plots
 %
 
+savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
+cd(savepath); fprintf('Savepath: %s', savepath);
 %% Time in Julian Day
 time = [SWIFT.time];
 jd = time;
@@ -138,7 +140,7 @@ end
 
 if isfield(SWIFT,'CTdepth') && any(~isnan([SWIFT.CTdepth])),
     ts_depth = [SWIFT.CTdepth];
-    if mean(ts_depth) == ts_depth(1)
+    if ~any(diff(ts_depth)) ~=0
         ts_depth = ts_depth(1);
     end;
 else 
@@ -232,6 +234,9 @@ if isfield(SWIFT,'peakwaveperiod') && any(~isnan([SWIFT.peakwaveperiod])),
 else
     cp = NaN;
 end
+%fill in waveperiod NaNmean
+cp(cp ==0) = nanmean(cp);
+
 if isfield(SWIFT,'sigwaveheight') && any(~isnan([SWIFT.sigwaveheight])),
     sigH = [SWIFT.sigwaveheight];
 else
@@ -241,9 +246,14 @@ end
 sigH(sigH ==0) = nanmean(sigH); % Setting blank "0" wh to NaN
 
 figure
+subplot(211)
 plot(time, sigH,'x'); grid on;
 datetick
 ylabel('Wave Height [m]')
+subplot(212)
+plot(time, cp,'x'); grid on;
+datetick
+ylabel("Wave Period (s)")
 
 print('-djpeg',[cd '\' sprintf('%s_COAREinputwaveheight.jpeg',SWIFT(1).ID)])
 
@@ -252,12 +262,12 @@ print('-djpeg',[cd '\' sprintf('%s_COAREinputwaveheight.jpeg',SWIFT(1).ID)])
 % Option to set local variables to default values if input is NaN... can do
 % single value or fill each individual. Warning... this will fill arrays
 % with the dummy values and produce results where no input data are valid
-ii=find(isnan(P)); P(ii)=1013;    % pressure
-ii=find(isnan(sw_dn)); sw_dn(ii)=200;   % incident shortwave radiation
-ii=find(isnan(lat)); lat(ii)=45;  % latitude
-ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); % incident longwave radiation
+% ii=find(isnan(P)); P(ii)=1013;    % pressure
+% ii=find(isnan(sw_dn)); sw_dn(ii)=200;   % incident shortwave radiation
+% ii=find(isnan(lat)); lat(ii)=45;  % latitude
+% ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); % incident longwave radiation
 ii=find(isnan(zi)); zi(ii)=600;   % PBL height
-ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
+% ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
 
 %% run COARE
 
