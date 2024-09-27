@@ -63,6 +63,7 @@ zrf_u = 0; %reference height
 % Plot input
 figure
 plot(time, u,'x'); legend(sprintf('reference height = %g', zu));grid on;
+title('COARE input');
 datetick
 ylabel('Wind [m/s]')
 
@@ -79,8 +80,9 @@ zt = zu; % air temp height is same as wind height
 zrf_t = zrf_u; %same reference
 
 % Plot input
-figure
+figure; 
 plot(time, t,'x'); legend(sprintf('reference height = %g', zt));grid on;
+title('COARE input');
 datetick
 ylabel('Air temp [deg C]')
 
@@ -96,8 +98,9 @@ zq = zu; % rh height is same as wind height
 zrf_q = zrf_u; %same reference
 
 % Plot input
-figure
+figure; 
 plot(time, rh,'x'); legend(sprintf('reference height = %g', zq));grid on;
+title('COARE input');
 datetick
 ylabel('Humidity [%]')
 
@@ -111,8 +114,9 @@ else
 end
 
 % Plot input
-figure
+figure; 
 plot(time, P,'x'); legend(sprintf('reference height = %g', zt));grid on;
+title('COARE input');
 datetick
 ylabel('Air pressure [mbar]')
 
@@ -150,8 +154,9 @@ end
 
 
 % Plot input
-figure
+figure; 
 plot(time, ts,'x'); legend(sprintf('reference depth = %g', ts_depth(1)));grid on;
+title('COARE input');
 datetick
 ylabel('Water temp [deg C]')
 
@@ -165,8 +170,9 @@ else
 end;
 
 % Plot input
-figure
+figure; 
 plot(time, Ss,'x'); legend(sprintf('reference depth = %g', ts_depth(1)));grid on;
+title('COARE input');
 datetick
 ylabel('Salinity [PSU]')
 
@@ -186,7 +192,7 @@ else
 end
 
 % Plot input
-figure
+figure; 
 yyaxis left
 plot(time, lw_dn,'x');
 ylabel('LW Radiation Downwelling [W/m^2]');
@@ -194,6 +200,7 @@ datetick; set(gca,'XGrid', 'on')
 yyaxis right
 plot(time,sw_dn,'o')
 ylabel('SW Radiation Downwelling [W/m^2]');
+title('COARE input');
 
 print('-djpeg',[cd '\' sprintf('%s_COAREinputraddwnwell.jpeg',SWIFT(1).ID)])
 %% latitude and lon
@@ -209,6 +216,7 @@ lon(isnan(lon)) = nanmean(lon);
 
 
 geoplot(lat, lon);
+title('COARE input');
 print('-djpeg',[cd '\' sprintf('%s_COAREinputlatlon.jpeg',SWIFT(1).ID)])
 
 %% atmospheric PBL height
@@ -221,8 +229,9 @@ else
     rain = 0; % cannot be NaN, must have a value
 end
 
-figure
+figure; 
 plot(time, rain,'x'); grid on;
+title('COARE input');
 datetick
 ylabel('Rain Rate')
 
@@ -250,16 +259,23 @@ sigH(sigH ==0) = nanmean(sigH); % Setting blank "0" wh to NaN
 % want no waves
 % sigH = repmat(nan,[1 573]);
 % cp = repmat(nan,[1 573]);
+% Tp = repmat(nan,[1 573]);
 
-figure
-subplot(211)
+
+figure; 
+subplot(311)
 plot(time, sigH,'x'); grid on;
+title('COARE input');
 datetick
 ylabel('Wave Height [m]')
-subplot(212)
+subplot(312)
+plot(time, Tp,'x'); grid on;
+datetick
+ylabel("Peak Wave Period (s)")
+subplot(313)
 plot(time, cp,'x'); grid on;
 datetick
-ylabel("Wave Period (s)")
+ylabel("Wave Speed (m/s)")
 
 print('-djpeg',[cd '\' sprintf('%s_COAREinputwaveheight.jpeg',SWIFT(1).ID)])
 
@@ -298,7 +314,7 @@ U10N = fluxes(:,34);
 fluxes = array2table(fluxes, ...
      'VariableNames',{ ...
     'usr' 'tau' 'hsb' 'hlb' 'hbb' 'hsbb' 'hlwebb' 'tsr' 'qsr' 'zo'  'zot'...
-    'zoq' 'Cd' 'Ch' 'Ce'  'L'  'zeta' 'dT_skinx' 'dq_skinx' 'dz_skin' 'Urf'...
+    'zoq' 'Cd' 'Ch' 'Ce'  'L'  'zeta' 'dT_skin' 'dq_skin' 'dz_skin' 'Urf'...
     'Trf' 'Qrf' 'RHrf' 'UrfN' 'TrfN' 'QrfN'  'lw_net' 'sw_net' 'Le' 'rhoa'...
     'UN' 'U10' 'U10N' 'Cdn_10' 'Chn_10' 'Cen_10' 'hrain' 'Qs' 'Evap' 'T10'...
     'T10N' 'Q10' 'Q10N'  'RH10' 'P10' 'rhoa10' 'gust' 'wc_frac' 'Edis'
@@ -354,107 +370,146 @@ fluxes = array2table(fluxes, ...
 %8   Edis = energy dissipated by wave breaking (W/m^2)
 
 %% calc net radiative balance (since COARE does not seem to do it)
-albedo = 0.08; % 0.08 is open water, but can bemuch higher with ice.  see Persson et al JGR 2018, Eq. 1
-SWradup = albedo * sw_dn';
+% albedo = 0.08; % 0.08 is open water, but can bemuch higher with ice.  see Persson et al JGR 2018, Eq. 1
+% SWradup = albedo * sw_dn';
+% FLUXES Calculated within COARE 3.6, option for lat/lon and time/zenith angle specific albedo
+% according to Payne 1972 or constant
+
+fluxes.sw_up = [SWIFT.SWrad]' - fluxes.sw_net; % positive heating ocean
 
 % choose one below (based on interpretation of column 25)
-LWnet = LWrad; LWradup = lw_dn' - LWnet;
-%LWradup = LWrad; LWnet = lw_dn' - LWradup;
+fluxes.lw_up = [SWIFT.LWrad]' - fluxes.lw_net; %positive heating ocean
 
 % calc net rad
-netrad = sw_dn' - SWradup + LWnet;
-Qnet = netrad - hsb - hlh;
-
+fluxes.netrad = fluxes.sw_net + fluxes.lw_net;
+fluxes.Qnet = fluxes.netrad - fluxes.hsb - fluxes.hlb; % positive heating ocean; Ta < Tskin; Ta < Tskin
+Qnet = fluxes.Qnet;
 
 %% plot key values as time series
-rtime = max(time) - min(time);
 
-figure, clf
-ax(1) = subplot(3,1,1);
-plot(time,t,'kx',time,ts,'md');
-legend('air temp','water temp')
-ylabel('[C]')
-datetick, set(gca,'XLim',[min(time) max(time)+0.3*rtime])
-if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
-ax(2) = subplot(3,1,2);
-plot(time,hsb,'bx',time,hlh,'r+',time,hbb,'g.',time,hsbb,'c.');
-legend('Q_{sen}','Q_{latent}','Q_{buoy}','Q_{sbuoy}')
-if isfield(SWIFT,'Qsen'), 
-    hold on
-    plot(time,[SWIFT.Qsen],'kd')
-    plot([min(time) max(time)],[ 0 0],'k:')
-    legend('Q_{sen}','Q_{latent}','Q_{buoy}','Q_{sbuoy}','Q_{wT}')
-else
-end
-hold on
-datetick
-ylabel('[W/m^2]')
-ax(3) = subplot(3,1,3);
-plot(time,u,'kx',time,U10,'b+');
-datetick
-legend('measured wind','U_{10}')
-ylabel('[m/s]')
-linkaxes(ax,'x')
-if isfield(SWIFT,'ID'),
-    print('-dpng',[SWIFT(1).ID '_COAREfluxes.png'])
-else
-    print('-dpng',['COAREfluxes.png'])
-end
+plotCOAREfromSWIFT(SWIFT, fluxes); 
+% Much more simplified; split into a separate call to plotting script
+% Legacy code below
 
 
-figure, clf
-ax(1) = subplot(3,1,1);
-yyaxis left
-plot(time,sw_dn,'x');ylabel('SW down [W/m^2]')
-yyaxis right
-plot(time,lw_dn,'rx');ylabel('LW down [W/m^2]')
-datetick, set(gca,'XLim',[min(time) max(time)+0.3*rtime])
-if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
-ax(2) = subplot(3,1,2);
-yyaxis left
-plot(time,SWradup,'x'); ylabel('SW up [W/m^2]')
-yyaxis right
-plot(time,LWradup,'rx');ylabel('LW up [W/m^2]')
-datetick
-ax(3) = subplot(3,1,3);
-plot(time,netrad,'go',time,Qnet,'ks'); hold on
-plot([min(time) max(time)],[ 0 0],'k:')
-legend('Net rad','Net all')
-datetick
-ylabel('[W/m^2]')
-linkaxes(ax,'x')
-if isfield(SWIFT,'ID'),
-    print('-dpng',[SWIFT(1).ID '_radfluxes.png'])
-else
-    print('-dpng',['radfluxes.png'])
-end
 
 
-if isfield(SWIFT,'windustar') && length(ustar) == length([SWIFT.windustar]),
-    figure, clf
-    plot(u,ustar,'kx',u,[SWIFT.windustar],'ro'), 
-    legend('COARE','inertial')
-    if isfield(SWIFT,'windustar_directcovar') && length(ustar) == length([SWIFT.windustar_directcovar]),
-        hold on
-        plot(u,[SWIFT.windustar_directcovar],'b.')
-        legend('COARE','inertial','direct covar')
-    else
-    end
-    
-    axis square, grid
-    axis([ 0 15 0 1])
-    xlabel('Measured wind spd [m/s]')
-    ylabel('u_* [m/s]')
-    if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
-
-    if isfield(SWIFT,'ID'),
-        print('-dpng',[SWIFT(1).ID '_ustar.png'])
-    else
-        print('-dpng',['ustar.png'])
-    end
-    
-else
-end
+% rtime = max(time) - min(time);
+% 
+% figure, clf
+% ax(1) = subplot(3,1,1);
+% plot(time,t,'kx',time,ts,'md');
+% legend('air temp','water temp')
+% ylabel('[C]')
+% datetick, set(gca,'XLim',[min(time) max(time)+0.3*rtime])
+% if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
+% ax(2) = subplot(3,1,2);
+% plot(time,hsb,'bx',time,hlh,'r+',time,hbb,'g.',time,hsbb,'c.');
+% legend('Q_{sen}','Q_{latent}','Q_{buoy}','Q_{sbuoy}')
+% if isfield(SWIFT,'Qsen'), 
+%     hold on
+%     plot(time,[SWIFT.Qsen],'kd')
+%     plot([min(time) max(time)],[ 0 0],'k:')
+%     legend('Q_{sen}','Q_{latent}','Q_{buoy}','Q_{sbuoy}','Q_{wT}')
+% else
+% end
+% hold on
+% datetick
+% ylabel('[W/m^2]')
+% ax(3) = subplot(3,1,3);
+% plot(time,u,'kx',time,U10,'b+');
+% datetick
+% legend('measured wind','U_{10}')
+% ylabel('[m/s]')
+% linkaxes(ax,'x')
+% if isfield(SWIFT,'ID'),
+%     print('-dpng',[SWIFT(1).ID '_COAREfluxes.png'])
+% else
+%     print('-dpng',['COAREfluxes.png'])
+% end
+% 
+% 
+% figure, clf
+% ax(1) = subplot(3,1,1);
+% yyaxis left
+% plot(time,sw_dn,'x');ylabel('SW down [W/m^2]')
+% yyaxis right
+% plot(time,lw_dn,'rx');ylabel('LW down [W/m^2]')
+% datetick, set(gca,'XLim',[min(time) max(time)+0.3*rtime])
+% if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
+% ax(2) = subplot(3,1,2);
+% yyaxis left
+% plot(time,SWradup,'x'); ylabel('SW up [W/m^2]')
+% yyaxis right
+% plot(time,LWradup,'rx');ylabel('LW up [W/m^2]')
+% datetick
+% ax(3) = subplot(3,1,3);
+% plot(time,netrad,'go',time,Qnet,'ks'); hold on
+% plot([min(time) max(time)],[ 0 0],'k:')
+% legend('Net rad','Net all')
+% datetick
+% ylabel('[W/m^2]')
+% linkaxes(ax,'x')
+% if isfield(SWIFT,'ID'),
+%     print('-dpng',[SWIFT(1).ID '_radfluxes.png'])
+% else
+%     print('-dpng',['radfluxes.png'])
+% end
+% 
+% 
+% if isfield(SWIFT,'windustar') && length(ustar) == length([SWIFT.windustar]),
+%     figure, clf
+%     plot(u,ustar,'kx',u,[SWIFT.windustar],'ro'), 
+%     legend('COARE','inertial')
+%     if isfield(SWIFT,'windustar_directcovar') && length(ustar) == length([SWIFT.windustar_directcovar]),
+%         hold on
+%         plot(u,[SWIFT.windustar_directcovar],'b.')
+%         legend('COARE','inertial','direct covar')
+%     else
+%     end
+% 
+%     axis square, grid
+%     axis([ 0 15 0 1])
+%     xlabel('Measured wind spd [m/s]')
+%     ylabel('u_* [m/s]')
+%     if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
+% 
+%     if isfield(SWIFT,'ID'),
+%         print('-dpng',[SWIFT(1).ID '_ustar.png'])
+%     else
+%         print('-dpng',['ustar.png'])
+%     end
+% 
+% else
+% end
+% 
+% if isfield(SWIFT,'windustar') && length(tau) == length([SWIFT.time]),
+%     figure, clf
+%     inertialtau = fluxes.rhoa.*[SWIFT.windustar]'.^2;
+%     plot(time,tau,'kx',time,inertialtau,'ro'); datetick;
+%     legend('COARE','inertial')
+%     if isfield(SWIFT,'windustar_directcovar') && length(ustar) == length([SWIFT.windustar_directcovar]),
+%         hold on
+%         directcovartau = fluxes.rhoa.*[SWIFT.windustar_directcovar]'.^2;
+%         plot(time,[SWIFT.windustar_directcovar],'b.')
+%         legend('COARE','inertial','direct covar')
+%     else
+%     end
+% 
+%     grid minor;
+%     xlabel('[UTC]')
+%     ylabel('\tau [N/m^2]')
+% 
+%     if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
+% 
+%     if isfield(SWIFT,'ID'),
+%         print('-dpng',[SWIFT(1).ID '_tau.png'])
+%     else
+%         print('-dpng',['_tau.png'])
+%     end
+% 
+% else
+% end
 
 
 
