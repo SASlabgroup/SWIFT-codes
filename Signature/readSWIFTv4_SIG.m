@@ -121,7 +121,7 @@ while (~feof(fid))
                     burst.Accelerometer(ensemblecount_burst,1) = fread(fid,1,'int16','ieee-le');
                     burst.Accelerometer(ensemblecount_burst,2) = fread(fid,1,'int16','ieee-le');
                     burst.Accelerometer(ensemblecount_burst,3) = fread(fid,1,'int16','ieee-le');
-                    AmbiquityVelocity(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
+                    AmbiuityVelocity(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                     DataSetDescription(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                     TransmitEnergy(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                     VelocityScaling_burst(ensemblecount_burst) = fread(fid,1,'int8','ieee-le');

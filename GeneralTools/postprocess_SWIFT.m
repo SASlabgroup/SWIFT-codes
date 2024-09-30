@@ -19,15 +19,15 @@ else
     slash = '/';
 end
 
-expdir = ['S:' slash 'SEAFAC' slash 'June2024' slash 'NorthMooring'];
+expdir = ['S:' slash 'SEAFAC' slash 'June2024' slash 'SouthMooring'];
 
 % Processing toggles
-rpIMU = false; % Waves
+rpIMU = true; % Waves
 rpSBG = false; % Waves
 rpWXT = false; % MET
 rpY81 = false; % MET
 rpACS = false; % CT
-rpSIG = true; % TKE
+rpSIG = false; % TKE 
 rpAQH = false; % TKE
 rpAQD = false; % TKE
 
@@ -41,12 +41,18 @@ missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
 %% Loop through missions and reprocess
-for im = 1
-
-    disp(['Post-processing ' missions(im).name])
+for im = 1:length(missions)
 
     missiondir = [missions(im).folder slash missions(im).name];
     cd(missiondir)
+
+    diaryfile = [missions(im).name '_postprocess.txt'];
+     if exist(diaryfile,'file')
+        delete(diaryfile);
+     end
+    diary(diaryfile)
+
+    disp(['Post-processing ' missions(im).name])
 
     %% Locate L1 product, skip if does not exist. 
     % Else create 'sinfo' and modify L1 product.
@@ -67,7 +73,7 @@ for im = 1
             else 
                 sinfo.type = 'V3';
             end
-            disp('Saving new L1 product...')
+            disp('Updating L1 product sinfo...')
             save([l1file.folder slash l1file.name],'SWIFT','sinfo')
         end
         % One time, will remove later
@@ -84,7 +90,7 @@ for im = 1
     if rpIMU
         if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_IMU_*.dat']))
             disp('Reprocessing IMU data...')
-            calctype = 'IMUandGPS';
+            calctype = 'GPS';
             filtertype = 'RC';
             saveraw = false;
             interpf = false;
@@ -195,6 +201,8 @@ for im = 1
         print(fh2,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
     end
 
+
+diary off
 end
 
 

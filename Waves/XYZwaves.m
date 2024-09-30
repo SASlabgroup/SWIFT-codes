@@ -231,15 +231,15 @@ Dp = dir(fpindex); % dominant (peak) direction, use peak f
 
 
 %% prune high frequency results
-E( f > maxf ) = [];
-dir( f > maxf ) = [];
-spread( f > maxf ) = [];
-a1( f > maxf ) = [];
-b1( f > maxf ) = [];
-a2( f > maxf ) = [];
-b2( f > maxf ) = [];
-check( f > maxf ) = [];
-f( f > maxf ) = [];
+% E( f > maxf ) = [];
+% dir( f > maxf ) = [];
+% spread( f > maxf ) = [];
+% a1( f > maxf ) = [];
+% b1( f > maxf ) = [];
+% a2( f > maxf ) = [];
+% b2( f > maxf ) = [];
+% check( f > maxf ) = [];
+% f( f > maxf ) = [];
 
 
 else % if not enough points or sufficent sampling rate or data, give 9999

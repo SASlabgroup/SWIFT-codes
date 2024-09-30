@@ -364,18 +364,18 @@ end
 
 
 %% prune high frequency results
-E( f > maxf ) = [];
-Exx( f > maxf ) = [];
-Eyy( f > maxf ) = [];
-Ezz( f > maxf ) = [];
-dir( f > maxf ) = [];
-spread( f > maxf ) = [];
-a1( f > maxf ) = [];
-b1( f > maxf ) = [];
-a2( f > maxf ) = [];
-b2( f > maxf ) = [];
-check( f > maxf ) = [];
-f( f > maxf ) = [];
+% E( f > maxf ) = [];
+% Exx( f > maxf ) = [];
+% Eyy( f > maxf ) = [];
+% Ezz( f > maxf ) = [];
+% dir( f > maxf ) = [];
+% spread( f > maxf ) = [];
+% a1( f > maxf ) = [];
+% b1( f > maxf ) = [];
+% a2( f > maxf ) = [];
+% b2( f > maxf ) = [];
+% check( f > maxf ) = [];
+% f( f > maxf ) = [];
 
 
 else % if not enough points or sufficent sampling rate or data, give 9999
