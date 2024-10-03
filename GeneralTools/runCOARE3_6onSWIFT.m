@@ -33,20 +33,7 @@ jd = time;
 
 %% wind speed and height
 if isfield(SWIFT,'windspd') && any(~isnan([SWIFT.windspd])),
-    u = [SWIFT.windspd]; % vector
-    if isfield(SWIFT, 'driftspd') && any(~isnan([SWIFT.driftspd])),
-        
-        windxyvec = [cosd([SWIFT.winddirR]'), sind([SWIFT.winddirR]')].*[SWIFT.windspd]';
-        drifxyvec = [cosd([SWIFT.driftdirT]'), sind([SWIFT.driftdirT]')].*[SWIFT.driftspd]';
-                
-        for k=1:length(drifxyvec);
-            driftspdrel2wind(k) = dot(drifxyvec(k,:),windxyvec(k,:)/norm(windxyvec(k,:)));
-        end
-
-        
-        u(~isnan(driftspdrel2wind)) = u(~isnan(driftspdrel2wind)) - driftspdrel2wind(~isnan(driftspdrel2wind)); %Only corrects for which there is data
-        % clear windxyvec drifxyvec driftspdrel2wind
-    end
+    u = [SWIFT.windspd]; % vector; since SWIFT drifts, this is rel to water current
 else
     disp('missing wind spd, COARE will skip most results')
     u = NaN; % required parameter, setting to zero remove most results
@@ -209,7 +196,7 @@ print('-djpeg',[cd '\' sprintf('%s_COAREinputraddwnwell.jpeg',SWIFT(1).ID)])
 lat = [SWIFT.lat]; % vector
 lon = [SWIFT.lon]; % vector
 
-%fill in NaN with nanmean
+%fill in NaN with nanmean (toggle with comment)
 lat(isnan(lat)) = nanmean(lat);
 lon(isnan(lon)) = nanmean(lon);
 
@@ -244,16 +231,20 @@ if isfield(SWIFT,'peakwaveperiod') && any(~isnan([SWIFT.peakwaveperiod])),
 else
     cp = NaN;
 end
-%fill in waveperiod NaNmean
-cp(cp ==0) = nanmean(cp);
+% %fill in waveperiod NaNmean (toggle with commment)
+% cp(cp ==0) = nanmean(cp);
+% cp(isnan(cp)) = nanmean(cp);
+cp(cp ==0) = nan; % Fill nan for blank
 
 if isfield(SWIFT,'sigwaveheight') && any(~isnan([SWIFT.sigwaveheight])),
     sigH = [SWIFT.sigwaveheight];
 else
     sigH = NaN;
 end
-
-sigH(sigH ==0) = nanmean(sigH); % Setting blank "0" wh to NaN
+% %fill in waveperiod NaNmean (toggle with commment)
+% sigH(sigH ==0) = nanmean(sigH); % Setting blank "0" wh to NaN
+% sigH(isnan(sigH)) = nanmean(sigH);
+sigH(sigH ==0) = nan; % Fill nan for blank
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Comment OUT unless you
 % want no waves
