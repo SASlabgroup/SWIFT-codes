@@ -7,15 +7,20 @@
 
 % K. Zeiden 07/2024
 
-%% User defined experiment directory (to be later converted to function inputs)
+% Need to consider additional QC steps after processing...
+% Airmar temp, NaN out if below/above -20/50 deg C
+% Wind speed, NaN out above 30 m/s
+
+%% Experiment Directory
+expdir = ['S:' slash 'SEAFAC' slash 'June2024'];
+
+%% Processing toggles
 
 if ispc
     slash = '\';
 else
     slash = '/';
 end
-
-expdir = ['S:' slash 'SEAFAC' slash 'June2024'];
 
 % Processing toggles
 rpIMU = false; % Waves
@@ -31,7 +36,7 @@ rpAQD = false; % TKE
 plotL1L2 = true;
 
 % List of missions
-missions = dir([expdir slash 'SWIFT1*']);
+missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
 %% Loop through missions and reprocess

@@ -34,24 +34,6 @@ plotflag = true;  % binary flag for plotting (compiled plots, not individual plo
 fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
 fixpositions = false; % binary flag to use "filloutliers" to fix spurious positions.   Use with care. 
 
-% % QC Parameters
-% minwaveheight = 0;% minimum wave height in data screening
-% minsalinity = 0;% PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
-% maxdriftspd = 5;% m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
-% maxwindspd = 30;% m/s for malfunctioning Airmars
-% minairtemp = -20;% min airtemp
-% maxairtemp = 50;% max airtemp
-% 
-% disp('-------------------------------------')
-% disp('QC settings:')
-% disp(['Minimum wave height: ' num2str(minwaveheight) ' m'])
-% disp(['Minimum salinity: ' num2str(minsalinity) ' PSU'])
-% disp(['Maximum drift speed: ' num2str(maxdriftspd) ' ms^{-1}'])
-% disp(['Maximum wind speed: ' num2str(maxwindspd) ' ms^{-1}'])
-% disp(['Minimum air temp: ' num2str(minairtemp) ' C'])
-% disp(['Maximum air temp: ' num2str(maxairtemp) ' C'])
-% disp('-------------------------------------')
-
 % List missions
 missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
@@ -134,16 +116,21 @@ for iburst = 1:nburst
         oneSWIFT = rmfield(oneSWIFT,'wavehistogram');
     end
     
-    %%% Increment main structure %%%
+    %%% Add burst to SWIFT structure %%%
     burstpayloads = string(fieldnames(oneSWIFT));
     npayloads(iburst) = length(burstpayloads);
 
-    if iburst == 1
+    % Loop through paylaods on current burst, add to SWIFT structure
+    for ipay = 1:npayloads(iburst)
+        SWIFT(iburst).(burstpayloads{ipay}) = oneSWIFT.(burstpayloads{ipay});
+    end
+
+    % List initial payloads, as well as any missing or additional payloads
+    if iburst == 1 % Initial payloads
         allpayloads = burstpayloads;
         disp('Initial payloads:')
         disp(allpayloads)
-    elseif iburst ~= 1 && npayloads(iburst) > length(allpayloads)
-
+    elseif iburst ~= 1 && npayloads(iburst) > length(allpayloads) % Additional payloads
         isnew = false(npayloads(iburst),1);
         for ip = 1:npayloads(iburst)
             isnew(ip) = ~any(strcmp(burstpayloads(ip),allpayloads));
@@ -152,9 +139,7 @@ for iburst = 1:nburst
         disp(['New payloads in burst file ' num2str(iburst) ':'])
         disp(newpayloads)
         allpayloads = burstpayloads;
-
-    elseif iburst ~= 1 && npayloads(iburst) < length(allpayloads)
-        
+    elseif iburst ~= 1 && npayloads(iburst) < length(allpayloads)% Missing payloads
         ismissing = false(length(allpayloads),1);
         for ip = 1:length(allpayloads)
             ismissing(ip) = ~any(strcmp(allpayloads(ip),burstpayloads));
@@ -164,109 +149,14 @@ for iburst = 1:nburst
         disp(missingpayloads)
     end
 
-    for ipay = 1:npayloads(iburst)
-        SWIFT(iburst).(burstpayloads{ipay}) = oneSWIFT.(burstpayloads{ipay});
-    end
-    
-    %%% Original Increment Method -- reinitialize if new payloads, skip if
-    %%% fewer payloads... misses a lot of good data
-    % % First SBD: set the structure fields as the standard
-    % if iburst == 1 && voltage ~= 9999 
-    %     SWIFT(iburst) = oneSWIFT;
-    %     initpayloads = burstpayloads;
-    %     disp(['Initial payloads in burst file ' num2str(iburst) ':'])
-    %     disp(initpayloads)
-    % 
-    % elseif iburst == 1 && voltage == 9999
-    % 
-    %     badburst(iburst) = true;
-    %     initpayloads = [];
-    % 
-    % % Payloads match: increment
-    % elseif iburst > 1 && npayloads(iburst) == length(initpayloads)
-    %     SWIFT(iburst) = oneSWIFT;
-    % 
-    % % Additional payloads: favor that new structure (removing other)
-    % elseif iburst > 1 && npayloads(iburst) > length(initpayloads)
-    % 
-    %     isnew = false(npayloads(iburst),1);
-    %     for ip = 1:npayloads(iburst)
-    %        isnew(ip) = ~any(strcmp(burstpayloads(ip),initpayloads));
-    %     end
-    %     newpayloads = burstpayloads(isnew);
-    % 
-    %     clear SWIFT
-    %     badburst(iburst-1) = true;
-    %     SWIFT(iburst) = oneSWIFT;
-    %     disp(['Found extra payloads in burst file ' num2str(iburst) ':'])
-    %     disp(newpayloads)
-    %     disp('...re-initializing SWIFT structure...')
-    %     initpayloads = burstpayloads; % reset the prefer field names
-    % 
-    % % Fewer paylaods: skip that burst
-    % elseif iburst > 1 && npayloads(iburst) < length(initpayloads) || voltage==9999
-    % 
-    %     ismissing = false(length(initpayloads),1);
-    %     for ip = 1:length(initpayloads)
-    %        ismissing(ip) = ~any(strcmp(initpayloads(ip),burstpayloads));
-    %     end
-    %     missingpayloads = initpayloads(ismissing);
-    % 
-    %     disp(['Missing payloads in burst file ' num2str(iburst) ':'])
-    %     disp(missingpayloads)
-    %     SWIFT(iburst) = SWIFT(iburst-1); % placeholder, which will be removed when badburst applied
-    %     badburst(iburst) = true;
-    %     disp('...skipping burst...')
-    % end
-        
-    %%% Screen the bad data (usually out of the water) %%%
-    % No data
-    if isempty(oneSWIFT.lon) || isempty(oneSWIFT.lat) || isempty(oneSWIFT.time)
-        badburst(iburst) = true;
-        disp('No position or timestamp!')
-    end
-    % No position
-    if oneSWIFT.lon == 0 || ~isnumeric(oneSWIFT.lon) || isnan(oneSWIFT.lon)
-        badburst(iburst) = true;
-        disp('No position!')
-    end
-    % Waves too small
-    if isfield(oneSWIFT,'sigwaveheight')
-        if oneSWIFT.sigwaveheight < minwaveheight || oneSWIFT.sigwaveheight >= 999
-            badburst(iburst) = true;
-            disp('Waves too small, removing burst.')
-        end
-    end
-    % Salinity too small
-    if isfield(oneSWIFT,'salinity') %&& ~micro
-        if all(oneSWIFT.salinity < minsalinity) % & all(~isnan(oneSWIFT.salinity)),
-            badburst(iburst) = true;
-            disp('Salinity too low, removing burst.')
-        end
-    end
-    % Drift speed limit
-    if isfield(oneSWIFT,'driftspd')
-        if oneSWIFT.driftspd > maxdriftspd
-            badburst(iburst) = true;
-            disp('Speed too fast, removing burst.')
-        end
-    end
-
      disp('=================================')
     
 % End burst loop
 end
 diary off
 
-% Remove bursts which had less payloads
-% badburst(npayloads < length(initpayloads)) = true;
+%% Fill empty SWIFT fields due to missing payloads in a burst
 
-%% Apply QC
-
-% SWIFT(badburst) = [];
-% battery(badburst) = [];
-
-%% Fill empty SWIFT fields
 payloads = fieldnames(SWIFT);
 npay = length(payloads);
 nburst = length(SWIFT);

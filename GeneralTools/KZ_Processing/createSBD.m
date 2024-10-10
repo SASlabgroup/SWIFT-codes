@@ -12,15 +12,18 @@
 %               9/2019  changed time convention to use start of the burst,rather than end
 %
 
+%% Experiment directory 
+
+expdir = 'S:\SEAFAC\June2024';
+SBDfold = 'ProcessedSBD';
+
+%% Sampling Parameters
+
 if ispc
     slash = '\';
 else
     slash = '/';
 end
-
-% Experiment directory and sampling parameters (user defined)
-expdir = 'S:\SEAFAC\June2024';
-SBDfold = 'ProcessedSBD';
 
 % Sampling Parameters
 burstinterval = 12; % minutes between bursts
