@@ -40,12 +40,12 @@ missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
 %% Loop through missions and reprocess
-for im = 1:length(missions)
+for im = 1%:length(missions)
 
     missiondir = [missions(im).folder slash missions(im).name];
     cd(missiondir)
 
-    diaryfile = ['L3_' missions(im).name '_postprocessSWIFT.txt'];
+    diaryfile = [missions(im).name '_L3_postprocessSWIFT.txt'];
      if exist(diaryfile,'file')
         delete(diaryfile);
      end

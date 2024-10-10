@@ -42,7 +42,7 @@ missiondir = [missions(im).folder slash missions(im).name];
 cd(missiondir)
 sname = missions(im).name;
 
-diaryfile = ['L0_' missions(im).name '_createSBD.txt'];
+diaryfile = [missions(im).name '_L0_createSBD.txt'];
 if exist(diaryfile,'file')
 delete(diaryfile);
 end

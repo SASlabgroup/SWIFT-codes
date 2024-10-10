@@ -49,7 +49,7 @@ for im = 1%:length(missions)
     end
     
     % Create diary file
-     diaryfile = ['L2_' missions(im).name '_pruneSWIFT.txt'];
+     diaryfile = [missions(im).name '_L2_pruneSWIFT.txt'];
      if exist(diaryfile,'file')
         delete(diaryfile);
      end

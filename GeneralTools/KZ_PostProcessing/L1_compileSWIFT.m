@@ -31,8 +31,6 @@ end
 
 % Processing parameters
 plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
-fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
-fixpositions = false; % binary flag to use "filloutliers" to fix spurious positions.   Use with care. 
 
 % List missions
 missions = dir([expdir slash 'SWIFT*']);
@@ -47,7 +45,7 @@ cd(missiondir)
 sname = missions(im).name;
 
 % Create diary file
- diaryfile = ['L1_' missions(im).name '_compileSWIFT.txt'];
+ diaryfile = [missions(im).name '_L1_compileSWIFT.txt'];
  if exist(diaryfile,'file')
     delete(diaryfile);
  end
@@ -154,7 +152,6 @@ for iburst = 1:nburst
     
 % End burst loop
 end
-diary off
 
 %% Fill empty SWIFT fields due to missing payloads in a burst
 
@@ -299,14 +296,14 @@ end
 if micro
     save([missiondir slash 'micro' sname '_L1.mat'],'SWIFT*')
 else
-    save([missiondir slash sname '_L1.mat'],'SWIFT',sinfo)
+    save([missiondir slash sname '_L1.mat'],'SWIFT','sinfo')
 end
 
 %% Plot
 
 if plotflag
     
-    l1file = dir([missiondir slash '*L2.mat']);
+    l1file = dir([missiondir slash '*L1.mat']);
     if strcmp(sinfo.type,'V3')
     fh = plotSWIFTV3(SWIFT);
     else
@@ -318,5 +315,7 @@ if plotflag
 end
 
 clear SWIFT
+
+diary off
 
 end % End mission loop
