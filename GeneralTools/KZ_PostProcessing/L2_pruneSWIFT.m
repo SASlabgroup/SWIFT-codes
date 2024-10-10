@@ -28,7 +28,7 @@ disp(['Minimum salinity: ' num2str(minsalinity) ' PSU'])
 disp(['Maximum drift speed: ' num2str(maxdriftspd) ' ms^{-1}'])
 disp('-------------------------------------')
 
-% List missions
+%% List missions
 missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
@@ -40,16 +40,16 @@ for im = 1%:length(missions)
     sname = missions(im).name;
 
     % Load L1 file
-    sfile = dir([missiondir slash '*SWIFT*L1.mat']);
-    if ~isempty(sfile) 
-        load([sfile.folder slash sfile.name],'SWIFT','sinfo');
+    l1file = dir([missiondir slash '*SWIFT*L1.mat']);
+    if ~isempty(l1file) 
+        load([l1file.folder slash l1file.name],'SWIFT','sinfo');
     else %  Exit reprocessing if no L1 product exists
         warning(['No L1 product found for ' missiondir(end-16:end) '. Skipping...'])
         return
     end
     
     % Create diary file
-     diaryfile = [missions(im).name '_pruneSWIFT.txt'];
+     diaryfile = ['L2_' missions(im).name '_pruneSWIFT.txt'];
      if exist(diaryfile,'file')
         delete(diaryfile);
      end
@@ -92,13 +92,20 @@ for im = 1%:length(missions)
      % Remove out-of-water bursts
      SWIFT(outofwater) = [];
 
+     % Save L2 file
+     save([missiondir slash sname '_L2.mat'],'SWIFT','sinfo')
+
      % Plot
      if plotflag
-     plotSWIFT(SWIFT)
-     end
-
-     % Save L2 file
-     save([missiondir slash sname '_L2.mat'],'SWIFT')
+        l2file = dir([missiondir slash '*L2.mat']);
+        if strcmp(sinfo.type,'V3')
+        fh = plotSWIFTV3(SWIFT);
+        else
+            fh = plotSWIFTV4(SWIFT);
+        end
+        set(fh,'Name',l2file.name(1:end-4))
+        print(fh,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
+      end
 
      % Turn off diary
      diary off

@@ -22,6 +22,22 @@ else
     slash = '/';
 end
 
+%% Load existing L3 product, or L2 product if does not exist. If no L3 product, return to function
+
+l2file = dir([missiondir slash '*SWIFT*L2.mat']);
+l3file = dir([missiondir slash '*SWIFT*L3.mat']);
+
+if ~isempty(l3file) % First check to see if there is an existing L3 file to load
+    sfile = l3file;
+    load([sfile.folder slash sfile.name],'SWIFT','sinfo');
+elseif isempty(l3file) && ~isempty(l2file)% If not, load L1 file
+    sfile = l2file;
+    load([sfile.folder slash sfile.name],'SWIFT','sinfo');
+else %  Exit reprocessing if no L2 or L3 product exists
+    warning(['No L2 or L3 product found for ' missiondir(end-16:end) '. Skipping...'])
+    return
+end
+
 %% Internal Toggles
 
 % Data Load/Save Toggles
@@ -49,21 +65,6 @@ else
     ftype = '.mat';
 end
 
-%% Load or create SWIFT structure, create SIG structure, list burst files
-
-l1file = dir([missiondir slash '*SWIFT*L1.mat']);
-l2file = dir([missiondir slash '*SWIFT*L2.mat']);
-
-if ~isempty(l2file) % First check to see if there is an existing L2 file to load
-    sfile = l2file;
-    load([sfile.folder slash sfile.name],'SWIFT','sinfo');
-elseif isempty(l2file) && ~isempty(l1file)% If not, load L1 file
-    sfile = l1file;
-    load([sfile.folder slash sfile.name],'SWIFT','sinfo');
-else %  Exit reprocessing if no L1 or L2 product exists
-    warning(['No L1 or L2 product found for ' missiondir(end-16:end) '. Skipping...'])
-    return
-end
 burstreplaced = false(length(SWIFT),1);
 badaqh = false(length(SWIFT),1);
 
@@ -266,7 +267,22 @@ if ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
 SWIFT = SWIFT(isort);
 end
 
-%% Log reprocessing and flags, then save new L2 file or overwrite existing one
+%% Save AQH Structure + Plot %%%%%%%%
+
+if opt.saveAQH
+   save([sfile.folder slash sfile.name(1:end-7) '_burstavgAQH.mat'],'AQH')
+end
+
+% Plot burst Averaged SWIFT Signature Data
+catAQH(AQH,'plot');
+set(gcf,'Name',sfile.name(1:end-7))
+if opt.saveplots
+    figname = [missiondir slash get(gcf,'Name')];
+    print([figname '_AQH'],'-dpng')
+    close gcf
+end
+
+%% Log reprocessing and flags, then save new L3 file or overwrite existing one
 
 params = opt;
 
@@ -282,23 +298,10 @@ sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).flags.badaqh = badaqh;
 sinfo.postproc(ip).params = params;
 
-save([sfile.folder slash sfile.name(1:end-7) '_L2.mat'],'SWIFT','sinfo')
+save([sfile.folder slash sfile.name(1:end-7) '_L3.mat'],'SWIFT','sinfo')
 
-%% Save SIG Structure + Plot %%%%%%%%
 
-if opt.saveAQH
-   save([sfile.folder slash sfile.name(1:end-7) '_burstavgAQH.mat'],'AQH')
-end
-
-% Plot burst Averaged SWIFT Signature Data
-catAQH(AQH,'plot');
-set(gcf,'Name',sfile.name(1:end-7))
-if opt.saveplots
-    figname = [missiondir slash get(gcf,'Name')];
-    print([figname '_AQH'],'-dpng')
-    close gcf
-end
-
+%% Return to mission directory
 cd(missiondir)
 
 end

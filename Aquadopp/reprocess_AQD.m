@@ -19,6 +19,22 @@ else
     slash = '/';
 end
 
+%% Load existing L3 product, or L2 product if does not exist. If no L3 product, return to function
+
+l2file = dir([missiondir slash '*SWIFT*L2.mat']);
+l3file = dir([missiondir slash '*SWIFT*L3.mat']);
+
+if ~isempty(l3file) % First check to see if there is an existing L3 file to load
+    sfile = l3file;
+    load([sfile.folder slash sfile.name],'SWIFT','sinfo');
+elseif isempty(l3file) && ~isempty(l2file)% If not, load L1 file
+    sfile = l2file;
+    load([sfile.folder slash sfile.name],'SWIFT','sinfo');
+else %  Exit reprocessing if no L2 or L3 product exists
+    warning(['No L2 or L3 product found for ' missiondir(end-16:end) '. Skipping...'])
+    return
+end
+
 %% Parameters
 
 minamp = 30; % amplitude cutoff, usually 30 or 40
@@ -28,22 +44,6 @@ z = 1.25:0.5:20.75;
 % Raw Doppler velocity precision of 1 MHz Aquadopp
 Vert_prec =  .074; % m/s
 Hori_prec = .224; % m/s
-
-%% Load existing L2 product, or L1 product if does not exist. If no L1 product, return to function
-
-l1file = dir([missiondir slash '*SWIFT*L1.mat']);
-l2file = dir([missiondir slash '*SWIFT*L2.mat']);
-
-if ~isempty(l2file) % First check to see if there is an existing L2 file to load
-    sfile = l2file;
-    load([sfile.folder slash sfile.name],'SWIFT','sinfo');
-elseif isempty(l2file) && ~isempty(l1file)% If not, load L1 file
-    sfile = l1file;
-    load([sfile.folder slash sfile.name],'SWIFT','sinfo');
-else %  Exit reprocessing if no L1 or L2 product exists
-    warning(['No L1 or L2 product found for ' missiondir(end-16:end) '. Skipping...'])
-    return
-end
 
 burstreplaced = NaN(length(SWIFT),1);
 
@@ -136,7 +136,7 @@ for iburst = 1:length(SWIFT)
     end
 end
 
-%% Log reprocessing and flags, then save new L2 file or overwrite existing one
+%% Log reprocessing and flags, then save new L3 file or overwrite existing one
 
 if isfield(sinfo,'postproc')
 ip = length(sinfo.postproc)+1; 
@@ -150,7 +150,7 @@ sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).flags = [];
 sinfo.postproc(ip).params = [];
 
-save([sfile.folder slash sfile.name(1:end-6) 'L2.mat'],'SWIFT','sinfo')
+save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')
 
 %% End function
 end

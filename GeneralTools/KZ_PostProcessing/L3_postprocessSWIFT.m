@@ -1,13 +1,20 @@
 % [SWIFT,sinfo] = postprocess_SWIFT(expdir)
 
 % Master post-processing function, that calls sub-functions to reprocess
-% each different type of raw SWIFT data.
+% each different type of raw SWIFT data and create an L3 product.
 % L1 product must have been created prior to running this script,
-% by running 'compileSWIFT.m'
+% by running 'compileSWIFT.m', and L2 created by running 'qcSWIFT.m';
 
 % K. Zeiden 07/2024
 
-%% User defined experiment directory (to be later converted to function inputs)
+% Need to consider additional QC steps after processing...
+% Airmar temp, NaN out if below/above -20/50 deg C
+% Wind speed, NaN out above 30 m/s
+
+%% Experiment Directory
+expdir = ['S:' slash 'SEAFAC' slash 'June2024'];
+
+%% Processing toggles
 
 if ispc
     slash = '\';
@@ -15,20 +22,18 @@ else
     slash = '/';
 end
 
-expdir = ['S:' slash 'SEAFAC' slash 'June2024'];
-
 % Processing toggles
-rpIMU = true; % Waves
-rpSBG = true; % Waves
-rpWXT = true; % MET
+rpIMU = false; % Waves
+rpSBG = false; % Waves
+rpWXT = false; % MET
 rpY81 = true; % MET
-rpACS = true; % CT
-rpSIG = true; % TKE 
-rpAQH = true; % TKE
-rpAQD = true; % TKE
+rpACS = false; % CT
+rpSIG = false; % TKE 
+rpAQH = false; % TKE
+rpAQD = false; % TKE
 
 % Plotting toggle
-plotL1L2 = true;
+plotflag = true;
 
 % List of missions
 missions = dir([expdir slash 'SWIFT*']);
@@ -40,7 +45,7 @@ for im = 1:length(missions)
     missiondir = [missions(im).folder slash missions(im).name];
     cd(missiondir)
 
-    diaryfile = [missions(im).name '_postprocessSWIFT.txt'];
+    diaryfile = ['L3_' missions(im).name '_postprocessSWIFT.txt'];
      if exist(diaryfile,'file')
         delete(diaryfile);
      end
@@ -48,43 +53,22 @@ for im = 1:length(missions)
 
     disp(['Post-processing ' missions(im).name])
 
-    %% Locate L1 product, skip if does not exist. 
-    % Else create 'sinfo' and modify L1 product.
-    l1file = dir([missiondir slash '*L1.mat']);
-    if isempty(l1file)
-        disp(['No L1 product found for ' missiondir(end-16:end) '. Skipping...'])
+    %% Locate L2 product, skip if does not exist. 
+
+    l2file = dir([missiondir slash '*L2.mat']);
+
+    if isempty(l2file)
+        disp(['No L2 product found for ' missiondir(end-16:end) '. Skipping...'])
+        return
     else
-        load([l1file.folder slash l1file.name],'SWIFT');
-        if isfield(SWIFT,'ID')
-            disp('Create information structure ''sinfo''')
-            sinfo.ID = SWIFT(1).ID;
-            sinfo.CTdepth = SWIFT(1).CTdepth;
-            if isfield(SWIFT,'metheight')
-            sinfo.metheight = SWIFT(1).metheight;
-            end
-            if isfield(SWIFT,'signature')
-                sinfo.type = 'V4';
-            else 
-                sinfo.type = 'V3';
-            end
-            disp('Updating L1 product sinfo...')
-            save([l1file.folder slash l1file.name],'SWIFT','sinfo')
-        end
-        % One time, will remove later
-        if isfield(SWIFT,'signature')
-            sinfo.type = 'V4';
-            save([l1file.folder slash l1file.name],'sinfo','-append')
-            else
-                sinfo.type = 'V3';
-                save([l1file.folder slash l1file.name],'sinfo','-append')
-        end
+        load([l2file.folder slash l2file.name],'SWIFT','sinfo');
     end
     
     %% Reprocess IMU
     if rpIMU
         if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_IMU_*.dat']))
             disp('Reprocessing IMU data...')
-            calctype = 'GPS';
+            calctype = 'IMU';
             filtertype = 'RC';
             saveraw = false;
             interpf = false;
@@ -176,28 +160,19 @@ for im = 1:length(missions)
         end
     end
 
-    %% Re-load L1 and L2 product and plot each for comparison
+    %% Plot
 
-    load([l1file.folder slash l1file.name],'SWIFT','sinfo');
-    SWIFTL1 = SWIFT;
-    l2file = dir([missiondir slash '*L2.mat']);
-    load([l2file.folder slash l2file.name],'SWIFT');
-    SWIFTL2 = SWIFT;
+    l3file = dir([missiondir slash '*L3.mat']);
 
-    if plotL1L2
+    if plotflag
         if strcmp(sinfo.type,'V3')
-        fh1 = plotSWIFTV3(SWIFTL1);
-        fh2 = plotSWIFTV3(SWIFTL2);
+        fh = plotSWIFTV3(SWIFT);
         else
-            fh1 = plotSWIFTV4(SWIFTL1);
-            fh2 = plotSWIFTV4(SWIFTL2);
+            fh = plotSWIFTV4(SWIFT);
         end
-        print(fh1,[l1file.folder slash l1file.name(1:end-4)],'-dpng')
-        print(fh2,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
+        set(fh,'Name',l3file.name(1:end-4))
+        print(fh,[l3file.folder slash l3file.name(1:end-4)],'-dpng')
     end
-
-    close all
-
 
 diary off
 end

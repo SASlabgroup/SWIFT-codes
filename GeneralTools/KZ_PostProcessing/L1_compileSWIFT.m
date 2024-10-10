@@ -15,19 +15,19 @@
 
 % K. Zeiden 10/01/2024
 
-%% Experiment directory and QC parameters (user defined)
+%% Experiment directory
+expdir = 'S:\SEAFAC\June2024';
+
+% SBD folder
+SBDfold = 'ProcessedSBD';
+
+%% QC parameters (user defined)
 
 if ispc
     slash = '\';
 else
     slash = '/';
 end
-
-% Experiment Directory
-expdir = 'S:\SEAFAC\June2024';
-
-% SBD folder
-SBDfold = 'ProcessedSBD';
 
 % Processing parameters
 plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
@@ -40,13 +40,14 @@ missions = missions([missions.isdir]);
 
 %% Loop through missions
 
-for im = 1:length(missions)
+for im = 1%:length(missions)
 
 missiondir = [missions(im).folder slash missions(im).name];
 cd(missiondir)
 sname = missions(im).name;
 
- diaryfile = [missions(im).name '_compileSWIFT.txt'];
+% Create diary file
+ diaryfile = ['L1_' missions(im).name '_compileSWIFT.txt'];
  if exist(diaryfile,'file')
     delete(diaryfile);
  end
@@ -193,10 +194,53 @@ for ipay = 1:npay
 
 end
 
-%% Sort final structure
+%% Sort final structure by time
 [~,tinds] = sort([SWIFT.time]);
 SWIFT = SWIFT(tinds);
 battery = battery(tinds);
+
+%% Calculate drift speed 
+%   Drift speed is included from the Airmar results, but not always avail.
+%   Compute drift speed by differencing position.
+%   Note that wind slip, which is 1%, is not removed.
+%   NaN out values associated with large time gaps.
+
+if length(SWIFT) > 3
+    
+    time = [SWIFT.time];
+    lat = [SWIFT.lat];
+    lon = [SWIFT.lon];
+    dt = gradient(time);
+    dlondt = gradient(lon,time);
+    dxdt = deg2km(dlondt,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( 24*3600 ); % m/s
+    dlatdt = gradient(lat,time); % deg per day
+    dydt = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
+    dxdt(isinf(dxdt)) = NaN;
+    dydt(isinf(dydt)) = NaN;
+    speed = sqrt(dxdt.^2 + dydt.^2); % m/s
+    direction = -180 ./ 3.14 .* atan2(dydt,dxdt); % cartesian direction [deg]
+    direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
+    direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90 -> 0
+
+    for si = 1:length(SWIFT)
+        if si == 1 || si == length(SWIFT) || dt(si) > 1/12
+            SWIFT(si).driftspd = NaN;
+            SWIFT(si).driftdirT = NaN;
+        else
+            SWIFT(si).driftspd = speed(si);
+            SWIFT(si).driftdirT = direction(si);
+        end
+    end
+    
+    
+else
+
+    for si = 1:length(SWIFT)
+        SWIFT(si).driftspd = NaN;
+        SWIFT(si).driftdirT = NaN;
+    end
+
+end
 
 %% Enforce a single value for CT and MET sensor heights
 
@@ -212,134 +256,17 @@ if isfield(SWIFT,'metheight')
     end
 end
 
-
-%% Fill position outliers
-
-if fixpositions
-    [cleanlon,cloni] = filloutliers([SWIFT.lon],'linear');
-    [cleanlat,clati] = filloutliers([SWIFT.lat],'linear');
-    if cloni == clati
-        for ci = find(cloni)
-            SWIFT(ci).lon = cleanlon(ci);
-            SWIFT(ci).lat = cleanlat(ci);
-        end
-        disp(['Filled ' num2str(sum(cloni)) ' position outliers.'])
-    end
-end
-
-%% Recalculate drift (note that wind slip, which is 1%, is not removed)
-% Drift speed is included from the Airmar results, 
-% but that sensor is not always available or included
-% (so simpler to just calculate it from differencing positions).
-
-if length(SWIFT) > 3
-    
-    time = [SWIFT.time];%[time tinds ] = sort(time);
-    lat = [SWIFT.lat]; %lat = lat(tinds);
-    lon = [SWIFT.lon]; %lon = lon(tinds);
-    dlondt = gradient(lon,time); % deg per day
-    dxdt = deg2km(dlondt,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( 24*3600 ); % m/s
-    dlatdt = gradient(lat,time); % deg per day
-    dydt = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
-    dxdt(isinf(dxdt)) = NaN;
-    dydt(isinf(dydt)) = NaN;
-    speed = sqrt(dxdt.^2 + dydt.^2); % m/s
-    direction = -180 ./ 3.14 .* atan2(dydt,dxdt); % cartesian direction [deg]
-    direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
-    direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90->0
-
-    for si = 1:length(SWIFT)
-        if si == 1 || si == length(SWIFT)
-            SWIFT(si).driftspd = NaN;
-            SWIFT(si).driftdirT = NaN;
-        else
-            SWIFT(si).driftspd = speed(si);
-            SWIFT(si).driftdirT = direction(si);
-        end
-    end
-    
-    %     % remove last burst, if big change in direction (suggests recovery by ship)
-    %     dirchange = abs( SWIFT( length(SWIFT) - 2).driftdirT  - SWIFT( length(SWIFT) - 1).driftdirT );
-    %     if dirchange > 90,
-    %         disp('removing last burst, suspect includes ship recovery')
-    %         SWIFT( length(SWIFT) - 1).driftdirT = NaN;
-    %         SWIFT( length(SWIFT) - 1).driftspd = NaN;
-    %         SWIFT( length(SWIFT) ) = [];
-    %         battery( length(SWIFT) ) = [];
-    %     end
-    
-elseif length(SWIFT) <= 3
-    for si = 1:length(SWIFT)
-        SWIFT(si).driftspd = NaN;
-        SWIFT(si).driftdirT = NaN;
-    end
-end
-
-% Quality control by removing drift results associated with large time gaps
-if length([SWIFT.time]) > 1
-    dt = gradient([SWIFT.time]);
-    for si = 1:length(SWIFT)
-        if dt(si) > 1/12 % 1/12 of day is two hours
-            SWIFT(si).driftspd = NaN;
-            SWIFT(si).driftdirT = NaN;
-        end
-    end
-end
-
-% Quality control drift speeds too fast (prob on deck) with new drift spd
-if length([SWIFT.time]) > 1 && isfield(SWIFT(1),'driftspd')
-        toofast = [SWIFT.driftspd] > maxdriftspd;
-        SWIFT( toofast ) =[];
-        battery( toofast ) = [];
-end
-
-%% Extrapolate missing low frequencies of wave energy spectra %%
-%   Require energy at lowest frequenc to be zero.
-%   Not neccessary if post-processing for raw displacements.
-%   Less necessary after Oct 2017 rev of onboard processing with improved RC filter.
-
-if fixspectra && isfield(SWIFT,'wavespectra')
-    for si = 1:length(SWIFT)
-    notzero = find(SWIFT(si).wavespectra.energy ~= 0 & SWIFT(si).wavespectra.freq > 0.04);
-    tobereplaced =  find(SWIFT(si).wavespectra.energy == 0 & SWIFT(si).wavespectra.freq > 0.04);
-        if length(notzero) > 10
-            E = interp1([0.04; SWIFT(si).wavespectra.freq(notzero)],[0; SWIFT(si).wavespectra.energy(notzero)],SWIFT(si).wavespectra.freq);
-            SWIFT(si).wavespectra.energy(tobereplaced) = E(tobereplaced);
-            df = median(diff(SWIFT(si).wavespectra.freq));
-            SWIFT(si).sigwaveheight = 4*sqrt(sum(SWIFT(si).wavespectra.energy,'omitnan')*df);
-        end
-    end
-end
-
-%% Quality control wind speeds
-if length([SWIFT.time]) > 1 && isfield(SWIFT,'windspd')
-    for si = 1:length(SWIFT)
-        if SWIFT(si).windspd > maxwindspd
-            SWIFT(si).windspd = NaN;
-            SWIFT(si).winddirT = NaN;
-            SWIFT(si).winddirR = NaN;
-        end
-    end
-end
-
-%% Quality control airmar temperature
-if isfield(SWIFT,'airtemp')
-    for si = 1:length(SWIFT)
-        if SWIFT(si).airtemp == 0.0 || SWIFT(si).airtemp < minairtemp || SWIFT(si).airtemp > maxairtemp
-            SWIFT(si).airtemp = NaN;
-            SWIFT(si).windspd = NaN;
-        end
-    end
-end 
-
 %% Sort the microSWIFT onboard processing, using the battery voltage as a flag 
 % only applies to v1 microSWIFTs from 2022
 
 IMU = find(battery==0);
 GPS = find(battery==1);
-
-if ~isempty(IMU), SWIFT_IMU = SWIFT(IMU); end
-if ~isempty(GPS), SWIFT_GPS = SWIFT(GPS); end
+if ~isempty(IMU)
+    SWIFT_IMU = SWIFT(IMU);
+end
+if ~isempty(GPS)
+    SWIFT_GPS = SWIFT(GPS);
+end
 
 %% Fill in the ID field from mission directory name if NaN
 
@@ -350,28 +277,43 @@ for si = find(idnan)
     SWIFT(si).ID = ID;
 end
 
+%% Create sinfo structure
+
+if ~micro
+    disp('Create information structure ''sinfo''')
+    sinfo.ID = SWIFT(1).ID;
+    sinfo.CTdepth = SWIFT(1).CTdepth;
+    if isfield(SWIFT,'metheight')
+    sinfo.metheight = SWIFT(1).metheight;
+    end
+    if isfield(SWIFT,'signature')
+        sinfo.type = 'V4';
+    else 
+        sinfo.type = 'V3';
+    end
+end
+
+
 %% Save L1 file
 
 if micro
     save([missiondir slash 'micro' sname '_L1.mat'],'SWIFT*')
-elseif length([SWIFT.time]) > 1
-    save([missiondir slash sname '_L1.mat'],'SWIFT')
+else
+    save([missiondir slash sname '_L1.mat'],'SWIFT',sinfo)
 end
 
 %% Plot
 
 if plotflag
     
-    plotSWIFT(SWIFT)
-    
-    % battery plot
-    if any(~isnan(battery))
-        figure(7), clf,
-        plot([SWIFT.time],battery,'kx','linewidth',3)
-        datetick, grid
-        ylabel('Voltage')
-        print('-dpng',[sname(1:7) '_battery.png'])
+    l1file = dir([missiondir slash '*L2.mat']);
+    if strcmp(sinfo.type,'V3')
+    fh = plotSWIFTV3(SWIFT);
+    else
+        fh = plotSWIFTV4(SWIFT);
     end
+    set(fh,'Name',l1file.name(1:end-4))
+    print(fh,[l1file.folder slash l1file.name(1:end-4)],'-dpng')
     
 end
 
