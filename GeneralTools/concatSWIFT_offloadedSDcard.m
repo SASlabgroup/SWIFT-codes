@@ -14,18 +14,12 @@
 
 clear all, close all, clc
 
-if ispc
-    slash = '\';
-else
-    slash = '/';
-end
-
 plotflag = 1;  % binary flag for plotting
 burstinterval = 12; % minutes between bursts
 burstlength = 512/60; % minutes of sampling during each burst
 
-dirpath = ['.' slash];%'~/Desktop/'; '~/Dropbox/SWIFT_v3.x/TestData/';
-sourcedir = '';%'SWIFT11_02Oct2014_SDcard';%'SWIFT15_Test_19Jun2014'%'SWIFTdata_27Apr2014' %'SWIFT15_LakeWA_Stereo_09May2014';
+dirpath = './'%'~/Desktop/'; '~/Dropbox/SWIFT_v3.x/TestData/';
+sourcedir = ''%'SWIFT11_02Oct2014_SDcard';%'SWIFT15_Test_19Jun2014'%'SWIFTdata_27Apr2014' %'SWIFT15_LakeWA_Stereo_09May2014';
 
 %%  glob all processed files (per instrument) 
 % and put these all in one directory (skip if already in one directory)
@@ -121,10 +115,9 @@ eval(['!mv buoy*.mat ConcatProcessed/'])
 
 if isfield(SWIFT(1),'ID')
     load(['SWIFT' SWIFT(1).ID '_telemetry.mat'])
-    save(['SWIFT' SWIFT(1).ID '_' datestr(min([SWIFT.time]),'ddmmmyyyy') '_L1.mat'  ], 'SWIFT')
+    save(['SWIFT' SWIFT(1).ID '_' datestr(min([SWIFT.time]),'ddmmmyyyy') '-' datestr(max([SWIFT.time]),'ddmmmyyyy') '_L1.mat'  ], 'SWIFT')
     eval(['!rm *telemetry.mat'])
 else
 end
 
 plotSWIFT(SWIFT)
-

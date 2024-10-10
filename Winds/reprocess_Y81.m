@@ -40,39 +40,25 @@ for iburst = 1:length(bfiles)
 
    disp(['Burst ' num2str(iburst) ' : ' bfiles(iburst).name(1:end-4)])
         
-        % if bfiles(iburst).bytes > 1e5
-        % RMYdata = importdata([bfiles(iburst).folder slash bfiles(iburst).name]);
-        % uvw = RMYdata.data(:,1:3);
-        % temp = RMYdata.data(:,4);
-        % else 
-        %     uvw = NaN(1000,3);
-        %     temp = NaN(1000,1);
-        % end
-        % windspd = mean((uvw(:,1).^2 + uvw(:,2).^2 + uvw(:,3).^2).^.5);
-        % u = uvw(:,1);
-        % v = uvw(:,2);
-        % w = uvw(:,3);
-
         % Read raw data
         if bfiles(iburst).bytes > 1e5
         [u,v,w,temp,~] = readSWIFT_Y81([bfiles(iburst).folder slash bfiles(iburst).name]);
-        windspd = mean( (u.^2 + v.^2 + w.^2).^.5 );
         else
+            disp('File size too small, skipping ...')
             u = NaN(1000,1);
             v = u;w = u;temp = u;
         end
+        windspd = mean( (u.^2 + v.^2 + w.^2).^.5 );
 
         % Recalculate friction velocity
         z = sinfo.metheight;
         fs = 10;
-        [ustar,~,~,~,~,~,~,~,~,~] = inertialdissipation(u,v,w,temp,z,fs);
+        [ustar,~,~,~,~,~,~,~,windfreq,windpower] = inertialdissipation(u,v,w,temp,z,fs);
         
         % Find matching time
         day = bfiles(iburst).name(13:21);
         hour = bfiles(iburst).name(23:24);
         mint = bfiles(iburst).name(26:27);
-        % time = datenum(bfiles(iburst).name(13:21)) + str2double(bfiles(iburst).name(23:24))./24 ...
-        %     + str2double(bfiles(iburst).name(26:27))./(24*6);
         time = datenum(day)+datenum(0,0,0,str2double(hour),(str2double(mint)-1)*12,0);
         [tdiff,tindex] = min(abs([SWIFT.time]-time));
 
@@ -82,9 +68,11 @@ for iburst = 1:length(bfiles)
             SWIFT(tindex).winddirR = NaN;
             if ustar ~= 9999
                 SWIFT(tindex).windustar = ustar;
+                SWIFT(tindex).windspectra.freq = windfreq(:);
+                SWIFT(tindex).windspectra.energy = windpower(:);
             end
         else
-            disp(['No time match, dt = ' num2str(tdiff*24*60) ' min...'])
+            disp(['No time match, dt = ' num2str(tdiff*24*60) ' min. Skipping...'])
         end
 
 end

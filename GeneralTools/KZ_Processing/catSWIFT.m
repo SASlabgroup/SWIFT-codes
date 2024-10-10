@@ -51,32 +51,18 @@ else
 end
 
 % Radiometer
-if isfield(SWIFT,'radiometertemp1mean')% This is the brightness (target) temperature
-    nrad = length(SWIFT(1).radiometertemp1mean);
-    swift.radtemp1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT));
-    if size(swift.radtemp1,2)~= nt
-        swift.radtemp1 = swift.radtemp1';
+if isfield(SWIFT,'infraredtempmean')% This is the brightness (target) temperature
+    nrad = length(SWIFT(1).infraredtempmean);
+    swift.IRtemp = reshape([SWIFT.infraredtempmean],nrad,length(SWIFT));
+    if size(swift.IRtemp,2)~= nt
+        swift.IRtemp = swift.IRtemp';
     end
 end
-if isfield(SWIFT,'radiometerrad1')% This is derived from brightness temp using stefan boltzman
-    nrad = length(SWIFT(1).radiometerrad1);
-    swift.rad1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
-    if size(swift.rad1,2)~= nt
-        swift.rad1 = swift.rad1';
-    end
-end
-if isfield(SWIFT,'radiometertemp2mean')% This is the jacket temperature
-    nrad = length(SWIFT(1).radiometertemp2mean);
-    swift.radtemp2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT));
-    if size(swift.radtemp2,2)~= nt
-        swift.radtemp2 = swift.radtemp2';
-    end
-end
-if isfield(SWIFT,'radiometerrad1')
-    nrad = length(SWIFT(1).radiometerrad2);% This is derived from jacket temp using stefan boltzman
-    swift.rad2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
-    if size(swift.rad2,2)~= nt
-        swift.rad2 = swift.rad2';
+if isfield(SWIFT,'ambienttempmean')% This is the jacket temperature
+    nrad = length(SWIFT(1).ambienttempmean);
+    swift.AMBtemp = reshape([SWIFT.ambienttempmean],nrad,length(SWIFT));
+    if size(swift.AMBtemp,2)~= nt
+        swift.AMBtemp = swift.AMBtemp';
     end
 end
 
@@ -97,7 +83,7 @@ swift.driftv = driftv;
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
-    swift.depth = SWIFT(end).signature.profile.z';
+    swift.depth = SWIFT(round(end/2)).signature.profile.z';
     nz = length(swift.depth);
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
@@ -178,6 +164,7 @@ end
 swift.wavepower(swift.wavepower<0) = 0;
 wavefreq = median(swift.wavefreq,2,'omitnan');
 wavepower = NaN(length(wavefreq),nt);
+
 % Interpolate to median frequency
 for it = 1:nt
     ireal = ~isnan(swift.wavepower(:,it)) & swift.wavepower(:,it)~=0;
@@ -197,12 +184,14 @@ swift.wavepeakdir = [SWIFT.peakwavedirT];
 om = 2*pi./swift.wavepeakT;
 k = om.^2./9.81;
 swift.waveustokes = (swift.wavesigH./4).^2.*om.*k;
+
 % Re-calculate peak wave period (via centroid method)
 wavepower = swift.wavepower;
 wavefreq = swift.wavefreq;
 wavevar = sum(wavepower,1,'omitnan');
 waveweight = sum(wavepower.*repmat(wavefreq,1,size(wavepower,2)),1,'omitnan');
 swift.wavepeakT = 1./(waveweight./wavevar);
+
 % Directional Wave Spectra
 % [~,swift.wavedir,~,~,~,~,~,~] = SWIFTdirectionalspectra(SWIFT(1),0);
 % ndir = length(swift.wavedir);
@@ -255,7 +244,7 @@ swift.wavepeakT = 1./(waveweight./wavevar);
 
 % TKE Dissipation Rate and HR vertical velocity
 if isfield(SWIFT,'signature')
-    swift.surfz = SWIFT(end).signature.HRprofile.z';
+    swift.surfz = SWIFT(round(end/2)).signature.HRprofile.z';
     nz = length(swift.surfz);
     swift.surftke = NaN(nz,nt);
     for it = 1:nt

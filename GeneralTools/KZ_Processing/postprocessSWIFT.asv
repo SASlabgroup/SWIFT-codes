@@ -3,11 +3,7 @@
 % Master post-processing function, that calls sub-functions to reprocess
 % each different type of raw SWIFT data.
 % L1 product must have been created prior to running this script,
-% by running 'concatSWIFT_offloadedSDcard.m' in the mission directory
-% Note: concatSWIFT in turn runs 'compileSWIFT_SBDservertelemetry.m',
-%       which in turn calls the function 'readSWIFT_SBD.m'
-% Currently no reprocessing option for Airmar (PB2) 
-%       nor Heitronics CTs (536?)
+% by running 'compileSWIFT.m'
 
 % K. Zeiden 07/2024
 
@@ -19,24 +15,22 @@ else
     slash = '/';
 end
 
-expdir = ['S:' slash 'SEAFAC' slash 'June2024' slash 'SouthMooring'];
+expdir = ['S:' slash 'SEAFAC' slash 'June2024'];
 
 % Processing toggles
 rpIMU = true; % Waves
-rpSBG = false; % Waves
-rpWXT = false; % MET
-rpY81 = false; % MET
-rpACS = false; % CT
-rpSIG = false; % TKE 
-rpAQH = false; % TKE
-rpAQD = false; % TKE
+rpSBG = true; % Waves
+rpWXT = true; % MET
+rpY81 = true; % MET
+rpACS = true; % CT
+rpSIG = true; % TKE 
+rpAQH = true; % TKE
+rpAQD = true; % TKE
 
 % Plotting toggle
 plotL1L2 = true;
 
-%% List of missions
-
-cd(expdir)
+% List of missions
 missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
@@ -46,7 +40,7 @@ for im = 1:length(missions)
     missiondir = [missions(im).folder slash missions(im).name];
     cd(missiondir)
 
-    diaryfile = [missions(im).name '_postprocess.txt'];
+    diaryfile = [missions(im).name '_postprocessSWIFT.txt'];
      if exist(diaryfile,'file')
         delete(diaryfile);
      end
@@ -113,7 +107,7 @@ for im = 1:length(missions)
         end
     end
 
-    %% Reprocess WXT (536!!!)
+    %% Reprocess WXT (536, confusing b/c CT15 can also be 536)
     if rpWXT
         if ~isempty(dir([missiondir slash 'WXT' slash 'Raw' slash '*' slash '*_536_*.dat']))
             disp('Reprocessing Vaisala WXT data...')
@@ -183,6 +177,7 @@ for im = 1:length(missions)
     end
 
     %% Re-load L1 and L2 product and plot each for comparison
+
     load([l1file.folder slash l1file.name],'SWIFT','sinfo');
     SWIFTL1 = SWIFT;
     l2file = dir([missiondir slash '*L2.mat']);
@@ -200,6 +195,8 @@ for im = 1:length(missions)
         print(fh1,[l1file.folder slash l1file.name(1:end-4)],'-dpng')
         print(fh2,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
     end
+
+    close all
 
 
 diary off

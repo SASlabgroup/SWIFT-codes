@@ -1,0 +1,491 @@
+% Aggregate and read all SWIFT sbd data after concatenating the 
+%   offload from SD card or the sbd email attachments. SBD files should be in the 
+%   subfolder specified by 'SBDfold' of any given SWIFT mission folder.
+%   Based on compileSWIFT_SBDservertelemetry.m by J. Thomson.
+%   QC has been removed. The intention is to create a pure L1 product which
+%   has all data recorded. Basic QC has been allocated to another parallel
+%   script, 'pruneSWIFT.m'.
+
+% Time: SWIFT - Take the time from the filename, even when there is time from 
+    %     the airmar (because of parsing errors). For telemetry, this 
+    %     is the telemtry time (at the end of the burst). For offloaded data,
+    %     this the concat file name (from the start of the burst).
+    %   microSWIFT - Use the time embedded within the payload 50 or 51 or 52 of the
+    %     SBD file, which is the time at the end of the burst of raw data.
+
+% K. Zeiden 10/01/2024
+
+%% Experiment directory and QC parameters (user defined)
+
+if ispc
+    slash = '\';
+else
+    slash = '/';
+end
+
+% Experiment Directory
+expdir = 'S:\SEAFAC\June2024';
+
+% SBD folder
+SBDfold = 'ProcessedSBD';
+
+% Processing parameters
+plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
+fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
+fixpositions = false; % binary flag to use "filloutliers" to fix spurious positions.   Use with care. 
+
+% % QC Parameters
+% minwaveheight = 0;% minimum wave height in data screening
+% minsalinity = 0;% PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+% maxdriftspd = 5;% m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
+% maxwindspd = 30;% m/s for malfunctioning Airmars
+% minairtemp = -20;% min airtemp
+% maxairtemp = 50;% max airtemp
+% 
+% disp('-------------------------------------')
+% disp('QC settings:')
+% disp(['Minimum wave height: ' num2str(minwaveheight) ' m'])
+% disp(['Minimum salinity: ' num2str(minsalinity) ' PSU'])
+% disp(['Maximum drift speed: ' num2str(maxdriftspd) ' ms^{-1}'])
+% disp(['Maximum wind speed: ' num2str(maxwindspd) ' ms^{-1}'])
+% disp(['Minimum air temp: ' num2str(minairtemp) ' C'])
+% disp(['Maximum air temp: ' num2str(maxairtemp) ' C'])
+% disp('-------------------------------------')
+
+% List missions
+missions = dir([expdir slash 'SWIFT*']);
+missions = missions([missions.isdir]);
+
+%% Loop through missions
+
+for im = 1:length(missions)
+
+missiondir = [missions(im).folder slash missions(im).name];
+cd(missiondir)
+sname = missions(im).name;
+
+ diaryfile = [missions(im).name '_compileSWIFT.txt'];
+ if exist(diaryfile,'file')
+    delete(diaryfile);
+ end
+ diary(diaryfile)
+ disp(['Compiling ' sname])
+
+%%% Compile list of sbd burst files %%%
+if exist([missiondir slash SBDfold],'dir')
+    blist = dir([missiondir slash SBDfold slash '*.sbd']);
+else
+    disp('Processed files have not been concatenated...')
+    blist = [];
+end
+nburst = length(blist);
+
+%%% Initialize badburst flag %%%
+badburst = false(1,nburst);
+
+%%% Initialize vectors %%%
+battery = NaN(1,nburst);
+npayloads = NaN(1,nburst);
+
+%%% Loop through all SBD burst files, load, QC, and save in SWIFT structure
+for iburst = 1:nburst
+
+    disp('=================================')
+    disp(['Burst ' num2str(iburst) ' : ' blist(iburst).name ])
+        
+    [oneSWIFT,voltage]= readSWIFT_SBD([blist(iburst).folder slash blist(iburst).name],0);
+    
+    if voltage == 9999 % error flag from SBD message
+        badburst(iburst) = true; 
+    end
+    
+    if ~isempty(voltage)
+        battery(iburst) = voltage;
+        oneSWIFT.battery = voltage;
+    else
+        oneSWIFT.battery = NaN;
+    end
+    
+    if isempty(oneSWIFT.lat) || isempty(oneSWIFT.lon)
+        oneSWIFT.lat = NaN;
+        oneSWIFT.lon = NaN;
+    end
+    
+    %%% SWIFT type and Time stamp %%%
+    if blist(iburst).name(6) == 'S' % SWIFT v3 and v4
+        nameoffset = 14;
+        day = blist(iburst).name(nameoffset + (1:2));
+        month = blist(iburst).name(nameoffset + (3:5));
+        year = blist(iburst).name(nameoffset + (6:9));
+        hr = blist(iburst).name(nameoffset + (11:12));
+        minute = blist(iburst).name(nameoffset + (13:14));
+        sec = blist(iburst).name(nameoffset + (15:16));
+        oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+        micro = false;
+    elseif blist(iburst).name(6) == 'm' % microSWIFT
+        micro = true;
+    else
+        oneSWIFT.time = NaN;
+        micro = false;
+    end
+    
+    %%% Remove wave histograms %%%
+    if isfield(oneSWIFT,'wavehistogram')
+        oneSWIFT = rmfield(oneSWIFT,'wavehistogram');
+    end
+    
+    %%% Increment main structure %%%
+    burstpayloads = string(fieldnames(oneSWIFT));
+    npayloads(iburst) = length(burstpayloads);
+
+    if iburst == 1
+        allpayloads = burstpayloads;
+        disp('Initial payloads:')
+        disp(allpayloads)
+    elseif iburst ~= 1 && npayloads(iburst) > length(allpayloads)
+
+        isnew = false(npayloads(iburst),1);
+        for ip = 1:npayloads(iburst)
+            isnew(ip) = ~any(strcmp(burstpayloads(ip),allpayloads));
+        end
+        newpayloads = burstpayloads(isnew);
+        disp(['New payloads in burst file ' num2str(iburst) ':'])
+        disp(newpayloads)
+        allpayloads = burstpayloads;
+
+    elseif iburst ~= 1 && npayloads(iburst) < length(allpayloads)
+        
+        ismissing = false(length(allpayloads),1);
+        for ip = 1:length(allpayloads)
+            ismissing(ip) = ~any(strcmp(allpayloads(ip),burstpayloads));
+        end
+        missingpayloads = allpayloads(ismissing);
+        disp(['Missing payloads in burst file ' num2str(iburst) ':'])
+        disp(missingpayloads)
+    end
+
+    for ipay = 1:npayloads(iburst)
+        SWIFT(iburst).(burstpayloads{ipay}) = oneSWIFT.(burstpayloads{ipay});
+    end
+    
+    %%% Original Increment Method -- reinitialize if new payloads, skip if
+    %%% fewer payloads... misses a lot of good data
+    % % First SBD: set the structure fields as the standard
+    % if iburst == 1 && voltage ~= 9999 
+    %     SWIFT(iburst) = oneSWIFT;
+    %     initpayloads = burstpayloads;
+    %     disp(['Initial payloads in burst file ' num2str(iburst) ':'])
+    %     disp(initpayloads)
+    % 
+    % elseif iburst == 1 && voltage == 9999
+    % 
+    %     badburst(iburst) = true;
+    %     initpayloads = [];
+    % 
+    % % Payloads match: increment
+    % elseif iburst > 1 && npayloads(iburst) == length(initpayloads)
+    %     SWIFT(iburst) = oneSWIFT;
+    % 
+    % % Additional payloads: favor that new structure (removing other)
+    % elseif iburst > 1 && npayloads(iburst) > length(initpayloads)
+    % 
+    %     isnew = false(npayloads(iburst),1);
+    %     for ip = 1:npayloads(iburst)
+    %        isnew(ip) = ~any(strcmp(burstpayloads(ip),initpayloads));
+    %     end
+    %     newpayloads = burstpayloads(isnew);
+    % 
+    %     clear SWIFT
+    %     badburst(iburst-1) = true;
+    %     SWIFT(iburst) = oneSWIFT;
+    %     disp(['Found extra payloads in burst file ' num2str(iburst) ':'])
+    %     disp(newpayloads)
+    %     disp('...re-initializing SWIFT structure...')
+    %     initpayloads = burstpayloads; % reset the prefer field names
+    % 
+    % % Fewer paylaods: skip that burst
+    % elseif iburst > 1 && npayloads(iburst) < length(initpayloads) || voltage==9999
+    % 
+    %     ismissing = false(length(initpayloads),1);
+    %     for ip = 1:length(initpayloads)
+    %        ismissing(ip) = ~any(strcmp(initpayloads(ip),burstpayloads));
+    %     end
+    %     missingpayloads = initpayloads(ismissing);
+    % 
+    %     disp(['Missing payloads in burst file ' num2str(iburst) ':'])
+    %     disp(missingpayloads)
+    %     SWIFT(iburst) = SWIFT(iburst-1); % placeholder, which will be removed when badburst applied
+    %     badburst(iburst) = true;
+    %     disp('...skipping burst...')
+    % end
+        
+    %%% Screen the bad data (usually out of the water) %%%
+    % No data
+    if isempty(oneSWIFT.lon) || isempty(oneSWIFT.lat) || isempty(oneSWIFT.time)
+        badburst(iburst) = true;
+        disp('No position or timestamp!')
+    end
+    % No position
+    if oneSWIFT.lon == 0 || ~isnumeric(oneSWIFT.lon) || isnan(oneSWIFT.lon)
+        badburst(iburst) = true;
+        disp('No position!')
+    end
+    % Waves too small
+    if isfield(oneSWIFT,'sigwaveheight')
+        if oneSWIFT.sigwaveheight < minwaveheight || oneSWIFT.sigwaveheight >= 999
+            badburst(iburst) = true;
+            disp('Waves too small, removing burst.')
+        end
+    end
+    % Salinity too small
+    if isfield(oneSWIFT,'salinity') %&& ~micro
+        if all(oneSWIFT.salinity < minsalinity) % & all(~isnan(oneSWIFT.salinity)),
+            badburst(iburst) = true;
+            disp('Salinity too low, removing burst.')
+        end
+    end
+    % Drift speed limit
+    if isfield(oneSWIFT,'driftspd')
+        if oneSWIFT.driftspd > maxdriftspd
+            badburst(iburst) = true;
+            disp('Speed too fast, removing burst.')
+        end
+    end
+
+     disp('=================================')
+    
+% End burst loop
+end
+diary off
+
+% Remove bursts which had less payloads
+% badburst(npayloads < length(initpayloads)) = true;
+
+%% Apply QC
+
+% SWIFT(badburst) = [];
+% battery(badburst) = [];
+
+%% Fill empty SWIFT fields
+payloads = fieldnames(SWIFT);
+npay = length(payloads);
+nburst = length(SWIFT);
+
+for ipay = 1:npay
+
+    var = [SWIFT.(payloads{ipay})];
+   
+    % If some burst values are empty
+    if length(var) ~= nburst
+
+        % If variable is a scalar (e.g. 'watertemp') fill with NaN
+        if isa(var,'double')
+            for iburst = 1:nburst
+                if isempty(SWIFT(iburst).(payloads{ipay}))
+                    SWIFT(iburst).(payloads{ipay}) = NaN;
+                end
+            end
+        elseif isa(var,'char')
+            for iburst = 1:nburst
+                if isempty(SWIFT(iburst).(payloads{ipay}))
+                    SWIFT(iburst).(payloads{ipay}) = var(1);
+                end
+            end
+        else % If variable is a structure array (e.g. 'wavespectra') fill w/NaN structure
+            for iburst = 1:nburst
+                if isempty(SWIFT(iburst).(payloads{ipay}))
+                    SWIFT(iburst).(payloads{ipay}) = NaNstructR(var(1));
+                end
+            end
+        end
+
+    end
+
+end
+
+%% Sort final structure
+[~,tinds] = sort([SWIFT.time]);
+SWIFT = SWIFT(tinds);
+battery = battery(tinds);
+
+%% Enforce a single value for CT and MET sensor heights
+
+if isfield(SWIFT,'CTdepth')
+    for si = 1:length(SWIFT)
+        SWIFT(si).CTdepth = median([SWIFT.CTdepth],'omitnan');
+    end
+end
+
+if isfield(SWIFT,'metheight')
+    for si = 1:length(SWIFT)
+        SWIFT(si).metheight = median([SWIFT.metheight],'omitnan');
+    end
+end
+
+
+%% Fill position outliers
+
+if fixpositions
+    [cleanlon,cloni] = filloutliers([SWIFT.lon],'linear');
+    [cleanlat,clati] = filloutliers([SWIFT.lat],'linear');
+    if cloni == clati
+        for ci = find(cloni)
+            SWIFT(ci).lon = cleanlon(ci);
+            SWIFT(ci).lat = cleanlat(ci);
+        end
+        disp(['Filled ' num2str(sum(cloni)) ' position outliers.'])
+    end
+end
+
+%% Recalculate drift (note that wind slip, which is 1%, is not removed)
+% Drift speed is included from the Airmar results, 
+% but that sensor is not always available or included
+% (so simpler to just calculate it from differencing positions).
+
+if length(SWIFT) > 3
+    
+    time = [SWIFT.time];%[time tinds ] = sort(time);
+    lat = [SWIFT.lat]; %lat = lat(tinds);
+    lon = [SWIFT.lon]; %lon = lon(tinds);
+    dlondt = gradient(lon,time); % deg per day
+    dxdt = deg2km(dlondt,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( 24*3600 ); % m/s
+    dlatdt = gradient(lat,time); % deg per day
+    dydt = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
+    dxdt(isinf(dxdt)) = NaN;
+    dydt(isinf(dydt)) = NaN;
+    speed = sqrt(dxdt.^2 + dydt.^2); % m/s
+    direction = -180 ./ 3.14 .* atan2(dydt,dxdt); % cartesian direction [deg]
+    direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
+    direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90->0
+
+    for si = 1:length(SWIFT)
+        if si == 1 || si == length(SWIFT)
+            SWIFT(si).driftspd = NaN;
+            SWIFT(si).driftdirT = NaN;
+        else
+            SWIFT(si).driftspd = speed(si);
+            SWIFT(si).driftdirT = direction(si);
+        end
+    end
+    
+    %     % remove last burst, if big change in direction (suggests recovery by ship)
+    %     dirchange = abs( SWIFT( length(SWIFT) - 2).driftdirT  - SWIFT( length(SWIFT) - 1).driftdirT );
+    %     if dirchange > 90,
+    %         disp('removing last burst, suspect includes ship recovery')
+    %         SWIFT( length(SWIFT) - 1).driftdirT = NaN;
+    %         SWIFT( length(SWIFT) - 1).driftspd = NaN;
+    %         SWIFT( length(SWIFT) ) = [];
+    %         battery( length(SWIFT) ) = [];
+    %     end
+    
+elseif length(SWIFT) <= 3
+    for si = 1:length(SWIFT)
+        SWIFT(si).driftspd = NaN;
+        SWIFT(si).driftdirT = NaN;
+    end
+end
+
+% Quality control by removing drift results associated with large time gaps
+if length([SWIFT.time]) > 1
+    dt = gradient([SWIFT.time]);
+    for si = 1:length(SWIFT)
+        if dt(si) > 1/12 % 1/12 of day is two hours
+            SWIFT(si).driftspd = NaN;
+            SWIFT(si).driftdirT = NaN;
+        end
+    end
+end
+
+% Quality control drift speeds too fast (prob on deck) with new drift spd
+if length([SWIFT.time]) > 1 && isfield(SWIFT(1),'driftspd')
+        toofast = [SWIFT.driftspd] > maxdriftspd;
+        SWIFT( toofast ) =[];
+        battery( toofast ) = [];
+end
+
+%% Extrapolate missing low frequencies of wave energy spectra %%
+%   Require energy at lowest frequenc to be zero.
+%   Not neccessary if post-processing for raw displacements.
+%   Less necessary after Oct 2017 rev of onboard processing with improved RC filter.
+
+if fixspectra && isfield(SWIFT,'wavespectra')
+    for si = 1:length(SWIFT)
+    notzero = find(SWIFT(si).wavespectra.energy ~= 0 & SWIFT(si).wavespectra.freq > 0.04);
+    tobereplaced =  find(SWIFT(si).wavespectra.energy == 0 & SWIFT(si).wavespectra.freq > 0.04);
+        if length(notzero) > 10
+            E = interp1([0.04; SWIFT(si).wavespectra.freq(notzero)],[0; SWIFT(si).wavespectra.energy(notzero)],SWIFT(si).wavespectra.freq);
+            SWIFT(si).wavespectra.energy(tobereplaced) = E(tobereplaced);
+            df = median(diff(SWIFT(si).wavespectra.freq));
+            SWIFT(si).sigwaveheight = 4*sqrt(sum(SWIFT(si).wavespectra.energy,'omitnan')*df);
+        end
+    end
+end
+
+%% Quality control wind speeds
+if length([SWIFT.time]) > 1 && isfield(SWIFT,'windspd')
+    for si = 1:length(SWIFT)
+        if SWIFT(si).windspd > maxwindspd
+            SWIFT(si).windspd = NaN;
+            SWIFT(si).winddirT = NaN;
+            SWIFT(si).winddirR = NaN;
+        end
+    end
+end
+
+%% Quality control airmar temperature
+if isfield(SWIFT,'airtemp')
+    for si = 1:length(SWIFT)
+        if SWIFT(si).airtemp == 0.0 || SWIFT(si).airtemp < minairtemp || SWIFT(si).airtemp > maxairtemp
+            SWIFT(si).airtemp = NaN;
+            SWIFT(si).windspd = NaN;
+        end
+    end
+end 
+
+%% Sort the microSWIFT onboard processing, using the battery voltage as a flag 
+% only applies to v1 microSWIFTs from 2022
+
+IMU = find(battery==0);
+GPS = find(battery==1);
+
+if ~isempty(IMU), SWIFT_IMU = SWIFT(IMU); end
+if ~isempty(GPS), SWIFT_GPS = SWIFT(GPS); end
+
+%% Fill in the ID field from mission directory name if NaN
+
+idnan = isnan([SWIFT.ID]);
+ID = sname(strfind(sname,'SWIFT')+ (5:6));
+
+for si = find(idnan)
+    SWIFT(si).ID = ID;
+end
+
+%% Save L1 file
+
+if micro
+    save([missiondir slash 'micro' sname '_L1.mat'],'SWIFT*')
+elseif length([SWIFT.time]) > 1
+    save([missiondir slash sname '_L1.mat'],'SWIFT')
+end
+
+%% Plot
+
+if plotflag
+    
+    plotSWIFT(SWIFT)
+    
+    % battery plot
+    if any(~isnan(battery))
+        figure(7), clf,
+        plot([SWIFT.time],battery,'kx','linewidth',3)
+        datetick, grid
+        ylabel('Voltage')
+        print('-dpng',[sname(1:7) '_battery.png'])
+    end
+    
+end
+
+close all
+clear SWIFT
+
+end % End mission loop

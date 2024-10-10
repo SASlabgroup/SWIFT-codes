@@ -59,26 +59,26 @@ for iburst = 1:length(bfiles)
     end
 
     % SBG time
-    time = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour,...
+    btime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour,...
         sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
 
     % Find matching time index in the existing SWIFT structure
-    btime = median(time,'omitnan');% First entries are bad (no satellites acquired yet)
-    [tdiff,tindex] = min(abs([SWIFT.time]-btime));
+    % First entries are bad (no satellites acquired yet)
+    [tdiff,tindex] = min(abs([SWIFT.time]-median(btime,'omitnan')));
     if tdiff > 1/(5*24) % If no close time index, skip burst
         disp('No time match. Skipping...')
         continue
     end
 
     % If not enough data to work with, skip burst
-    if isempty(tindex) || length(time)<tproc*5 || length(sbgData.ShipMotion.heave)<tproc*5 || ... 
+    if isempty(tindex) || length(btime)<tproc*5 || length(sbgData.ShipMotion.heave)<tproc*5 || ... 
             length(sbgData.GpsPos.lat)<tproc*5 || length(sbgData.GpsVel.vel_e)<tproc*5
             disp('Not enough data. Skipping...')
             continue
     end
 
         % Despike data and make convenience variables
-        t = time(end-tproc*5+1:end);
+        t = btime(end-tproc*5+1:end);
         t = filloutliers(t,'linear');
         z = sbgData.ShipMotion.heave(end-tproc*5+1:end);
         z = filloutliers(z,'linear');

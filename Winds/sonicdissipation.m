@@ -1,18 +1,29 @@
-function [eps,ustar,ps,cs,f,uadv,theta,iso,power] = sonicdissipation(u,v,w,temp,fs,twin,z)
+function [eps,ustar,ps,cs,f,uadv,thetaH,iso,power] = sonicdissipation(u,v,w,temp,fs,twin,z)
 
 %%% Rotate to get streamwise + cross-stream velocities
-theta = atan2d(mean(v,'omitnan'),mean(u,'omitnan'));
-R = [cosd(theta), -sind(theta);...
-    sind(theta), cosd(theta)];
-uv_rot = R'*([u(:)'; v(:)']);
+
+% Rotate horizontally into downstream direction
+thetaH = atan2d(mean(v,'omitnan'),mean(u,'omitnan'));
+RH = [cosd(thetaH), -sind(thetaH);...
+    sind(thetaH), cosd(thetaH)];
+uv_rot = RH'*([u(:)'; v(:)']);
 u_rot = uv_rot(1,:);
 v_rot = uv_rot(2,:);
+
+% Rotate vertically into tilt direction
+thetaV = atan2d(mean(w,'omitnan'),mean(u_rot,'omitnan'));
+RV = [cosd(thetaV), -sind(thetaV);...
+    sind(thetaV), cosd(thetaV)];
+uw_rot = RV'*([u_rot(:)'; w(:)']);
+u_rot = uw_rot(1,:);
+w_rot = uw_rot(2,:);
+
 uadv = mean(u_rot,'omitnan');
 
 %%% Convert direction to oceanographic convention
-theta = -theta + 90;
-if theta < 0
-    theta = theta + 360;
+thetaH = -thetaH + 90;
+if thetaH < 0
+    thetaH = thetaH + 360;
 end
 
 % Spectra
@@ -20,13 +31,13 @@ nwin = floor(twin.*fs);
 norm = 'par';
 [UU,f,~,~,~] = hannwinPSD2(u_rot,nwin,fs,norm);
 [VV,~,~,~,~] = hannwinPSD2(v_rot,nwin,fs,norm);
-[WW,~,~,~,~] = hannwinPSD2(w,nwin,fs,norm);
+[WW,~,~,~,~] = hannwinPSD2(w_rot,nwin,fs,norm);
 [TT,~,~,~,~] = hannwinPSD2(temp,nwin,fs,norm);
 
 % Cospectra
-[UW,~,~] = hannwinCOPSD2(u,w,nwin,fs,norm);
-[VW,~,~] = hannwinCOPSD2(v,w,nwin,fs,norm);
-[TW,~,~] = hannwinCOPSD2(temp,w,nwin,fs,norm);
+[UW,~,~] = hannwinCOPSD2(u_rot,w_rot,nwin,fs,norm);
+[VW,~,~] = hannwinCOPSD2(v_rot,w_rot,nwin,fs,norm);
+[TW,~,~] = hannwinCOPSD2(temp,w_rot,nwin,fs,norm);
 
 % Dissipation Rate and Friction Velocity
 K = 0.55;
