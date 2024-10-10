@@ -317,7 +317,6 @@ if plotflag
     
 end
 
-close all
 clear SWIFT
 
 end % End mission loop

@@ -23,14 +23,14 @@ else
 end
 
 % Processing toggles
-rpIMU = false; % Waves
-rpSBG = false; % Waves
-rpWXT = false; % MET
+rpIMU = true; % Waves
+rpSBG = true; % Waves
+rpWXT = true; % MET
 rpY81 = true; % MET
-rpACS = false; % CT
-rpSIG = false; % TKE 
-rpAQH = false; % TKE
-rpAQD = false; % TKE
+rpACS = true; % CT
+rpSIG = true; % TKE 
+rpAQH = true; % TKE
+rpAQD = true; % TKE
 
 % Plotting toggle
 plotflag = true;
@@ -68,7 +68,7 @@ for im = 1:length(missions)
     if rpIMU
         if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_IMU_*.dat']))
             disp('Reprocessing IMU data...')
-            calctype = 'IMU';
+            calctype = 'GPS';
             filtertype = 'RC';
             saveraw = false;
             interpf = false;
