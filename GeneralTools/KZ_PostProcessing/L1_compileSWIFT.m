@@ -38,7 +38,7 @@ missions = missions([missions.isdir]);
 
 %% Loop through missions
 
-for im = 1%:length(missions)
+for im = 1:length(missions)
 
 missiondir = [missions(im).folder slash missions(im).name];
 cd(missiondir)
