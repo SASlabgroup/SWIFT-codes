@@ -1,9 +1,9 @@
 % Find out-of-water bursts and prune them from the SWIFT structure
 
-% K. Zeiden 10/10/2024
+% K. Zeiden 10/10/2024... similar to SWIFT_QC.m
 
 %% Experiment Directory
-expdir = 'S:\SEAFAC\June2024';
+expdir = '/Volumes/Data/SEAFAC/June2024';
 
 %% Parameters for QC/out-of-water identification
 
@@ -14,7 +14,7 @@ else
 end
 
 % Processing parameters
-plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
+plotflag = false;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 
 % QC Parameters
 minwaveheight = 0;% minimum wave height in data screening

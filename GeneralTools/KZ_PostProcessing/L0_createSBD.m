@@ -11,10 +11,11 @@
 %               9/2017  add oxygen optode and sea owl fluorometer
 %               9/2019  changed time convention to use start of the burst,rather than end
 %
+%   K. Zeiden, 10/2024 overhaul to make PC compatible and catch all sensor payloads
 
 %% Experiment directory 
 
-expdir = 'S:\SEAFAC\June2024';
+expdir = '/Volumes/Data/SEAFAC/June2024';
 SBDfold = 'ProcessedSBD';
 
 %% Sampling Parameters
@@ -108,7 +109,7 @@ for iburst = 1:length(refbfiles)
     end
     syscommand = [syscommand ' ' sbdfile];
     else
-        syscommand = ['!cat ' payloadfile];
+        syscommand = ['cat ' payloadfile];
         for iprc = 1:length(PRCburstfiles)
             syscommand = [syscommand ' ' PRCburstfiles(iprc).folder slash PRCburstfiles(iprc).name];
         end

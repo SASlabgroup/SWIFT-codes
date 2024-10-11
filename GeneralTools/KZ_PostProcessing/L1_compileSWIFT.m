@@ -13,10 +13,10 @@
     %   microSWIFT - Use the time embedded within the payload 50 or 51 or 52 of the
     %     SBD file, which is the time at the end of the burst of raw data.
 
-% K. Zeiden 10/01/2024
+% K. Zeiden 10/01/2024, based on orginal compileSWIFT_SBDservertelemetry.m
 
 %% Experiment directory
-expdir = 'S:\SEAFAC\June2024';
+expdir = '/Volumes/Data/SEAFAC/June2024';
 
 % SBD folder
 SBDfold = 'ProcessedSBD';
@@ -30,7 +30,7 @@ else
 end
 
 % Processing parameters
-plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
+plotflag = false;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 
 % List missions
 missions = dir([expdir slash 'SWIFT*']);

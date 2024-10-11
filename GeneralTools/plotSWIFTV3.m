@@ -8,7 +8,8 @@ lw = 2;
 nt = length(swift.time);
 
 fh = figure('color','w');
-fullscreen(2)
+%fullscreen(2)
+h = tight_subplot(8,3,[0.035 0.05],[0.1 0.075],0.075);
 h = tight_subplot(8,3,[0.035 0.05],[0.1 0.075],0.075);
 % tight_subplot(Nh, Nw, [gap_h gap_w], [lower upper], [left right] )
 

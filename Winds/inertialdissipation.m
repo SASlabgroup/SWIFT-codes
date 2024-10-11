@@ -30,7 +30,7 @@ kv = 0.4; % von Karman constant
 % Window length
 twin = 256;   % Window length in seconds (should make 2^N samples)
 nwin = round(fs*twin);  % Window length in data points
-if isodd(nwin) % Enforce even number window length
+if rem(nwin,2) ~= 0 % Enforce even number window length
     nwin = nwin-1;
 end
 

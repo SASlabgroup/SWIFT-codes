@@ -3,16 +3,16 @@
 % Master post-processing function, that calls sub-functions to reprocess
 % each different type of raw SWIFT data and create an L3 product.
 % L1 product must have been created prior to running this script,
-% by running 'compileSWIFT.m', and L2 created by running 'qcSWIFT.m';
+% by running 'compileSWIFT.m', and L2 created by running 'pruneSWIFT.m';
 
-% K. Zeiden 07/2024
+% K. Zeiden 07/2024, based on existing sensor-specific processing codes w 
 
 % Need to consider additional QC steps after processing...
 % Airmar temp, NaN out if below/above -20/50 deg C
 % Wind speed, NaN out above 30 m/s
 
 %% Experiment Directory
-expdir = ['S:' slash 'SEAFAC' slash 'June2024'];
+expdir = ['/Volumes/Data/SEAFAC/June2024'];
 
 %% Processing toggles
 
@@ -33,7 +33,7 @@ rpAQH = true; % TKE
 rpAQD = true; % TKE
 
 % Plotting toggle
-plotflag = true;
+plotflag = false;
 
 % List of missions
 missions = dir([expdir slash 'SWIFT*']);
