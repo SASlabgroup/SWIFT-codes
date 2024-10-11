@@ -27,6 +27,12 @@ function [] = plotSWIFT(SWIFT)
 %   figure 9: oxygen concentration and FDOM (fluorometer dissolved organic matter?)
 %   figure 10: radiometers
 
+if ispc
+    slash = '\';
+else
+    slash = '/';
+end
+
 
 %% Initialize 
 % Check that SWIFT contains information
@@ -39,7 +45,7 @@ if isfield(SWIFT(1),'ID')
     wd = SWIFT(1).ID;
 else
     wd = pwd;
-    wdi = find(wd == '/',1,'last');
+    wdi = find(wd == slash,1,'last');
     wd = wd((wdi+1):length(wd));
 end
 
@@ -51,8 +57,6 @@ set(0,'defaultaxesfontsize',14,'defaultaxesfontweight','demi');
 % Create cleanup function that resets fontsize,weight when this function is
 % finished or terminates for any reason
 cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw) );
-
-
 
 
 %% Figure 1: Wind and wave plot
@@ -105,7 +109,7 @@ end %if
 
 linkaxes(ax,'x')
 set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)] )
-print('-dpng',[wd  '_windandwaves.png'])
+print('-dpng',['SWIFT' wd  '_windandwaves.png'])
 
 
 
@@ -208,7 +212,7 @@ end
 if isfield(SWIFT,'airtemp') | isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity'),
     linkaxes(tax,'x');
     set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
-    print('-dpng',[wd '_tempandsalinity.png'])
+    print('-dpng',['SWIFT' wd '_tempandsalinity.png'])
 else
 end
 % -------------------------------------------------------------------------
@@ -270,7 +274,7 @@ if isfield(SWIFT,'wavespectra')
     else 
     end
     
-    print('-dpng',[ wd '_wavespectra.png'])
+    print('-dpng',[ 'SWIFT' wd '_wavespectra.png'])
 else
 end %if
 
@@ -347,7 +351,7 @@ if nansum([turb.epsilon]) ~= 0 % check if there is something to plot
         xlabel('\epsilon [W/kg]')
     end %try/catch
 
-    print('-dpng',[ wd '_HRprofile_turbulence.png'])
+    print('-dpng',['SWIFT' wd '_HRprofile_turbulence.png'])
 end %if
 
 
@@ -467,7 +471,7 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         
     end %try/catch
     
-    print('-dpng', [wd '_Avgvelocityprofiles.png']);      
+    print('-dpng', ['SWIFT' wd '_Avgvelocityprofiles.png']);      
 elseif nansum([prof.spd]) ~= 0 % no separate profiles, but speeds exist
     figure(5); clf;
     
@@ -503,7 +507,7 @@ elseif nansum([prof.spd]) ~= 0 % no separate profiles, but speeds exist
         xlabel('Magnitude [m/s]');      
     end %try/catch
     
-    print('-dpng', [wd '_Avgvelocityprofiles.png']);  
+    print('-dpng', ['SWIFT' wd '_Avgvelocityprofiles.png']);  
 end %if
 
 
@@ -526,7 +530,7 @@ if isfield( SWIFT, 'driftspd' ) && isfield( SWIFT, 'driftdirT' )
     ylabel('latitude');
     ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,1];  % ratio of lat to lon distances at a given latitude
     daspect(ratio)
-    print('-dpng',[wd '_drift.png'])
+    print('-dpng',['SWIFT' wd '_drift.png'])
 end %if
 
 %% Figure 7: Rain
@@ -555,7 +559,7 @@ if isfield(SWIFT,'rainaccum') && any(~isnan([SWIFT.rainaccum])) && any(~isempty(
     
     linkaxes(rax,'x');
     set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
-    print('-dpng',[wd '_rain.png'])
+    print('-dpng',['SWIFT' wd '_rain.png'])
     
 end %if 
 
@@ -583,7 +587,7 @@ if isfield(SWIFT,'windspectra') &&... % check field exists
     ylabel('Energy [m^2/Hz]')
     title('Wind Spectra')
     set(gca,'XLim',[1e-2 1e1])
-    print('-dpng',[wd '_wind.png'])
+    print('-dpng',['SWIFT' wd '_wind.png'])
 else
 end
 
@@ -595,7 +599,7 @@ if isfield(SWIFT,'O2conc') && any(~isnan([SWIFT.O2conc])) && any(~isempty([SWIFT
     plot([SWIFT.time],[SWIFT.O2conc],'x')
     datetick
     ylabel('O_2 conc [uM/Kg]')
-    print('-dpng',[wd '_oxygen_FDOM.png'])
+    print('-dpng',['SWIFT' wd '_oxygen_FDOM.png'])
 end
     
 if isfield(SWIFT,'FDOM') && any(~isnan([SWIFT.FDOM])) && any(~isempty([SWIFT.FDOM])),
@@ -604,33 +608,38 @@ if isfield(SWIFT,'FDOM') && any(~isnan([SWIFT.FDOM])) && any(~isempty([SWIFT.FDO
     plot([SWIFT.time],[SWIFT.FDOM],'x')
     datetick
     ylabel('FDOM [ppb]')
-    print('-dpng',[wd '_oxygen_FDOM.png'])
+    print('-dpng',['SWIFT' wd '_oxygen_FDOM.png'])
 end
 
 
 %% Figure 10: SST radiometers (CT15)
 
-if isfield(SWIFT, 'infraredtempmean') && any(~isnan([SWIFT.infraredtempmean]))
-    nrad = length( SWIFT(1).infraredtempmean );
-    IRT = reshape([SWIFT.infraredtempmean],nrad,length(SWIFT));
-    if isfield(SWIFT, 'radiancemean')
-        radiance = reshape([SWIFT.radiancemean],nrad,length(SWIFT));
+if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mean]))
+    nrad = length( SWIFT(1).radiometertemp1mean );
+    RadT1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT));
+    RadT2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT));
+    if isfield(SWIFT, 'radiometerrad1')
+        RadR1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
+        RadR2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
     else
-        radiance = NaN; 
+        RadR1 = NaN;
+        RadR2 = NaN;  
     end
     
     figure(10), hold off
     subplot(2,1,1)
-    plot([SWIFT.time],IRT)
+    plot([SWIFT.time],RadT1)
     hold on
+    plot([SWIFT.time],RadT2,'color',rgb('lightgrey'))
     datetick
-    ylabel('IR Temperature [C]')
+    ylabel('Temperature [C]')
     subplot(2,1,2)
-    plot([SWIFT.time],radiance)
+    plot([SWIFT.time],RadR1)
     hold on
+    plot([SWIFT.time],RadR2,'color',rgb('lightgrey'))
     datetick
     ylabel('Radiance [mV]')
-    print('-dpng',[wd '_infraredradiometer.png'])
+    print('-dpng',['SWIFT' wd '_radiometer.png'])
 
 end
 
