@@ -1,26 +1,23 @@
-% [SWIFT,sinfo] = postprocess_SWIFT(expdir)
+% [SWIFT,sinfo] = L3_postprocessSWIFT(expdir,plotflag)
 
 % Master post-processing function, that calls sub-functions to reprocess
 % each different type of raw SWIFT data and create an L3 product.
 % L1 product must have been created prior to running this script,
 % by running 'compileSWIFT.m', and L2 created by running 'pruneSWIFT.m';
 
-% K. Zeiden 07/2024, based on existing sensor-specific processing codes w 
-
 % Need to consider additional QC steps after processing...
 % Airmar temp, NaN out if below/above -20/50 deg C
 % Wind speed, NaN out above 30 m/s
 
-%% Experiment Directory
-expdir = ['/Volumes/Data/SEAFAC/June2024'];
+% K. Zeiden 07/2024, based on existing sensor-specific processing codes w 
 
-%% Processing toggles
+%% User defined inputs
 
-if ispc
-    slash = '\';
-else
-    slash = '/';
-end
+% Experiment Directory
+expdir = '/Volumes/Data/SEAFAC/June2024';
+
+% Plotting toggle
+plotflag = false;
 
 % Processing toggles
 rpIMU = true; % Waves
@@ -32,10 +29,14 @@ rpSIG = true; % TKE
 rpAQH = true; % TKE
 rpAQD = true; % TKE
 
-% Plotting toggle
-plotflag = false;
+%% List missions
 
-% List of missions
+if ispc
+    slash = '\';
+else
+    slash = '/';
+end
+
 missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
@@ -44,6 +45,7 @@ for im = 1:length(missions)
 
     missiondir = [missions(im).folder slash missions(im).name];
     cd(missiondir)
+    sname = missions(im).name;
 
     diaryfile = [missions(im).name '_L3_postprocessSWIFT.txt'];
      if exist(diaryfile,'file')
@@ -51,17 +53,17 @@ for im = 1:length(missions)
      end
     diary(diaryfile)
 
-    disp(['Post-processing ' missions(im).name])
+    disp(['Post-processing ' sname])
 
     %% Locate L2 product, skip if does not exist. 
 
-    l2file = dir([missiondir slash '*L2.mat']);
+    L2file = dir([missiondir slash '*L2.mat']);
 
-    if isempty(l2file)
+    if isempty(L2file)
         disp(['No L2 product found for ' missiondir(end-16:end) '. Skipping...'])
         return
     else
-        load([l2file.folder slash l2file.name],'SWIFT','sinfo');
+        load([L2file.folder slash L2file.name],'SWIFT','sinfo');
     end
     
     %% Reprocess IMU
@@ -162,7 +164,7 @@ for im = 1:length(missions)
 
     %% Plot
 
-    l3file = dir([missiondir slash '*L3.mat']);
+    L3file = dir([missiondir slash '*L3.mat']);
 
     if plotflag
         if strcmp(sinfo.type,'V3')
@@ -170,8 +172,8 @@ for im = 1:length(missions)
         else
             fh = plotSWIFTV4(SWIFT);
         end
-        set(fh,'Name',l3file.name(1:end-4))
-        print(fh,[l3file.folder slash l3file.name(1:end-4)],'-dpng')
+        set(fh,'Name',L3file.name(1:end-4))
+        print(fh,[L3file.folder slash L3file.name(1:end-4)],'-dpng')
     end
 
 diary off

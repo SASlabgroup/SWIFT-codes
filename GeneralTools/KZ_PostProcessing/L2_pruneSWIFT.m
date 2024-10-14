@@ -1,11 +1,25 @@
-% Find out-of-water bursts and prune them from the SWIFT structure
+% [SWIFT,sinfo] = L2_pruneSWIFT(expdir,plotflag)
 
-% K. Zeiden 10/10/2024... similar to SWIFT_QC.m
+% Find out-of-water bursts and prune them from the SWIFT structure using
+%   minimum wave height, minimum salinity and maximum drift speed
+%   thresholds. 
 
-%% Experiment Directory
+% K. Zeiden 10/10/2024, based on SWIFT_QC.m by J. Thomson.
+
+%% User defined inputs
+
+% Experiment Directory
 expdir = '/Volumes/Data/SEAFAC/June2024';
 
-%% Parameters for QC/out-of-water identification
+% Plotting toggle
+plotflag = false;
+
+% QC Parameters
+minwaveheight = 0;% minimum wave height in data screening
+minsalinity = 1;% PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+maxdriftspd = 3;% m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
+
+%% List missions
 
 if ispc
     slash = '\';
@@ -13,22 +27,6 @@ else
     slash = '/';
 end
 
-% Processing parameters
-plotflag = false;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
-
-% QC Parameters
-minwaveheight = 0;% minimum wave height in data screening
-minsalinity = 1;% PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
-maxdriftspd = 3;% m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
-
-disp('-------------------------------------')
-disp('Out-of-water parameters:')
-disp(['Minimum wave height: ' num2str(minwaveheight) ' m'])
-disp(['Minimum salinity: ' num2str(minsalinity) ' PSU'])
-disp(['Maximum drift speed: ' num2str(maxdriftspd) ' ms^{-1}'])
-disp('-------------------------------------')
-
-%% List missions
 missions = dir([expdir slash 'SWIFT*']);
 missions = missions([missions.isdir]);
 
@@ -39,6 +37,14 @@ for im = 1:length(missions)
     cd(missiondir)
     sname = missions(im).name;
 
+     % Create diary file
+     diaryfile = [missions(im).name '_L2_pruneSWIFT.txt'];
+     if exist(diaryfile,'file')
+        delete(diaryfile);
+     end
+     diary(diaryfile)
+     disp(['Pruning ' sname])
+
     % Load L1 file
     l1file = dir([missiondir slash '*SWIFT*L1.mat']);
     if ~isempty(l1file) 
@@ -47,14 +53,6 @@ for im = 1:length(missions)
         warning(['No L1 product found for ' missiondir(end-16:end) '. Skipping...'])
         return
     end
-    
-    % Create diary file
-     diaryfile = [missions(im).name '_L2_pruneSWIFT.txt'];
-     if exist(diaryfile,'file')
-        delete(diaryfile);
-     end
-     diary(diaryfile)
-     disp(['Pruning ' sname])
 
      % Loop through and identify out-of-water bursts
      nburst = length(SWIFT);
@@ -97,14 +95,14 @@ for im = 1:length(missions)
 
      % Plot
      if plotflag
-        l2file = dir([missiondir slash '*L2.mat']);
+        L2file = dir([missiondir slash '*L2.mat']);
         if strcmp(sinfo.type,'V3')
         fh = plotSWIFTV3(SWIFT);
         else
             fh = plotSWIFTV4(SWIFT);
         end
-        set(fh,'Name',l2file.name(1:end-4))
-        print(fh,[l2file.folder slash l2file.name(1:end-4)],'-dpng')
+        set(fh,'Name',L2file.name(1:end-4))
+        print(fh,[L2file.folder slash L2file.name(1:end-4)],'-dpng')
       end
 
      % Turn off diary
