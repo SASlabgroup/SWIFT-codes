@@ -104,7 +104,8 @@ for iburst = 1:length(bfiles)
     f_original = SWIFT(tindex).wavespectra.freq;  % original frequency bands from onboard processing
         
     % Reconstruct sea surface (get raw displacements)
-    [y,x,z,~] = rawdisplacements(AHRS,prefilter); % call is [y,x,z] to get output in east, north, up instead of NEU
+    % (!!!) call is [y,x,z] to get output in east, north, up instead of NEU
+    [y,x,z,~] = rawdisplacements(AHRS,prefilter);
     if strcmp(prefilter,'RC')
         x=x'; y=y'; z=z';
     end
@@ -112,6 +113,10 @@ for iburst = 1:length(bfiles)
     % Prepare GPS and IMU data for reprocessing
     [~,iinterp] = unique(AHRS.GPS_Time.TimeOfWeek);
     az = interp1(AHRS.GPS_Time.TimeOfWeek(iinterp),AHRS.Accel(iinterp,3),GPS.Time.TimeOfWeek(end-2047:end));
+    if ~any(~isnan(az))
+        disp('Time mismatch between AHRS and GPS. Skipping...')
+        continue
+    end
     indices = 1:2048;
     az = interp1(indices(~isnan(az)),az(~isnan(az)),indices,'linear',mean(az,'omitnan'))';
     u = GPS.NED_Vel.Velocity_NED(end-2047:end,2);

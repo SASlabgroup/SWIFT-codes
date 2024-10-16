@@ -41,6 +41,7 @@ end
 
 diaryfile = [missiondir slash sname '_L3_postprocessSWIFT.txt'];
  if exist(diaryfile,'file')
+    diary off
     delete(diaryfile);
  end
 diary(diaryfile)
