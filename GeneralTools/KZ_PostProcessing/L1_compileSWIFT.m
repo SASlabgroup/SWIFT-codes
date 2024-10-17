@@ -34,6 +34,7 @@ end
 
  diaryfile = [missiondir slash sname '_L1_compileSWIFT.txt'];
  if exist(diaryfile,'file')
+     diary off
     delete(diaryfile);
  end
  diary(diaryfile)

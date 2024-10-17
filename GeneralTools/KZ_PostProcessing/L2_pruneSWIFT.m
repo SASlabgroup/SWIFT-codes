@@ -27,6 +27,7 @@ end
  diaryfile = [missiondir slash sname '_L2_pruneSWIFT.txt'];
 
  if exist(diaryfile,'file')
+     diary off
     delete(diaryfile);
  end
  diary(diaryfile)
