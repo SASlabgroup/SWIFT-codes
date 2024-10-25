@@ -43,6 +43,7 @@ for iburst = 1:length(bfiles)
         
         if bfiles(iburst).bytes   == 0
             disp('Burst file is empty. Skippping ...')
+            return
         end
             
         % Read mat file or load raw data
@@ -51,6 +52,11 @@ for iburst = 1:length(bfiles)
                 readSWIFT_WXT([bfiles(iburst).folder slash bfiles(iburst).name]);
         else
             load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
+        end
+
+        if ~any(~isnan(windspd))
+            disp('No data read. Skipping...')
+            return
         end
         
         % Find matching time
