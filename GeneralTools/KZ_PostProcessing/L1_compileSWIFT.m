@@ -1,10 +1,10 @@
+function [SWIFT,sinfo] = L1_compileSWIFT(missiondir,SBDfold,plotflag)
+
 % Aggregate and read all SWIFT sbd data after concatenating the 
-%   offload from SD card or the sbd email attachments. SBD files should be in the 
+%   offload from SD card. SBD files should be in the 
 %   subfolder specified by 'SBDfold' of any given SWIFT mission folder.
-%   Based on compileSWIFT_SBDservertelemetry.m by J. Thomson.
-%   QC has been removed. The intention is to create a pure L1 product which
-%   has all data recorded. Basic QC has been allocated to another parallel
-%   script, 'pruneSWIFT.m'.
+%   No QC is performed. The intention is to create a pure L1 product which
+%   has all data recorded. Basic QC has been allocated to 'L2_pruneSWIFT.m'.
 
 % Time: SWIFT - Take the time from the filename, even when there is time from 
     %     the airmar (because of parsing errors). For telemetry, this 
@@ -13,15 +13,7 @@
     %   microSWIFT - Use the time embedded within the payload 50 or 51 or 52 of the
     %     SBD file, which is the time at the end of the burst of raw data.
 
-% K. Zeiden 10/01/2024, based on orginal compileSWIFT_SBDservertelemetry.m
-
-%% Experiment directory
-expdir = '/Volumes/Data/SEAFAC/June2024';
-
-% SBD folder
-SBDfold = 'ProcessedSBD';
-
-%% QC parameters (user defined)
+% K. Zeiden 10/01/2024, based on compileSWIFT_SBDservertelemetry.m
 
 if ispc
     slash = '\';
@@ -29,30 +21,27 @@ else
     slash = '/';
 end
 
-% Processing parameters
-plotflag = false;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
+%% Mission name
 
-% List missions
-missions = dir([expdir slash 'SWIFT*']);
-missions = missions([missions.isdir]);
+islash = strfind(missiondir,slash);
+if ~isempty(islash)
+    sname = missiondir(islash(end)+1:end);
+else
+    sname = missiondir;
+end
 
-%% Loop through missions
+%% Create diary file
 
-for im = 1:length(missions)
-
-missiondir = [missions(im).folder slash missions(im).name];
-cd(missiondir)
-sname = missions(im).name;
-
-% Create diary file
- diaryfile = [missions(im).name '_L1_compileSWIFT.txt'];
+ diaryfile = [missiondir slash sname '_L1_compileSWIFT.txt'];
  if exist(diaryfile,'file')
+     diary off
     delete(diaryfile);
  end
  diary(diaryfile)
  disp(['Compiling ' sname])
 
-%%% Compile list of sbd burst files %%%
+%% Compile list of sbd burst files %%%
+
 if exist([missiondir slash SBDfold],'dir')
     blist = dir([missiondir slash SBDfold slash '*.sbd']);
 else
@@ -61,14 +50,15 @@ else
 end
 nburst = length(blist);
 
-%%% Initialize badburst flag %%%
+% Initialize badburst flag
 badburst = false(1,nburst);
 
-%%% Initialize vectors %%%
+% Initialize vectors
 battery = NaN(1,nburst);
 npayloads = NaN(1,nburst);
 
-%%% Loop through all SBD burst files, load, QC, and save in SWIFT structure
+%% Loop through all SBD burst files, load, QC, and save in SWIFT structure
+
 for iburst = 1:nburst
 
     disp('=================================')
@@ -290,7 +280,6 @@ if ~micro
     end
 end
 
-
 %% Save L1 file
 
 if micro
@@ -303,19 +292,19 @@ end
 
 if plotflag
     
-    l1file = dir([missiondir slash '*L1.mat']);
+    L1file = dir([missiondir slash '*L1.mat']);
     if strcmp(sinfo.type,'V3')
     fh = plotSWIFTV3(SWIFT);
     else
         fh = plotSWIFTV4(SWIFT);
     end
-    set(fh,'Name',l1file.name(1:end-4))
-    print(fh,[l1file.folder slash l1file.name(1:end-4)],'-dpng')
+    set(fh,'Name',L1file.name(1:end-4))
+    print(fh,[L1file.folder slash L1file.name(1:end-4)],'-dpng')
     
 end
 
-clear SWIFT
 
+%% Close diary 
 diary off
 
-end % End mission loop
+end % End function

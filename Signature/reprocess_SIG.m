@@ -488,7 +488,8 @@ if ~isempty(fieldnames(SWIFT))
     end
 end
 
-% Sort by time
+%% Sort by time %%%%%%%%
+
 if ~isempty(fieldnames(SWIFT)) && isfield(SWIFT,'time')
 [~,isort] = sort([SWIFT.time]);
 SWIFT = SWIFT(isort);

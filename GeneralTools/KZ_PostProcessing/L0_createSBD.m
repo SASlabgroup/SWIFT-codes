@@ -1,24 +1,10 @@
-% aggregate, concat, and read all onboard processed SWIFT data (once offloaded from SD card) 
-% run this in a dedicated directory for the results
-% 
-% (this fills in the results not sent by Iridium when running more than 1 burst per hour) 
-%
-% J. Thomson, 4/2014
-%               9/2015  v3.3, use com names but currently only pulls one ACS file (out of three), because they are not uniquely named. 
-%               1/2016  v3.3, so up to 3 ACS files can be included
-%               6/2016 v 3.4, includ sdi coms (Vasaila 536)
-%               1/2017  v4.0, include SBG, Nortek Signature and RM Young 8100 sonic, plus index on SBG, not AQ
-%               9/2017  add oxygen optode and sea owl fluorometer
-%               9/2019  changed time convention to use start of the burst,rather than end
-%
-%   K. Zeiden, 10/2024 overhaul to make PC compatible and catch all sensor payloads
+function L0_createSBD(missiondir,SBDfold,burstinterval,payloadtype)
 
-%% Experiment directory 
+% Read and concatentae all onboard processed SWIFT data (once offloaded from SD card) 
+%   for a given mission located in 'missiondir'. User must specify the
+%   burst interval and payloadtype.
 
-expdir = '/Volumes/Data/SEAFAC/June2024';
-SBDfold = 'ProcessedSBD';
-
-%% Sampling Parameters
+%   K. Zeiden, 10/2024
 
 if ispc
     slash = '\';
@@ -26,44 +12,41 @@ else
     slash = '/';
 end
 
-% Sampling Parameters
-burstinterval = 12; % minutes between bursts
-burstlength = 512/60; % minutes of sampling during each burst
-payloadtype = '7'; % v3.3 (2015) and up 
+%% Mission name
 
-% Identify missions
-missions = dir([expdir slash 'SWIFT*']);
-missions = missions([missions.isdir]);
+islash = strfind(missiondir,slash);
 
-%% Loop through missions
+if ~isempty(islash)
+    sname = missiondir(islash(end)+1:end);
+else
+    sname = missiondir;
+end
 
-for im = 1:length(missions)
+%% Create diary file
 
-missiondir = [missions(im).folder slash missions(im).name];
-cd(missiondir)
-sname = missions(im).name;
-
-diaryfile = [missions(im).name '_L0_createSBD.txt'];
+diaryfile = [missiondir slash sname '_L0_createSBD.txt'];
 if exist(diaryfile,'file')
+    diary off
 delete(diaryfile);
 end
 diary(diaryfile)
-disp(['Compiling ' sname])
+disp(['Creating SBD files for ' sname])
 
 
-%%% Create folder for new SBD files %%%
+%% Create folder for new SBD files
+
 if ~exist([missiondir slash SBDfold],'dir')
     mkdir([missiondir slash SBDfold])
 end
 
-%%% Create payload type temporary file %%%
+%% Create temporary binary file with payload type
 
 payloadfile = [missiondir slash 'payload'];
 fid = fopen(payloadfile,'wb');
 fwrite(fid,payloadtype,'uint8');
 fclose(fid);
 
-%%% Find all processed (PRC) files in all port folders
+%% Find all processed (PRC) files in all port folders
 
 PRCfiles = dir([missiondir slash '*' slash 'Processed' slash '*' slash '*PRC*.dat']);
 
@@ -79,7 +62,7 @@ end
 [~,b] = unique(burstfiletimes);
 refbfiles = PRCfiles(b);
 
-%%% Loop through reference burst files (IMU or SBG) %%%
+%% Loop through reference burst files (IMU or SBG)
 
 for iburst = 1:length(refbfiles)
        
@@ -123,8 +106,9 @@ for iburst = 1:length(refbfiles)
     end
 
 end % End burst loop
-
+    
 delete(payloadfile)
 diary off
 
-end % End mission loop
+end % End function
+
