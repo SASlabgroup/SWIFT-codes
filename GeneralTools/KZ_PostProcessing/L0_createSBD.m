@@ -2,7 +2,7 @@ function L0_createSBD(missiondir,SBDfold,burstinterval,payloadtype)
 
 % Read and concatentae all onboard processed SWIFT data (once offloaded from SD card) 
 %   for a given mission located in 'missiondir'. User must specify the
-%   burst interval and payloadtype.
+%   burst interval (in minutes) and payloadtype (always string value '7').
 
 %   K. Zeiden, 10/2024
 

@@ -80,7 +80,7 @@ for iburst = 1:length(bfiles)
     end
 
     % If data is missing, skip burst
-    if isempty(GPS) || isempty(AHRS) || length(AHRS.Accel) < 12000
+    if isempty(GPS) %|| isempty(AHRS) || length(AHRS.Accel) < 12000
         disp('No data. Skipping...')
         continue
     end
@@ -94,34 +94,47 @@ for iburst = 1:length(bfiles)
     end
         
     % Sampling rates and frequency bands
-    dt = median(diff(AHRS.Timestamp_sec)); % time step of raw IMU data
-    if isnan(dt)
-        dt = 600./length(AHRS.Accel);
+    if strcmp(calctype,'GPS')
+        dt = NaN;
     else
+        dt = median(diff(AHRS.Timestamp_sec)); % time step of raw IMU data
     end
+%     if isnan(dt)
+%         dt = 600./length(AHRS.Accel);
+%     else
+%     end
     fs_ahrs = 1/dt; % should be 25 Hz
     fs_gps = 1000./median(diff(GPS.UTC.mSec)); % should be 4 Hz
     f_original = SWIFT(tindex).wavespectra.freq;  % original frequency bands from onboard processing
         
     % Reconstruct sea surface (get raw displacements)
     % (!!!) call is [y,x,z] to get output in east, north, up instead of NEU
-    [y,x,z,~] = rawdisplacements(AHRS,prefilter);
-    if strcmp(prefilter,'RC')
-        x=x'; y=y'; z=z';
+    if strcmp(calctype,'GPS')
+        x = NaN(4096,1); y = NaN(4096,1); z = NaN(4096,1); 
+    else
+        [y,x,z,~] = rawdisplacements(AHRS,prefilter);
+        if strcmp(prefilter,'RC')
+            x=x'; y=y'; z=z';
+        end
     end
         
     % Prepare GPS and IMU data for reprocessing
-    [~,iinterp] = unique(AHRS.GPS_Time.TimeOfWeek);
-    az = interp1(AHRS.GPS_Time.TimeOfWeek(iinterp),AHRS.Accel(iinterp,3),GPS.Time.TimeOfWeek(end-2047:end));
-    if ~any(~isnan(az))
-        disp('Time mismatch between AHRS and GPS. Skipping...')
-        continue
-    end
-    indices = 1:2048;
-    az = interp1(indices(~isnan(az)),az(~isnan(az)),indices,'linear',mean(az,'omitnan'))';
     u = GPS.NED_Vel.Velocity_NED(end-2047:end,2);
     v =  GPS.NED_Vel.Velocity_NED(end-2047:end,1);
     z_gps = GPS.Geodetic_Pos.H_above_MSL(end-2047:end);
+
+    if strcmp(calctype,'IMUandGPS')
+        [~,iinterp] = unique(AHRS.GPS_Time.TimeOfWeek);
+        az = interp1(AHRS.GPS_Time.TimeOfWeek(iinterp),AHRS.Accel(iinterp,3),GPS.Time.TimeOfWeek(end-2047:end));
+        if ~any(~isnan(az))
+            disp('Time mismatch between AHRS and GPS. Skipping...')
+            continue
+        end
+        indices = 1:2048;
+        az = interp1(indices(~isnan(az)),az(~isnan(az)),indices,'linear',mean(az,'omitnan'))';
+    else
+        az = NaN(length(u),1);
+    end
         
     % Prefilter
     if strcmp(prefilter,'elliptic')  % Elliptic filter

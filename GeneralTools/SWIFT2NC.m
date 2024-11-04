@@ -22,6 +22,7 @@ end
 
 %SWIFT=rmfield(SWIFT,'CTdepth');
 %SWIFT=rmfield(SWIFT,'metheight');
+SWIFT=rmfield(SWIFT,'salinityvariance');
 
 if isfield(SWIFT,'salinity') && length(SWIFT(1).salinity)>1
     for si=1:length(SWIFT)

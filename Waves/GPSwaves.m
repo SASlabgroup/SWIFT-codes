@@ -307,17 +307,17 @@ Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
 %  energy period
 fe = sum( f(fwaves).*E(fwaves) )./sum( E(fwaves) );
 [~ , feindex] = min(abs(f-fe));
-Ta = 1./fe;
+Te = 1./fe;
 
 % peak period
 %[~ , fpindex] = max(UU+VV); % can use velocity (picks out more distint peak)
 [~ , fpindex] = max(E);
 Tp = 1./f(fpindex);
 
-if Tp > 18, % if peak not found, use centroid
-    Tp = Ta;
+%if Tp > 18, % if peak not found, use centroid
+    Tp = Te;
     fpindex = feindex;
-end
+%end
 
 %% spectral directions
 dir = - 180 ./ 3.14 * dir1;  % switch from rad to deg, and CCz to Cz (negate)

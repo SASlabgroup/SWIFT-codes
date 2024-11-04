@@ -121,7 +121,7 @@ scatter(swift.lon,swift.lat,[],swift.time,'filled');
 set(gca,'YAxisLocation','right')
 hold on
 quiver(swift.lon,swift.lat,swift.driftu./lonscale,swift.driftv,'k')
-c = slimcolorbar;
+c = colorbar; %c = slimcolorbar;
 c.Location = 'South';
 c.TickLabels = datestr(c.Ticks,'mmm-dd');
 ylabel('Lat [^{\circ}N]')
@@ -168,7 +168,7 @@ shading flat
 end
 ylim([0.05 5])
 set(gca,'YScale','log')
-c = slimcolorbar;
+c = colorbar; %c = slimcolorbar;
 set(gca,'YDir','Reverse')
 ylabel('F [Hz]')
 cmocean('thermal')
@@ -201,7 +201,7 @@ xlim([0.05 1])
 ylim(10.^([-5 0]))
 set(gca,'YScale','log','XScale','log')
 colormap(gca,cwind)
-c = slimcolorbar;
+c = colorbar;% slimcolorbar;
 c.Label.String = 'U [ms^{-1}]';
 c.Ticks = 0:0.25:1;
 c.TickLabels = num2str((c.Ticks*16 + 2)');
@@ -217,7 +217,7 @@ pcolor(swift.time,swift.wavefreq,log10(swift.wavepower))
 end
 shading flat
 set(gca,'YScale','log')
-c = slimcolorbar;
+c = colorbar; %slimcolorbar;
 c.Label.String = 'P [m^2Hz^{-1}]';
 set(gca,'YDir','Reverse')
 c.Ticks = -3:1:0;
@@ -245,6 +245,6 @@ datetick('x','KeepLimits')
 xlabel('Time')
 
 set(h,'FontSize',12)
-rmemptysub
+%rmemptysub
 
 end
