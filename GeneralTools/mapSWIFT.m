@@ -36,7 +36,7 @@ wd = wd( lastslash : end );
 
 for fi = 1:length(flist),
     
-    load(flist(fi).name)
+    load(flist(fi).name,'SWIFT')
     clear color
     
     if isfield(SWIFT,colorfield) && ~isempty([SWIFT]),
