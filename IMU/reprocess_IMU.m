@@ -106,6 +106,9 @@ for iburst = 1:length(bfiles)
     fs_ahrs = 1/dt; % should be 25 Hz
     fs_gps = 1000./median(diff(GPS.UTC.mSec)); % should be 4 Hz
     f_original = SWIFT(tindex).wavespectra.freq;  % original frequency bands from onboard processing
+    if any(isnan(f_original)) | any(f_original==0)
+        f_original = linspace(0.0098, 0.4902, 42) % apply standard 42 freq bands if missing
+    end
         
     % Reconstruct sea surface (get raw displacements)
     % (!!!) call is [y,x,z] to get output in east, north, up instead of NEU
@@ -198,13 +201,14 @@ for iburst = 1:length(bfiles)
 
             [Hs,Tp,Dp,E,f,a1,b1,a2,b2,check] = GPSandIMUwaves(u(igood),v(igood),az(igood),[],[],fs_gps);
             
-            if interpf
+            if interpf 
             % Interpolate to the original freq bands
                 E = interp1(f,E,f_original);
                 a1 = interp1(f,a1,f_original);
                 b1 = interp1(f,b1,f_original);
                 a2 = interp1(f,a2,f_original);
                 b2 = interp1(f,b2,f_original);
+                check = interp1(f,check,f_original);
                 f = f_original;
             end
             
@@ -234,6 +238,7 @@ for iburst = 1:length(bfiles)
             b1 = interp1(f,b1,f_original);
             a2 = interp1(f,a2,f_original);
             b2 = interp1(f,b2,f_original);
+            check = interp1(f,check,f_original);
             f = f_original;
         end
         
