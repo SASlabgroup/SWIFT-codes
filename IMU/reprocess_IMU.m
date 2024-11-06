@@ -107,7 +107,7 @@ for iburst = 1:length(bfiles)
     fs_gps = 1000./median(diff(GPS.UTC.mSec)); % should be 4 Hz
     f_original = SWIFT(tindex).wavespectra.freq;  % original frequency bands from onboard processing
     if any(isnan(f_original)) | any(f_original==0)
-        f_original = linspace(0.0098, 0.4902, 42) % apply standard 42 freq bands if missing
+        f_original = linspace(0.0098, 0.4902, 42)'; % apply standard 42 freq bands if missing
     end
         
     % Reconstruct sea surface (get raw displacements)
