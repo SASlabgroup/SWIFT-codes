@@ -26,6 +26,7 @@ function [] = plotSWIFT(SWIFT)
 %   figure 8: Wind spectra
 %   figure 9: oxygen concentration and FDOM (fluorometer dissolved organic matter?)
 %   figure 10: radiometers
+%   figure 11: drift spd and direction
 
 if ispc
     slash = '\';
@@ -640,6 +641,26 @@ if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mea
     datetick
     ylabel('Radiance [mV]')
     print('-dpng',['SWIFT' wd '_radiometer.png'])
+
+end
+
+%% Figure 11: drift speed and direction
+
+if isfield(SWIFT,'driftspd') && any(~isnan([SWIFT.driftspd]))
+
+    figure(11), clf
+    subplot(2,1,1)
+    plot([SWIFT.time],[SWIFT.driftspd])
+    hold on
+    datetick
+    ylabel('Drift Spd [m/s]')
+    subplot(2,1,2)
+    plot([SWIFT.time],[SWIFT.driftdirT],'.')
+    hold on
+    datetick
+    ylabel('Drift dir [deg T]')
+    set(gca,'YLim',[0 360])
+    print('-dpng',['SWIFT' wd '_driftspd_driftdir.png']) 
 
 end
 
