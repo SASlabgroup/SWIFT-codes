@@ -11,6 +11,7 @@ function SWIFT2NC(SWIFT_in,filename)
 % original by L. Hosekova in 2020
 %   Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
 %   Feb 2023 by J. Thomson for SASSIE and general use
+%   Nov 2024 by J. Thomson to include microSWIFTs
 
 swiftnum = str2num(strrep(strrep(SWIFT_in(1).ID, 'SWIFT', ''), ' ', '') );
 
@@ -20,9 +21,21 @@ if isfield(SWIFT,'wavehistogram')
     SWIFT=rmfield(SWIFT,'wavehistogram');
 end
 
-%SWIFT=rmfield(SWIFT,'CTdepth');
-%SWIFT=rmfield(SWIFT,'metheight');
-SWIFT=rmfield(SWIFT,'salinityvariance');
+if isfield(SWIFT,'battery')
+    SWIFT=rmfield(SWIFT,'battery');
+end
+
+if isfield(SWIFT,'CTdepth')
+    SWIFT=rmfield(SWIFT,'CTdepth');
+end
+
+if isfield(SWIFT,'Metheight')
+    SWIFT=rmfield(SWIFT,'metheight');
+end
+
+if isfield(SWIFT,'salinityvariance')
+    SWIFT=rmfield(SWIFT,'salinityvariance');
+end
 
 if isfield(SWIFT,'salinity') && length(SWIFT(1).salinity)>1
     for si=1:length(SWIFT)
@@ -181,16 +194,16 @@ for i=1:length(names)
         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''air_pressure'',''NC_DOUBLE'',[t_dim])'));
     elseif strcmp(names{i},'airpresstddev')
         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''air_pressure_stddev'',''NC_DOUBLE'',[t_dim])'));
-    elseif strcmp(names{i},'flag_values_watertemp')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_watertemp'',''NC_DOUBLE'',[t_dim])'));
-    elseif strcmp(names{i},'flag_values_airtemp')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_airtemp'',''NC_DOUBLE'',[t_dim])'));
-    elseif strcmp(names{i},'flag_values_humidity')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_humidity'',''NC_DOUBLE'',[t_dim])'));
-    elseif strcmp(names{i},'flag_values_windpsd')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_windspd'',''NC_DOUBLE'',[t_dim])'));
-    elseif strcmp(names{i},'flag_values_salinity')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_salinity'',''NC_DOUBLE'',[t_dim])'));
+%     elseif strcmp(names{i},'flag_values_watertemp')
+%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_watertemp'',''NC_DOUBLE'',[t_dim])'));
+%     elseif strcmp(names{i},'flag_values_airtemp')
+%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_airtemp'',''NC_DOUBLE'',[t_dim])'));
+%     elseif strcmp(names{i},'flag_values_humidity')
+%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_humidity'',''NC_DOUBLE'',[t_dim])'));
+%     elseif strcmp(names{i},'flag_values_windpsd')
+%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_windspd'',''NC_DOUBLE'',[t_dim])'));
+%     elseif strcmp(names{i},'flag_values_salinity')
+%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_salinity'',''NC_DOUBLE'',[t_dim])'));
 
     elseif ~strcmp(names{i},'ID')
         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''',names{i},''',''NC_DOUBLE'',[t_dim])'));
@@ -225,19 +238,19 @@ end
 if swiftnum < 100
     netcdf.putAtt(ncid,varid,'temporal_sampling','Data from are ensembles values calculated from 512 secs of raw data recorded at 4 Hz.');
     netcdf.putAtt(ncid,varid,'reference1','Thomson, J., (2012). Wave breaking dissipation observed with SWIFT drifters, Journal of Atmospheric and Oceanic Technology, http://dx.doi.org/10.1175/JTECH-D-12-00018.1');
-    netcdf.putAtt(ncid,varid,'reference2','https://github.com/SASlabgroup/SWIFT-codes');
+    netcdf.putAtt(ncid,varid,'reference2','https://github.com/SASlabgroup/SWIFT-codes,https://doi.org/10.5281/zenodo.13922183');
 end
 
 netcdf.putAtt(ncid,varid,'level','Version 1');
 netcdf.putAtt(ncid,varid,'history','Version 1');
 netcdf.putAtt(ncid,varid,'missing_data_flag','-999');
 
-%adjust attributes if we have a WaveGlider
-%if a waveglider...
-if swiftnum > 100 %3 digit input number = Wave Glider
-    netcdf.putAtt(ncid,varid,'description',['Data collected from Wave Glider SV3-' num2str(swiftnum) '.']);
-    netcdf.putAtt(ncid,varid,'temporal_sampling','Data from are ensembles values calculated from 1536 secs of raw data recorded at 4 Hz.');
-    netcdf.putAtt(ncid,varid,'reference1','Thomson, J., Girton, J. B., Jha, R., & Trapani, A. (2018). Measurements of directional wave spectra and wind stress from a wave glider autonomous surface vehicle. Journal of Atmospheric and Oceanic Technology, 35(2), 347–363, doi.org/10.1175/JTECH-D-17-0091.1.');
+%adjust attributes for a microSWIFT
+if swiftnum > 100 %3 digit input number = microSWIFT
+    netcdf.putAtt(ncid,varid,'description', 'Data collected from a microSWIFT buoy.  See www.apl.uw.edu/SWIFT for more information' );
+    netcdf.putAtt(ncid,varid,'temporal_sampling','Data from are ensembles values calculated from 1024 secs of raw data recorded at 4 Hz.');
+    netcdf.putAtt(ncid,varid,'reference1','Thomson et al, Development and testing of microSWIFT expendable wave buoys, Coastal Engineering Journal, https://doi.org/10.1080/21664250.2023.2283325');
+    netcdf.putAtt(ncid,varid,'reference2','https://github.com/SASlabgroup/SWIFT-codes, https://doi.org/10.5281/zenodo.13922183');
 end
 
 
@@ -306,8 +319,8 @@ for i=1:length(names)
                     ncwriteatt(filename,'a1','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                     ncwriteatt(filename,'a1','instrument','SBG Ellipse/AHRS')
-                elseif swiftnum >= 100 %Wave Glider
-                    ncwriteatt(filename,'a1','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+                elseif swiftnum >= 100 % microSWIFT
+                    ncwriteatt(filename,'a1','instrument','GPSWaves / NEDwaves')
                 end
                 ncwriteatt(filename,'a1','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
@@ -318,8 +331,8 @@ for i=1:length(names)
                     ncwriteatt(filename,'b1','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                     ncwriteatt(filename,'b1','instrument','SBG Ellipse/AHRS')
-                elseif swiftnum >= 100 %Wave Glider
-                    ncwriteatt(filename,'b1','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+                elseif swiftnum >= 100 % microSWIFT
+                    ncwriteatt(filename,'b1','instrument','GGPSWaves / NEDwaves')
                 end
                 ncwriteatt(filename,'b1','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
@@ -330,8 +343,8 @@ for i=1:length(names)
                     ncwriteatt(filename,'a2','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                     ncwriteatt(filename,'a2','instrument','SBG Ellipse/AHRS')
-                elseif swiftnum >= 100 %Wave Glider
-                    ncwriteatt(filename,'a2','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+                elseif swiftnum >= 100 % microSWIFT
+                    ncwriteatt(filename,'a2','instrument','GPSWaves / NEDwaves')
                 end
                 ncwriteatt(filename,'a2','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
@@ -342,8 +355,8 @@ for i=1:length(names)
                     ncwriteatt(filename,'b2','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                     ncwriteatt(filename,'b2','instrument','SBG Ellipse/AHRS')
-                elseif swiftnum >= 100 %Wave Glider
-                    ncwriteatt(filename,'b2','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+                elseif swiftnum >= 100 % microSWIFT
+                    ncwriteatt(filename,'b2','instrument','GPSWaves / NEDwaves')
                 end
                 ncwriteatt(filename,'b2','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
@@ -355,8 +368,8 @@ for i=1:length(names)
                     ncwriteatt(filename,'energy','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                     ncwriteatt(filename,'energy','instrument','SBG Ellipse/AHRS')
-                elseif swiftnum >= 100 %Wave Glider
-                    ncwriteatt(filename,'energy','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+                elseif swiftnum >= 100 % microSWIFT
+                    ncwriteatt(filename,'energy','instrument','GPSWaves / NEDwaves')
                 end
                 ncwriteatt(filename,'energy','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
@@ -368,8 +381,8 @@ for i=1:length(names)
                     ncwriteatt(filename,'freq','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                     ncwriteatt(filename,'freq','instrument','SBG Ellipse/AHRS')
-                elseif swiftnum >= 100 %Wave Glider
-                    ncwriteatt(filename,'freq','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+                elseif swiftnum >= 100 % microSWIFT
+                    ncwriteatt(filename,'freq','instrument','GPSWaves / NEDwaves')
                 end
                 ncwriteatt(filename,'freq','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
 
@@ -522,29 +535,29 @@ for i=1:length(names)
                 ncwriteatt(filename,'sea_water_temperature','long_name','sea water temperature at 0.5 m depth')
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'sea_water_temperature','long_name','sea water temperature at 0.3 m depth')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_water_temperature','long_name','sea water temperature at 0.24 m depth')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_water_temperature','long_name','sea water temperature at 0.5 m depth')
             end
             ncwriteatt(filename,'sea_water_temperature','standard_name','sea_water_temperature')
             ncwriteatt(filename,'sea_water_temperature','instrument','Aanderaa 4319')
-            ncwriteatt(filename,'sea_water_temperature','ancillary_variables','flag_values_watertemp')
-            ncwriteatt(filename,'sea_water_temperature','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'sea_water_temperature','_FillValue',-999)
+            %ncwriteatt(filename,'sea_water_temperature','ancillary_variables','flag_values_watertemp')
+            %ncwriteatt(filename,'sea_water_temperature','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+            %ncwriteatt(filename,'sea_water_temperature','_FillValue',-999)
         end
         if strcmp(names(i),'watertemp_d2')
             ncwriteatt(filename,'sea_water_temperature_at_depth','units','degree_C')
             if swiftnum < 18 %v3 SWIFT
                 ncwriteatt(filename,'sea_water_temperature_at_depth','long_name','sea water temperature at 1.0 m depth')
                 ncwriteatt(filename,'sea_water_temperature_at_depth','instrument','Aanderaa 4319')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_water_temperature_at_depth','long_name','sea water temperature at 8.0 m depth')
-                ncwriteatt(filename,'sea_water_temperature_at_depth','instrument','Seabird GPCTD')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_water_temperature_at_depth','long_name','sea water temperature at 0.5 m depth')
+                ncwriteatt(filename,'sea_water_temperature_at_depth','instrument','Aanderaa 4319')
 
             end
             ncwriteatt(filename,'sea_water_temperature_at_depth','standard_name','sea_water_temperature')
-            ncwriteatt(filename,'sea_water_temperature_at_depth','ancillary_variables','flag_values_watertemp')
-            ncwriteatt(filename,'sea_water_temperature_at_depth','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'sea_water_temperature_at_depth','_FillValue',-999)
+%             ncwriteatt(filename,'sea_water_temperature_at_depth','ancillary_variables','flag_values_watertemp')
+%             ncwriteatt(filename,'sea_water_temperature_at_depth','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'sea_water_temperature_at_depth','_FillValue',-999)
         end
         if strcmp(names(i),'qsea')
             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','units','grams_per_kilogram')
@@ -552,14 +565,14 @@ for i=1:length(names)
                 ncwriteatt(filename,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.5 m depth')
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.3 m depth')
-            elseif swiftnum >= 100 %Wave Glider
+            elseif swiftnum >= 100 %microSWIFT
                 ncwriteatt(filename,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.24 m depth')
             end
             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','standard_name','surface_specific_humidity')
-            ncwriteatt(filename,'sea_surface_saturation_specific_humidity','method','calculated from sea water temperature')
-            ncwriteatt(filename,'sea_surface_saturation_specific_humidity','ancillary_variables','flag_values_watertemp')
-            ncwriteatt(filename,'sea_surface_saturation_specific_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'sea_surface_saturation_specific_humidity','_FillValue',-999)
+%             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','method','calculated from sea water temperature')
+%             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','ancillary_variables','flag_values_watertemp')
+%             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','_FillValue',-999)
         end
         if strcmp(names(i),'sigwaveheight')
             ncwriteatt(filename,'sea_surface_wave_significant_height','units','m')
@@ -569,8 +582,8 @@ for i=1:length(names)
                 ncwriteatt(filename,'sea_surface_wave_significant_height','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'sea_surface_wave_significant_height','instrument','SBG Ellipse/AHRS')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_surface_wave_significant_height','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_surface_wave_significant_height','instrument','GPSWaves / NEDwaves')
             end
         end
         if strcmp(names(i),'peakwaveperiod')
@@ -581,8 +594,8 @@ for i=1:length(names)
                 ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','instrument','SBG Ellipse/AHRS')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','instrument','GPSWaves / NEDwaves')
             end
         end
         if strcmp(names(i),'centroidwaveperiod')
@@ -593,64 +606,64 @@ for i=1:length(names)
                 ncwriteatt(filename,'sea_surface_wave_mean_period','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'sea_surface_wave_mean_period','instrument','SBG Ellipse/AHRS')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_surface_wave_mean_period','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_surface_wave_mean_period','instrument','GPSWaves / NEDwaves')
             end
         end
-        if strcmp(names(i),'mss')
-            ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','units','s')
-            ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','long_name','wave_mean_square_slope_normalized_by_frequency_width of 0.15 (0.25 to 0.4 1/s frequency range). Multiply by frequency width to get unnormalized value.')
-            ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','standard_name','sea_surface_wave_mean_square_slope')
-            if swiftnum < 18 %v3 SWIFT
-                ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','instrument','Microstrain 3DM-GX3-35/AHRS')
-            elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
-                ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','instrument','SBG Ellipse/AHRS')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
-            end
-            ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','method','Calculated with equation 4 in Iyer et al., JGR Oceans, 2022.')
-        end
-        if strcmp(names(i),'ustar')
-            ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','units','m/s')
-            ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','long_name','friction_velocity_in_air_from_wave_spectra calculated using 0.25 to 0.4 1/s frequency range')
-            ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','standard_name','friction_velocity_in_air')
-            if swiftnum < 18 %v3 SWIFT
-                ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','Microstrain 3DM-GX3-35/AHRS')
-            elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
-                ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','SBG Ellipse/AHRS')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
-            end
-            ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','method','Calculated with equation 3 in Iyer et al., JGR Oceans, 2022.')
-        end
+%         if strcmp(names(i),'mss')
+%             ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','units','s')
+%             ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','long_name','wave_mean_square_slope_normalized_by_frequency_width of 0.15 (0.25 to 0.4 1/s frequency range). Multiply by frequency width to get unnormalized value.')
+%             ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','standard_name','sea_surface_wave_mean_square_slope')
+%             if swiftnum < 18 %v3 SWIFT
+%                 ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','instrument','Microstrain 3DM-GX3-35/AHRS')
+%             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
+%                 ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','instrument','SBG Ellipse/AHRS')
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+%             end
+%             ncwriteatt(filename,'sea_surface_wave_mean_square_slope_normalized_by_frequency_width','method','Calculated with equation 4 in Iyer et al., JGR Oceans, 2022.')
+%         end
+%         if strcmp(names(i),'ustar')
+%             ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','units','m/s')
+%             ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','long_name','friction_velocity_in_air_from_wave_spectra calculated using 0.25 to 0.4 1/s frequency range')
+%             ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','standard_name','friction_velocity_in_air')
+%             if swiftnum < 18 %v3 SWIFT
+%                 ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','Microstrain 3DM-GX3-35/AHRS')
+%             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
+%                 ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','SBG Ellipse/AHRS')
+%             elseif swiftnum >= 100 %microSWIFT
+%                 ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+%             end
+%             ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','method','Calculated with equation 3 in Iyer et al., JGR Oceans, 2022.')
+%         end
         if strcmp(names(i),'salinity')
             ncwriteatt(filename,'sea_water_salinity','units','psu')
             if swiftnum < 18 %v3 SWIFT
                 ncwriteatt(filename,'sea_water_salinity','long_name','sea water salinity at 0.5 m depth')
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'sea_water_salinity','long_name','sea water salinity at 0.3 m depth')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_water_salinity','long_name','sea water salinity at 0.24 m depth')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_water_salinity','long_name','sea water salinity at 0.5 m depth')
             end
             ncwriteatt(filename,'sea_water_salinity','standard_name','sea_water_salinity')
             ncwriteatt(filename,'sea_water_salinity','instrument','Aanderaa 4319')
-            ncwriteatt(filename,'sea_water_salinity','ancillary_variables','flag_values_salinity')
-            ncwriteatt(filename,'sea_water_salinity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'sea_water_salinity','_FillValue',-999)
+%             ncwriteatt(filename,'sea_water_salinity','ancillary_variables','flag_values_salinity')
+%             ncwriteatt(filename,'sea_water_salinity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'sea_water_salinity','_FillValue',-999)
         end
         if strcmp(names(i),'salinity_d2')
             ncwriteatt(filename,'sea_water_salinity_at_depth','units','psu')
             if swiftnum < 18 %v3 SWIFT
                 ncwriteatt(filename,'sea_water_salinity_at_depth','long_name','sea water salinity at 1.0 m depth')
                 ncwriteatt(filename,'sea_water_salinity_at_depth','instrument','Aanderaa 4319')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_water_salinity_at_depth','long_name','sea water salinity at 8.0 m depth')
-                ncwriteatt(filename,'sea_water_salinity_at_depth','instrument','Seabird GPCTD')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_water_salinity_at_depth','long_name','sea water salinity at 0.5 m depth')
+                ncwriteatt(filename,'sea_water_salinity_at_depth','instrument','Aanderaa 4319')
             end
             ncwriteatt(filename,'sea_water_salinity_at_depth','standard_name','sea_water_salinity')
-            ncwriteatt(filename,'sea_water_salinity_at_depth','ancillary_variables','flag_values_salinity')
-            ncwriteatt(filename,'sea_water_salinity_at_depth','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'sea_water_salinity_at_depth','_FillValue',-999)
+%             ncwriteatt(filename,'sea_water_salinity_at_depth','ancillary_variables','flag_values_salinity')
+%             ncwriteatt(filename,'sea_water_salinity_at_depth','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'sea_water_salinity_at_depth','_FillValue',-999)
         end
         if strcmp(names(i),'peakwavedirT')
             ncwriteatt(filename,'sea_surface_wave_from_direction_at_variance_spectral_density_maximum','units','degree')
@@ -660,8 +673,8 @@ for i=1:length(names)
                 ncwriteatt(filename,'sea_surface_wave_from_direction_at_variance_spectral_density_maximum','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'sea_surface_wave_from_direction_at_variance_spectral_density_maximum','instrument','SBG Ellipse/AHRS')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_surface_wave_from_direction_at_variance_spectral_density_maximum','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_surface_wave_from_direction_at_variance_spectral_density_maximum','instrument','GPSWaves / NEDwaves')
             end
             ncwriteatt(filename,'sea_surface_wave_from_direction_at_variance_spectral_density_maximum','method','Wave spectral processing as described by Thomson et al., JTech, 2018.')
         end
@@ -673,8 +686,8 @@ for i=1:length(names)
                 ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','instrument','SBG Ellipse/AHRS')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+            elseif swiftnum >= 100 % microSWIFT
+                ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','instrument','GPSWaves / NEDwaves')
             end
             ncwriteatt(filename,'sea_surface_wave_period_at_variance_spectral_density_maximum','method','Wave spectral processing as described by Thomson et al., JTech, 2018.')
         end
@@ -688,10 +701,10 @@ for i=1:length(names)
                 ncwriteatt(filename,'wind_direction','long_name','true wind direction at 0.5 m height above the wave-following surface, direction from north')
                 ncwriteatt(filename,'wind_direction','standard_name','wind_from_direction')
                 ncwriteatt(filename,'wind_direction','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'wind_direction','long_name','true wind direction at 1.0 m height above the wave-following surface, direction from north')
-                ncwriteatt(filename,'wind_direction','standard_name','wind_from_direction')
-                ncwriteatt(filename,'wind_direction','instrument','Airmar 200WX')
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'wind_direction','long_name','true wind direction at 1.0 m height above the wave-following surface, direction from north')
+%                 ncwriteatt(filename,'wind_direction','standard_name','wind_from_direction')
+%                 ncwriteatt(filename,'wind_direction','instrument','Airmar 200WX')
             end
         end
         if strcmp(names(i),'winddirTstddev')
@@ -702,9 +715,9 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'wind_direction_stddev','long_name','standard deviation of true wind direction at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'wind_direction_stddev','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'wind_direction_stddev','long_name','standard deviation of true wind direction at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_direction_stddev','instrument','Airmar 200WX')
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'wind_direction_stddev','long_name','standard deviation of true wind direction at 1.0 m height above the wave-following surface')
+%                 ncwriteatt(filename,'wind_direction_stddev','instrument','Airmar 200WX')
             end
         end
         if strcmp(names(i),'windspd')
@@ -715,14 +728,14 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'wind_speed','long_name','true wind speed at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'wind_speed','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'wind_speed','long_name','true wind speed at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_speed','instrument','Airmar 200WX')
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'wind_speed','long_name','true wind speed at 1.0 m height above the wave-following surface')
+%                 ncwriteatt(filename,'wind_speed','instrument','Airmar 200WX')
             end
             ncwriteatt(filename,'wind_speed','standard_name','wind_speed')
-            ncwriteatt(filename,'wind_speed','ancillary_variables','flag_values_windspd')
-            ncwriteatt(filename,'wind_speed','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'wind_speed','_FillValue',-999)
+%             ncwriteatt(filename,'wind_speed','ancillary_variables','flag_values_windspd')
+%             ncwriteatt(filename,'wind_speed','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'wind_speed','_FillValue',-999)
         end
         if strcmp(names(i),'windspdstddev')
             ncwriteatt(filename,'wind_speed_stddev','units','m/s')
@@ -732,12 +745,12 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'wind_speed_stddev','long_name','standard deviation of true wind speed at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'wind_speed_stddev','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'wind_speed_stddev','long_name','standard deviation of true wind speed at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_speed_stddev','instrument','Airmar 200WX')
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'wind_speed_stddev','long_name','standard deviation of true wind speed at 1.0 m height above the wave-following surface')
+%                 ncwriteatt(filename,'wind_speed_stddev','instrument','Airmar 200WX')
             end
-            ncwriteatt(filename,'wind_speed_stddev','ancillary_variables','flag_values_windspd')
-            ncwriteatt(filename,'wind_speed_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'wind_speed_stddev','ancillary_variables','flag_values_windspd')
+%             ncwriteatt(filename,'wind_speed_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
         end
         if strcmp(names(i),'airtemp')
             ncwriteatt(filename,'air_temperature','units','degree_C')
@@ -748,15 +761,15 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'air_temperature','long_name','air temperature at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'air_temperature','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'air_temperature','long_name','air temperature at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'air_temperature','instrument','Airmar 200WX')
-                ncwriteatt(filename,'air_temperature','note','Daytime data (10:00-21:00 UTC) have been replaced with NaNs, because of diurnal heating of the sensor. Additional corrections were made to Airmar air temperature data to correct for unrealistically low values in high wind conditions due to sea spray. This involved applying a 2-hour maximum filter (take the maximum data point every 2 hours). Remaining unrealistic data were removed manually. Because of this processing step, air temperature data should be treated as if the time resolution is 2 hours.');
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'air_temperature','long_name','air temperature at 1.0 m height above the wave-following surface')
+%                 ncwriteatt(filename,'air_temperature','instrument','Airmar 200WX')
+%                 ncwriteatt(filename,'air_temperature','note','Daytime data (10:00-21:00 UTC) have been replaced with NaNs, because of diurnal heating of the sensor. Additional corrections were made to Airmar air temperature data to correct for unrealistically low values in high wind conditions due to sea spray. This involved applying a 2-hour maximum filter (take the maximum data point every 2 hours). Remaining unrealistic data were removed manually. Because of this processing step, air temperature data should be treated as if the time resolution is 2 hours.');
             end
             ncwriteatt(filename,'air_temperature','standard_name','air_temperature')
-            ncwriteatt(filename,'air_temperature','ancillary_variables','flag_values_airtemp')
-            ncwriteatt(filename,'air_temperature','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'air_temperature','_FillValue',-999)
+%             ncwriteatt(filename,'air_temperature','ancillary_variables','flag_values_airtemp')
+%             ncwriteatt(filename,'air_temperature','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'air_temperature','_FillValue',-999)
 
         end
         if strcmp(names(i),'airtempstddev')
@@ -767,13 +780,13 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'air_temperature_stddev','long_name','standard deviation of air temperature at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'air_temperature_stddev','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'air_temperature_stddev','long_name','standard deviation of air temperature at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'air_temperature_stddev','instrument','Airmar 200WX')
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'air_temperature_stddev','long_name','standard deviation of air temperature at 1.0 m height above the wave-following surface')
+%                 ncwriteatt(filename,'air_temperature_stddev','instrument','Airmar 200WX')
             end
-            ncwriteatt(filename,'air_temperature_stddev','ancillary_variables','flag_values_airtemp')
-            ncwriteatt(filename,'air_temperature_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'air_temperature_stddev','_FillValue',-999)
+%             ncwriteatt(filename,'air_temperature_stddev','ancillary_variables','flag_values_airtemp')
+%             ncwriteatt(filename,'air_temperature_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'air_temperature_stddev','_FillValue',-999)
         end
         if strcmp(names(i),'relhumidity')
             ncwriteatt(filename,'relative_humidity','units','%')
@@ -784,13 +797,13 @@ for i=1:length(names)
                 ncwriteatt(filename,'relative_humidity','long_name','relative_humidity at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'relative_humidity','instrument','Vaisala WXT530')
                 ncwriteatt(filename,'relative_humidity','standard_name','relative_humidity')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'relative_humidity','long_name','relative_humidity at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'relative_humidity','standard_name','relative_humidity')
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'relative_humidity','long_name','relative_humidity at 1.0 m height above the wave-following surface')
+%                 ncwriteatt(filename,'relative_humidity','standard_name','relative_humidity')
             end
-            ncwriteatt(filename,'relative_humidity','ancillary_variables','flag_values_humidity')
-            ncwriteatt(filename,'relative_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'relative_humidity','_FillValue',-999)
+%             ncwriteatt(filename,'relative_humidity','ancillary_variables','flag_values_humidity')
+%             ncwriteatt(filename,'relative_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'relative_humidity','_FillValue',-999)
         end
         if strcmp(names(i),'qair')
             ncwriteatt(filename,'specific_humidity','units','grams_per_kilogram')
@@ -800,14 +813,14 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'specific_humidity','standard_name','specific_humidity')
-            elseif swiftnum >= 100 %Wave Glider
-                ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'specific_humidity','standard_name','specific_humidity')
+%             elseif swiftnum >= 100 % microSWIFT
+%                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 1.0 m height above the wave-following surface')
+%                 ncwriteatt(filename,'specific_humidity','standard_name','specific_humidity')
             end
             ncwriteatt(filename,'specific_humidity','method','calculated from air temperature, air pressure, and relative humidity')
-            ncwriteatt(filename,'specific_humidity','ancillary_variables','flag_values_humidity')
-            ncwriteatt(filename,'specific_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'specific_humidity','_FillValue',-999)
+%             ncwriteatt(filename,'specific_humidity','ancillary_variables','flag_values_humidity')
+%             ncwriteatt(filename,'specific_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'specific_humidity','_FillValue',-999)
         end
         if strcmp(names(i),'relhumiditystddev')
             ncwriteatt(filename,'relative_humidity_stddev','units','')
@@ -816,12 +829,12 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'relative_humidity_stddev','long_name','standard deviation of relative_humidity at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'relative_humidity_stddev','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
+            elseif swiftnum >= 100 %microSWIFT
                 ncwriteatt(filename,'relative_humidity_stddev','long_name','standard deviation of relative_humidity at 1.0 m height above the wave-following surface')
             end
-            ncwriteatt(filename,'relative_humidity_stddev','ancillary_variables','flag_values_humidity')
-            ncwriteatt(filename,'relative_humidity_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            ncwriteatt(filename,'relative_humidity_stddev','_FillValue',-999)
+%             ncwriteatt(filename,'relative_humidity_stddev','ancillary_variables','flag_values_humidity')
+%             ncwriteatt(filename,'relative_humidity_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             ncwriteatt(filename,'relative_humidity_stddev','_FillValue',-999)
         end
         if strcmp(names(i),'airpres')
             ncwriteatt(filename,'air_pressure','units','Pa')
@@ -831,13 +844,13 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'air_pressure','long_name','air pressure at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'air_pressure','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
+            elseif swiftnum >= 100 % microSWIFT
                 ncwriteatt(filename,'air_pressure','long_name','air pressure at 1.0 m height above the wave-following surface')
                 ncwriteatt(filename,'air_pressure','instrument','Airmar 200WX')
             end
             ncwriteatt(filename,'air_pressure','standard_name','air_pressure')
-            ncwriteatt(filename,'air_pressure','ancillary_variables','flag_values_airtemp')
-            ncwriteatt(filename,'air_pressure','_FillValue',-999)
+%             ncwriteatt(filename,'air_pressure','ancillary_variables','flag_values_airtemp')
+%             ncwriteatt(filename,'air_pressure','_FillValue',-999)
         end
         if strcmp(names(i),'airpresstddev')
             ncwriteatt(filename,'air_pressure_stddev','units','Pa')
@@ -847,12 +860,12 @@ for i=1:length(names)
             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
                 ncwriteatt(filename,'air_pressure_stddev','long_name','standard deviation of air pressure at 0.5 m height above the wave-following surface')
                 ncwriteatt(filename,'air_pressure_stddev','instrument','Vaisala WXT530')
-            elseif swiftnum >= 100 %Wave Glider
+            elseif swiftnum >= 100 %microSWIFT
                 ncwriteatt(filename,'air_pressure_stddev','long_name','standard deviation of air pressure at 1.0 m height above the wave-following surface')
                 ncwriteatt(filename,'air_pressure_stddev','instrument','Airmar 200WX')
             end
-            ncwriteatt(filename,'air_pressure_stddev','ancillary_variables','flag_values_airtemp')
-            ncwriteatt(filename,'air_pressure_stddev','_FillValue',-999)
+%             ncwriteatt(filename,'air_pressure_stddev','ancillary_variables','flag_values_airtemp')
+%             ncwriteatt(filename,'air_pressure_stddev','_FillValue',-999)
         end
         if strcmp(names(i),'flag_values_watertemp')
             ncwriteatt(filename,'flag_values_watertemp','description','flags')
@@ -907,7 +920,7 @@ for i=1:length(names)
         %                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 0.8 m height above the wave-following surface')
         %             elseif swiftnum >= 18 && swiftnum < 100 %v4 SWIFT
         %                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 0.5 m height above the wave-following surface')
-        %             elseif swiftnum >= 100 %Wave Glider
+        %             elseif swiftnum >= 100 %microSWIFT
         %                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 1.0 m height above the wave-following surface')
         %             end
         %             ncwriteatt(filename,'specific_humidity','standard_name','specific_humidity')
