@@ -18,7 +18,7 @@
 %                   and give messages for burst screening
 %             9/2019   force timestamp from filename always, rather than Airmar
 %             7/2022    allow microSWIFT timestamps (not from filename)
-clear all,
+clear all
 
 plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
@@ -27,15 +27,15 @@ fixpositions = false; % binary flag to use "filloutliers" to fix spurious positi
 disp('-------------------------------------')
 disp('Check QC settings... currently using:')
 
-minwaveheight = 0 % minimum wave height in data screening
+minwaveheight = 0; % minimum wave height in data screening
 
-minsalinity = 0 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = -10; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
-maxdriftspd = 5  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
+maxdriftspd = 5;  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
 
-maxwindspd = 30 % m/s for malfunctioning Airmars
+maxwindspd = 30; % m/s for malfunctioning Airmars
 
-minairtemp = -20 % min airtemp
+minairtemp = -20; % min airtemp
 disp('-------------------------------------')
 
 wd = pwd;
@@ -61,6 +61,7 @@ for ai = 1:length(flist),
     else
         battery(ai) = voltage;
     end
+    oneSWIFT.battery = battery;
     
     if isempty(oneSWIFT.lat) | isempty(oneSWIFT.lon),
         oneSWIFT.lat = NaN;

@@ -18,4 +18,6 @@ errorflag = RMYdata.data(:,5);
 % [ustar,epsilon,meanu,meanv,meanw,meantemp,anisotropy,quality,freq,tkespectrum] = ...
 %     inertialdissipation(uvw(:,1), uvw(:,2), uvw(:,3), temp, z, fs);
 
+save([filename(1:end-4) '.mat'],'u','v','w','temp','errorflag');
+
 end

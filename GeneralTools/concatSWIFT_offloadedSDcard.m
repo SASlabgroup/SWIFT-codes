@@ -121,4 +121,3 @@ else
 end
 
 plotSWIFT(SWIFT)
-

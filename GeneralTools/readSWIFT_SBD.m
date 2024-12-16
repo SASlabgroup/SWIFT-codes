@@ -1,4 +1,4 @@
-function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
+function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 % Matlab readin of SWIFT Iridum SBD (short burst data) messages
 % which are binary files with onboard processed results
 % see Sutron documentation for message format
@@ -83,15 +83,15 @@ SWIFTversion = NaN; % placeholder
 %% SWIFT id flag from file name
 % note that all telemetry files from server start with 5 char 'buoy-'
 % this will fail for any other prefix of file naming convention
+ibuoy = strfind(fname,'buoy');
 
-if fname(6)=='S', % SWIFT v3 and v4
-    SWIFT.ID = fname(12:13);
-elseif fname(6)=='m', % microSWIFT
-    SWIFT.ID = fname(17:19);
+if fname(ibuoy + 5)=='S' % SWIFT v3 and v4
+    SWIFT.ID = fname(ibuoy + (11:12));
+elseif fname(ibuoy + 5)=='m' % microSWIFT
+    SWIFT.ID = fname(ibuoy + (16:18));
 else
     SWIFT.ID = NaN;
 end
-
 
 %% begin reading file
 % Note that the actual email attachment from the Iridium system has an
@@ -112,7 +112,7 @@ picflag = false; % initialize picture binary flag
 
 while 1
     
-    disp('-----------------')
+    % disp('-----------------')
     type = fread(fid,1,'uint8');
     port = fread(fid,1,'uint8');
     size = fread(fid,1,'uint16');
@@ -606,7 +606,20 @@ else
     SWIFT.peakwavedirT = NaN;
 end
 
+%% change indicator for no conductivity - temperature
 
+% use NaN instead of 9999 for no data
+if isfield(SWIFT,'salinity')
+    if all(SWIFT.salinity >= 9999),
+        SWIFT.salinity = NaN;
+    end
+end
+
+if isfield(SWIFT,'watertemp')
+    if all(SWIFT.watertemp >= 9999),
+        SWIFT.watertemp = NaN;
+    end
+end
 
 %% fill in time if none read (time is a required field)
 

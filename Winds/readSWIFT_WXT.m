@@ -8,7 +8,19 @@ function [winddirR windspd airtemp relhumidity airpres rainaccum rainint ] = rea
 %
 % J. Thomson, 4/2020
 
+try
 data = importdata( filename );
+catch 
+    warning('Couldn''t import data.')
+    winddirR = NaN;
+    windspd = NaN;
+    airtemp = NaN;
+    relhumidity = NaN;
+    airpres = NaN;
+    rainaccum = NaN;
+    rainint = NaN;
+    return
+end
 
 if iscell(data),
     

@@ -10,8 +10,9 @@ clear
 GPSflist = dir('*.bin');
 GPSsamplingrate = 4; % assume 4 Hz
 includetelemetry = false;
-despike = false;
+despike = true;
 pts = 4096;
+minwaveheight = 1;
 
 if includetelemetry
     load('microSWIFT003_telemetry.mat')
@@ -25,8 +26,8 @@ for gi = 1:length(GPSflist)
     
     if despike
         north = filloutliers(north,'nearest');
-        east = filloutliers(north,'nearest');
-        down = filloutliers(north,'nearest');
+        east = filloutliers(east,'nearest');
+        down = filloutliers(down,'nearest');
     end
     
     % legacy GPS waves processing
@@ -54,7 +55,7 @@ for gi = 1:length(GPSflist)
     NEDresults(gi).peakwaveperiod = Tp;
     NEDresults(gi).peakwavedirT = Dp;
     NEDresults(gi).wavespectra.energy = E;
-    NEDresults(gi).wavespectra.freq = f;
+    NEDresults(gi).wavespectra.freq = linspace(fmin, fmax, length(E) );
     NEDresults(gi).wavespectra.a1 = a1;
     NEDresults(gi).wavespectra.b1 = b1;
     NEDresults(gi).wavespectra.a2 = a2;
@@ -64,6 +65,15 @@ for gi = 1:length(GPSflist)
     %     NEDresults(gi).lon = median(GPS.lon);
     %     NEDresults(gi).ID =  [GPSflist(gi).name(11:13)];
     
+    figure(4), clf
+    hist([north east down])
+    hold on
+    plot([0 0],[0 pts],'k--')
+    legend('north','east','down')
+    xlabel('m/s')
+    ylabel('Observations')
+     set(gca,'fontsize',16,'fontweight','demi')
+    print('-dpng',[ GPSflist(gi).name(1:end-4) '_NEDhistogram.png'])
     
     figure(2), clf
     loglog(GPSresults(gi).wavespectra.freq, GPSresults(gi).wavespectra.energy), hold on
@@ -74,17 +84,28 @@ for gi = 1:length(GPSflist)
             ['NEDwaves memlight, H_s = ' num2str(NEDresults(gi).sigwaveheight,2)],'telemetry')
     else
         legend(['GPSwaves, H_s = ' num2str(GPSresults(gi).sigwaveheight,2) ],...
-            ['NEDwaves memlight, H_s = ' num2str(NEDresults(gi).sigwaveheight,2)],'telemetry')
+            ['NEDwaves memlight, H_s = ' num2str(NEDresults(gi).sigwaveheight,2)])
     end
     title(GPSflist(gi).name)
     xlabel('frequency [Hz]')
     ylabel('Energy density [m^2/Hz]')
+     set(gca,'fontsize',16,'fontweight','demi')
     print('-dpng',[ GPSflist(gi).name(1:end-4) '_spectra.png'])
     
+    north_all(gi,:) = north;
+    east_all(gi,:) = east;
+    down_all(gi,:) = down;
     
 end
 
 save('results.mat','GPSresults','NEDresults');
+
+%% screen and save raw data
+nowaves = find( [NEDresults.sigwaveheight] < minwaveheight );
+north_all(nowaves,:) = [];
+east_all(nowaves,:) = [];
+down_all(nowaves,:) = [];
+save rawdata *all
 
 %%
 
@@ -93,7 +114,20 @@ plot( [NEDresults.sigwaveheight].^2 ./ [GPSresults.sigwaveheight].^2, 'bo','line
 ylabel('Variance ratio')
 xlabel('file number')
 axis([0 inf 0 2])
+ set(gca,'fontsize',16,'fontweight','demi')
 grid
 print -dpng varianceratio.png
 
+
+figure(5), clf
+plot([1:length(east_all(:))]./(60*GPSsamplingrate) , smooth(east_all(:),30*GPSsamplingrate),'c-','linewidth',2)
+hold on
+%plot(reshape(smooth(east_all',30*GPSsamplingrate), size(east_all) ),'.'), hold on
+%plot(east_all','.')
+plot([0: pts./(60*GPSsamplingrate) : length(east_all(:))./(60*GPSsamplingrate)], zeros(1,1+size(east_all,1)) ,'k-x','linewidth',2,'markersize',10)
+ylabel('smoother east velocity component [m/s]')
+xlabel('minutes')
+grid
+ set(gca,'fontsize',16,'fontweight','demi')
+print -dpng smoothed_east.png
 

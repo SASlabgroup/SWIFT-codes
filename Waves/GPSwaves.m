@@ -1,4 +1,4 @@
-function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs) 
+function [Hs,Tp,Dp,E,f,a1,b1,a2,b2,check] = GPSwaves(u,v,z,fs) 
 
 % matlab function to read and process GPS data
 %   to estimate wave height, period, direction, and spectral moments
@@ -307,17 +307,17 @@ Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
 %  energy period
 fe = sum( f(fwaves).*E(fwaves) )./sum( E(fwaves) );
 [~ , feindex] = min(abs(f-fe));
-Ta = 1./fe;
+Te = 1./fe;
 
 % peak period
 %[~ , fpindex] = max(UU+VV); % can use velocity (picks out more distint peak)
 [~ , fpindex] = max(E);
 Tp = 1./f(fpindex);
 
-if Tp > 18, % if peak not found, use centroid
-    Tp = Ta;
+%if Tp > 18, % if peak not found, use centroid
+    Tp = Te;
     fpindex = feindex;
-end
+%end
 
 %% spectral directions
 dir = - 180 ./ 3.14 * dir1;  % switch from rad to deg, and CCz to Cz (negate)
@@ -364,18 +364,18 @@ end
 
 
 %% prune high frequency results
-E( f > maxf ) = [];
-Exx( f > maxf ) = [];
-Eyy( f > maxf ) = [];
-Ezz( f > maxf ) = [];
-dir( f > maxf ) = [];
-spread( f > maxf ) = [];
-a1( f > maxf ) = [];
-b1( f > maxf ) = [];
-a2( f > maxf ) = [];
-b2( f > maxf ) = [];
-check( f > maxf ) = [];
-f( f > maxf ) = [];
+% E( f > maxf ) = [];
+% Exx( f > maxf ) = [];
+% Eyy( f > maxf ) = [];
+% Ezz( f > maxf ) = [];
+% dir( f > maxf ) = [];
+% spread( f > maxf ) = [];
+% a1( f > maxf ) = [];
+% b1( f > maxf ) = [];
+% a2( f > maxf ) = [];
+% b2( f > maxf ) = [];
+% check( f > maxf ) = [];
+% f( f > maxf ) = [];
 
 
 else % if not enough points or sufficent sampling rate or data, give 9999
