@@ -283,9 +283,9 @@ ii=find(isnan(zi)); zi(ii)=600;   % PBL height
 % ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
 
 %% run COARE
-
-fluxes = coare36vn_zrf_et(u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',jd',zi,rain',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
-% fluxes = coare36vnWarm_et(jd',u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',zi,rain',ts_depth',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
+% Running Warm Layer inclusive script (other script commented out)
+% fluxes = coare36vn_zrf_et(u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',jd',zi,rain',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
+fluxes = coare36vnWarm_et(jd',u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',zi,rain',ts_depth',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
 
 validcolumns = find( nansum( fluxes, 1 ) ~= 0  & ~isnan(nansum( fluxes, 1 )) );
 
@@ -308,7 +308,8 @@ fluxes = array2table(fluxes, ...
     'zoq' 'Cd' 'Ch' 'Ce'  'L'  'zeta' 'dT_skin' 'dq_skin' 'dz_skin' 'Urf'...
     'Trf' 'Qrf' 'RHrf' 'UrfN' 'TrfN' 'QrfN'  'lw_net' 'sw_net' 'Le' 'rhoa'...
     'UN' 'U10' 'U10N' 'Cdn_10' 'Chn_10' 'Cen_10' 'hrain' 'Qs' 'Evap' 'T10'...
-    'T10N' 'Q10' 'Q10N'  'RH10' 'P10' 'rhoa10' 'gust' 'wc_frac' 'Edis'
+    'T10N' 'Q10' 'Q10N'  'RH10' 'P10' 'rhoa10' 'gust' 'wc_frac' 'Edis'...
+    'dT_warm'  'dz_warm'  'dT_warm_to_skin'  'du_warm'
     })
 % KEY for flux indexing
 %1    usr = friction velocity that includes gustiness (m/s), u*
@@ -359,6 +360,11 @@ fluxes = array2table(fluxes, ...
 %6   gust = gustiness velocity (m/s)
 %7 wc_frac = whitecap fraction (ratio)
 %8   Edis = energy dissipated by wave breaking (W/m^2)
+%9   dT_warm  - dT from base of warm layer to skin, i.e. warming across entire warm layer depth (deg C) 
+%50  dz_warm  - warm layer thickness (m)
+%1   dT_warm_to_skin  -dT from measurement depth to skin due to warm layer, 
+%                       such that Tskin = Tsea + dT_warm_to_skin - dT_skin
+%2   du_warm - total current accumulation in warm layer (m/s ?...  unsure of units but likely m/s)
 
 %% calc net radiative balance (since COARE does not seem to do it)
 % albedo = 0.08; % 0.08 is open water, but can bemuch higher with ice.  see Persson et al JGR 2018, Eq. 1

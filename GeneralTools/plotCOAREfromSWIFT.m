@@ -105,9 +105,39 @@ if isfield(SWIFT,'windustar') && length(fluxes.usr) == length([SWIFT.windustar])
     else
         print('-dpng',['ustar.png'])
     end
+    
+    
+    figure, clf
+    xline(0,'k--','HandleVisibility','off')
+    hold on;
+    Qidx = [0.01: 0.01:1];
+    inertialusr_pctdiff = (fluxes.usr - [SWIFT.windustar]') ./ [SWIFT.windustar]' .*100;
+    Qinert = quantile(inertialusr_pctdiff,Qidx);
+    plot(Qinert,Qidx,'r-'), 
+    legend('COARE - inertial')
+    if isfield(SWIFT,'windustar_directcovar') && length(fluxes.usr) == length([SWIFT.windustar_directcovar]),
+        hold on
+        directcovarusr_pctdiff = (fluxes.usr - [SWIFT.windustar_directcovar]') ./ [SWIFT.windustar_directcovar]' .*100; 
+        Qcovar = quantile(directcovarusr_pctdiff,Qidx);
+       plot(Qinert,Qidx,'b-')
+        legend('COARE - inertial','direct covar - inertial')
+    else
+    end
 
+    axis square, grid on
+    xlabel('% diff COARE - observed / observed')
+    ylabel('Probability of Value <= Given Value')
+    if isfield(SWIFT,'ID'), title(sprintf('COARE Comparision of U_* SWIFT %s',SWIFT(1).ID)), else, end
+
+    if isfield(SWIFT,'ID'),
+        print('-dpng',[SWIFT(1).ID '_ustarCDF.png'])
+    else
+        print('-dpng',['ustarCDF.png'])
+    end
 else
 end
+    
+
 
 if isfield(SWIFT,'windustar') && length(fluxes.tau) == length([SWIFT.time]),
     figure, clf
@@ -207,7 +237,6 @@ if length(fluxes.tau) == length([SWIFT.time]),
     end
 
 end
-
 
 
 
