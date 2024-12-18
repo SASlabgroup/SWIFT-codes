@@ -262,8 +262,8 @@ end
 
 netcdf.putAtt(ncid,varid,'level','Version 1');
 netcdf.putAtt(ncid,varid,'history','Version 1');
-netcdf.putAtt(ncid,varid,'missing_data_flag','-999');
-netcdf.putAtt(ncid,varid,'_FillValue','NaN');
+%netcdf.putAtt(ncid,varid,'missing_data_flag','-999');
+netcdf.putAtt(ncid,varid,'_FillValue',nan);
 
 
 %adjust attributes for a microSWIFT
@@ -874,7 +874,7 @@ for i=1:length(names)
 %             ncwriteatt(filename,'relative_humidity_stddev','_FillValue',-999)
         end
         if strcmp(names(i),'airpres')
-            ncwriteatt(filename,'air_pressure','units','Pa')
+            ncwriteatt(filename,'air_pressure','units','bar')
             if swiftnum < 18 && ~micro %v3 SWIFT
                 ncwriteatt(filename,'air_pressure','long_name','air pressure at 0.8 m height above the wave-following surface')
                 ncwriteatt(filename,'air_pressure','instrument','Airmar 200WX')
@@ -890,7 +890,7 @@ for i=1:length(names)
 %             ncwriteatt(filename,'air_pressure','_FillValue',-999)
         end
         if strcmp(names(i),'airpresstddev')
-            ncwriteatt(filename,'air_pressure_stddev','units','Pa')
+            ncwriteatt(filename,'air_pressure_stddev','units','bar')
             if swiftnum < 18 && ~micro %v3 SWIFT
                 ncwriteatt(filename,'air_pressure_stddev','long_name','standard deviation of air pressure at 0.8 m height above the wave-following surface')
                 ncwriteatt(filename,'air_pressure_stddev','instrument','Airmar 200WX')
