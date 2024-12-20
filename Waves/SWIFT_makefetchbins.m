@@ -24,7 +24,7 @@ lat = repmat(obslat,[1,length(winddir)])';
 lon = repmat(obslon,[1,length(winddir)])';
 
 %Define radius of fetch calc
-r = 100; %km
+r = 1000; %km
 r = km2deg(r);
 
 % Set up wind vector
