@@ -7,9 +7,9 @@ clear all, close all
 
 fpath = './';
 
-filelist = dir('SWIFT*.mat');
+filelist = dir('*SWIFT*.mat');
 
-forcesimple = true;
+forcesimple = false;
 
 Sindex = 0;
 
@@ -17,6 +17,9 @@ Sindex = 0;
 for fi=1:length(filelist), 
     
     load(filelist(fi).name),
+    
+    % Order fields to prevent misfiltering identical structures
+    SWIFT = orderfields(SWIFT);
 
     if forcesimple
         for ii=1:length(SWIFT)
@@ -41,6 +44,7 @@ for fi=1:length(filelist),
 
     names = fieldnames(SWIFT);
 
+    % Edit by M. James 2025 to include ALL vars regardless of data or not
     if fi == 1
         
         allSWIFT( Sindex + [1:length(SWIFT)] ) = SWIFT;
@@ -57,7 +61,62 @@ for fi=1:length(filelist),
         
         Sindex = length(allSWIFT);
         
-    else 
+    elseif fi > 1 && length(setdiff(names, allnames)) >0 | length(setdiff(allnames, names))
+        % Find unique field names that are not common
+        uniqueSWIFTFields = setdiff(names, allnames);
+        uniqueallSWIFTFields = setdiff(allnames, names);
+
+        fprintf('Missing SWIFT values: %s\n',...
+            string([uniqueSWIFTFields;uniqueallSWIFTFields]) )
+
+        % Add in nan to numeric fields as filler
+        for i = 1:length(uniqueSWIFTFields);
+            if isnumeric(SWIFT(1).(uniqueSWIFTFields{i}))
+                for k = 1:length(allSWIFT)
+                    allSWIFT(k).(uniqueSWIFTFields{i}) = nan;
+                end
+            end
+        end
+        for i = 1:length(uniqueallSWIFTFields);
+            if isnumeric(allSWIFT(1).(uniqueallSWIFTFields{i}))
+                for k = 1:length(SWIFT)
+                    SWIFT(k).(uniqueallSWIFTFields{i}) = nan;
+                end
+            end
+        end
+        
+        % <<Can add more capability on fillers here>>
+
+
+        disp('Numeric fields filled in')
+
+        % Reevaluate what is not matching left
+        names = fieldnames(SWIFT);
+        allnames = fieldnames(allSWIFT);
+
+        uniqueSWIFTFields = setdiff(names, allnames);
+        uniqueallSWIFTFields = setdiff(allnames, names);
+
+        fprintf('Removing SWIFT fields: %s\n',...
+            string([uniqueSWIFTFields;uniqueallSWIFTFields]) )
+
+        for i = 1:length(uniqueSWIFTFields);
+            SWIFT = rmfield(SWIFT, uniqueSWIFTFields{i});
+        end
+        for i = 1:length(uniqueallSWIFTFields);
+            allSWIFT = rmfield(allSWIFT, uniqueallSWIFTFields{i});
+        end
+
+        % Order Fields to allSWIFT
+        SWIFT = orderfields(SWIFT, fieldnames(allSWIFT));
+        
+        allSWIFT( Sindex + [1:length(SWIFT)] ) = SWIFT;
+        
+        allnames = fieldnames(allSWIFT);
+        
+        Sindex = length(allSWIFT);
+        
+    else
         disp(['skip ' num2str(fi) ' of ' num2str(length(filelist))])
     end
 end
