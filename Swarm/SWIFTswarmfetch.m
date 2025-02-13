@@ -115,6 +115,21 @@ title('Counts for hours with steady winds')
 
 print('-djpeg','SWIFTswarmfetch_steadyhourhistorgram')
 
+figure; 
+ID = categorical(string({SWIFT.ID})');
+counts = countcats(ID);
+labels = unique(ID);
+
+bar(counts)
+xticklabels(labels)
+xlabel('SWIFT ID')
+ylabel('Number of inputs')
+
+print('-djpeg','SWIFTswarmfetch_steadySWIFTIDs')
+
+
+
+
 %% Create fetch axis
 % bin out median dir
 
