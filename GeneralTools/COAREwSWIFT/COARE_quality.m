@@ -1,6 +1,13 @@
 function [qual] = COARE_quality(SWIFT, fluxes)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-outputArg1 = inputArg1;
-outputArg2 = inputArg2;
+% function to create qual table giving time synchonous percent errors of
+% COARE vs SWIFT vars. Compiles all percent differences into a corrcoef
+% confusion matrix to find what pct errors correlate
+% 
+% Vars:
+% 
+% Tskin, ustar, tau, epsilon
+%
+
+savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
+cd(savepath); fprintf('Savepath: %s', savepath);
 end
