@@ -493,9 +493,9 @@ while 1
         seconds = fname(35:36);
         filetime = datenum([day '-' month '-' year ' ' hour ':' minutes ':' seconds ]);  
         tooearly = 3; % maximum time gaps (in days) to tolerate between embedded time and file received time
-        if SWIFT.time < ( filetime - tooearly) 
-            SWIFT.time = filetime;
-        end
+        %if SWIFT.time < ( filetime - tooearly) 
+        %    SWIFT.time = filetime;
+        %end
 
     else
         
