@@ -57,7 +57,7 @@ for iburst = 1:nburst
     if isfield(oneSWIFT,'sigwaveheight')
         if oneSWIFT.sigwaveheight < minwaveheight || oneSWIFT.sigwaveheight >= 999
             outofwater(iburst) = true;
-            disp('Waves too small, removing burst.')
+            disp(['Burst ' num2str(iburst) ': Waves too small, removing burst.'])
         end
     end
     
@@ -65,7 +65,7 @@ for iburst = 1:nburst
     if isfield(oneSWIFT,'salinity') 
         if all(oneSWIFT.salinity < minsalinity) 
             outofwater(iburst) = true;
-            disp('Salinity too low, removing burst.')
+            disp(['Burst ' num2str(iburst) ': Salinity too low, removing burst.'])
         end
     end
     
@@ -73,7 +73,7 @@ for iburst = 1:nburst
     if isfield(oneSWIFT,'driftspd')
         if oneSWIFT.driftspd > maxdriftspd
             outofwater(iburst) = true;
-            disp('Speed too fast, removing burst.')
+            disp(['Burst ' num2str(iburst) ': Speed too fast, removing burst.'])
         end
     end
 
