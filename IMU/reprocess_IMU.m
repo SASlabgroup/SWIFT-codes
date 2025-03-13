@@ -106,7 +106,7 @@ for iburst = 1:length(bfiles)
     fs_ahrs = 1/dt; % should be 25 Hz
     fs_gps = 1000./median(diff(GPS.UTC.mSec)); % should be 4 Hz
     f_original = SWIFT(tindex).wavespectra.freq;  % original frequency bands from onboard processing
-    if any(isnan(f_original)) | any(f_original==0)
+    if any(isnan(f_original)) || any(f_original==0)
         f_original = linspace(0.0098, 0.4902, 42)'; % apply standard 42 freq bands if missing
     end
         
@@ -295,6 +295,8 @@ end
 
 params.Data = calctype;
 params.Filter = filtertype;
+params.Interpf = interpf;
+params.Saveraw = saveraw;
 
 if isfield(sinfo,'postproc')
 ip = length(sinfo.postproc)+1; 
@@ -307,7 +309,6 @@ sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).flags.badwaves = badwaves;
 sinfo.postproc(ip).params = params;
-
 
 save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')
 

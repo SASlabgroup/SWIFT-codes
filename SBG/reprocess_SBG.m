@@ -207,6 +207,8 @@ end
 %% Log reprocessing and flags, then save new L3 file or overwrite existing one
 
 params.AltGPS = useGPS;
+params.saveraw = saveraw;
+params.interpf = interpf;
 
 if isfield(sinfo,'postproc')
 ip = length(sinfo.postproc)+1; 

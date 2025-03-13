@@ -65,7 +65,7 @@ testing = false;
 %% fixed parameters (which will produce 42 frequency bands)
 wsecs = 256;   % windoz length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
-maxf = .5;       % frequency cutoff for telemetry Hz
+% maxf = .5;       % frequency cutoff for telemetry Hz
 
 %% deal with variable input data, with priority for GPS velocity
 

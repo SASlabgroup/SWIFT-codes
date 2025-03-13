@@ -67,7 +67,7 @@ if rpIMU
         calctype = 'GPS';
         filtertype = 'RC';
         saveraw = false; % this is the raw wave displacements, not the raw motion data
-        interpf = true;
+        interpf = false;
         [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw,interpf);
     else 
         disp('No IMU data...')
