@@ -17,12 +17,13 @@ else
     slash = '/';
 end
 
-%% Processing toggles
+%% Default processing toggles
 
 rpIMU = true; % Waves
 rpSBG = true; % Waves
 rpWXT = true; % MET
 rpY81 = true; % MET
+rpPB2 = true; % MET
 rpACS = true; % CT
 rpSIG = true; % TKE 
 rpAQH = true; % TKE
@@ -98,6 +99,18 @@ if rpWXT
         [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw,usewind);
     else
         disp('No WXT data...')
+    end
+end
+
+%% Reprocess PB2 
+
+if rpPB2
+    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_PB2_*.dat']))
+        disp('Reprocessing Gill Anemometer (PB2) data...')
+        readraw = false;
+        [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw);
+    else
+        disp('No PB2 data...')
     end
 end
 

@@ -1,4 +1,4 @@
-function [time rawwindspd rawwinddir rawairtemp rawairpres lat lon sog cog pitch roll] = readSWIFTv3_PB2(filename);
+function [time,rawwindspd,rawwinddir,rawairtemp,rawairpres,lat,lon,sog,cog,pitch,roll] = readSWIFTv3_PB2(filename)
 % function to read Airmar data (wind and gps in 'PB2' files) from SWIFTs
 % return variables and automatically save mat file
 %
@@ -127,9 +127,9 @@ end
 fclose(fid);
 
 
-if zdalength>1, % valid data indicated by a time string
+if zdalength > 1 % valid data indicated by a time string
 
-    [timelinenum ui ] = unique(timelinenum);
+    [timelinenum,ui] = unique(timelinenum);
     gpstime = gpstime(ui);
 
     if exist('positionlinenum')
@@ -139,6 +139,8 @@ if zdalength>1, % valid data indicated by a time string
     save([filename(1:end-4) '.mat'],'time', 'rawwindspd', 'rawwinddir', 'rawairtemp', 'rawairpres', 'lat', 'lon', 'sog', 'cog', 'pitch', 'roll');
 
 else
+    time = NaN(size(rawwindspd));
+    save([filename(1:end-4) '.mat'],'time','rawwindspd', 'rawwinddir', 'rawairtemp', 'rawairpres', 'lat', 'lon', 'sog', 'cog', 'pitch', 'roll');
     disp('no valid timestamps (ZDA string)')
 
 end

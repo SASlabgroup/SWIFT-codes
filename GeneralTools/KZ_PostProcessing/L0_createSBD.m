@@ -56,7 +56,7 @@ burstfiletimes = NaN(length(PRCfiles),1);
 for iburst = 1:length(burstfiletimes)
     date = datenum(PRCfiles(iburst).name(13:21));
     hour = str2double(PRCfiles(iburst).name(23:24));
-    min = (str2double(PRCfiles(iburst).name(26:27))-1)*12;
+    min = (str2double(PRCfiles(iburst).name(26:27))-1)*burstinterval;
     burstfiletimes(iburst) = date + datenum([0 0 0 hour min 0]);
 end
 [~,b] = unique(burstfiletimes);
@@ -69,13 +69,13 @@ for iburst = 1:length(refbfiles)
     ID = refbfiles(iburst).name(1:7);
     date = refbfiles(iburst).name(13:21);
     hour = refbfiles(iburst).name(23:24);
-    burst = refbfiles(iburst).name(26:27);
-    bfilename = [date '_' hour '_' burst '_PRC.dat'];
+    burstnum = refbfiles(iburst).name(26:27);
+    bfilename = [date '_' hour '_' burstnum '_PRC.dat'];
 
     disp(['Creating SBD file for burst ' num2str(iburst) ' : ' bfilename(1:end-8)])
 
     % Name concat file same as if pulled from swiftserver
-    minute = num2str((str2double(burst(2))-1) * burstinterval);
+    minute = num2str((str2double(burstnum(2))-1) * burstinterval);
     if length(minute) == 1
         minute = ['0' minute]; %#ok<AGROW>
     end 

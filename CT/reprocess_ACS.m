@@ -36,7 +36,7 @@ for iburst = 1:length(bfiles)
 
      disp(['Burst ' num2str(iburst) ' : ' bfiles(iburst).name(1:end-4)])
 
-        % Read mat file or load raw data
+    % Read mat file or load raw data
     if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
         try
         [~,~,Salinity,~,~] = readSWIFTv3_ACS([bfiles(iburst).folder slash bfiles(iburst).name]);
@@ -49,9 +49,9 @@ for iburst = 1:length(bfiles)
     end
 
      % Find matching time
-    time = datenum(bfiles(iburst).name(13:21)) + str2double(bfiles(iburst).name(23:24))./24 ...
+    btime = datenum(bfiles(iburst).name(13:21)) + str2double(bfiles(iburst).name(23:24))./24 ...
         + str2double(bfiles(iburst).name(26:27))./(24*6);
-    [tdiff,tindex] = min(abs([SWIFT.time]-time));
+    [tdiff,tindex] = min(abs([SWIFT.time]-btime));
 
     if tdiff > 12/(60*24)
         disp('No time match. Skippping...')

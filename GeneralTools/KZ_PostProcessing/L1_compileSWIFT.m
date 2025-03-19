@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = L1_compileSWIFT(missiondir,SBDfold,plotflag)
+function [SWIFT,sinfo] = L1_compileSWIFT(missiondir,SBDfold,burstinterval,plotflag)
 
 % Aggregate and read all SWIFT sbd data after concatenating the 
 %   offload from SD card. SBD files should be in the 
@@ -6,12 +6,15 @@ function [SWIFT,sinfo] = L1_compileSWIFT(missiondir,SBDfold,plotflag)
 %   No QC is performed. The intention is to create a pure L1 product which
 %   has all data recorded. Basic QC has been allocated to 'L2_pruneSWIFT.m'.
 
-% Time: SWIFT - Take the time from the filename, even when there is time from 
+% Time: SWIFT - Take the time from the SBD filename, even when there is time from 
     %     the airmar (because of parsing errors). For telemetry, this 
     %     is the telemtry time (at the end of the burst). For offloaded data,
     %     this the concat file name (from the start of the burst).
     %   microSWIFT - Use the time embedded within the payload 50 or 51 or 52 of the
     %     SBD file, which is the time at the end of the burst of raw data.
+
+% NOTE: L1 contains no QC, just pulls onboard data and creates initial
+%       SWIFT structure.
 
 % K. Zeiden 10/01/2024, based on compileSWIFT_SBDservertelemetry.m
 
@@ -57,7 +60,7 @@ badburst = false(1,nburst);
 battery = NaN(1,nburst);
 npayloads = NaN(1,nburst);
 
-%% Loop through all SBD burst files, load, QC, and save in SWIFT structure
+%% Loop through all SBD burst files, load data and save in SWIFT structure
 
 for iburst = 1:nburst
 
@@ -210,7 +213,7 @@ if length(SWIFT) > 3
     direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90 -> 0
 
     for si = 1:length(SWIFT)
-        if si == 1 || si == length(SWIFT) || dt(si) > 1/12
+        if si == 1 || si == length(SWIFT) || dt(si) > 1/burstinterval
             SWIFT(si).driftspd = NaN;
             SWIFT(si).driftdirT = NaN;
         else

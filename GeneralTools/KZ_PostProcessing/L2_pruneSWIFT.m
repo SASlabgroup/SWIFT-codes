@@ -4,6 +4,9 @@ function [SWIFT,sinfo] = L2_pruneSWIFT(missiondir,plotflag,minwaveheight,minsali
 %   minimum wave height, minimum salinity and maximum drift speed
 %   thresholds. 
 
+% Note: Does not pull from any raw burst files, just what is in the L1 SWIFT
+% structure.
+
 % K. Zeiden 10/10/2024, based on SWIFT_QC.m by J. Thomson.
 
 if ispc
@@ -52,6 +55,10 @@ outofwater = false(1,nburst);
 for iburst = 1:nburst
         
     oneSWIFT = SWIFT(iburst);
+    btime = oneSWIFT.time;
+
+    disp('=================================')
+    disp(['Burst ' num2str(iburst) ' : ' datestr(btime,'mmm dd yyyy, HH:MM')])
     
     % Waves too small (probably out of water)
     if isfield(oneSWIFT,'sigwaveheight')
