@@ -66,7 +66,8 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %                       to report number of raw GPS velocities replaced before processing 
 %   K. Zeiden, 6/2024  change default signature profile size to 128, when
 %                       empty and filling w/NaN
-%
+%   
+%   J. Thomson, 3/2025 add Lufft WS700 sensor
 
 recip = true; % binary flag to change wave direction to FROM
 errorfile = false; % initialize
@@ -113,9 +114,9 @@ picflag = false; % initialize picture binary flag
 while 1
     
     % disp('-----------------')
-    type = fread(fid,1,'uint8');
-    port = fread(fid,1,'uint8');
-    size = fread(fid,1,'uint16');
+    type = fread(fid,1,'uint8')
+    port = fread(fid,1,'uint8')
+    size = fread(fid,1,'uint16')
     
     if type == 0 & size > 0, % uplooking high-resolution aquadopp (AQH)
         disp('reading AQH results')
@@ -497,8 +498,27 @@ while 1
         %    SWIFT.time = filetime;
         %end
 
-    else
+    elseif type == 100   %  Lufft WS700 windspeed
+        disp('reading Lufft wind speeds')
+        SWIFT.windspd = fread(fid, 4,'uchar') % m/s
+
+    elseif type == 101   %  Lufft WS700 direction
+        disp('reading Lufft wind dir')
+        SWIFT.winddirR = fread(fid, 4,'uchar') % deg
         
+    elseif type == 102   %  Lufft WS700 air temp
+        disp('reading Lufft air temp')
+        SWIFT.airtemp = fread(fid, 4,'uchar') % C
+
+    elseif type == 103   %  Lufft WS700 humidity
+        disp('reading Lufft humidity')
+        SWIFT.relhumidity = fread(fid, 4,'uchar') % percent
+    
+    elseif type == 104   %  Lufft WS700 raditian
+        disp('reading Lufft humidity')
+        SWIFT.solarrad = fread(fid, 4,'uchar') % W/m^2
+    else
+
     end
     
     if isempty(type),% & size == 0,
