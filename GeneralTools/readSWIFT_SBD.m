@@ -500,23 +500,23 @@ while 1
 
     elseif type == 100   %  Lufft WS700 windspeed
         disp('reading Lufft wind speeds')
-        SWIFT.windspd = fread(fid, 4,'uchar') % m/s
+        SWIFT.windspd = fread(fid, 1,'float') % m/s
 
     elseif type == 101   %  Lufft WS700 direction
         disp('reading Lufft wind dir')
-        SWIFT.winddirR = fread(fid, 4,'uchar') % deg
+        SWIFT.winddirR = fread(fid, 1,'float') % deg
         
     elseif type == 102   %  Lufft WS700 air temp
         disp('reading Lufft air temp')
-        SWIFT.airtemp = fread(fid, 4,'uchar') % C
+        SWIFT.airtemp = fread(fid, 1,'uchar') % C
 
     elseif type == 103   %  Lufft WS700 humidity
         disp('reading Lufft humidity')
-        SWIFT.relhumidity = fread(fid, 4,'uchar') % percent
+        SWIFT.relhumidity = fread(fid, 1,'float') % percent
     
     elseif type == 104   %  Lufft WS700 raditian
         disp('reading Lufft humidity')
-        SWIFT.solarrad = fread(fid, 4,'uchar') % W/m^2
+        SWIFT.solarrad = fread(fid, 1,'float') % W/m^2
     else
 
     end
