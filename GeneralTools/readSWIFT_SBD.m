@@ -460,8 +460,7 @@ while 1
         
     elseif type == 52 & size == 327, % microSWIFT, size should be 327 bytes
         disp('reading microSWIFT (compact)')
-        replacedrawvalues = port*10 % microSWIFTs do not give com port, so we are using a diagnostic for raw data QC (and replacement)
-        SWIFT.replacedrawvalues = replacedrawvalues;
+        cachedmessages = port % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
@@ -485,38 +484,39 @@ while 1
         epochTime                = fread(fid, 1,'float'); % epoch time
         asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
         SWIFT.time               = datenum(asDatetime); % time at end of burst
+        errorcodes = fread(fid,inf,'uchar')  % error codes at end of v2.2 micro messages
         % also get the time from the filename and see how they compare
-        year = fname(26:29);
-        month = fname(23:25);
-        day = fname(21:22);
-        hour = fname(31:32);
-        minutes = fname(33:34);
-        seconds = fname(35:36);
-        filetime = datenum([day '-' month '-' year ' ' hour ':' minutes ':' seconds ]);  
-        tooearly = 3; % maximum time gaps (in days) to tolerate between embedded time and file received time
+        %year = fname(26:29);
+        %month = fname(23:25);
+        %day = fname(21:22);
+        %hour = fname(31:32);
+        %minutes = fname(33:34);
+        %seconds = fname(35:36);
+        %filetime = datenum([day '-' month '-' year ' ' hour ':' minutes ':' seconds ]);  
+        %tooearly = 3; % maximum time gaps (in days) to tolerate between embedded time and file received time
         %if SWIFT.time < ( filetime - tooearly) 
         %    SWIFT.time = filetime;
         %end
 
     elseif type == 100   %  Lufft WS700 windspeed
         disp('reading Lufft wind speeds')
-        SWIFT.windspd = fread(fid, 1,'float') % m/s
+        SWIFT.windspd = fread(fid, 1,'float'); % m/s
 
     elseif type == 101   %  Lufft WS700 direction
         disp('reading Lufft wind dir')
-        SWIFT.winddirR = fread(fid, 1,'float') % deg
+        SWIFT.winddirR = fread(fid, 1,'float'); % deg
         
     elseif type == 102   %  Lufft WS700 air temp
         disp('reading Lufft air temp')
-        SWIFT.airtemp = fread(fid, 1,'uchar') % C
+        SWIFT.airtemp = fread(fid, 1,'uchar'); % C
 
     elseif type == 103   %  Lufft WS700 humidity
         disp('reading Lufft humidity')
-        SWIFT.relhumidity = fread(fid, 1,'float') % percent
+        SWIFT.relhumidity = fread(fid, 1,'float'); % percent
     
     elseif type == 104   %  Lufft WS700 raditian
         disp('reading Lufft humidity')
-        SWIFT.solarrad = fread(fid, 1,'float') % W/m^2
+        SWIFT.solarrad = fread(fid, 1,'float'); % W/m^2
     else
 
     end
