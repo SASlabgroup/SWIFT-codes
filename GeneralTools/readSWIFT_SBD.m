@@ -458,9 +458,9 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
-    elseif type == 52 & size == 327, % microSWIFT, size should be 327 bytes
+    elseif type == 52 & size >= 327, % microSWIFT, size should be 327 bytes
         disp('reading microSWIFT (compact)')
-        cachedmessages = port % microSWIFT specific
+        GNSSdebug = port % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
