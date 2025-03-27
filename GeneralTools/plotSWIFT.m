@@ -517,21 +517,25 @@ end %if
 % Available for all SWIFTs
 
 if isfield( SWIFT, 'driftspd' ) && isfield( SWIFT, 'driftdirT' )
-    figure(6);
-    clf;
+    if any(~isnan([SWIFT.lat]))
+        figure(6);
+        clf;
 
-    quiver([SWIFT.lon],[SWIFT.lat],...
-           [SWIFT.driftspd].*sind([SWIFT.driftdirT]),...
-           [SWIFT.driftspd].*cosd([SWIFT.driftdirT]),...
-           1,'r','linewidth',2);
-    hold on;
-    plot([SWIFT.lon],[SWIFT.lat],'bo','markersize',2);
+        quiver([SWIFT.lon],[SWIFT.lat],...
+            [SWIFT.driftspd].*sind([SWIFT.driftdirT]),...
+            [SWIFT.driftspd].*cosd([SWIFT.driftdirT]),...
+            1,'r','linewidth',2);
+        hold on;
+        plot([SWIFT.lon],[SWIFT.lat],'bo','markersize',2);
 
-    xlabel('longitude');
-    ylabel('latitude');
-    ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,1];  % ratio of lat to lon distances at a given latitude
-    daspect(ratio)
-    print('-dpng',['SWIFT' wd '_drift.png'])
+        xlabel('longitude');
+        ylabel('latitude');
+        ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,1];  % ratio of lat to lon distances at a given latitude
+        daspect(ratio)
+        print('-dpng',['SWIFT' wd '_drift.png'])
+    else
+        disp('*** ALL POSITIONS ARE NAN, cannot make drift plot ***')
+    end
 end %if
 
 %% Figure 7: Rain
