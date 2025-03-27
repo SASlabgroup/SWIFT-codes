@@ -114,9 +114,9 @@ picflag = false; % initialize picture binary flag
 while 1
     
     % disp('-----------------')
-    type = fread(fid,1,'uint8')
-    port = fread(fid,1,'uint8')
-    size = fread(fid,1,'uint16')
+    type = fread(fid,1,'uint8');
+    port = fread(fid,1,'uint8');
+    size = fread(fid,1,'uint16');
     
     if type == 0 & size > 0, % uplooking high-resolution aquadopp (AQH)
         disp('reading AQH results')
@@ -498,23 +498,24 @@ while 1
         %    SWIFT.time = filetime;
         %end
 
-    elseif type == 100   %  Lufft WS700 windspeed
+    elseif type == 100   %  Lufft WS700 wind speed and dir
         disp('reading Lufft wind speeds')
         SWIFT.windspd = fread(fid, 1,'float'); % m/s
-
-    elseif type == 101   %  Lufft WS700 direction
-        disp('reading Lufft wind dir')
         SWIFT.winddirR = fread(fid, 1,'float'); % deg
-        
-    elseif type == 102   %  Lufft WS700 air temp
-        disp('reading Lufft air temp')
-        SWIFT.airtemp = fread(fid, 1,'uchar'); % C
 
-    elseif type == 103   %  Lufft WS700 humidity
+    elseif type == 101   %  Lufft WS700 air temp
+        disp('reading Lufft air temp')
+        SWIFT.airtemp = fread(fid, 1,'float'); % C
+
+    elseif type == 102   %  Lufft WS700 humidity
         disp('reading Lufft humidity')
         SWIFT.relhumidity = fread(fid, 1,'float'); % percent
     
-    elseif type == 104   %  Lufft WS700 raditian
+    elseif type == 103   %  Lufft WS700 atmos pressure
+        disp('reading Lufft barometer')
+        SWIFT.airpres = fread(fid, 1,'float'); % percent
+
+    elseif type == 104   %  Lufft WS700 radiation
         disp('reading Lufft humidity')
         SWIFT.solarrad = fread(fid, 1,'float'); % W/m^2
     else
