@@ -58,27 +58,41 @@ for iburst = 1:length(bfiles)
         load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'],'sbgData')
     end
 
-    % SBG time
-    btime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour,...
-        sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
+    % % Find matching time index in the existing SWIFT structure
+    % % First entries are bad (no satellites acquired yet)
+    % [tdiff,tindex] = min(abs([SWIFT.time]-median(btime,'omitnan')));
+    % if tdiff > 1/(5*24) % If no close time index, skip burst
+    %     disp('No time match. Skipping...')
+    %     continue
+    % end
 
-    % Find matching time index in the existing SWIFT structure
-    % First entries are bad (no satellites acquired yet)
-    [tdiff,tindex] = min(abs([SWIFT.time]-median(btime,'omitnan')));
-    if tdiff > 1/(5*24) % If no close time index, skip burst
-        disp('No time match. Skipping...')
+    % Find burst index in the existing SWIFT structure
+    burstID = bfiles(iburst).name(13:end-4);
+    sindex = find(strcmp(burstID,{SWIFT.burstID}'));
+    if isempty(sindex)
+        disp('No matching SWIFT index. Skipping...')
         continue
     end
 
+    % Make sure data is same length
+    if length(sbgData.UtcTime.sec) ~= length(sbgData.ShipMotion.heave)
+        disp('Bad data sizes. Skipping...')
+        continue
+    end
+
+    % Time 
+    sbgtime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour,...
+        sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
+
     % If not enough data to work with, skip burst
-    if isempty(tindex) || length(btime)<tproc*5 || length(sbgData.ShipMotion.heave)<tproc*5 || ... 
+    if isempty(sindex) || length(sbgtime)<tproc*5 || length(sbgData.ShipMotion.heave)<tproc*5 || ... 
             length(sbgData.GpsPos.lat)<tproc*5 || length(sbgData.GpsVel.vel_e)<tproc*5
             disp('Not enough data. Skipping...')
             continue
     end
 
         % Despike data and make convenience variables
-        t = btime(end-tproc*5+1:end);
+        t = sbgtime(end-tproc*5+1:end);
         t = filloutliers(t,'linear');
         z = sbgData.ShipMotion.heave(end-tproc*5+1:end);
         z = filloutliers(z,'linear');
@@ -102,7 +116,7 @@ for iburst = 1:length(bfiles)
 
         % Recalculate wave spectra to get proper directional moments 
         %   (bug fix in 11/2017)
-        f = SWIFT(tindex).wavespectra.freq;  % original frequency bands
+        f = SWIFT(sindex).wavespectra.freq;  % original frequency bands
         fs = 5; % should be 5 Hz for standard SBG settings
         [newHs,newTp,newDp,newE,newf,newa1,newb1,newa2,newb2,newcheck] = SBGwaves(u,v,z,fs);
 
@@ -153,51 +167,51 @@ for iburst = 1:length(bfiles)
         end
 
         % Replace new wave spectral variables in original SWIFT structure
-        SWIFT(tindex).sigwaveheight = newHs;
-        SWIFT(tindex).sigwaveheight_alt = altHs;
-        SWIFT(tindex).peakwaveperiod = newTp;
-        SWIFT(tindex).peakwaveperiod_alt = altTp;
-        SWIFT(tindex).peakwavedirT = newDp;
-        SWIFT(tindex).wavespectra.energy = E;
-        SWIFT(tindex).wavespectra.energy_alt = altE;
-        SWIFT(tindex).wavespectra.freq = f;
-        SWIFT(tindex).wavespectra.a1 = a1;
-        SWIFT(tindex).wavespectra.b1 = b1;
-        SWIFT(tindex).wavespectra.a2 = a2;
-        SWIFT(tindex).wavespectra.b2 = b2;
-        SWIFT(tindex).wavespectra.check = check;
+        SWIFT(sindex).sigwaveheight = newHs;
+        SWIFT(sindex).sigwaveheight_alt = altHs;
+        SWIFT(sindex).peakwaveperiod = newTp;
+        SWIFT(sindex).peakwaveperiod_alt = altTp;
+        SWIFT(sindex).peakwavedirT = newDp;
+        SWIFT(sindex).wavespectra.energy = E;
+        SWIFT(sindex).wavespectra.energy_alt = altE;
+        SWIFT(sindex).wavespectra.freq = f;
+        SWIFT(sindex).wavespectra.a1 = a1;
+        SWIFT(sindex).wavespectra.b1 = b1;
+        SWIFT(sindex).wavespectra.a2 = a2;
+        SWIFT(sindex).wavespectra.b2 = b2;
+        SWIFT(sindex).wavespectra.check = check;
 
         % Save raw displacements (5 Hz) if specified
         if saveraw 
-            SWIFT(tindex).x = x;
-            SWIFT(tindex).y = y;
-            SWIFT(tindex).z = z;
-            SWIFT(tindex).rawtime = t;
-            SWIFT(tindex).u = u;
-            SWIFT(tindex).v = v;
+            SWIFT(sindex).x = x;
+            SWIFT(sindex).y = y;
+            SWIFT(sindex).z = z;
+            SWIFT(sindex).rawtime = t;
+            SWIFT(sindex).u = u;
+            SWIFT(sindex).v = v;
         end
 
         % Flag bad bursts when processing fails (9999 error code)
         if isempty(u)
-            badwaves(tindex) = true;
+            badwaves(sindex) = true;
         end
 
         if newHs == 9999
             disp('wave processing gave 9999')
-            SWIFT(tindex).sigwaveheight = NaN;
-            SWIFT(tindex).peakwaveperiod = NaN;
-            SWIFT(tindex).peakwaveperiod = NaN;
-            SWIFT(tindex).peakwavedirT = NaN;
-            badwaves(tindex) = true;
+            SWIFT(sindex).sigwaveheight = NaN;
+            SWIFT(sindex).peakwaveperiod = NaN;
+            SWIFT(sindex).peakwaveperiod = NaN;
+            SWIFT(sindex).peakwavedirT = NaN;
+            badwaves(sindex) = true;
         end
 
         if altHs == 9999
-            SWIFT(tindex).sigwaveheight_alt = NaN;
-            SWIFT(tindex).peakwaveperiod_alt = NaN;
+            SWIFT(sindex).sigwaveheight_alt = NaN;
+            SWIFT(sindex).peakwaveperiod_alt = NaN;
         end
 
         if newDp > 9000 % sometimes only the directions fail
-            SWIFT(tindex).peakwavedirT = NaN;
+            SWIFT(sindex).peakwavedirT = NaN;
         end
 
 % End file loop

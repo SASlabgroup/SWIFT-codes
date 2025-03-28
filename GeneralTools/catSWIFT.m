@@ -83,8 +83,12 @@ swift.driftv = driftv;
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
-    swift.depth = SWIFT(round(end/2)).signature.profile.z';
-    nz = length(swift.depth);
+    it = 1; nz = 0;
+    while nz == 0
+        swift.depth = SWIFT(it).signature.profile.z';
+        nz = length(swift.depth);
+        it = it + 1;
+    end
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
     swift.relw = NaN(nz,nt);
@@ -208,15 +212,6 @@ wavevar = sum(wavepower,1,'omitnan');
 waveweight = sum(wavepower.*repmat(wavefreq,1,size(wavepower,2)),1,'omitnan');
 swift.wavepeakT = 1./(waveweight./wavevar);
 
-% Directional Wave Spectra
-% [~,swift.wavedir,~,~,~,~,~,~] = SWIFTdirectionalspectra(SWIFT(1),0);
-% ndir = length(swift.wavedir);
-% nf = length(wavefreq);
-% swift.dirwavepower = NaN(nf,ndir,nt);
-% for it = 1:nt
-%     [swift.dirwavepower(:,:,it),~,~,~,~,~,~,~] = SWIFTdirectionalspectra(SWIFT(it),0);
-% end
-
  % Wind
  if isfield(SWIFT,'windustar')
      swift.windustar = [SWIFT.windustar];
@@ -260,8 +255,12 @@ swift.wavepeakT = 1./(waveweight./wavevar);
 
 % TKE Dissipation Rate and HR vertical velocity
 if isfield(SWIFT,'signature')
-    swift.surfz = SWIFT(round(end/2)).signature.HRprofile.z';
-    nz = length(swift.surfz);
+    it = 1; nz = 0;
+    while nz == 0
+        swift.surfz = SWIFT(it).signature.HRprofile.z';
+        nz = length(swift.surfz);
+        it = it + 1;
+    end
     swift.surftke = NaN(nz,nt);
     for it = 1:nt
         if isfield(SWIFT(it).signature.HRprofile,'tkedissipationrate')
@@ -291,17 +290,21 @@ end
 % Echograms
 if isfield(SWIFT,'signature')
     if isfield(SWIFT(floor(end/2)).signature,'echogram')
-    swift.echoz = SWIFT(1).signature.echogram.z;
-    nz = length(swift.echoz);
-    swift.echo = NaN(nz,nt);
-    for it = 1:nt
-        if isfield(SWIFT(it).signature,'echogram')
-            echo = SWIFT(it).signature.echogram.echoc;
-            swift.echo(1:length(echo),it) = echo;
-        else 
-            swift.echo(:,it) = NaN(nz,1);
+        it = 1; nz = 0;
+        while nz == 0
+            swift.echoz = SWIFT(it).signature.echogram.z';
+            nz = length(swift.echoz);
+            it = it + 1;
         end
-    end
+        swift.echo = NaN(nz,nt);
+        for it = 1:nt
+            if isfield(SWIFT(it).signature,'echogram')
+                echo = SWIFT(it).signature.echogram.echoc;
+                swift.echo(1:length(echo),it) = echo;
+            else 
+                swift.echo(:,it) = NaN(nz,1);
+            end
+        end
     end
 end
   

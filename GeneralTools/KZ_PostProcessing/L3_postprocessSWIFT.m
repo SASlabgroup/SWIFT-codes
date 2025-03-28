@@ -19,15 +19,16 @@ end
 
 %% Default processing toggles
 
-rpIMU = true; % Waves
-rpSBG = true; % Waves
-rpWXT = true; % MET
-rpY81 = true; % MET
 rpPB2 = true; % MET
-rpACS = true; % CT
-rpSIG = true; % TKE 
-rpAQH = true; % TKE
-rpAQD = true; % TKE
+
+rpIMU = false; % Waves
+rpSBG = false; % Waves
+rpWXT = false; % MET
+rpY81 = false; % MET
+rpACS = false; % CT
+rpSIG = false; % TKE 
+rpAQH = false; % TKE
+rpAQD = false; % TKE
 
 %% Mission name
 
@@ -95,7 +96,7 @@ if rpWXT
     if ~isempty(dir([missiondir slash 'WXT' slash 'Raw' slash '*' slash '*_536_*.dat']))
         disp('Reprocessing Vaisala WXT data...')
         readraw = false;
-        usewind = false;
+        usewind = true;
         [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw,usewind);
     else
         disp('No WXT data...')
@@ -106,7 +107,7 @@ end
 
 if rpPB2
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_PB2_*.dat']))
-        disp('Reprocessing Gill Anemometer (PB2) data...')
+        disp('Reprocessing Airmar Anemometer (PB2) data...')
         readraw = false;
         [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw);
     else
@@ -155,7 +156,7 @@ end
 if rpAQD 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.dat']))
         disp('Reprocessing Aquadopp (AQD) data...')
-        readraw = true;
+        readraw = false;
         [SWIFT,sinfo] = reprocess_AQD(missiondir,readraw);
     else
         disp('No AQD data...')

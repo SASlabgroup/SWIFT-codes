@@ -1,4 +1,4 @@
-function [winddirR windspd airtemp relhumidity airpres rainaccum rainint ] = readSWIFT_WXT( filename );
+function [winddirR,windspd,airtemp,relhumidity,airpres,rainaccum,rainint] = readSWIFT_WXT( filename )
 % function to read raw Vaisala WXT files from SWIFTs
 % usage:
 %
@@ -8,45 +8,94 @@ function [winddirR windspd airtemp relhumidity airpres rainaccum rainint ] = rea
 %
 % J. Thomson, 4/2020
 
+% Commented out line length requriement - K. Zeiden 03/2025
+
 try
-data = importdata( filename );
-catch 
-    warning('Couldn''t import data.')
-    winddirR = NaN;
-    windspd = NaN;
-    airtemp = NaN;
-    relhumidity = NaN;
-    airpres = NaN;
-    rainaccum = NaN;
-    rainint = NaN;
-    return
+
+    data = importdata( filename );
+    
+    catch 
+    
+        warning('Couldn''t import data.')
+        winddirR = NaN;
+        windspd = NaN;
+        airtemp = NaN;
+        relhumidity = NaN;
+        airpres = NaN;
+        rainaccum = NaN;
+        rainint = NaN;
+        return
+
 end
 
-if iscell(data),
+if iscell(data)
     
-    for di = 1:length(data),
+    for di = 1:length(data)
         
         thisline = data{di};
         
-        equalsigns = find(thisline=='=');
-        commas = find(thisline==',');
+        equalsigns = find(thisline == '=');
+        commas = find(thisline == ',');
         
-        if length(equalsigns)==7 && length(commas)==7 && length(thisline)>=65,
-            temp = str2num( thisline( equalsigns(1)+1:commas(2)-2 ) ) ;
-            if ~isempty(temp), winddirR(di)  = temp(1); else winddirR(di) = NaN; end
+        if length(equalsigns) == 7 && length(commas) == 7 % && length(thisline) >= 65
+
+            % Wind Direction
+            temp = str2num( thisline( equalsigns(1)+1:commas(2)-2 ) ) ; %#ok<*ST2NM>
+            if ~isempty(temp)
+                winddirR(di)  = temp(1); %#ok<*AGROW>
+            else 
+                winddirR(di) = NaN; 
+            end
+
+            % Wind Speed
             temp = str2num( thisline( equalsigns(2)+1:commas(3)-2 ) ) ;
-            if ~isempty(temp), windspd(di)   = temp(1) ; else windspd(di) = NaN; end
+            if ~isempty(temp)
+                windspd(di)   = temp(1);
+            else 
+                windspd(di) = NaN;
+            end
+
+            % Air Temperature
             temp = str2num( thisline( equalsigns(3)+1:commas(4)-2 ) ) ;
-            if ~isempty(temp), airtemp(di)   = temp(1); else airtemp(di) = NaN; end
+            if ~isempty(temp)
+                airtemp(di)   = temp(1); 
+            else 
+                airtemp(di) = NaN; 
+            end
+
+            % Relative Humidity
             temp = str2num( thisline( equalsigns(4)+1:commas(5)-2 ) );
-            if ~isempty(temp), relhumidity(di) = temp(1) ; else relhumidity(di) = NaN; end
+            if ~isempty(temp)
+                relhumidity(di) = temp(1) ; 
+            else 
+                relhumidity(di) = NaN; 
+            end
+
+            % Air Pressure
             temp = str2num( thisline( equalsigns(5)+1:commas(6)-2 ) ) ;
-            if ~isempty(temp), airpres(di)   = temp(1); else airpres(di) = NaN; end
+            if ~isempty(temp)
+                airpres(di)   = temp(1); 
+            else 
+                airpres(di) = NaN; 
+            end
+
+            % Rain Accumulation
             temp = str2num( thisline( equalsigns(6)+1:commas(7)-2 ) ) ;
-            if ~isempty(temp), rainaccum(di) = temp(1) ; else rainaccum(di) = NaN; end
+            if ~isempty(temp)
+                rainaccum(di) = temp(1) ; 
+            else 
+                rainaccum(di) = NaN; 
+            end
+
+            % Rain Int?
             temp = str2num( thisline( equalsigns(7)+1:length(thisline)-1 ) );
-            if ~isempty(temp), rainint(di)   = temp(1) ; else rainint(di)   = NaN; end
-        else,
+            if ~isempty(temp)
+                rainint(di)   = temp(1) ; 
+            else 
+                rainint(di)   = NaN; 
+            end
+
+        else
             winddirR(di)  = NaN;
             windspd(di)   = NaN;
             airtemp(di)   = NaN;
@@ -55,8 +104,6 @@ if iscell(data),
             rainaccum(di)     = NaN;
             rainint(di)     = NaN;
         end
-        
-        
         
     end
     
