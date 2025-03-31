@@ -497,6 +497,22 @@ while 1
         %if SWIFT.time < ( filetime - tooearly) 
         %    SWIFT.time = filetime;
         %end
+    elseif type == 54 & size == 303 % microSWIFT light sensor, size usually 303
+        disp('reading microSWIFT light sensor')
+        for sw = 1:6 % usually six sampling windows with each light sensor message
+            startlat = fread(fid,1,'int32') * 1e-7
+            startlon = fread(fid,1,'int32') * 1e-7
+            endlat = fread(fid,1,'int32') * 1e-7
+            endlon = fread(fid,1,'int32') * 1e-7
+            starttime = fread(fid,1,'uint32')
+            endtime = fread(fid,1,'uint32')
+            SWIFT(sw).lat = endlat;
+            SWIFT(sw).lon = endlon;
+            SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            SWIFT(sw).lightmax = fread(fid,1,'uint16');
+            SWIFT(sw).lightmin = fread(fid,1,'uint16');
+            SWIFT(sw).lightchannels = fread(fid,11,'uint16')
+        end
 
     elseif type == 100   %  Lufft WS700 wind speed and dir
         disp('reading Lufft wind speeds')
@@ -546,7 +562,7 @@ if ~isfield(SWIFT,'lat'), % if no IMU, use this one
     SWIFT.lat = PBlat;
     SWIFT.lon = PBlon;
 end
-if isfield(SWIFT,'lat') & ( SWIFT.lat == 0 | isempty(SWIFT.lat) ), % if IMU did not give position, use this one
+if isfield(SWIFT,'lat') & ( SWIFT(1).lat == 0 | isempty(SWIFT(1).lat) ), % if IMU did not give position, use this one
     disp('Using Airmar positions')
     SWIFT.lat = PBlat;
     SWIFT.lon = PBlon;
@@ -622,9 +638,9 @@ if isfield(SWIFT,'sigwaveheight'),
         SWIFT.peakwavedirT = NaN;
     end
 else
-    SWIFT.sigwaveheight = NaN;
-    SWIFT.peakwaveperiod = NaN;
-    SWIFT.peakwavedirT = NaN;
+%    SWIFT.sigwaveheight = NaN;
+%    SWIFT.peakwaveperiod = NaN;
+%    SWIFT.peakwavedirT = NaN;
 end
 
 %% change indicator for no conductivity - temperature
@@ -653,7 +669,7 @@ end
 
 %% take reciprocal of wave directions
 
-if recip,
+if recip & isfield(SWIFT,'peakwavedirT')
     dirto = SWIFT.peakwavedirT;
     if dirto >=180,
         SWIFT.peakwavedirT = dirto - 180;
