@@ -263,6 +263,9 @@ for iburst = 1:nburst
         badcorr = false;
     end
 
+    % Flag bad bursts
+    badburst = smallfile;% | badamp | badcorr
+
     %%%%%%% Process Broadband velocity data ('avg' structure) %%%%%%
 
       [profile,fh] = processSIGavg(avg,opt);
@@ -284,9 +287,6 @@ for iburst = 1:nburst
             print(figname,'-dpng')
             close gcf
         end
-
-        % Flag bad bursts
-        badburst = smallfile;% | badamp | badcorr
        
 
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
