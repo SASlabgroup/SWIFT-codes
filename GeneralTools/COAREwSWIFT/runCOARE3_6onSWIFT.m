@@ -79,7 +79,7 @@ print('-djpeg',[cd '\' sprintf('%s_COAREinputairtemp.jpeg',SWIFT(1).ID)])
 if isfield(SWIFT,'relhumidity') && any(~isnan([SWIFT.relhumidity])),
     rh = [SWIFT.relhumidity];
 else
-    rh = 95; % cannot be NaN, must have a value
+    rh = 95.*ones(1,length(SWIFT)); % cannot be NaN, must have a value
 end
 zq = zu; % rh height is same as wind height
 zrf_q = zrf_u; %same reference
@@ -213,7 +213,7 @@ zi = NaN;
 if isfield(SWIFT,'rainint') && any(~isnan([SWIFT.rainint])),
     rain = [SWIFT.rainint];
 else
-    rain = 0; % cannot be NaN, must have a value
+    rain = zeros(length(SWIFT),1); % cannot be NaN, must have a value
 end
 
 figure; 
