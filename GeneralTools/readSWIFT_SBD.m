@@ -458,7 +458,7 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
-    elseif type == 52 & size >= 327, % microSWIFT, size should be 327 bytes
+    elseif type == 52 & size >= 327, % microSWIFT, size should be 327 bytes for v2.1, or 331 bytes for v2.2
         disp('reading microSWIFT (compact)')
         GNSSdebug = port % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
