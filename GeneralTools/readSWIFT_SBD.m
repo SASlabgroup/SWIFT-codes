@@ -498,7 +498,7 @@ while 1
         %    SWIFT.time = filetime;
         %end
     elseif type == 54 & size == 303 % microSWIFT light sensor, size usually 303
-        disp('reading microSWIFT light sensor')
+        disp('reading microSWIFT light sensor (payload 54)')
         for sw = 1:6 % usually six sampling windows with each light sensor message
             startlat = fread(fid,1,'int32') * 1e-7;
             startlon = fread(fid,1,'int32') * 1e-7;
