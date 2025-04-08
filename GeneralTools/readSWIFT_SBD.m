@@ -66,8 +66,8 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %                       to report number of raw GPS velocities replaced before processing 
 %   K. Zeiden, 6/2024  change default signature profile size to 128, when
 %                       empty and filling w/NaN
-%   
-%   J. Thomson, 3/2025 add Lufft WS700 sensor
+%   J. Thomson, 3/2025 add microSWIFT light sensor (payload type 54)
+%   J. Thomson, 3/2025 add Lufft WS700 sensor (payload types 100-104)
 
 recip = true; % binary flag to change wave direction to FROM
 errorfile = false; % initialize
@@ -459,8 +459,8 @@ while 1
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
     elseif type == 52 & size >= 327, % microSWIFT, size should be 327 bytes for v2.1, or 331 bytes for v2.2
-        disp('reading microSWIFT (compact)')
-        GNSSdebug = port % microSWIFT specific
+        disp('reading microSWIFT NEDwaves (payload 52)')
+        GNSSdebug = port; % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
@@ -484,7 +484,7 @@ while 1
         epochTime                = fread(fid, 1,'float'); % epoch time
         asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
         SWIFT.time               = datenum(asDatetime); % time at end of burst
-        errorcodes = fread(fid,inf,'uchar')  % error codes at end of v2.2 micro messages
+        errorcodes = fread(fid,inf,'uchar');  % error codes at end of v2.2 micro messages
         % also get the time from the filename and see how they compare
         %year = fname(26:29);
         %month = fname(23:25);
@@ -500,18 +500,18 @@ while 1
     elseif type == 54 & size == 303 % microSWIFT light sensor, size usually 303
         disp('reading microSWIFT light sensor')
         for sw = 1:6 % usually six sampling windows with each light sensor message
-            startlat = fread(fid,1,'int32') * 1e-7
-            startlon = fread(fid,1,'int32') * 1e-7
-            endlat = fread(fid,1,'int32') * 1e-7
-            endlon = fread(fid,1,'int32') * 1e-7
-            starttime = fread(fid,1,'uint32')
-            endtime = fread(fid,1,'uint32')
+            startlat = fread(fid,1,'int32') * 1e-7;
+            startlon = fread(fid,1,'int32') * 1e-7;
+            endlat = fread(fid,1,'int32') * 1e-7;
+            endlon = fread(fid,1,'int32') * 1e-7;
+            starttime = fread(fid,1,'uint32');
+            endtime = fread(fid,1,'uint32');
             SWIFT(sw).lat = endlat;
             SWIFT(sw).lon = endlon;
             SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
             SWIFT(sw).lightmax = fread(fid,1,'uint16');
             SWIFT(sw).lightmin = fread(fid,1,'uint16');
-            SWIFT(sw).lightchannels = fread(fid,11,'uint16')
+            SWIFT(sw).lightchannels = fread(fid,11,'uint16');
         end
 
     elseif type == 100   %  Lufft WS700 wind speed and dir
