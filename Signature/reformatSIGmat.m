@@ -3,7 +3,7 @@ function reformatSIGmat(missiondir)
 % software to match the convensions of the lab structures
 % K.Zeiden June 2024
 
-bfiles = dir([missiondir '\SIG\Raw\*\*.mat']);
+bfiles = dir([missiondir '\SIG\Raw\*\*00000.mat']);
 if isempty(bfiles)
     disp('No burst mat files found.')
     return
@@ -15,7 +15,7 @@ for iburst = 1:nburst
 
     disp(['Reformatting ' bfiles(iburst).name ])
 
-    vars = whos('-file',bfiles(iburst).name);
+    vars = whos('-file',[bfiles(iburst).folder '\' bfiles(iburst).name]);
 
     % Check to see if already in lab format, skip file if so
     if any(strcmp({vars.name},'avg'))
