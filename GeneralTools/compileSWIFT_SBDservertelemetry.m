@@ -180,9 +180,9 @@ for ai = 1:length(flist)
         SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
         badburst(ai) = true;
 
-    %     % if light sensor, increment a different structure
-    % elseif lightsensor(ai)
-    %     SWIFTlightdata(ai) = oneSWIFTlightdata; 
+    else
+        SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
+        badburst(ai) = true;
     end
     
     badburst( find(lengthofnames < length(allnames) ) ) = true;
