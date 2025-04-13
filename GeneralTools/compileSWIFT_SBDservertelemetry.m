@@ -349,7 +349,15 @@ GPS = find(battery==1);
 if ~isempty(IMU), SWIFT_IMU = SWIFT(IMU); end
 if ~isempty(GPS), SWIFT_GPS = SWIFT(GPS); end
 
-clear SWIFT_IMU
+clear SWIFT_IMU % IMU deprecated, so remove it
+
+%% if all salinity is zero, the CT is probably not present, so assign NaN
+
+if isfield(SWIFT,'salinity') && all([SWIFT.salinity]==0)
+    for si=1:length(SWIFT)
+        SWIFT(si).salinity = NaN;
+    end
+end
 
 %% save
 %save([ flist(ai).name(6:13) '.mat'], 'SWIFT')
