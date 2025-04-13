@@ -512,6 +512,7 @@ while 1
             SWIFT(sw).lightmax = fread(fid,1,'uint16');
             SWIFT(sw).lightmin = fread(fid,1,'uint16');
             SWIFT(sw).lightchannels = fread(fid,11,'uint16');
+            SWIFT(sw).ID = SWIFT.ID;
         end
 
     elseif type == 100   %  Lufft WS700 wind speed and dir
