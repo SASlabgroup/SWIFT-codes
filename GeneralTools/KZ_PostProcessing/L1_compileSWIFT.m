@@ -68,7 +68,14 @@ for iburst = 1:nburst
     disp(['Burst ' num2str(iburst) ' : ' sbdlist(iburst).name])
         
     % Read in SBD file data
+    try
     [oneSWIFT,voltage]= readSWIFT_SBD([sbdlist(iburst).folder slash sbdlist(iburst).name],0);
+    catch ME
+        disp(['Burst SBD file could not be read in. Error Message: ' ME.message])
+        oneSWIFT.lon = NaN;
+        oneSWIFT.lat = NaN;
+        voltage = NaN;
+    end
 
     % Track SBD file in SWIFT structure
     oneSWIFT.sbdfile = sbdlist(iburst).name;

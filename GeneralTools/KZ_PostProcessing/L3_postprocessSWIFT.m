@@ -19,15 +19,17 @@ end
 
 %% Default processing toggles
 
-rpPB2 = true; % MET
-rpIMU = true; % Waves
+rpWXT = false; % MET
+rpPB2 = false; % MET
+rpY81 = false; % ME
+rpIMU = false; % Waves
+
 rpSBG = true; % Waves
-rpWXT = true; % MET
-rpY81 = true; % MET
-rpACS = true; % CT
-rpSIG = true; % TKE 
-rpAQH = true; % TKE
-rpAQD = true; % TKE
+
+rpACS = false; % CT
+rpSIG = false; % TKE 
+rpAQH = false; % TKE
+rpAQD = false; % TKE    
 
 %% Mission name
 
@@ -41,10 +43,7 @@ end
  %% Create diary file
 
 diaryfile = [missiondir slash sname '_L3_postprocessSWIFT.txt'];
- if exist(diaryfile,'file')
-    diary off
-    delete(diaryfile);
- end
+
 diary(diaryfile)
 
 disp(['Post-processing ' sname])
@@ -81,7 +80,7 @@ if rpSBG
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SBG_*.dat']))
         disp('Reprocessing SBG data...')
         saveraw = false;
-        useGPS = false;
+        useGPS = true;
         interpf = false;
         [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf);
     else
@@ -94,7 +93,7 @@ end
 if rpWXT
     if ~isempty(dir([missiondir slash 'WXT' slash 'Raw' slash '*' slash '*_536_*.dat']))
         disp('Reprocessing Vaisala WXT data...')
-        readraw = false;
+        readraw = true;
         usewind = true;
         [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw,usewind);
     else
@@ -107,7 +106,7 @@ end
 if rpPB2
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_PB2_*.dat']))
         disp('Reprocessing Airmar Anemometer (PB2) data...')
-        readraw = false;
+        readraw = true;
         [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw);
     else
         disp('No PB2 data...')

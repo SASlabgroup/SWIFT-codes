@@ -31,6 +31,7 @@ end
 
 %% Loop through raw burst files and reprocess
 SWIFTreplaced = false(length(SWIFT),1);
+relwind = false(length(SWIFT),1);
 
 bfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*PB2*.dat']);
 disp(['Found ' num2str(length(bfiles)) ' burst files...'])
@@ -46,19 +47,10 @@ for iburst = 1:length(bfiles)
             
         % Read mat file or load raw data
         if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
-            [~,windspd,winddirT,airtemp,airpres,~,~,~,~,~,~] = ...
+            [~,windspd,winddirT,airtemp,airpres,~,~,~,~,~,~,relhumidity,windspdR,winddirR] = ...
                 readSWIFTv3_PB2([bfiles(iburst).folder slash bfiles(iburst).name]);
         else
             load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
-            windspd = rawwindspd;
-            winddirT = rawwinddir;
-            airtemp = rawairtemp;
-            airpres = rawairpres;
-        end
-
-        if ~any(~isnan(windspd))
-            disp('No data read. Skipping...')
-            continue
         end
 
         % Check for zero-d data
@@ -69,7 +61,7 @@ for iburst = 1:length(bfiles)
 
         % Check for bad winds
         if mean(windspd,'omitnan') > 50 && std(windspd,[],'omitnan') < 1
-            warning('Bad wind.')
+            disp('WARNING: Bad wind.')
             windspd = NaN;
             winddirT = NaN;
         end
@@ -86,15 +78,40 @@ for iburst = 1:length(bfiles)
             disp('No matching SWIFT index. Skipping...')
             continue
         end
-        
-        SWIFT(sindex).winddirT = nanmean(winddirT); %#ok<*NANMEAN> % mean wind direction (deg relative)
-        SWIFT(sindex).windspd = nanmean(windspd); % mean wind speed (m/s)
-        SWIFT(sindex).winddirTstddev =  nanstd(winddirT); % std dev of wind direction (deg)
-        SWIFT(sindex).windspdstddev = nanstd(windspd);  % std dev of wind spd (m/s)
-        SWIFT(sindex).airtemp = nanmean(airtemp); % deg C
-        SWIFT(sindex).airtempstddev = nanstd(airtemp); % deg C
-        SWIFT(sindex).airpres = nanmean(airpres); % millibars
-        SWIFT(sindex).airpresstddev = nanstd(airpres); % millibars
+
+        % Mean + Std Dev values
+        windspdstddev = nanstd(windspd); %#ok<*NANSTD> % std dev of wind spd (m/s) 
+        windspd = nanmean(windspd); %#ok<*NANMEAN> % mean wind speed (m/s)
+            % If wind is NaN, use relative wind speed if not NaN
+            if isnan(windspd) && ~isnan(nanmean(windspdR))
+                windspdstddev = nanstd(windspdR);
+                windspd = nanmean(windspdR);
+                relwind(sindex) = true;
+            end
+        winddirTstddev = nanstd(winddirT);% std dev of wind direction (deg)
+        winddirT = nanmean(winddirT);% mean wind direction (deg true)
+        winddirRstddev = nanstd(winddirR);% std dev of wind direction (deg)
+        winddirR = nanmean(winddirR);% mean wind direction (deg relative)
+        airtempstddev = nanstd(airtemp);
+        airtemp = nanmean(airtemp);
+        airpresstddev = nanstd(airpres);
+        airpres = nanmean(airpres);
+        relhumiditystddev = nanstd(relhumidity);
+        relhumidity = nanmean(relhumidity);
+
+        % Save in SWIFT structure
+        SWIFT(sindex).windspd = windspd;
+        SWIFT(sindex).windspdstddev = windspdstddev; 
+        SWIFT(sindex).winddirT = winddirT;
+        SWIFT(sindex).winddirTstddev =  winddirTstddev;
+        SWIFT(sindex).winddirR = winddirR; 
+        SWIFT(sindex).winddirRstddev = winddirRstddev;
+        SWIFT(sindex).airtemp = airtemp; 
+        SWIFT(sindex).airtempstddev = airtempstddev; 
+        SWIFT(sindex).airpres = airpres; 
+        SWIFT(sindex).airpresstddev = airpresstddev; 
+        SWIFT(sindex).relhumidity = relhumidity;
+        SWIFT(sindex).relhumiditystddev = relhumiditystddev;
 
         SWIFTreplaced(sindex) = true;
 
@@ -105,14 +122,18 @@ end
 
 if any(~SWIFTreplaced)
 
-    [SWIFT(~SWIFTreplaced).winddirT] = deal(NaN);
-    [SWIFT(~SWIFTreplaced).winddirTstddev] =  deal(NaN);
     [SWIFT(~SWIFTreplaced).windspd] = deal(NaN);
     [SWIFT(~SWIFTreplaced).windspdstddev] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).winddirT] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).winddirTstddev] =  deal(NaN);
+    [SWIFT(~SWIFTreplaced).winddirR] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).winddirRstddev] =  deal(NaN);
     [SWIFT(~SWIFTreplaced).airtemp] = deal(NaN);
     [SWIFT(~SWIFTreplaced).airtempstddev] = deal(NaN);
     [SWIFT(~SWIFTreplaced).airpres] = deal(NaN);
     [SWIFT(~SWIFTreplaced).airpresstddev] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).relhumidity] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).relhumiditystddev] = deal(NaN);
 
 end
 
@@ -127,7 +148,7 @@ end
 sinfo.postproc(ip).type = 'PB2';
 sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
-sinfo.postproc(ip).flags = [];
+sinfo.postproc(ip).flags.relwind = relwind;
 sinfo.postproc(ip).params = [];
 
 save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')
