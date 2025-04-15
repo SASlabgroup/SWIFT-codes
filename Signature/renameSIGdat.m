@@ -11,11 +11,15 @@ else
 end
 
 dfiles = dir([missiondir slash 'SIG' slash 'Raw' slash '*' slash '*.dat']);
+if isempty(dfiles)
+    disp('No Signature dat files found')
+    return
+end
 
 for ifile = 1:length(dfiles)
 
     cd(dfiles(ifile).folder)
-    movefile(dfiles(ifile).name,[dfiles(ifile).name(1:end-4) '.ad2cp'])
+    copyfile(dfiles(ifile).name,[dfiles(ifile).name(1:end-4) '.ad2cp'])
 
 end
 

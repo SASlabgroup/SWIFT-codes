@@ -1,8 +1,13 @@
-function profile = fixSIGenu(avg,T_AHRS,hh)
+function [bavgvelENU,bavgshear] = fixSIGenu(avg,T_AHRS,hh)
 % Estimate burst-averaged ENU velocity profiles from beam velocities using
-% mean-heading (hh). Motivated by bad pitch + roll data in Signature data.
+% mean-heading (hh). Motivated by bad motion in Signature data.
 % Can input just mean heading (hh is a scalar), or mean heading, pitch and
 % roll (hh is a 3x1 vector);
+
+% [E;N;U] = R*T*[B1;B2;B3;B4];
+% [B1;B2;B3;B4] = inv(T)*inv(R)*[E;N;U];
+% [E;N;U] = R*[X;Y;Z];
+% [X;Y;Z] = inv(R)*[E;N;U];
 
 % K. Zeiden Apr 2025
 
@@ -21,8 +26,8 @@ else
 end
 
 % Onboard ENU velocities
-ENUvel = avg.VelocityData;
-[nping,nbin,~] = size(ENUvel);
+velENU = avg.VelocityData;
+[nping,nbin,~] = size(velENU);
 
 % AHRS rotation matrix used in onboard ENU calculation
 R_ahrs = NaN(nping,3,3);
@@ -37,7 +42,8 @@ R_ahrs(:,3,2) = avg.AHRS_M32;
 R_ahrs(:,3,3) = avg.AHRS_M33;
 
 % Step 1) Revert ENU velocities back to beam velocities -------------------
-BEAMvel = NaN(size(ENUvel));
+velBEAM = NaN(size(velENU));
+velXYZ = NaN(size(velENU));
 for iping = 1:nping
 
     % Use onboard AHRS matrix & convert to 4-beam
@@ -49,13 +55,14 @@ for iping = 1:nping
 
     % ENU to Beam
     for ibin = 1:nbin
-        BEAMvel(iping,ibin,:) = inv(T_AHRS)*inv(R)*squeeze(ENUvel(iping,ibin,:));
+        velXYZ(iping,ibin,:) = inv(R)*squeeze(velENU(iping,ibin,:));
+        velBEAM(iping,ibin,:) = inv(T_AHRS)*squeeze(velXYZ(iping,ibin,:));
     end
 
 end
 
 % Step 2) Compute burst-average beam velocities --------------------------
-bavgBEAM = squeeze(mean(BEAMvel,1,'omitnan'));
+bavgvelBEAM = squeeze(mean(velBEAM,1,'omitnan'));
 
 % Step 3) Compute HPR rotation matrix  -----------------------------------
 
@@ -81,18 +88,12 @@ R = [R(1,1) R(1,2) R(1,3)/2 R(1,3)/2;
      R(3,1) R(3,2) 0        R(3,3)];
 
 % Step 3) Rotate burst-averaged beam velocities to ENU ------------------
-bavgENU = NaN(size(bavgBEAM));
+bavgvelENU = NaN(size(bavgvelBEAM));
 for ibin = 1:nbin
-    bavgENU(ibin,:) = R*T*bavgBEAM(ibin,:)';
+    bavgvelENU(ibin,:) = R*T*bavgvelBEAM(ibin,:)';
 end
 
 % Swap signs in ENU
-bavgENU(:,2:4) = -bavgENU(:,2:4);
-
-% Output resultant ENU velocity profiles---------------------------------
-profile.east = bavgENU(:,1);
-profile.north = bavgENU(:,2);
-profile.w = bavgENU(:,4);% consistent with processSIGavg
-profile.w2 = bavgENU(:,3);
+bavgvelENU(:,2:4) = -bavgvelENU(:,2:4);
 
 end
