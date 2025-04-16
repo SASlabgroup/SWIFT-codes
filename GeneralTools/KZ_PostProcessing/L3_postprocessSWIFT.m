@@ -19,15 +19,15 @@ end
 
 %% Default processing toggles
 
-rpIMU = true; % Waves
-rpSBG = true; % Waves
-rpWXT = true; % MET
-rpY81 = true; % MET
+rpWXT = false; % MET
 rpPB2 = true; % MET
-rpACS = true; % CT
-rpSIG = true; % TKE 
-rpAQH = true; % TKE
-rpAQD = true; % TKE
+rpY81 = false; % ME
+rpIMU = false; % Waves
+rpSBG = true; % Waves
+rpACS = false; % CT
+rpSIG = false; % TKE 
+rpAQH = false; % TKE
+rpAQD = false; % TKE    
 
 %% Mission name
 
@@ -41,10 +41,7 @@ end
  %% Create diary file
 
 diaryfile = [missiondir slash sname '_L3_postprocessSWIFT.txt'];
- if exist(diaryfile,'file')
-    diary off
-    delete(diaryfile);
- end
+
 diary(diaryfile)
 
 disp(['Post-processing ' sname])
@@ -81,7 +78,7 @@ if rpSBG
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SBG_*.dat']))
         disp('Reprocessing SBG data...')
         saveraw = false;
-        useGPS = false;
+        useGPS = true;
         interpf = false;
         [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf);
     else
@@ -95,7 +92,7 @@ if rpWXT
     if ~isempty(dir([missiondir slash 'WXT' slash 'Raw' slash '*' slash '*_536_*.dat']))
         disp('Reprocessing Vaisala WXT data...')
         readraw = false;
-        usewind = false;
+        usewind = true;
         [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw,usewind);
     else
         disp('No WXT data...')
@@ -106,7 +103,7 @@ end
 
 if rpPB2
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_PB2_*.dat']))
-        disp('Reprocessing Gill Anemometer (PB2) data...')
+        disp('Reprocessing Airmar Anemometer (PB2) data...')
         readraw = false;
         [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw);
     else
@@ -155,7 +152,7 @@ end
 if rpAQD 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.dat']))
         disp('Reprocessing Aquadopp (AQD) data...')
-        readraw = true;
+        readraw = false;
         [SWIFT,sinfo] = reprocess_AQD(missiondir,readraw);
     else
         disp('No AQD data...')

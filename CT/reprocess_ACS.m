@@ -39,7 +39,7 @@ for iburst = 1:length(bfiles)
     % Read mat file or load raw data
     if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
         try
-        [~,~,Salinity,~,~] = readSWIFTv3_ACS([bfiles(iburst).folder slash bfiles(iburst).name]);
+        [~, Temperature, Salinity, Density, ~]  = readSWIFTv3_ACS([bfiles(iburst).folder slash bfiles(iburst).name]);
         catch
             disp(['Cannot read ' bfiles(iburst).name '. Skipping...'])
         continue
@@ -48,18 +48,17 @@ for iburst = 1:length(bfiles)
          load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
     end
 
-     % Find matching time
-    btime = datenum(bfiles(iburst).name(13:21)) + str2double(bfiles(iburst).name(23:24))./24 ...
-        + str2double(bfiles(iburst).name(26:27))./(24*6);
-    [tdiff,tindex] = min(abs([SWIFT.time]-btime));
-
-    if tdiff > 12/(60*24)
-        disp('No time match. Skippping...')
+    % Find burst index in the existing SWIFT structure
+    burstID = bfiles(iburst).name(13:end-4);
+    sindex = find(strcmp(burstID,{SWIFT.burstID}'));
+    if isempty(sindex)
+        disp('No matching SWIFT index. Skipping...')
         continue
     end
 
     % Replace Values in SWIFT structure
-    SWIFT(tindex).salinityvariance = std(Salinity);
+    SWIFT(sindex).watertemp = mean(Temperature,'omitnan');
+    SWIFT(sindex).salinityvariance = std(Salinity,[],'omitnan');
 
 end
     

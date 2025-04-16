@@ -83,9 +83,9 @@ for it = 1:length(sig.time)
     sig.N(1:nzhr,it) = SIG(it).HRprofile.QC.qualEOF.N(1:nzhr);
     sig.mspe(1:nzhr,it) = SIG(it).HRprofile.QC.qualEOF.mspe(1:nzhr);
     sig.slope(1:nzhr,it) = SIG(it).HRprofile.QC.qualEOF.slope(1:nzhr);
-    sig.wpeofmag(1:nzhr,it) = SIG(it).HRprofile.QC.wpeofmag(1:nzhr);
-    sig.eofs(1:nzhr,1:nzhr,it) = SIG(it).HRprofile.QC.eofs(1:nzhr,1:nzhr,:);
-    sig.eofvar(1:nzhr,it) = SIG(it).HRprofile.QC.eofvar(1:nzhr);
+    % sig.wpeofmag(1:nzhr,it) = SIG(it).HRprofile.QC.wpeofmag(1:nzhr);
+    % sig.eofs(1:nzhr,1:nzhr,it) = SIG(it).HRprofile.QC.eofs(1:nzhr,1:nzhr,:);
+    % sig.eofvar(1:nzhr,it) = SIG(it).HRprofile.QC.eofvar(1:nzhr);
 
     % Motion
     sig.pitch(it) = SIG(it).motion.pitch;
@@ -117,9 +117,9 @@ if QCsig && sum(badburst) < length(sig.time)
     sig.pspike(:,badburst) = [];
     sig.pbadping(badburst) = [];
     sig.time(badburst) = [];
-    sig.wpeofmag(:,badburst) = [];
-    sig.eofs(:,:,badburst) = [];
-    sig.eofvar(:,badburst) = [];
+    % sig.wpeofmag(:,badburst) = [];
+    % sig.eofs(:,:,badburst) = [];
+    % sig.eofvar(:,badburst) = [];
     sig.pitch(badburst) = SIG(badburst).motion.pitch;
     sig.roll(badburst) = SIG(badburst).motion.roll;
     sig.head(badburst) = SIG(badburst).motion.head;

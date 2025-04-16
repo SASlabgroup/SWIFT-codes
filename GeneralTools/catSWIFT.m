@@ -83,8 +83,13 @@ swift.driftv = driftv;
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
-    swift.depth = SWIFT(round(end/2)).signature.profile.z';
-    nz = length(swift.depth);
+    it = 1; nz = 0;
+    swift.depth = NaN;
+    while nz == 0 || any(isnan(swift.depth))
+        swift.depth = SWIFT(it).signature.profile.z';
+        nz = length(swift.depth);
+        it = it + 1;
+    end
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
     swift.relw = NaN(nz,nt);
@@ -115,8 +120,16 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
         end
     end
 elseif isfield(SWIFT,'downlooking')
-    swift.depth = SWIFT(end).downlooking.z';
-    nz = length(swift.depth);
+    it = 1; nz = 0;
+    swift.depth = NaN;
+    while nz == 0 || any(isnan(swift.depth))
+        swift.depth = SWIFT(it).downlooking.z';
+        nz = length(swift.depth);
+        it = it + 1;
+    end
+     if any(isnan(swift.depth)) 
+        swift.depth = 1.5+(1:nz)*0.04;
+    end
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
     swift.relw = NaN(nz,nt);
@@ -124,8 +137,16 @@ elseif isfield(SWIFT,'downlooking')
     swift.relverr = NaN(nz,nt);
     swift.relwerr = NaN(nz,nt);       
 elseif isfield(SWIFT,'uplooking')
-    swift.depth = SWIFT(end).uplooking.z;
-    nz = length(swift.depth);
+    it = 1; nz = 0;
+    swift.depth = NaN;
+    while nz == 0 || any(isnan(swift.depth)) && it < nt
+        swift.depth = SWIFT(it).uplooking.z';
+        nz = length(swift.depth);
+        it = it + 1;
+    end
+    if any(isnan(swift.depth)) 
+        swift.depth = 0.9+(1:nz)*0.04;
+    end
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
     swift.relw = NaN(nz,nt);
@@ -208,15 +229,6 @@ wavevar = sum(wavepower,1,'omitnan');
 waveweight = sum(wavepower.*repmat(wavefreq,1,size(wavepower,2)),1,'omitnan');
 swift.wavepeakT = 1./(waveweight./wavevar);
 
-% Directional Wave Spectra
-% [~,swift.wavedir,~,~,~,~,~,~] = SWIFTdirectionalspectra(SWIFT(1),0);
-% ndir = length(swift.wavedir);
-% nf = length(wavefreq);
-% swift.dirwavepower = NaN(nf,ndir,nt);
-% for it = 1:nt
-%     [swift.dirwavepower(:,:,it),~,~,~,~,~,~,~] = SWIFTdirectionalspectra(SWIFT(it),0);
-% end
-
  % Wind
  if isfield(SWIFT,'windustar')
      swift.windustar = [SWIFT.windustar];
@@ -226,12 +238,22 @@ swift.wavepeakT = 1./(waveweight./wavevar);
  else
     swift.windu = NaN(size(swift.driftspd));
  end
+  if isfield(SWIFT,'windspdR')
+    swift.winduR = [SWIFT.windspdR];
+ else
+    swift.winduR = NaN(size(swift.driftspd));
+ end
  if isfield(SWIFT,'winddirT')
      swift.winddir = [SWIFT.winddirT];
  elseif isfield(SWIFT,'windmeanu')
     swift.winddir = atan2d([SWIFT.windmeanv],[SWIFT.windmeanu]);
  else
      swift.winddir = NaN(size(swift.driftspd));
+ end
+ if isfield(SWIFT,'winddirR')
+     swift.winddirR = [SWIFT.winddirR];
+ else
+     swift.winddirR = NaN(size(swift.driftspd));
  end
  if isfield(SWIFT,'windspectra') 
      for it = 1:nt
@@ -260,8 +282,13 @@ swift.wavepeakT = 1./(waveweight./wavevar);
 
 % TKE Dissipation Rate and HR vertical velocity
 if isfield(SWIFT,'signature')
-    swift.surfz = SWIFT(round(end/2)).signature.HRprofile.z';
-    nz = length(swift.surfz);
+    it = 1; nz = 0;
+    swift.surfz = NaN;
+    while nz == 0 || any(isnan(swift.surfz))
+        swift.surfz = SWIFT(it).signature.HRprofile.z';
+        nz = length(swift.surfz);
+        it = it + 1;
+    end
     swift.surftke = NaN(nz,nt);
     for it = 1:nt
         if isfield(SWIFT(it).signature.HRprofile,'tkedissipationrate')
@@ -276,8 +303,16 @@ if isfield(SWIFT,'signature')
         end
     end
 elseif isfield(SWIFT,'uplooking')
-    swift.surfz = SWIFT(1).uplooking.z';
-    nz = length(swift.surfz);
+    it = 1; nz = 0;
+    swift.surfz = NaN;
+    while nz == 0 || any(isnan(swift.surfz)) && it <= nt
+        swift.surfz = SWIFT(it).uplooking.z';
+        nz = length(swift.surfz);
+        it = it + 1;
+    end
+    if any(isnan(swift.depth)) 
+        swift.depth = 0.9+(1:nz)*0.04;
+    end
     swift.surftke = NaN(nz,nt);
     for it = 1:nt
         swift.surftke(:,it) = SWIFT(it).uplooking.tkedissipationrate;
@@ -291,17 +326,21 @@ end
 % Echograms
 if isfield(SWIFT,'signature')
     if isfield(SWIFT(floor(end/2)).signature,'echogram')
-    swift.echoz = SWIFT(1).signature.echogram.z;
-    nz = length(swift.echoz);
-    swift.echo = NaN(nz,nt);
-    for it = 1:nt
-        if isfield(SWIFT(it).signature,'echogram')
-            echo = SWIFT(it).signature.echogram.echoc;
-            swift.echo(1:length(echo),it) = echo;
-        else 
-            swift.echo(:,it) = NaN(nz,1);
+        it = 1; nz = 0;
+        while nz == 0
+            swift.echoz = SWIFT(it).signature.echogram.z';
+            nz = length(swift.echoz);
+            it = it + 1;
         end
-    end
+        swift.echo = NaN(nz,nt);
+        for it = 1:nt
+            if isfield(SWIFT(it).signature,'echogram')
+                echo = SWIFT(it).signature.echogram.echoc;
+                swift.echo(1:length(echo),it) = echo;
+            else 
+                swift.echo(:,it) = NaN(nz,1);
+            end
+        end
     end
 end
   

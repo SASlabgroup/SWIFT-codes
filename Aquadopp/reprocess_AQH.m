@@ -203,38 +203,49 @@ for iburst = 1:nburst
 
    if ~isempty(fieldnames(SWIFT)) && ~isempty(SWIFT)
 
-        [tdiff,tindex] = min(abs([SWIFT.time]-btime));
-        if tdiff > 12/(60*24)% must be within 10 min
-            disp('   NO time index match...')
-            timematch = false;
-        elseif tdiff < 12/(60*24)
-            timematch = true;
-            burstreplaced(tindex) = true;
-        elseif isempty(tdiff)
-            disp('   NO time index match...')
-            timematch = false;
+        % [tdiff,tindex] = min(abs([SWIFT.time]-btime));
+        % if tdiff > 12/(60*24)% must be within 10 min
+        %     disp('   NO time index match...')
+        %     timematch = false;
+        % elseif tdiff < 12/(60*24)
+        %     timematch = true;
+        %     burstreplaced(tindex) = true;
+        % elseif isempty(tdiff)
+        %     disp('   NO time index match...')
+        %     timematch = false;
+        % end
+
+        % Find burst index in the existing SWIFT structure
+        burstID = bfiles(iburst).name(13:end-4);
+        sindex = find(strcmp(burstID,{SWIFT.burstID}'));
+        if isempty(sindex)
+            disp('No matching SWIFT index.')
+            burstmatch = false;
+        else
+            burstmatch = true;
+            burstreplaced(sindex) = true;
         end
 
-        if  timematch && ~badburst % time match, good burst
+        if  burstmatch && ~badburst % time match, good burst
             % HR data
-            SWIFT(tindex).uplooking = [];
-            SWIFT(tindex).uplooking.w = HRprofile.w;
-            SWIFT(tindex).uplooking.wvar = HRprofile.wvar;
-            SWIFT(tindex).uplooking.z = HRprofile.z';
-            SWIFT(tindex).uplooking.tkedissipationrate = HRprofile.eps;
+            SWIFT(sindex).uplooking = [];
+            SWIFT(sindex).uplooking.w = HRprofile.w;
+            SWIFT(sindex).uplooking.wvar = HRprofile.wvar;
+            SWIFT(sindex).uplooking.z = HRprofile.z';
+            SWIFT(sindex).uplooking.tkedissipationrate = HRprofile.eps;
 
-        elseif timematch && badburst % time match, bad burst
+        elseif burstmatch && badburst % time match, bad burst
             % HR data
-            SWIFT(tindex).uplooking = [];
-            SWIFT(tindex).uplooking.w = NaN(size(HRprofile.w));
-            SWIFT(tindex).uplooking.wvar = NaN(size(HRprofile.w));
-            SWIFT(tindex).uplooking.z = HRprofile.z';
-            SWIFT(tindex).uplooking.tkedissipationrate = ...
+            SWIFT(sindex).uplooking = [];
+            SWIFT(sindex).uplooking.w = NaN(size(HRprofile.w));
+            SWIFT(sindex).uplooking.wvar = NaN(size(HRprofile.w));
+            SWIFT(sindex).uplooking.z = HRprofile.z';
+            SWIFT(sindex).uplooking.tkedissipationrate = ...
                 NaN(size(HRprofile.w'));
 
-            badaqh(tindex) = true;
+            badaqh(sindex) = true;
 
-        elseif ~timematch && ~badburst % Good burst, no time match
+        elseif ~burstmatch && ~badburst % Good burst, no time match
             disp('   ALERT: Burst good, but no time match...')
             AQH(iaqh-1).flag.notimematch = true;
 

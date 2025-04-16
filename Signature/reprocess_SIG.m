@@ -115,11 +115,13 @@ else %  Exit reprocessing if no L2 or L3 product exists
     return
 end
 
-%% Load User Input Toggles
+%% Toggles
+
+%%% User Input Toggles
 opt.readraw = readraw;% read raw binary files
 opt.plotburst = plotburst; % generate plots for each burst
 
-%% Internal Toggles
+%%% Internal Toggles
 opt.saveSIG = true; %save detailed sig data in separate SIG structure
 opt.saveplots = true; % save generated plots
 
@@ -180,11 +182,6 @@ nburst = length(bfiles);
 %% Loop through burst files and reprocess signature data
 for iburst = 1:nburst
 
-    % Burst time stamp and name
-    day = bfiles(iburst).name(13:21);
-    hour = bfiles(iburst).name(23:24);
-    mint = bfiles(iburst).name(26:27);
-    btime = datenum(day)+datenum(0,0,0,str2double(hour),(str2double(mint)-1)*12,0);
     bname = bfiles(iburst).name(1:end-4);
     disp(['Burst ' num2str(iburst) ' : ' bname])
 
@@ -208,23 +205,21 @@ for iburst = 1:nburst
     end
 
     % Burst time
-    t0 = min(avg.time);
-    if abs(btime - t0) > 15/(60*24)
-        disp('   WARNING: File name disagrees with recorded time. Using recorded time...   ')
-        btime = t0;
-    end
+    btime = min(burst.time);
 
-    % Time match
-    [tdiff,tindex] = min(abs([SWIFT.time]-btime));
-    if tdiff > 12/(60*24)% must be within 15 min
-        disp('   NO time index match...')
-        timematch = false;
-    elseif tdiff < 12/(60*24)
-        timematch = true;
-        burstreplaced(tindex) = true;
-    elseif isempty(tdiff)
-        disp('   NO time index match...')
-        timematch = false;
+    % Find burst index in the existing SWIFT structure
+    burstID = bfiles(iburst).name(13:end-4);
+    sindex = find(strcmp(burstID,{SWIFT.burstID}'));
+    if isempty(sindex)
+        disp('No matching SWIFT index.')
+        burstmatch = false;
+    else
+        burstmatch = true;
+        burstreplaced(sindex) = true;
+        stime = SWIFT(sindex).time;
+        if abs(stime-btime) > 1/(60*24) % within 1-min
+           disp('   WARNING: File name disagrees with recorded time...   ')
+        end
     end
 
     % Altimeter Distance
@@ -234,7 +229,7 @@ for iburst = 1:nburst
         maxz = inf;
     end
     
-    %%%%%%% FLAGS %%%%%%=
+    %%%%%%% FLAGS %%%%%%
 
     % Flag if coming in/out of the water
     if any(ischange(burst.Pressure)) && any(ischange(burst.Temperature))
@@ -254,7 +249,7 @@ for iburst = 1:nburst
 
     % Flag out of water based on bursts w/anomalously high amplitude
     if mean(burst.AmplitudeData(:),'omitnan') > opt.maxamp
-        disp('   FLAG: Bad Amp (high average amp)...')
+        disp('   FLAG: High average amp...')
         badamp = true;
     else
         badamp = false;
@@ -262,11 +257,14 @@ for iburst = 1:nburst
 
     % Flag out of water based on bursts w/low correlation
     if mean(burst.CorrelationData(:),'omitnan') < opt.mincorr
-        disp('   FLAG: Bad Corr (low average corr)...')
+        disp('   FLAG: Low average corr...')
         badcorr = true;
     else
         badcorr = false;
     end
+
+    % Flag bad bursts
+    badburst = smallfile;% | badamp | badcorr
 
     %%%%%%% Process Broadband velocity data ('avg' structure) %%%%%%
 
@@ -289,14 +287,14 @@ for iburst = 1:nburst
             print(figname,'-dpng')
             close gcf
         end
-
-        % Flag bad bursts
-        badburst = badamp | badcorr | smallfile;
        
 
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
     
         [HRprofile,fh] = processSIGburst(burst,opt);
+
+        % Remove EOF data (too large)
+        HRprofile.QC = rmfield(HRprofile.QC,{'eofs','eofvar','eofamp','wpeofmag'});
         
         if isempty(HRprofile)
             HRprofile = NaNstructR(SIG(isig-1).HRprofile);
@@ -336,6 +334,8 @@ for iburst = 1:nburst
 
     %Time
     SIG(isig).time = btime;
+    % Burst ID
+    SIG(isig).burstID = burstID;
     % HR data
     SIG(isig).HRprofile = HRprofile;
     %Temperaure
@@ -355,7 +355,7 @@ for iburst = 1:nburst
     SIG(isig).motion.headvar = var(unwrap(avg.Heading),'omitnan');
     % Badburst & flags
     SIG(isig).badburst = badburst;
-    SIG(isig).timematch = timematch;
+    SIG(isig).timematch = burstmatch;
     SIG(isig).outofwater = outofwater;
     SIG(isig).flag.badamp = badamp;
     SIG(isig).flag.badcorr = badcorr;
@@ -367,94 +367,60 @@ for iburst = 1:nburst
 
    if ~isempty(fieldnames(SWIFT)) && ~isempty(SWIFT)
 
-        if  timematch && ~badburst % time match, good burst
+        if  burstmatch && ~badburst % time match, good burst
             % HR data
-            SWIFT(tindex).signature.HRprofile = [];
-            SWIFT(tindex).signature.HRprofile.w = HRprofile.w;
-            SWIFT(tindex).signature.HRprofile.wvar = HRprofile.wvar;
-            SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
-            SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
+            SWIFT(sindex).signature.HRprofile = [];
+            SWIFT(sindex).signature.HRprofile.w = HRprofile.w;
+            SWIFT(sindex).signature.HRprofile.wvar = HRprofile.wvar;
+            SWIFT(sindex).signature.HRprofile.z = HRprofile.z';
+            SWIFT(sindex).signature.HRprofile.tkedissipationrate = ...
                 HRprofile.eps;
             % Broadband data
-            SWIFT(tindex).signature.profile = [];
-            SWIFT(tindex).signature.profile.east = profile.u;
-            SWIFT(tindex).signature.profile.north = profile.v;
-            SWIFT(tindex).signature.profile.w = profile.w;
-            SWIFT(tindex).signature.profile.uvar = profile.uvar;
-            SWIFT(tindex).signature.profile.vvar = profile.vvar;
-            SWIFT(tindex).signature.profile.wvar = profile.wvar;
-            SWIFT(tindex).signature.profile.z = profile.z;
+            SWIFT(sindex).signature.profile = [];
+            SWIFT(sindex).signature.profile.east = profile.u;
+            SWIFT(sindex).signature.profile.north = profile.v;
+            SWIFT(sindex).signature.profile.w = profile.w;
+            SWIFT(sindex).signature.profile.uvar = profile.uvar;
+            SWIFT(sindex).signature.profile.vvar = profile.vvar;
+            SWIFT(sindex).signature.profile.wvar = profile.wvar;
+            SWIFT(sindex).signature.profile.z = profile.z;
             % Echogram data
             if ~isempty(echo)
-                SWIFT(tindex).signature.echo = echogram.echoc;
-                SWIFT(tindex).signature.echoz = echogram.r + opt.xz;
+                SWIFT(sindex).signature.echo = echogram.echoc;
+                SWIFT(sindex).signature.echoz = echogram.r + opt.xz;
             end
             % Altimeter
-            SWIFT(tindex).signature.altimeter = maxz;
+            SWIFT(sindex).signature.altimeter = maxz;
             % Temperaure
-            SWIFT(tindex).watertemp = profile.temp;
+            SWIFT(sindex).watertemp2 = profile.temp;
 
-        elseif timematch && badburst % time match, bad burst
+        elseif burstmatch && badburst % time match, bad burst
             % HR data
-            SWIFT(tindex).signature.HRprofile = [];
-            SWIFT(tindex).signature.HRprofile.w = NaN(size(HRprofile.w));
-            SWIFT(tindex).signature.HRprofile.wvar = NaN(size(HRprofile.w));
-            SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
-            SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
+            SWIFT(sindex).signature.HRprofile = [];
+            SWIFT(sindex).signature.HRprofile.w = NaN(size(HRprofile.w));
+            SWIFT(sindex).signature.HRprofile.wvar = NaN(size(HRprofile.w));
+            SWIFT(sindex).signature.HRprofile.z = HRprofile.z';
+            SWIFT(sindex).signature.HRprofile.tkedissipationrate = ...
                 NaN(size(HRprofile.w'));
             % Broadband data
-            SWIFT(tindex).signature.profile = [];
-            SWIFT(tindex).signature.profile.w = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.east = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.north = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.uvar = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.vvar = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.wvar = NaN(size(profile.u));
-            SWIFT(tindex).signature.profile.z = profile.z;
+            SWIFT(sindex).signature.profile = [];
+            SWIFT(sindex).signature.profile.w = NaN(size(profile.u));
+            SWIFT(sindex).signature.profile.east = NaN(size(profile.u));
+            SWIFT(sindex).signature.profile.north = NaN(size(profile.u));
+            SWIFT(sindex).signature.profile.uvar = NaN(size(profile.u));
+            SWIFT(sindex).signature.profile.vvar = NaN(size(profile.u));
+            SWIFT(sindex).signature.profile.wvar = NaN(size(profile.u));
+            SWIFT(sindex).signature.profile.z = profile.z;
             % Echogram data
             if ~isempty(echo)
-                SWIFT(tindex).signature.echo = NaN(size(echogram.echoc));
-                SWIFT(tindex).signature.echo = echogram.r + opt.xz;
+                SWIFT(sindex).signature.echo = NaN(size(echogram.echoc));
+                SWIFT(sindex).signature.echoz = echogram.r + opt.xz;
             end
             % Flag
-            badsig(tindex) = true;
+            badsig(sindex) = true;
 
-        elseif ~timematch && ~badburst % Good burst, no time match
-            disp('   ALERT: Burst good, but no time match...')
-            
-            % tindex = length(SWIFT)+1;
-            % burstreplaced = [burstreplaced; true]; %#ok<AGROW>
-            % % Copy fields from SWIFT(1);
-            % SWIFT(tindex) = NaNstructR(SWIFT(1));            
-            % % HR data
-            % SWIFT(tindex).signature.HRprofile = [];
-            % SWIFT(tindex).signature.HRprofile.w = HRprofile.w;
-            % SWIFT(tindex).signature.HRprofile.wvar = HRprofile.wvar;
-            % SWIFT(tindex).signature.HRprofile.z = HRprofile.z';
-            % SWIFT(tindex).signature.HRprofile.tkedissipationrate = ...
-            %     HRprofile.eps;
-            % % Broadband data
-            % SWIFT(tindex).signature.profile = [];
-            % SWIFT(tindex).signature.profile.east = profile.u;
-            % SWIFT(tindex).signature.profile.north = profile.v;
-            % SWIFT(tindex).signature.profile.w = profile.w;
-            % SWIFT(tindex).signature.profile.uvar = profile.uvar;
-            % SWIFT(tindex).signature.profile.vvar = profile.vvar;
-            % SWIFT(tindex).signature.profile.wvar = profile.wvar;
-            % SWIFT(tindex).signature.profile.z = profile.z;
-            % % Echogram data
-            % if ~isempty(echo)
-            %     SWIFT(tindex).signature.echo = echogram.echoc;
-            %     SWIFT(tindex).signature.echoz = echogram.r + opt.xz;
-            % end
-            % % Altimeter
-            % SWIFT(tindex).signature.altimeter = maxz;
-            % % Temperaure
-            % SWIFT(tindex).watertemp = profile.temp;
-            % % Time
-            % SWIFT(tindex).time = btime;
-            % SWIFT(tindex).date = datestr(btime,'ddmmyyyy');
-            % disp(['   (new) SWIFT time: ' datestr(SWIFT(tindex).time)])
+        elseif ~burstmatch && ~badburst % Good burst, no index match
+            disp('   ALERT: Burst good, but no index match...')
 
         end
     end

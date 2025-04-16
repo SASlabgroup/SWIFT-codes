@@ -46,12 +46,12 @@ end
 %% Compile list of sbd burst files %%%
 
 if exist([missiondir slash SBDfold],'dir')
-    blist = dir([missiondir slash SBDfold slash '*.sbd']);
+    sbdlist = dir([missiondir slash SBDfold slash '*.sbd']);
 else
     disp('Processed files have not been concatenated...')
-    blist = [];
+    sbdlist = [];
 end
-nburst = length(blist);
+nburst = length(sbdlist);
 
 % Initialize badburst flag
 badburst = false(1,nburst);
@@ -65,14 +65,25 @@ npayloads = NaN(1,nburst);
 for iburst = 1:nburst
 
     disp('=================================')
-    disp(['Burst ' num2str(iburst) ' : ' blist(iburst).name ])
+    disp(['Burst ' num2str(iburst) ' : ' sbdlist(iburst).name])
         
-    [oneSWIFT,voltage]= readSWIFT_SBD([blist(iburst).folder slash blist(iburst).name],0);
+    % Read in SBD file data
+    try
+    [oneSWIFT,voltage]= readSWIFT_SBD([sbdlist(iburst).folder slash sbdlist(iburst).name],0);
+    catch ME
+        disp(['Burst SBD file could not be read in. Error Message: ' ME.message])
+        oneSWIFT.lon = NaN;
+        oneSWIFT.lat = NaN;
+        voltage = NaN;
+    end
+
+    % Track SBD file in SWIFT structure
+    oneSWIFT.sbdfile = sbdlist(iburst).name;
     
+    % Voltage/Battery
     if voltage == 9999 % error flag from SBD message
         badburst(iburst) = true; 
     end
-    
     if ~isempty(voltage)
         battery(iburst) = voltage;
         oneSWIFT.battery = voltage;
@@ -80,23 +91,27 @@ for iburst = 1:nburst
         oneSWIFT.battery = NaN;
     end
     
+    % Create NaN lon + lat if missing
     if isempty(oneSWIFT.lat) || isempty(oneSWIFT.lon)
         oneSWIFT.lat = NaN;
         oneSWIFT.lon = NaN;
     end
     
-    %%% SWIFT type and Time stamp %%%
-    if blist(iburst).name(6) == 'S' % SWIFT v3 and v4
+    %%% SWIFT type, burst ID, and time stamp %%%
+    if sbdlist(iburst).name(6) == 'S' % SWIFT v3 and v4
         nameoffset = 14;
-        day = blist(iburst).name(nameoffset + (1:2));
-        month = blist(iburst).name(nameoffset + (3:5));
-        year = blist(iburst).name(nameoffset + (6:9));
-        hr = blist(iburst).name(nameoffset + (11:12));
-        minute = blist(iburst).name(nameoffset + (13:14));
-        sec = blist(iburst).name(nameoffset + (15:16));
+        day = sbdlist(iburst).name(nameoffset + (1:2));
+        month = sbdlist(iburst).name(nameoffset + (3:5));
+        year = sbdlist(iburst).name(nameoffset + (6:9));
+        hr = sbdlist(iburst).name(nameoffset + (11:12));
+        minute = sbdlist(iburst).name(nameoffset + (13:14));
+        sec = sbdlist(iburst).name(nameoffset + (15:16));
         oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
         micro = false;
-    elseif blist(iburst).name(6) == 'm' % microSWIFT
+        bnum = ['0' num2str(str2double(minute)/burstinterval + 1)];
+        burstID = [day month year '_' hr '_' bnum];
+        oneSWIFT.burstID = burstID;
+    elseif sbdlist(iburst).name(6) == 'm' % microSWIFT
         micro = true;
     else
         oneSWIFT.time = NaN;

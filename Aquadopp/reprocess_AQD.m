@@ -97,29 +97,37 @@ for iburst = 1:length(bfiles)
     end
     Dir(n < minn) = NaN;
     
-     % Find matching time
-    time = datenum(bfiles(iburst).name(13:21)) + str2double(bfiles(iburst).name(23:24))./24 ...
-        + str2double(bfiles(iburst).name(26:27))./(24*6);
-    [tdiff,tindex] = min(abs([SWIFT.time]-time));
+    % % Find matching time
+    % time = datenum(bfiles(iburst).name(13:21)) + str2double(bfiles(iburst).name(23:24))./24 ...
+    %     + str2double(bfiles(iburst).name(26:27))./(24*6);
+    % [tdiff,tindex] = min(abs([SWIFT.time]-time));
+    % if tdiff > 12/(60*24)
+    %     disp('No time match...')
+    %     continue
+    % else
+    %    burstreplaced(tindex) = true;
+    % end
 
-   if tdiff > 12/(60*24)
-        disp('No time match...')
-        continue
-   else
-       burstreplaced(tindex) = true;
+    % Find burst index in the existing SWIFT structure
+    burstID = bfiles(iburst).name(13:end-4);
+    sindex = find(strcmp(burstID,{SWIFT.burstID}'));
+    if isempty(sindex)
+        disp('No matching SWIFT index.')
+    else
+        burstreplaced(sindex) = true;
     end
     
     % Replace Values in SWIFT structure
-    SWIFT(tindex).downlooking.velocitydirection = Dir';
-    SWIFT(tindex).downlooking.amplitude = Amp';
-    SWIFT(tindex).downlooking.z = z;
-    SWIFT(tindex).downlooking.velocityerror = Hori_error;
-    SWIFT(tindex).downlooking.vertvel = mean(VelU,1,'omitnan');
+    SWIFT(sindex).downlooking.velocitydirection = Dir';
+    SWIFT(sindex).downlooking.amplitude = Amp';
+    SWIFT(sindex).downlooking.z = z;
+    SWIFT(sindex).downlooking.velocityerror = Hori_error;
+    SWIFT(sindex).downlooking.vertvel = mean(VelU,1,'omitnan');
     
-    if sum(SWIFT(tindex).downlooking.velocityprofile,'omitnan') > 0
-        SWIFT(tindex).downlooking.velocityprofile = Vel';
+    if sum(SWIFT(sindex).downlooking.velocityprofile,'omitnan') > 0
+        SWIFT(sindex).downlooking.velocityprofile = Vel';
     else
-        SWIFT(tindex).downlooking.velocityprofile = NaN(40,1);      
+        SWIFT(sindex).downlooking.velocityprofile = NaN(40,1);      
     end
      
 end
