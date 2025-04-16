@@ -75,7 +75,8 @@ iaqh = 1;
 
 bfiles = dir([missiondir slash 'AQH' slash 'Raw' slash '*' slash '*' ftype]);
 if isempty(bfiles)
-    error('   No burst files found    ')
+    disp('   No burst files found    ')
+    return
 end
 nburst = length(bfiles);
 

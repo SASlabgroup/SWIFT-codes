@@ -6,6 +6,7 @@ function [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw)
 % (assuming concatSWIFTv3_processed.m has already been run.
 
 % K. Zeiden 03/2025 based on reprocess_WXT
+plotburst = false;
 
 if ispc 
     slash = '\';
@@ -85,6 +86,45 @@ for iburst = 1:length(bfiles)
             disp('No matching SWIFT index. Skipping...')
             continue
         end
+
+        % Plotdata
+        if plotburst
+            figure('color','w')
+            subplot(5,1,1)
+            plot(windspd)
+            hold on
+            plot(windspdR)
+            axis tight;title('Wind Speed');legend('True','Relative')
+            subplot(5,1,2)
+            plot(winddirT)
+            hold on
+            plot(winddirR)
+            axis tight;title('Wind Direction');legend('True','Relative')
+            subplot(5,1,3)
+            plot(airtemp);
+            axis tight;title('Air Temperature');
+            subplot(5,1,4)
+            plot(airpres);
+            axis tight;title('Air Pressure');
+            subplot(5,1,5)
+            axis tight;title('Humidity');
+        end
+
+        % Despike
+        ispike = windspd > median(windspd)+2*std(windspd,'omitnan');
+        if sum(~ispike) > 3; windspd = interp1(find(~ispike),windspd(~ispike),1:length(windspd)); end
+        ispike = winddirT > median(winddirT)+2*std(winddirT,'omitnan');
+        if sum(~ispike) > 3; winddirT = interp1(find(~ispike),winddirT(~ispike),1:length(winddirT));end
+        ispike = windspdR > median(windspdR)+2*std(windspdR,'omitnan');
+        if sum(~ispike) > 3; windspdR = interp1(find(~ispike),windspdR(~ispike),1:length(windspdR));end
+        ispike = winddirR > median(winddirR)+2*std(winddirR,'omitnan');
+        if sum(~ispike) > 3; winddirR = interp1(find(~ispike),winddirR(~ispike),1:length(winddirR));end
+        ispike = airtemp > median(airtemp)+2*std(airtemp,'omitnan');
+        if sum(~ispike) > 3; airtemp = interp1(find(~ispike),airtemp(~ispike),1:length(airtemp));end
+        ispike = airpres > median(airpres)+2*std(airpres,'omitnan');
+        if sum(~ispike) > 3; airpres = interp1(find(~ispike),airpres(~ispike),1:length(airpres));end
+        ispike = relhumidity > median(relhumidity)+2*std(relhumidity,'omitnan');
+        if sum(~ispike) > 3; relhumidity = interp1(find(~ispike),relhumidity(~ispike),1:length(relhumidity));end
 
         % Mean + Std Dev values
         windspdstddev = nanstd(windspd); %#ok<*NANSTD> % std dev of wind spd (m/s) 

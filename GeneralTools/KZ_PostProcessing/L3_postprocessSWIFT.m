@@ -19,13 +19,21 @@ end
 
 %% Default processing toggles
 
+% MET
 rpWXT = false; % MET
-rpPB2 = true; % MET
-rpY81 = false; % ME
+rpPB2 = false; % MET
+rpY81 = false; % MET
+
+% Waves
+
 rpIMU = false; % Waves
-rpSBG = true; % Waves
+rpSBG = false; % Waves
+
+% CT
 rpACS = false; % CT
-rpSIG = false; % TKE 
+
+% ADCP
+rpSIG = true; % TKE 
 rpAQH = false; % TKE
 rpAQD = false; % TKE    
 

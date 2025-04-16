@@ -114,7 +114,7 @@ for iswift = 1:nswift
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 end
-subplot(4,1,1);title([level ' Wind Speed']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits')
+subplot(4,1,1);title([level ' Wind Speed']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits');ylim([0 30])
 subplot(4,1,2);title([level ' Sea Temperature']);ylabel('T [C^{\circ}]');axis tight;datetick('x','KeepLimits')
 subplot(4,1,3);title([level ' Salinity']);ylabel('S [psu]');axis tight;datetick('x','KeepLimits')
 subplot(4,1,4);title([level ' Drift Speed']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits')
@@ -152,7 +152,7 @@ linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
-title('Wind Speed')
+title([level ' Wave Spectra'])
 legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(h(1:end-1),'XTickLabel',[])
 axes(h(end))
@@ -176,7 +176,7 @@ for iswift = 1:nswift
     iSN = find(strcmp(SNs,SN));
 
     axes(h(iSN+1))
-    if ~any(isnan(allswift.(swifts{iswift}).depth))
+    if ~any(isnan(allswift.(swifts{iswift}).depth)) && any(~isnan(allswift.(swifts{iswift}).relu(:)))
     pcolor(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).depth,allswift.(swifts{iswift}).relu);
     end
     shading flat
@@ -191,7 +191,7 @@ linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
-title('Wind Speed')
+title([level ' Velocity'])
 legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(h(1:end-1),'XTickLabel',[])
 set(h(2:end),'YDir','Reverse')
@@ -215,7 +215,7 @@ for iswift = 1:nswift
     iSN = find(strcmp(SNs,SN));
 
     axes(h(iSN+1))
-    if ~any(isnan(allswift.(swifts{iswift}).surfz))
+    if ~any(isnan(allswift.(swifts{iswift}).surfz)) && any(~isnan(allswift.(swifts{iswift}).surftke(:)))
     pcolor(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).surfz,log10(allswift.(swifts{iswift}).surftke));
     end
     shading flat
@@ -230,7 +230,7 @@ linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
-title('Wind Speed')
+title([level ' Dissipation Rate'])
 legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(h(1:end-1),'XTickLabel',[])
 axes(h(end))

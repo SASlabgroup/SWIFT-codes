@@ -81,20 +81,15 @@ for iburst = 1:length(bfiles)
     %     continue
     % end
 
-    % Time 
-    sbgtime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour,...
-        sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
-
     % If not enough data to work with, skip burst
-    if isempty(sindex) || length(sbgtime)<tproc*5 || length(sbgData.ShipMotion.heave)<tproc*5 || ... 
+    if isempty(sindex) || length(sbgData.UtcTime.year)<tproc*5 || length(sbgData.ShipMotion.heave)<tproc*5 || ... 
             length(sbgData.GpsPos.lat)<tproc*5 || length(sbgData.GpsVel.vel_e)<tproc*5
             disp('Not enough data. Skipping...')
             continue
     end
 
         % Despike data and make convenience variables
-        t = sbgtime(end-tproc*5+1:end);
-        t = filloutliers(t,'linear');
+   
         z = sbgData.ShipMotion.heave(end-tproc*5+1:end);
         z = filloutliers(z,'linear');
         x = sbgData.ShipMotion.surge(end-tproc*5+1:end);
@@ -112,7 +107,7 @@ for iburst = 1:length(bfiles)
         
         % Remove NaNs?
         ibad = isnan(z + x + y + u + v + lat + lon);
-        t(ibad) = []; z(ibad) = []; x(ibad) = []; y(ibad)=[]; u(ibad)=[]; 
+        z(ibad) = []; x(ibad) = []; y(ibad)=[]; u(ibad)=[]; 
         v(ibad)=[]; lat(ibad)=[]; lon(ibad)=[];
 
         % Recalculate wave spectra to get proper directional moments 
@@ -185,12 +180,21 @@ for iburst = 1:length(bfiles)
 
         % Save raw displacements (5 Hz) if specified
         if saveraw 
+
+            % Time 
+            sbgtime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour,...
+                sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
+            t = sbgtime(end-tproc*5+1:end);
+            t = filloutliers(t,'linear');
+            t(ibad) = [];
+            
             SWIFT(sindex).x = x;
             SWIFT(sindex).y = y;
             SWIFT(sindex).z = z;
             SWIFT(sindex).rawtime = t;
             SWIFT(sindex).u = u;
             SWIFT(sindex).v = v;
+
         end
 
         % Flag bad bursts when processing fails (9999 error code)
