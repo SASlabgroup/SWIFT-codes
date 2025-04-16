@@ -85,11 +85,19 @@ for iburst = 1:length(bfiles)
         continue
     end
         
-    % Find matching time index in the existing SWIFT structure
-    time = median(datenum(GPS.UTC.Yr, GPS.UTC.Mo, GPS.UTC.Da, GPS.UTC.Hr, GPS.UTC.Mn, GPS.UTC.Sec),'omitnan');% First entries are bad (no satellites acquired yet)
-    [tdiff,tindex] = min(abs([SWIFT.time]-time));   
-    if tdiff > 1/(5*24) % If no close time index, skip burst
-        disp('No time match. Skipping...')
+    % % Find matching time index in the existing SWIFT structure
+    % time = median(datenum(GPS.UTC.Yr, GPS.UTC.Mo, GPS.UTC.Da, GPS.UTC.Hr, GPS.UTC.Mn, GPS.UTC.Sec),'omitnan');% First entries are bad (no satellites acquired yet)
+    % [tdiff,tindex] = min(abs([SWIFT.time]-time));   
+    % if tdiff > 1/(5*24) % If no close time index, skip burst
+    %     disp('No time match. Skipping...')
+    %     continue
+    % end
+
+    % Find burst index in the existing SWIFT structure
+    burstID = bfiles(iburst).name(13:end-4);
+    sindex = find(strcmp(burstID,{SWIFT.burstID}'));
+    if isempty(sindex)
+        disp('No matching SWIFT index. Skipping...')
         continue
     end
         
@@ -101,11 +109,10 @@ for iburst = 1:length(bfiles)
     end
 %     if isnan(dt)
 %         dt = 600./length(AHRS.Accel);
-%     else
 %     end
     fs_ahrs = 1/dt; % should be 25 Hz
     fs_gps = 1000./median(diff(GPS.UTC.mSec)); % should be 4 Hz
-    f_original = SWIFT(tindex).wavespectra.freq;  % original frequency bands from onboard processing
+    f_original = SWIFT(sindex).wavespectra.freq;  % original frequency bands from onboard processing
     if any(isnan(f_original)) || any(f_original==0)
         f_original = linspace(0.0098, 0.4902, 42)'; % apply standard 42 freq bands if missing
     end
@@ -182,16 +189,16 @@ for iburst = 1:length(bfiles)
     end
         
     % Replace scalar values
-    SWIFT(tindex).sigwaveheight = Hs;
-    SWIFT(tindex).peakwaveperiod = Tp;
-    SWIFT(tindex).peakwavedirT = Dp;
-    SWIFT(tindex).wavespectra.energy = E;
-    SWIFT(tindex).wavespectra.freq = f;
-    SWIFT(tindex).wavespectra.a1 = a1;
-    SWIFT(tindex).wavespectra.b1 = b1;
-    SWIFT(tindex).wavespectra.a2 = a2;
-    SWIFT(tindex).wavespectra.b2 = b2;
-    SWIFT(tindex).wavespectra.check = check;
+    SWIFT(sindex).sigwaveheight = Hs;
+    SWIFT(sindex).peakwaveperiod = Tp;
+    SWIFT(sindex).peakwavedirT = Dp;
+    SWIFT(sindex).wavespectra.energy = E;
+    SWIFT(sindex).wavespectra.freq = f;
+    SWIFT(sindex).wavespectra.a1 = a1;
+    SWIFT(sindex).wavespectra.b1 = b1;
+    SWIFT(sindex).wavespectra.a2 = a2;
+    SWIFT(sindex).wavespectra.b2 = b2;
+    SWIFT(sindex).wavespectra.check = check;
         
     elseif strcmp(calctype,'IMUandGPS') % using GPS velocities and IMU acceleration
 
@@ -213,16 +220,16 @@ for iburst = 1:length(bfiles)
             end
             
             % Replace scalar values, but not directional moments
-            SWIFT(tindex).sigwaveheight = Hs;
-            SWIFT(tindex).peakwaveperiod = Tp;
-            SWIFT(tindex).peakwavedirT = Dp;
-            SWIFT(tindex).wavespectra.energy = E;
-            SWIFT(tindex).wavespectra.freq = f;
-            SWIFT(tindex).wavespectra.a1 = a1;
-            SWIFT(tindex).wavespectra.b1 = b1;
-            SWIFT(tindex).wavespectra.a2 = a2;
-            SWIFT(tindex).wavespectra.b2 = b2;
-            SWIFT(tindex).wavespectra.check = check;
+            SWIFT(sindex).sigwaveheight = Hs;
+            SWIFT(sindex).peakwaveperiod = Tp;
+            SWIFT(sindex).peakwavedirT = Dp;
+            SWIFT(sindex).wavespectra.energy = E;
+            SWIFT(sindex).wavespectra.freq = f;
+            SWIFT(sindex).wavespectra.a1 = a1;
+            SWIFT(sindex).wavespectra.b1 = b1;
+            SWIFT(sindex).wavespectra.a2 = a2;
+            SWIFT(sindex).wavespectra.b2 = b2;
+            SWIFT(sindex).wavespectra.check = check;
         else
             disp(['Bad u,v, az values -- did not reprocess ' bfiles(iburst).name '...'])
         end
@@ -243,16 +250,16 @@ for iburst = 1:length(bfiles)
         end
         
         % replace scalar values, but not directional moments
-        SWIFT(tindex).sigwaveheight = Hs;
-        SWIFT(tindex).peakwaveperiod = Tp;
-        SWIFT(tindex).peakwavedirT = Dp;
-        SWIFT(tindex).wavespectra.energy = E;
-        SWIFT(tindex).wavespectra.freq = f;
-        SWIFT(tindex).wavespectra.a1 = a1;
-        SWIFT(tindex).wavespectra.b1 = b1;
-        SWIFT(tindex).wavespectra.a2 = a2;
-        SWIFT(tindex).wavespectra.b2 = b2;
-        SWIFT(tindex).wavespectra.check = check;
+        SWIFT(sindex).sigwaveheight = Hs;
+        SWIFT(sindex).peakwaveperiod = Tp;
+        SWIFT(sindex).peakwavedirT = Dp;
+        SWIFT(sindex).wavespectra.energy = E;
+        SWIFT(sindex).wavespectra.freq = f;
+        SWIFT(sindex).wavespectra.a1 = a1;
+        SWIFT(sindex).wavespectra.b1 = b1;
+        SWIFT(sindex).wavespectra.a2 = a2;
+        SWIFT(sindex).wavespectra.b2 = b2;
+        SWIFT(sindex).wavespectra.check = check;
 
 
     end
@@ -261,32 +268,32 @@ for iburst = 1:length(bfiles)
     
     if Hs == 9999 || isnan(Hs) % invalid wave result
         disp('Bad wave height. Flagging...')
-        badwaves(tindex) = true;
-        SWIFT(tindex).sigwaveheight = NaN;
+        badwaves(sindex) = true;
+        SWIFT(sindex).sigwaveheight = NaN;
     end
 
     if Tp == 9999 || isnan(Tp) % invalid wave result
         disp('Bad wave period. Flagging...')
-        badwaves(tindex) = true;
-        SWIFT(tindex).peakwaveperiod = NaN;
+        badwaves(sindex) = true;
+        SWIFT(sindex).peakwaveperiod = NaN;
     end
 
     if Dp == 9999 || isnan(Dp) % invalid wave result
         disp('Bad wave direction. Flagging...')
-        badwaves(tindex) = true;
-        SWIFT(tindex).peakwavedirT = NaN;
+        badwaves(sindex) = true;
+        SWIFT(sindex).peakwavedirT = NaN;
     end
 
     %% Save raw displacements to SWIFT structure and burst file if specified
     if saveraw
         save([bfiles(iburst).name(1:end-4) '.mat'],'z','-APPEND')
-        SWIFT(tindex).x = x;
-        SWIFT(tindex).y = y;
-        SWIFT(tindex).z = z;
-        SWIFT(tindex).u = u;
-        SWIFT(tindex).v = v;
-        SWIFT(tindex).rawlat = GPS.Geodetic_Pos.Lat_Lon(end-2047:end,1);
-        SWIFT(tindex).rawlon = GPS.Geodetic_Pos.Lat_Lon(end-2047:end,2);
+        SWIFT(sindex).x = x;
+        SWIFT(sindex).y = y;
+        SWIFT(sindex).z = z;
+        SWIFT(sindex).u = u;
+        SWIFT(sindex).v = v;
+        SWIFT(sindex).rawlat = GPS.Geodetic_Pos.Lat_Lon(end-2047:end,1);
+        SWIFT(sindex).rawlon = GPS.Geodetic_Pos.Lat_Lon(end-2047:end,2);
     end
 
 end

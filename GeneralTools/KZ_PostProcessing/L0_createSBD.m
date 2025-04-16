@@ -1,6 +1,6 @@
 function L0_createSBD(missiondir,SBDfold,burstinterval,payloadtype)
 
-% Read and concatentae all onboard processed SWIFT data (once offloaded from SD card) 
+% Read and concatenate all onboard processed SWIFT data (once offloaded from SD card) 
 %   for a given mission located in 'missiondir'. User must specify the
 %   burst interval (in minutes) and payloadtype (always string value '7').
 
@@ -103,6 +103,8 @@ for iburst = 1:length(refbfiles)
     status = system(syscommand);
     if status~=0
         warning('SBD file creation (PRC concatenation) failed...')
+    else
+        disp(['SBD file ' sbdfile ' created.'])
     end
 
 end % End burst loop

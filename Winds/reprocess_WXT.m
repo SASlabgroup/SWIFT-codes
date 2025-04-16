@@ -63,61 +63,76 @@ for iburst = 1:nburst
         end
 
         % Skip replacement if all NaN
-        if ~any(~isnan(winddirR)) && ~ any(~isnan(windspd)) && ~any(~isnan(airtemp)) ...
-                && ~ any(~isnan(relhumidity)) && ~ any(~isnan(airpres)) && ~ any(~isnan(rainaccum))...
-                && ~ any(~isnan(rainint))
+        if ~any(~isnan(winddirR)) && ~any(~isnan(windspd)) && ~any(~isnan(airtemp)) ...
+                && ~any(~isnan(relhumidity)) && ~any(~isnan(airpres)) && ~any(~isnan(rainaccum))...
+                && ~any(~isnan(rainint))
             disp('All NaN. Skipping...')
             continue
         end
         
-        % Find matching time
-        [tdiff,tindex] = min(abs([SWIFT.time]-btime(iburst)));
-        if tdiff > 12/(60*24)
-            disp('No time match. Skippping...')
+        % Find burst index in the existing SWIFT structure
+        burstID = bfiles(iburst).name(13:end-4);
+        sindex = find(strcmp(burstID,{SWIFT.burstID}'));
+        if isempty(sindex)
+            disp('No matching SWIFT index. Skipping...')
             continue
         end
-        
-        % Replace temp, humid, press and rain values
-        SWIFT(tindex).airtemp = nanmean(airtemp); % deg C
-        SWIFT(tindex).airtempstddev = nanstd(airtemp); % deg C
-        SWIFT(tindex).relhumidity = nanmean(relhumidity); % percent
-        SWIFT(tindex).relhumiditystddev = nanstd(relhumidity); % percent
-        SWIFT(tindex).airpres = nanmean(airpres); % millibars
-        SWIFT(tindex).airpresstddev = nanstd(airpres); % millibars
-        SWIFT(tindex).rainaccum = nanmean(rainaccum); % millimeters
-        SWIFT(tindex).rainint = nanmean(rainint); % millimeters_per_hour
 
-        % Replace wind values if specified
-        if usewind
-            SWIFT(tindex).winddirR = nanmean(winddirR); %#ok<*NANMEAN> % mean wind direction (deg relative)
-            SWIFT(tindex).windspd = nanmean(windspd); % mean wind speed (m/s)
-            SWIFT(tindex).winddirRstddev =  nanstd(winddirR); % std dev of wind direction (deg)
-            SWIFT(tindex).windspdstddev = nanstd(windspd);  % std dev of wind spd (m/s)
+        % Check for zero-d data
+        if mean(airtemp,'omitnan') == 0 && mean(windspd,'omitnan') == 0
+            disp('Bad data (all zero). Skipping...')
+            continue
         end
 
-        disp(['SWIFT index ' num2str(tindex) ' replaced.'])
-        SWIFTreplaced(tindex) = true;
+        % Check for bad winds
+        if mean(windspd,'omitnan') > 50 && std(windspd,[],'omitnan') < 1
+            warning('Bad wind.')
+            windspd = NaN;
+            winddirR = NaN;
+        end
+
+        % Replace temp, humid, press and rain values and wind if specified
+        SWIFT(sindex).airtemp = mean(airtemp,'omitnan'); % deg C
+        SWIFT(sindex).airtempstddev = std(airtemp,[],'omitnan'); % deg C
+        SWIFT(sindex).relhumidity = mean(relhumidity,'omitnan'); % percent
+        SWIFT(sindex).relhumiditystddev = std(relhumidity,[],'omitnan'); % percent
+        SWIFT(sindex).airpres = mean(airpres,'omitnan'); % millibars
+        SWIFT(sindex).airpresstddev = std(airpres,[],'omitnan'); % millibars
+        SWIFT(sindex).rainaccum = mean(rainaccum,'omitnan'); % millimeters
+        SWIFT(sindex).rainint = mean(rainint,'omitnan'); % millimeters_per_hour
+
+        if usewind
+            SWIFT(sindex).winddirR = mean(winddirR,'omitnan');% mean wind direction (deg relative)
+            SWIFT(sindex).windspd = mean(windspd,'omitnan'); % mean wind speed (m/s)
+            SWIFT(sindex).winddirRstddev =  std(winddirR,[],'omitnan'); % std dev of wind direction (deg)
+            SWIFT(sindex).windspdstddev = std(windspd,[],'omitnan');  % std dev of wind spd (m/s)
+        end
+
+        disp(['SWIFT index ' num2str(sindex) ' replaced.'])
+        SWIFTreplaced(sindex) = true;
 
 end
 
 %% If SWIFT structure elements not replaced, fill variables with NaNs
 
-for i = 1:length(SWIFT)
-    if ~isfield(SWIFT(i),'relhumidity') || isempty(SWIFT(i).relhumidity)
-        disp(['No data at index ' num2str(i)])
-        % SWIFT(i).winddirR = NaN;
-        % SWIFT(i).winddirRstddev =  NaN;
-        % SWIFT(i).windspd = NaN;
-        % SWIFT(i).windspdstddev = NaN;
-        SWIFT(i).airtemp = NaN;
-        SWIFT(i).airtempstddev = NaN;
-        SWIFT(i).relhumidity = NaN;
-        SWIFT(i).relhumiditystddev = NaN;
-        SWIFT(i).airpres = NaN;
-        SWIFT(i).airpresstddev = NaN;
-        SWIFT(i).rainaccum = NaN;
-        SWIFT(i).rainint = NaN;
+if any(~SWIFTreplaced)
+
+    if usewind
+        [SWIFT(~SWIFTreplaced).winddirR] = deal(NaN);
+        [SWIFT(~SWIFTreplaced).winddirRstddev] =  deal(NaN);
+        [SWIFT(~SWIFTreplaced).windspd] = deal(NaN);
+        [SWIFT(~SWIFTreplaced).windspdstddev] = deal(NaN);
     end
+
+    [SWIFT(~SWIFTreplaced).airtemp] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).airtempstddev] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).airpres] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).airpresstddev] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).relhumidity] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).relhumiditystddev] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).rainaccum] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).rainint] = deal(NaN);
+
 end
 
 %% Log reprocessing and flags, then save new L3 file or overwrite existing one

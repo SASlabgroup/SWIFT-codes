@@ -230,7 +230,7 @@ cmocean('thermal')
 linkaxes(h([1:3:end 2:3:11 23 24]),'x')
 set(h([1:3:end-3 2:3:8]),'XTickLabel',[])
 axes(h(1))
-axis tight
+xlim([min(swift.time) max(swift.time)])
 axes(h(11))
 datetick('x','KeepLimits')
 xlabel('Time')

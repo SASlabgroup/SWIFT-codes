@@ -40,7 +40,7 @@ tproc = 475;% seconds
 
 %% Flag bad wave data
 badwaves = false(1,length(SWIFT));
-SWIFTreplaced = false(1,length(SWIFT));
+swiftreplaced = false(1,length(SWIFT));
 
 %% Loop through raw burst files and reprocess
 
@@ -181,7 +181,7 @@ for iburst = 1:length(bfiles)
         SWIFT(sindex).wavespectra.a2 = a2;
         SWIFT(sindex).wavespectra.b2 = b2;
         SWIFT(sindex).wavespectra.check = check;
-        SWIFTreplaced(sindex) = true;
+        swiftreplaced(sindex) = true;
 
         % Save raw displacements (5 Hz) if specified
         if saveraw 
@@ -225,24 +225,19 @@ end
 
 %% NaN out bursts that weren't reprocessed 
 
-if any(~SWIFTreplaced)
-    for sindex = find(~SWIFTreplaced)
+for sindex = find(~swiftreplaced)
 
-        if ~exist('f','var')
-            f = SWIFT(sindex).wavespectra.freq;
-        end
-            SWIFT(sindex).sigwaveheight = NaN;
-            SWIFT(sindex).peakwaveperiod = NaN;
-            SWIFT(sindex).peakwavedirT = NaN;
-            SWIFT(sindex).wavespectra.energy = NaN(size(f));
-            SWIFT(sindex).wavespectra.freq = f;
-            SWIFT(sindex).wavespectra.a1 = NaN(size(f));
-            SWIFT(sindex).wavespectra.b1 = NaN(size(f));
-            SWIFT(sindex).wavespectra.a2 = NaN(size(f));
-            SWIFT(sindex).wavespectra.b2 = NaN(size(f));
-            SWIFT(sindex).wavespectra.check = NaN(size(f));
-    
-    end
+     
+        SWIFT(sindex).sigwaveheight = NaN;
+        SWIFT(sindex).peakwaveperiod = NaN;
+        SWIFT(sindex).peakwavedirT = NaN;
+        SWIFT(sindex).wavespectra.energy = NaN(size(f));
+        SWIFT(sindex).wavespectra.a1 = NaN;
+        SWIFT(sindex).wavespectra.b1 = NaN;
+        SWIFT(sindex).wavespectra.a2 = NaN;
+        SWIFT(sindex).wavespectra.b2 = NaN;
+        SWIFT(sindex).wavespectra.check = NaN;
+
 end
 
 
