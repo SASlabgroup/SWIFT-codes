@@ -20,12 +20,10 @@ end
 %% Default processing toggles
 
 rpWXT = false; % MET
-rpPB2 = false; % MET
+rpPB2 = true; % MET
 rpY81 = false; % ME
 rpIMU = false; % Waves
-
 rpSBG = true; % Waves
-
 rpACS = false; % CT
 rpSIG = false; % TKE 
 rpAQH = false; % TKE
@@ -93,7 +91,7 @@ end
 if rpWXT
     if ~isempty(dir([missiondir slash 'WXT' slash 'Raw' slash '*' slash '*_536_*.dat']))
         disp('Reprocessing Vaisala WXT data...')
-        readraw = true;
+        readraw = false;
         usewind = true;
         [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw,usewind);
     else
@@ -106,7 +104,7 @@ end
 if rpPB2
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_PB2_*.dat']))
         disp('Reprocessing Airmar Anemometer (PB2) data...')
-        readraw = true;
+        readraw = false;
         [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw);
     else
         disp('No PB2 data...')

@@ -51,6 +51,13 @@ for iburst = 1:length(bfiles)
                 readSWIFTv3_PB2([bfiles(iburst).folder slash bfiles(iburst).name]);
         else
             load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
+            windspd = rawwindspd;
+            winddirT = rawwinddir;
+            airtemp = rawairtemp;
+            airpres = rawairpres;
+            relhumidity = rawhumidity;
+            windspdR = rawwindspdR;
+            winddirR = rawwinddirR;
         end
 
         % Check for zero-d data
