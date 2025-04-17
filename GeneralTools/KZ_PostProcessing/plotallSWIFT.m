@@ -92,6 +92,8 @@ subplot(4,1,1)
 axP = get(gca,'Position');
 legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(gca, 'Position', axP);
+axis tight
+ylim([0 30])
 
 %% CT & Drift Speed
 fh = figure('color','w','Name',[expdir  ' ' level ' CT +  Drift Data']);
@@ -159,7 +161,7 @@ axes(h(end))
 datetick('x','KeepLimits')
 colormap(cmocean('thermal'))
 set(h,'CLim',[-5 1])
-set(h(2:end),'YLim',[0.05 0.5],'YDir','Reverse')
+set(h(2:end),'YLim',[0 1],'YDir','Reverse')
 
 %% ADCP Velocities
 
@@ -215,7 +217,7 @@ for iswift = 1:nswift
     iSN = find(strcmp(SNs,SN));
 
     axes(h(iSN+1))
-    if ~any(isnan(allswift.(swifts{iswift}).surfz)) && any(~isnan(allswift.(swifts{iswift}).surftke(:)))
+    if ~any(isnan(allswift.(swifts{iswift}).surfz)) && any(~isnan(allswift.(swifts{iswift}).surftke(:))) && ~any(allswift.(swifts{iswift}).surftke(:)<0)
     pcolor(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).surfz,log10(allswift.(swifts{iswift}).surftke));
     end
     shading flat
