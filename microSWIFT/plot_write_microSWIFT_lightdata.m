@@ -37,11 +37,11 @@ for j = 1:length(files)
 
         %Save plot
         plot_savename = ['microSWIFT', num2str(swift_number), '_lightdata.png'];
-        saveas(gcf, [savedir, plot_savename])
+        saveas(gcf, [savedir '/' plot_savename])
 
         %Save .csv
         csv_savename = ['microSWIFT', num2str(swift_number), '_lightdata.csv'];
-        write_SWIFTlightdata_timeseries_to_csv(SWIFTlightdata_timeseries, [savedir, csv_savename])
+        write_SWIFTlightdata_timeseries_to_csv(SWIFTlightdata_timeseries, [savedir '/' csv_savename])
 
     else
         disp(['No light data for microSWIFT ', num2str(swift_number)])
