@@ -286,7 +286,7 @@ ii=find(isnan(zi)); zi(ii)=600;   % PBL height
 % Running Warm Layer inclusive script (other script commented out)
 % fluxes = coare36vn_zrf_et(u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',jd',zi,rain',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
 fluxes = coare36vnWarm_et(jd',u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',zi,rain',ts_depth',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
-
+% fluxes = coare36vn_zrf_et_cs(u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',jd',zi,rain',Ss',cp',sigH',zrf_u,zrf_t,zrf_q)
 validcolumns = find( nansum( fluxes, 1 ) ~= 0  & ~isnan(nansum( fluxes, 1 )) );
 
 ustar = fluxes(:,1); % wind friction velocity
