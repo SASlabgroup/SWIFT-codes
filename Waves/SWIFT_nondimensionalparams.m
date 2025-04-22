@@ -110,6 +110,50 @@ nondim.sigH = g.^2.*[SWIFT.sigwaveheight]' ./ (([SWIFT.windspd10]').^2);
 
 nondim = struct2table(nondim);
 
+% % Adding in nondim hourly averages
+%     % time
+%     days = day([SWIFT.time]);
+%     hours = hour([SWIFT.time]);
+% 
+%     % Start hourly index at start of dataset
+%     hours = hours + 24.*(days- days(1));
+%     starthour = min(min([SWIFT.time]).*24)/24;
+%     hour_idx = hours-min(hours)+1;
+% 
+%     % Datetime hour bins
+%     nondim1hr.time = unique(hour_idx'./24 + starthour);
+% 
+%     nondim1hr.windspd10 = accumarray(hour_idx', [SWIFT.windspd10]', ...
+%     [length(unique(hours)), 1], @(x) ...
+%     mean(x), NaN); 
+% 
+%     nondim1hr.peakwaveperiod = accumarray(hour_idx', 1./[SWIFT.peakwaveperiod]', ...
+%     [length(unique(hours)), 1], @(x) ...
+%     mean(x), NaN); 
+% 
+%     nondim1hr.sigwaveheight = accumarray(hour_idx', [SWIFT.sigwaveheight]', ...
+%     [length(unique(hours)), 1], @(x) ...
+%     mean(x), NaN); 
+% 
+%     nondim1hr.fetch = accumarray(hour_idx', 1./[SWIFT.fetch]', ...
+%     [length(unique(hours)), 1], @(x) ...
+%     mean(x), NaN); 
+% 
+%     nondim1hr.winddirT = accumarray(hour_idx', 1./[SWIFT.peakwaveperiod]', ...
+%     [length(unique(hours)), 1], @(x) ...
+%     mod(atan2d(mean(sind(x)), mean(cosd(x))), 360),...
+%     NaN); 
+% 
+%     nondim1hr.pkf = (1./[nondim1hr.peakwaveperiod]).*[nondim1hr.windspd10] ./ g;
+%     nondim1hr.fetch = g.*[nondim1hr.fetch] ./ ([nondim1hr.windspd10]).^2;
+%     nondim1hr.energy = g.^2.*[nondim1hr.sigwaveheight] ./ (16*([nondim1hr.windspd10]).^4);
+%     nondim1hr.sigH = g.^2.*[nondim1hr.sigwaveheight] ./ (([nondim1hr.windspd10]).^2);
+% 
+%     nondim1hr = struct2table(nondim1hr);
+% 
+%     clear hours days starthour
+% % 
+
 if plotbool
     disp('Plot flag true... plotting results')
     % Limits

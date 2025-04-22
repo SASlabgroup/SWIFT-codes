@@ -272,7 +272,7 @@ end; clear i;
 
 % Run Nondimensional Params for entire
 
-[nondim, ~] =SWIFT_nondimensionalparams(SWIFT,true,'all'); 
+[nondim, nondim1hr] =SWIFT_nondimensionalparams(SWIFT,true,'all'); 
 
 % Run Nondimensional Params for each hour
 % 
