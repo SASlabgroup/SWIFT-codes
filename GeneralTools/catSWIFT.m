@@ -175,12 +175,18 @@ for it = 1:nt
     waveb1 = SWIFT(it).wavespectra.b1;
     wavea2 = SWIFT(it).wavespectra.a2;
     waveb2 = SWIFT(it).wavespectra.b2;
+    if isfield(SWIFT(it).wavespectra,'check')
+    wavecheck = SWIFT(it).wavespectra.check;
+    else
+        wavecheck = NaN(size(waveb2));
+    end
     if length(wavepower) ~= length(wavefreq)
         wavepower = NaN(size(wavefreq));
         wavea1 = NaN(size(wavefreq));
         waveb1 = NaN(size(wavefreq));
         wavea2 = NaN(size(wavefreq));
         waveb2 = NaN(size(wavefreq));
+        wavecheck = NaN(size(wavefreq));
     end
     if isempty(wavepower) || isempty(wavefreq)
         swift.wavepower(:,it) = 0;
@@ -188,6 +194,7 @@ for it = 1:nt
         swift.wavea2(:,it) = 0;
         swift.waveb1(:,it) = 0;
         swift.waveb2(:,it) = 0;
+        swift.wavecheck(:,it) = 0;
         swift.wavefreq(:,it) = NaN;
     else
      swift.wavepower(1:length(wavepower),it) = wavepower;
@@ -195,6 +202,7 @@ for it = 1:nt
      swift.waveb1(1:length(wavepower),it) = waveb1;
      swift.wavea2(1:length(wavepower),it) = wavea2;
      swift.waveb2(1:length(wavepower),it) = waveb2;
+     swift.wavecheck(1:length(wavepower),it) = wavecheck;
      swift.wavefreq(1:length(wavepower),it) = wavefreq;
     end
 end
