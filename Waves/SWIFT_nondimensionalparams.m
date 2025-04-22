@@ -102,6 +102,7 @@ disp('Calculating nondimensional params')
 g = 9.81;
 nondim.time = [SWIFT.time]';
 nondim.ID = string({SWIFT.ID})'
+nondim.winddirT = [SWIFT.winddirT]';
 nondim.pkf = (1./[SWIFT.peakwaveperiod]').*[SWIFT.windspd10]' ./ g;
 nondim.fetch = g.*[SWIFT.fetch]' ./ ([SWIFT.windspd10]').^2;
 nondim.energy = g.^2.*[SWIFT.sigwaveheight]' ./ (16*([SWIFT.windspd10]').^4);
