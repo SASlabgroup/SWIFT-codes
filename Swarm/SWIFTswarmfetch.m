@@ -272,7 +272,7 @@ end; clear i;
 
 % Run Nondimensional Params for entire
 
-[nondim, nondim1hr] =SWIFT_nondimensionalparams(SWIFT,true,'all'); 
+[nondim, ~] =SWIFT_nondimensionalparams(SWIFT,true,'23ANDUP'); 
 
 % Run Nondimensional Params for each hour
 % 
@@ -285,14 +285,13 @@ end; clear i;
 %     end
 % end
 
-save('nondimparams_all.mat','nondim');
 
 %% Plot each buoy in nondim sigH
 
 figure
 hold on
-plot([1e0 1e1],[1e0 1e1],'m','DisplayName','Structural Collinearity')
-plot([1e0 1e1],[1e0 5],'k','DisplayName','Stiassanie 2012')
+plot(sort(nondim.fetch),0.029.*[sort(nondim.fetch)],'m','DisplayName','Structural Collinearity')
+plot(sort(nondim.fetch),0.029.*[sort(nondim.fetch)].^(1./2),'k','DisplayName','Stiassanie 2012')
 
 for i = 1:length(labels)
     name = char(labels(i));
