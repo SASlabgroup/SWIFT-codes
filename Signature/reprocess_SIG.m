@@ -208,7 +208,7 @@ for iburst = 1:nburst
     btime = min(burst.time);
 
     % Find burst index in the existing SWIFT structure
-    burstID = bfiles(iburst).name(13:end-4);
+    burstID = bfiles(iburst).name(13:27);
     sindex = find(strcmp(burstID,{SWIFT.burstID}'));
     if isempty(sindex)
         disp('No matching SWIFT index.')

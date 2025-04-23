@@ -12,34 +12,30 @@ end
 
 missions = dir([expdir slash 'SWIFT*']);
 
-if isempty(allswift)
-
 allswift = struct;
 
-    for im = 1:length(missions)
-    
-        Lfile = dir([missions(im).folder slash missions(im).name slash '*' level '.mat']);
-    
-        if length(missions(im).name) ~= 17
-            disp(['Skippping ' missions(im).name])
-            continue
-        end
-    
-        ID = missions(im).name(6:7);
-        sdate = datestr(datenum(missions(im).name(9:17),'ddmmmyyyy'),'mmdd');
-    
-        sname = ['SN' ID '_' sdate];
-    
-        if isempty(Lfile)
-            disp(['No ' level ' product found in ' missions(im).name '. Skipping...'])
-        else
-            disp(['Loading ' missions(im).name ' ' level ' product...'])
-            load([Lfile.folder slash Lfile.name],'SWIFT');
-            SWIFT = SWIFT_Stokes(SWIFT);
-            swift = catSWIFT(SWIFT);
-            allswift.(sname) = swift;
-        end
-    
+for im = 1:length(missions)
+
+    Lfile = dir([missions(im).folder slash missions(im).name slash '*' level '.mat']);
+
+    if length(missions(im).name) ~= 17
+        disp(['Skippping ' missions(im).name])
+        continue
+    end
+
+    ID = missions(im).name(6:7);
+    sdate = datestr(datenum(missions(im).name(9:17),'ddmmmyyyy'),'mmdd');
+
+    sname = ['SN' ID '_' sdate];
+
+    if isempty(Lfile)
+        disp(['No ' level ' product found in ' missions(im).name '. Skipping...'])
+    else
+        disp(['Loading ' missions(im).name ' ' level ' product...'])
+        load([Lfile.folder slash Lfile.name],'SWIFT');
+        SWIFT = SWIFT_Stokes(SWIFT);
+        swift = catSWIFT(SWIFT);
+        allswift.(sname) = swift;
     end
 
 end
