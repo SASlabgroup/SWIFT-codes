@@ -210,6 +210,25 @@ swift.wavepower(swift.wavepower<0) = 0;
 wavefreq = median(swift.wavefreq,2,'omitnan');
 wavepower = NaN(length(wavefreq),nt);
 
+% Stokes profiles
+if isfield(SWIFT,'Stokes')
+    swift.stokesu = NaN(40,nt);
+    swift.stokesv = NaN(40,nt);
+        swift.stokesubulk = NaN(40,nt);
+    swift.stokesvbulk = NaN(40,nt);
+        swift.stokesu1d = NaN(40,nt);
+    swift.stokesv1d = NaN(40,nt);
+    swift.stokesz = (.35:.5:19.85)';
+    for it = 1:nt
+        swift.stokesu(:,it) = SWIFT(it).Stokes.spectral.profile.east;
+        swift.stokesv(:,it) = SWIFT(it).Stokes.spectral.profile.north;
+        swift.stokesubulk(:,it) = SWIFT(it).Stokes.monochrom.profile.east;
+        swift.stokesvbulk(:,it) = SWIFT(it).Stokes.monochrom.profile.north;
+        swift.stokesu1d(:,it) = SWIFT(it).Stokes.spec1d.profile.east;
+        swift.stokesv1d(:,it) = SWIFT(it).Stokes.spec1d.profile.north;
+    end
+end
+
 % Interpolate to median frequency
 for it = 1:nt
     ireal = ~isnan(swift.wavepower(:,it)) & swift.wavepower(:,it)~=0;

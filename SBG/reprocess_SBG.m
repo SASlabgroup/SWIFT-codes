@@ -239,6 +239,7 @@ if any(~SWIFTreplaced)
             SWIFT(sindex).peakwaveperiod = NaN;
             SWIFT(sindex).peakwavedirT = NaN;
             SWIFT(sindex).wavespectra.energy = NaN(size(f));
+            SWIFT(sindex).wavespectra.energy_alt = NaN(size(f));
             SWIFT(sindex).wavespectra.freq = f;
             SWIFT(sindex).wavespectra.a1 = NaN(size(f));
             SWIFT(sindex).wavespectra.b1 = NaN(size(f));

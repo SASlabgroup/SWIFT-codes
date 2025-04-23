@@ -33,6 +33,7 @@ for im = 1:length(missions)
     else
         disp(['Loading ' missions(im).name ' ' level ' product...'])
         load([Lfile.folder slash Lfile.name],'SWIFT');
+        SWIFT = SWIFT_Stokes(SWIFT);
         swift = catSWIFT(SWIFT);
         allswift.(sname) = swift;
     end

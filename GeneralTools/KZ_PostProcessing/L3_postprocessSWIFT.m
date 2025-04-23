@@ -27,13 +27,13 @@ rpY81 = false; % MET
 % Waves
 
 rpIMU = false; % Waves
-rpSBG = false; % Waves
+rpSBG = true; % Waves
 
 % CT
 rpACS = false; % CT
 
 % ADCP
-rpSIG = true; % TKE 
+rpSIG = false; % TKE 
 rpAQH = false; % TKE
 rpAQD = false; % TKE    
 

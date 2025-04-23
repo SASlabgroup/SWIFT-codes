@@ -65,7 +65,7 @@ dir2 = dir;
 % Spreading function
 % Dtheta = 2.^(2*s-1)./pi.*(gamma(s+1).^2)./(gamma(2*s+1)).*cos((theta-peakwavedirT)/2).^(2*s);
 
-plotflag=0;
+plotflag = 0;
 [Etheta_MEM, theta_MEM, f_MEM, dir_MEM, spread_MEM, spread2_MEM, spread2alt_MEM] = SWIFTdirectionalspectra(SWIFT(ii),plotflag);
 % Convert to direction to for plotting
 theta_MEM = theta_MEM-180; theta_MEM(theta_MEM<0)=theta_MEM(theta_MEM<0)+360;
