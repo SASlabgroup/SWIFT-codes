@@ -14,6 +14,9 @@ if isfield(SWIFT, 'windspd');
         for k=1:length(SWIFT);
             zu = SWIFT(k).metheight;
             SWIFT(k).windspd10 = SWIFT(k).windspd.*log(10/1e-4)./log(zu/1e-4);
+            % the ratio fo 2 windspeeds and wave heights from Cooper 2022
+            % divides out to above. z_0 is assumed 0.0001 for windspeeds ~5
+            % m/s
         end
     else
         error("Need metheight input")
