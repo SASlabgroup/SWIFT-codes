@@ -1,4 +1,4 @@
-function [SWIFT] =SWIFT_hourlyavg(SWIFT)
+function [hrSWIFT] =SWIFT_hourlyavg(SWIFT)
 %%%%%%%%%%%%%%%%%SWIFT_nondimensionalparams.m
 %
 %   Calculates hourly averages for all SWIFT .mat variables
@@ -23,8 +23,18 @@ hours = hour([SWIFT.time]);
 
 % Start hourly index at start of dataset
 hours = hours + 24.*(days- days(1));
-starthour = min(min([SWIFT.time]).*24)/24;
-hour_idx = hours-min(hours)+1;
+starthour = min([SWIFT.time]*24)/24;
+hours = hours-min(hours)+1;
+
+%continuous indexing
+hour_idx = hours;
+while any( diff(hour_idx)>1)
+    min(find(diff(hour_idx)>1))
+    hour_idx(ans+1:end) = hour_idx(ans+1:end) - diff(hour_idx(ans:ans+1));
+end
+
+% Datetime hour bins
+hour_bins = unique(hours./24 - 0.5/24 + starthour); % center point at every half hour
 
 
 for i=1:numel(numericArrayFields)
@@ -47,5 +57,8 @@ for i=1:numel(numericArrayFields)
     end
 end
 
-SWIFT = hrSWIFT;
+num2cell(hour_bins+0.5/24);
+[hrSWIFT.time] = deal(ans{:});
+
+[hrSWIFT.ID] = deal(SWIFT(1).ID);
 end
