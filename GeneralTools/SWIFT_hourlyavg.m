@@ -1,7 +1,7 @@
 function [hrSWIFT] =SWIFT_hourlyavg(SWIFT)
 %%%%%%%%%%%%%%%%%SWIFT_nondimensionalparams.m
 %
-%   Calculates hourly averages for all SWIFT .mat variables
+%   Calculates hourly averages for all SWIFT scalar .mat variables
 %
 %   Created: M. James, April 2025
 
