@@ -96,6 +96,7 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
     swift.reluerr = NaN(nz,nt);
     swift.relverr = NaN(nz,nt);
     swift.relwerr = NaN(nz,nt);
+    swift.spd_alt = NaN(nz,nt);
     for it = 1:nt
         if isfield(SWIFT(it).signature.profile,'east') && ~isempty(SWIFT(it).signature.profile.east)
             swift.relu(:,it) = SWIFT(it).signature.profile.east;
@@ -116,7 +117,9 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
             swift.relverr(:,it) = SWIFT(it).signature.profile.verr;
             swift.relwerr(:,it) = SWIFT(it).signature.profile.werr;
             end
-
+        end
+        if isfield(SWIFT(it).signature.profile,'spd_alt')
+            swift.spd_alt(:,it) = SWIFT(it).signature.profile.spd_alt;
         end
     end
 elseif isfield(SWIFT,'downlooking')
