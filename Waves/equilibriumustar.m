@@ -16,7 +16,7 @@ maxwind = 23;
 ustar = NaN(1,length([SWIFT.time]));
 Ip = 2.5;
 beta = 0.012;
-fmin = 0.25 * ones(1,length(SWIFT)); % fixed
+% fmin = 0.25 * ones(1,length(SWIFT)); % fixed
 fmin = 1.5 * 1./[SWIFT.peakwaveperiod]; % dyanmic, based on multiple of Tp
 fmax = 0.45 * ones(1,length(SWIFT)); % max freq
 

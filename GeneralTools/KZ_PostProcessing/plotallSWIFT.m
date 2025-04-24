@@ -207,14 +207,14 @@ datetick('x','KeepLimits')
 colormap(cmocean('balance'))
 set(h,'CLim',[-0.2 0.2])
 
-%% ADCP Velocities
-
-if isfield(allswift.(swifts{1}),'spd_alt')
+%% Alternative Speed Velocities
 
 fh = figure('color','w','Name',[expdir  ' ' level ' Scalar Shear Data']);
 set(fh,'outerposition',MP(1,:));
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
+
+    if isfield(allswift.(swifts{iswift}),'spd_alt')
     axes(h(1))
     plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
@@ -230,6 +230,8 @@ for iswift = 1:nswift
     shading flat
     hold on
     title(['SWIFT' SN])
+
+    end
     
 end
 axis tight
@@ -247,7 +249,6 @@ axes(h(end))
 datetick('x','KeepLimits')
 set(h,'CLim',[0 1])
 
-end
 
 %% ADCP Dissipation Rate
 
