@@ -1,4 +1,4 @@
-function [nondim, SWIFT] =SWIFT_nondimensionalparams(SWIFT,plotbool,name)
+function [nondim, idx, SWIFT] =SWIFT_nondimensionalparams(SWIFT,plotbool,name)
 %%%%%%%%%%%%%%%%%SWIFT_nondimensionalparams.m
 %
 %   Calculates nondimensional fetch, energy, frequency, and waveheight and
@@ -12,7 +12,9 @@ if nargin <3 % default name
  name = 'SWIFT';
 end
 if ~isfield(SWIFT, 'fetch')
-    % Load in coastline database from GSHHG (Alaska coast available from M. James)
+    % Load in coastline database from GSHHG (Alaska coast 
+    % available from M. James)
+
     load("Coastlinelatlon.mat");
     
     if nargin < 2
@@ -102,11 +104,10 @@ disp('Calculating nondimensional params')
 g = 9.81;
 nondim.time = [SWIFT.time]';
 nondim.ID = string({SWIFT.ID})'
-nondim.winddirT = [SWIFT.winddirT]';
 nondim.pkf = (1./[SWIFT.peakwaveperiod]').*[SWIFT.windspd10]' ./ g;
-nondim.fetch = g.*[SWIFT.fetch]' ./ ([SWIFT.windspd10]').^2;
+nondim.fetch = g.*([SWIFT.fetch]./1000)' ./ ([SWIFT.windspd10]').^2;
 nondim.energy = g.^2.*[SWIFT.sigwaveheight]' ./ (16*([SWIFT.windspd10]').^4);
-nondim.sigH = g.^2.*[SWIFT.sigwaveheight]' ./ (([SWIFT.windspd10]').^2);
+nondim.sigH = g.*[SWIFT.sigwaveheight]' ./ (([SWIFT.windspd10]').^2);
 
 nondim = struct2table(nondim);
 
@@ -166,7 +167,8 @@ if plotbool
     histogram(nondim.pkf,30)
         
     disp('Plotting filtered by wave age for pure wind seas')
-    nondim = nondim(nondim.pkf > 1/(2*pi),:); % Filter out by wave age
+    idx = nondim.pkf > 1/(2*pi)
+    nondim = nondim(idx,:); % Filter out by wave age
 
     hold on
     histogram(nondim.pkf,30)
