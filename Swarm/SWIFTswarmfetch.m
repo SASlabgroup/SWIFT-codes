@@ -291,7 +291,7 @@ end; clear i;
 figure
 hold on
 plot(sort(nondim.fetch),0.029.*[sort(nondim.fetch)],'m','DisplayName','Structural Collinearity')
-plot(sort(nondim.fetch),0.029.*[sort(nondim.fetch)].^(1./2),'k','DisplayName','Stiassanie 2012')
+plot(sort(nondim.fetch),0.029.*[sort(nondim.fetch)].^(1./2),'k','DisplayName','0.03\chi^1^/^2 Stiassanie 2012')
 
 for i = 1:length(labels)
     name = char(labels(i));
