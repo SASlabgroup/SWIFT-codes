@@ -14,7 +14,6 @@ end
 if ~isfield(SWIFT, 'fetch')
     % Load in coastline database from GSHHG (Alaska coast 
     % available from M. James)
-
     load("Coastlinelatlon.mat");
     
     if nargin < 2
@@ -105,7 +104,7 @@ g = 9.81;
 nondim.time = [SWIFT.time]';
 nondim.ID = string({SWIFT.ID})'
 nondim.pkf = (1./[SWIFT.peakwaveperiod]').*[SWIFT.windspd10]' ./ g;
-nondim.fetch = g.*([SWIFT.fetch]./1000)' ./ ([SWIFT.windspd10]').^2;
+nondim.fetch = g.*[SWIFT.fetch]'.*1000 ./ ([SWIFT.windspd10]').^2;
 nondim.energy = g.^2.*[SWIFT.sigwaveheight]' ./ (16*([SWIFT.windspd10]').^4);
 nondim.sigH = g.*[SWIFT.sigwaveheight]' ./ (([SWIFT.windspd10]').^2);
 
@@ -154,7 +153,7 @@ nondim = struct2table(nondim);
 % 
 %     clear hours days starthour
 % % 
-
+idx = nan;
 if plotbool
     disp('Plot flag true... plotting results')
     % Limits
