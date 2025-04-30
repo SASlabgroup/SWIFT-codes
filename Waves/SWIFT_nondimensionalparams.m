@@ -59,12 +59,24 @@ if ~isfield(SWIFT, 'fetch') || any(isnan([SWIFT.fetch]))
     %     clear idx;
     % end
     
-    % Adapted to moving buoys
-    % Bin everything to 9 deg bins
-    bincenters = [0,4.5:360]';
-    [~, idx] = min(abs(winddir - bincenters),[],1);
-    winddir = bincenters(idx);
+    % % Adapted to moving buoys
+    % % Bin everything to 30 deg bins
+    % bincenters = [0:30:360]';
+    % [~, idx] = min(abs(winddir - bincenters),[],1);
+    % winddir = bincenters(idx);
+    % 
+    % Define bin centers from 0 to 330 (i.e., 12 bins of 30°)
+    bincenters = (0:20:360)';
     
+    % Ensure winddir is a column vector
+    winddir = mod(winddir, 360);  % Wrap around to 0-359
+    winddir = winddir(:);         % Column vector
+    
+    % Find nearest bincenter
+    [~, idx] = min(abs(winddir' - bincenters), [], 1);
+    winddir = bincenters(idx)';
+    winddir(winddir ==360)=0;
+
     clear idx
     for k = 1:length(SWIFT)
         %Define radius of fetch calc
@@ -104,8 +116,8 @@ end
 % Calculation of nondim params
 disp('Calculating nondimensional params')
 g = 9.81;
+if isfield(SWIFT, 'ID');nondim.ID = string({SWIFT.ID})';end;
 nondim.time = [SWIFT.time]';
-nondim.ID = string({SWIFT.ID})'
 nondim.pkf = (1./[SWIFT.peakwaveperiod]').*[SWIFT.windspd10]' ./ g;
 nondim.fetch = g.*[SWIFT.fetch]'.*1000 ./ ([SWIFT.windspd10]').^2;
 nondim.energy = g.^2.*[SWIFT.sigwaveheight]' ./ (16*([SWIFT.windspd10]').^4);
