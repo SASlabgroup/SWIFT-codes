@@ -11,7 +11,7 @@ function SWIFT=SWIFT_makeU10(SWIFT)
 
 if isfield(SWIFT, 'windspd');
     if isfield(SWIFT, 'metheight');
-        if isfield(SWIFT, 'windustar')
+        if isfield(SWIFT, 'windustar') && all(~isnan([SWIFT.windustar]))
             zu = [SWIFT.metheight];
             cp = 9.81.*[SWIFT.peakwaveperiod]./(2.*pi); % deep water
             alpha = 0.14.*([SWIFT.windustar]./cp).^(0.61);
