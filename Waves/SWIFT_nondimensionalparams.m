@@ -11,34 +11,37 @@ function [nondim, idx, SWIFT] =SWIFT_nondimensionalparams(SWIFT,plotbool,name)
 if nargin <3 % default name
  name = 'SWIFT';
 end
-if ~isfield(SWIFT, 'fetch')
+if nargin < 2
+    plotbool = 0;
+    warning("No plot flag, setting plotting to off");
+end
+if ~isfield(SWIFT, 'fetch') || any(isnan([SWIFT.fetch]))
     % Load in coastline database from GSHHG (Alaska coast 
     % available from M. James)
     load("Coastlinelatlon.mat");
     
-    if nargin < 2
-        plotbool = 0;
-        warning("No plot flag, setting plotting to off");
-    end
+    
     
     % SWIFTfetch calculation
     tic;sprintf("Calculating Fetch, time elapsed %ds",round(toc))
-    if ~isfield(SWIFT,'winddirT')
-        warning('No true winds, using wave dir');
-        winddir = mod([SWIFT.peakwavedirT]+180, 360); % use wave dir
-        % winddir = [SWIFT.peakwavedirT];
-    
-        %% Calculation of true winds from wdirR and driftdirT, code in progress...
-        % for k = 1:length(SWIFT);
-        %     SWIFT(k).winddirT = atan2d(SWIFT(k).windspd.*cosd(SWIFT(k).winddirR) ... % north wind
-        %          % + SWIFT(k).driftspd.*cosd(SWIFT(k).driftdirT)... % north drift
-        %         % , SWIFT(k).driftspd.*sind(SWIFT(k).driftdirT) +... %east drift
-        %         SWIFT(k).windspd.*sind(SWIFT(k).winddirR)); %east wind
-        %     SWIFT(k).winddirT = mod(-SWIFT(k).winddirT+360, 360);
-        % end
-        %%
-    else 
-        winddir = [SWIFT.winddirT];
+    for i = 1:length(SWIFT)
+        if ~isfield(SWIFT,'winddirT') || isnan(SWIFT(i).winddirT)
+            warning('No true winds, using wave dir');
+            winddir(i) = mod([SWIFT(i).peakwavedirT]+180, 360); % use wave dir
+            % winddir = [SWIFT.peakwavedirT];
+        
+            %% Calculation of true winds from wdirR and driftdirT, code in progress...
+            % for k = 1:length(SWIFT);
+            %     SWIFT(k).winddirT = atan2d(SWIFT(k).windspd.*cosd(SWIFT(k).winddirR) ... % north wind
+            %          % + SWIFT(k).driftspd.*cosd(SWIFT(k).driftdirT)... % north drift
+            %         % , SWIFT(k).driftspd.*sind(SWIFT(k).driftdirT) +... %east drift
+            %         SWIFT(k).windspd.*sind(SWIFT(k).winddirR)); %east wind
+            %     SWIFT(k).winddirT = mod(-SWIFT(k).winddirT+360, 360);
+            % end
+            %%
+        else 
+            winddir(i) = [SWIFT(i).winddirT];
+        end
     end
     
     % Fit fetchbins to data (ASSUMING Stationary comapared to fetch distance
