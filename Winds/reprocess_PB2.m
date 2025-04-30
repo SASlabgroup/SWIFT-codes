@@ -136,9 +136,9 @@ for iburst = 1:length(bfiles)
                 relwind(sindex) = true;
             end
         winddirTstddev = nanstd(winddirT);% std dev of wind direction (deg)
-        winddirT = nanmean(winddirT);% mean wind direction (deg true)
+        winddirT = meandir(winddirT);% mean wind direction (deg true)
         winddirRstddev = nanstd(winddirR);% std dev of wind direction (deg)
-        winddirR = nanmean(winddirR);% mean wind direction (deg relative)
+        winddirR = meandir(winddirR);% mean wind direction (deg relative)
         airtempstddev = nanstd(airtemp);
         airtemp = nanmean(airtemp);
         airpresstddev = nanstd(airpres);

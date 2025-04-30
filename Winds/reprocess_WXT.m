@@ -102,7 +102,7 @@ for iburst = 1:nburst
         SWIFT(sindex).rainint = mean(rainint,'omitnan'); % millimeters_per_hour
 
         if usewind
-            SWIFT(sindex).winddirR = mean(winddirR,'omitnan');% mean wind direction (deg relative)
+            SWIFT(sindex).winddirR = meandir(winddirR);% mean wind direction (deg relative)
             SWIFT(sindex).windspd = mean(windspd,'omitnan'); % mean wind speed (m/s)
             SWIFT(sindex).winddirRstddev =  std(winddirR,[],'omitnan'); % std dev of wind direction (deg)
             SWIFT(sindex).windspdstddev = std(windspd,[],'omitnan');  % std dev of wind spd (m/s)

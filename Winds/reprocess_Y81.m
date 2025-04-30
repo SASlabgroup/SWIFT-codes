@@ -49,6 +49,7 @@ for iburst = 1:length(bfiles)
             v = u;w = u;temp = u;
         end
         windspd = mean( (u.^2 + v.^2 + w.^2).^.5 );
+        winddirR = meandir(atan2d(v,u));
 
         % Recalculate friction velocity
         z = sinfo.metheight;
@@ -66,7 +67,7 @@ for iburst = 1:length(bfiles)
         % Replace wind speed, NaN out wind direction and replace ustar
         if ~isempty(tdiff) && tdiff < 12/(24*60)
             SWIFT(sindex).windspd = windspd;
-            SWIFT(sindex).winddirR = NaN;
+            SWIFT(sindex).winddirR = winddirR;
             if ustar ~= 9999
                 SWIFT(sindex).windustar = ustar;
                 SWIFT(sindex).windspectra.freq = windfreq(:);

@@ -13,9 +13,9 @@ meanx = mean(sin(heading),'omitnan');
 meany = mean(cos(heading),'omitnan');
 
 % Compute mean angle using atan2
-dir = rad2deg(atan2(meanx, meany));
+dir = rad2deg(atan2(meany, meanx));
 
-% Ensure output is in [0, 360)
+% Ensure output is in [0, 360]
 if dir < 0
     dir = dir + 360;
 end
