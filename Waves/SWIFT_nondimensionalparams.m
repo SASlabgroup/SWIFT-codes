@@ -107,6 +107,8 @@ nondim.pkf = (1./[SWIFT.peakwaveperiod]').*[SWIFT.windspd10]' ./ g;
 nondim.fetch = g.*[SWIFT.fetch]'.*1000 ./ ([SWIFT.windspd10]').^2;
 nondim.energy = g.^2.*[SWIFT.sigwaveheight]' ./ (16*([SWIFT.windspd10]').^4);
 nondim.sigH = g.*[SWIFT.sigwaveheight]' ./ (([SWIFT.windspd10]').^2);
+nondim.fetcheff = ((g.*([nan; diff([SWIFT.time]')]).*(24*60*60)./[SWIFT.windspd10]')... % nondim duration
+    ./68.8).^(3/2);
 
 nondim = struct2table(nondim);
 
@@ -166,7 +168,7 @@ if plotbool
     histogram(nondim.pkf,30)
         
     disp('Plotting filtered by wave age for pure wind seas')
-    idx = nondim.pkf > 1/(2*pi)
+    idx = nondim.pkf > 1/(2*pi);
     nondim = nondim(idx,:); % Filter out by wave age
 
     hold on
@@ -261,6 +263,25 @@ if plotbool
 
     savefig(fullfile(cd, ['nondimplots',name]));
     print('-djpeg', fullfile(cd, ['nondimplots',name]));
+
+    % Effective Fetch comparision
+    figure
+    subplot 211
+    title(sprintf('SWIFT %s , Average timestep %i s', SWIFT(1).ID, mean(diff([SWIFT.time].*24.*3600))));
+    plot(nondim.time,nondim.fetcheff,'k--','DisplayName', 'Effective Nondim Fetch (gt/U*68.8)^3^/^2')
+    hold on
+    plot(nondim.time, nondim.fetch, 'b.','DisplayName','Nondim Fetch gx/U^2')
+    legend('Location','northwest')
+    datetick; xlabel('\chi')
+
+    subplot 212
+    histogram(nondim.fetch - nondim.fetcheff,30)
+    xlabel('nondim. fetch - nondim. fetcheff')
+
+
+    savefig(fullfile(cd, ['effectivefetch',name]));
+    print('-djpeg', fullfile(cd, ['effectivefetch',name]));
+
 end
 
 save(fullfile(cd, ['nondimparams_',name]),'nondim')
