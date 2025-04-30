@@ -26,6 +26,10 @@ time = datevec([SWIFT.time]);
 METWaveoutput = [time [SWIFT.lat]' [SWIFT.lon]' [SWIFT.driftspd]' 	[SWIFT.driftdirT]'	[SWIFT.airtemp]' 	[SWIFT.windspd]'	[SWIFT.sigwaveheight]'	[SWIFT.peakwaveperiod]'	[SWIFT.peakwavedirT]' ];
 %METWaveoutput = single(METWaveoutput);
 
+% solar option (Lufft WS700 sensor)
+%output = [time [SWIFT.solarrad]' ];
+%save(['SWIFTsolar.txt'],'output','-ascii', '-tabs')
+
 % spectra
 for si = 1:length(SWIFT), 
     energyoutput(si,:) = [time(si,:) SWIFT(si).wavespectra.energy'];
