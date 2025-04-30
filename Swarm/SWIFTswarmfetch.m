@@ -24,7 +24,7 @@ function circ_std_deg = circular_std(angles_deg)
     angles_rad = deg2rad(angles_deg(:));
 
     % Mean resultant length
-    R = abs(mean(exp(1i * angles_rad)));
+    R = abs(nanmean(exp(1i * angles_rad)));
 
     % Circular standard deviation in radians
     circ_std_rad = sqrt(-2 * log(R));
