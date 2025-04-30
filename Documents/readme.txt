@@ -46,11 +46,15 @@ SWIFT.airtemp: air temperature, in deg C, at 1 m height above the wave-following
 
 SWIFT.airtempstddev: standard deviation of air temperature, in deg C
 
+SWIFT.airpres: air pressure at 1 m height above the wave-following surface
+
+SWIFT.airpresstddev: standard deviation of air pressure at 1 m height above the wave-following surface
+
 SWIFT.sigwaveheight: significant wave height, in meters
 
 SWIFT.peakwaveperiod: peak of period orbital velocity spectra (note convention is usually wave height spectrum)
 
-SWIFT.peakwavedirT: wind direction, in degrees FROM North
+SWIFT.peakwavedirT: wave direction at peak of wave energy spectra, in degrees FROM North
 
 SWIFT.wavespectra.energy: wave energy spectral density, in m^2/Hz, as a function of frequency.  Note that this is derived from orbital motions and is thus insensitive to low-energy swell conditions.  The technique is best suited to measuring short wind waves. 
 
