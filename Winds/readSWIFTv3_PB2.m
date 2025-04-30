@@ -57,7 +57,7 @@ while 1
                 rawhumidity(mdalength) = metdata{9+1};% relative, percent
                 metlinenum(mdalength) = linenum;
             else 
-                disp(['Bad line: ' tline])
+                % disp(['Bad line: ' tline])
             end
             %% relative wind speed data, see PB100TechnicalManual_rev1.pdf, page 
             % use wind in knts and convert, b/c 0.1 knt is better res than 0.1 m/s
@@ -69,7 +69,7 @@ while 1
                 rawwinddirR(mwvlength) = metdata{1+1};
                 metlinenum2(mwvlength) = linenum;
             else
-               disp(['Bad line: ' tline])
+               % disp(['Bad line: ' tline])
             end
             %% GPS velocity data, see PB100TechnicalManual_rev1.pdf, page 22
             % NOTE VELOCITES ARE TOO DISCRETIZED (0.1 KM/HR) FOR WAVE SPECTRA
@@ -82,7 +82,7 @@ while 1
                 velmode(vtglength) = veldata{9+1};  % D is differential (best)
                 vellinenum(vtglength) = linenum;
             else
-              disp(['Bad line: ' tline])
+              % disp(['Bad line: ' tline])
             end
             %% GPS position data, see PB100TechnicalManual_rev1.pdf, page 6
         elseif tline(1:6) == '$GPGLL' & length(tline) > 25 & length(tline)<90,
@@ -105,7 +105,7 @@ while 1
                 if length(thislon)==1 , lon(ggalength) = thislon; else lon(ggalength) = NaN; end
                 positionlinenum(ggalength) = linenum;
             else
-              disp(['Bad line: ' tline])
+              % disp(['Bad line: ' tline])
             end
             %% GPS position data, see PB100TechnicalManual_rev1.pdf, page 8
         elseif tline(1:6) == '$GPGGA' & length(tline) > 30,
@@ -122,7 +122,7 @@ while 1
                 gpsquality(ggalength) = gpsdata{6+1}; % 2 is differential (best)
                 positionlinenum(ggalength) = linenum;
             else
-              disp(['Bad line: ' tline])
+              % disp(['Bad line: ' tline])
             end
             %% motion data, see PB100TechnicalManual_rev1.pdf, page 27
         elseif tline(1:6) == '$YXXDR' & length(tline) > 25, % note version 'B'
@@ -133,7 +133,7 @@ while 1
                 roll(xdrlength) = motiondata{6+1}; % deg, transvers across SWIFT vane axis
                 motionlinenum(xdrlength) = linenum;
             else 
-                disp(['Bad line: ' tline])
+                % disp(['Bad line: ' tline])
             end
             %% GPS time data, see PB100TechnicalManual_rev1.pdf, page 30
         elseif tline(1:6) == '$GPZDA' & length(tline) > 25,
@@ -153,7 +153,7 @@ while 1
             end
             timelinenum(zdalength) = linenum;
             else
-               disp(['Bad line: ' tline])
+               % disp(['Bad line: ' tline])
             end
         else
         end

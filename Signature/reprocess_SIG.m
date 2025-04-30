@@ -161,7 +161,7 @@ isig = 1;
 
 bfiles = dir([missiondir slash 'SIG' slash 'Raw' slash '*' slash '*' ftype]);
 if isempty(bfiles)
-    error('   No burst files found    ')
+    error(['   No ' ftype ' burst files found    '])
 end
 bfiles = bfiles(~contains({bfiles.name},'smoothwHR'));
 
@@ -186,8 +186,13 @@ for iburst = 1:nburst
     disp(['Burst ' num2str(iburst) ' : ' bname])
 
     % Load burst file
-    if opt.readraw
-   [burst,avg,~,~] = readSWIFTv4_SIG([bfiles(iburst).folder slash bfiles(iburst).name]);
+    if opt.readraw 
+        try
+        [burst,avg,~,echo] = readSWIFTv4_SIG([bfiles(iburst).folder slash bfiles(iburst).name]);
+        catch ME
+            disp(['Problem reading raw file: ' ME.message])
+            continue
+        end
     else
         load([bfiles(iburst).folder slash bfiles(iburst).name],'burst','avg','echo')
     end

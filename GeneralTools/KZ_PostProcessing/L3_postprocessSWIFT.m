@@ -20,22 +20,21 @@ end
 %% Default processing toggles
 
 % MET
-rpWXT = false; % MET
-rpPB2 = false; % MET
-rpY81 = false; % MET
+rpWXT = true; % MET
+rpPB2 = true; % MET
+rpY81 = true; % MET
 
 % Waves
-
-rpIMU = false; % Waves
+rpIMU = true; % Waves
 rpSBG = true; % Waves
 
 % CT
-rpACS = false; % CT
+rpACS = true; % CT
 
 % ADCP
-rpSIG = false; % TKE 
-rpAQH = false; % TKE
-rpAQD = false; % TKE    
+rpSIG = true; % TKE 
+rpAQH = true; % TKE
+rpAQD = true; % TKE    
 
 %% Mission name
 
@@ -147,8 +146,8 @@ end
 if rpSIG 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
         disp('Reprocessing Signature1000 data...')
-        plotburst = false; 
         readraw = false;
+        plotburst = false; 
         [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst);
     else
         disp('No SIG data...')
@@ -160,6 +159,11 @@ end
 if rpAQD 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.dat']))
         disp('Reprocessing Aquadopp (AQD) data...')
+        if isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.mat']))
+        readraw = true;
+        else
+            readraw = false;
+        end
         readraw = false;
         [SWIFT,sinfo] = reprocess_AQD(missiondir,readraw);
     else
@@ -171,7 +175,11 @@ end
 if rpAQH 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQH_*.dat']))
         disp('Reprocessing Aquadopp (AQH) data...')
-        readraw = false;
+        if isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQH_*.mat']))
+        readraw = true;
+        else
+            readraw = false;
+        end
         plotburst = false;
         [SWIFT,sinfo] = reprocess_AQH(missiondir,readraw,plotburst);
     else

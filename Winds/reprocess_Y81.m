@@ -54,16 +54,9 @@ for iburst = 1:length(bfiles)
         z = sinfo.metheight;
         fs = 10;
         [ustar,~,~,~,~,~,~,~,windfreq,windpower] = inertialdissipation(u,v,w,temp,z,fs);
-        
-        % % Find matching time
-        % day = bfiles(iburst).name(13:21);
-        % hour = bfiles(iburst).name(23:24);
-        % mint = bfiles(iburst).name(26:27);
-        % time = datenum(day)+datenum(0,0,0,str2double(hour),(str2double(mint)-1)*12,0);
-        % [tdiff,tindex] = min(abs([SWIFT.time]-time));
 
         % Find burst index in the existing SWIFT structure
-        burstID = bfiles(iburst).name(13:end-4);
+        burstID = bfiles(iburst).name(13:27);
         sindex = find(strcmp(burstID,{SWIFT.burstID}'));
         if isempty(sindex)
             disp('No matching SWIFT index. Skipping...')

@@ -80,7 +80,7 @@ for iburst = 1:nburst
     if isfield(oneSWIFT,'driftspd')
         if oneSWIFT.driftspd > maxdriftspd
             outofwater(iburst) = true;
-            disp(['Speed too fast, removing burst ' num2str(ibursT) '.'])
+            disp(['Speed too fast, removing burst ' num2str(iburst) '.'])
         end
     end
 
