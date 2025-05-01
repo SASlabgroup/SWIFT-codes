@@ -1,4 +1,4 @@
-function dir = meandir(heading)
+function [mdir,stddir] = meandir(heading)
 % AVGHEAD Calculates the mean direction from a timeseries of heading angles
 % Input: heading - vector of heading angles in degrees
 % Output: meandir - mean heading angle in degrees
@@ -12,12 +12,26 @@ heading = deg2rad(heading);
 meanx = mean(sin(heading),'omitnan');
 meany = mean(cos(heading),'omitnan');
 
+% Mean resultant length 
+r = sqrt(meanx.^2 + meany.^2);
+
 % Compute mean angle using atan2
+<<<<<<< Updated upstream
 dir = rad2deg(atan2(meany, meanx));
 
 % Ensure output is in [0, 360]
 if dir < 0
     dir = dir + 360;
+=======
+mdir = rad2deg(atan2(meany, meanx));
+
+% Ensure output is in [0, 360)
+if mdir < 0
+    mdir = mdir + 360;
+>>>>>>> Stashed changes
 end
+
+% Standard deviation
+stddir = sqrt(-2*log(r));
 
 end
