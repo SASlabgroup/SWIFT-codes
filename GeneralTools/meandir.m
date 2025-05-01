@@ -16,19 +16,11 @@ meany = mean(cos(heading),'omitnan');
 r = sqrt(meanx.^2 + meany.^2);
 
 % Compute mean angle using atan2
-<<<<<<< Updated upstream
-dir = rad2deg(atan2(meany, meanx));
-
-% Ensure output is in [0, 360]
-if dir < 0
-    dir = dir + 360;
-=======
 mdir = rad2deg(atan2(meany, meanx));
 
-% Ensure output is in [0, 360)
+% Ensure output is in [0, 360]
 if mdir < 0
     mdir = mdir + 360;
->>>>>>> Stashed changes
 end
 
 % Standard deviation
