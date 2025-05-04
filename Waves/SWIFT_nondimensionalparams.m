@@ -66,7 +66,7 @@ if ~isfield(SWIFT, 'fetch') || any(isnan([SWIFT.fetch]))
     % winddir = bincenters(idx);
     % 
     % Define bin centers from 0 to 330 (i.e., 12 bins of 30°)
-    bincenters = (0:20:360)';
+    bincenters = (0:30:360)';
     
     % Ensure winddir is a column vector
     winddir = mod(winddir, 360);  % Wrap around to 0-359
@@ -122,8 +122,9 @@ nondim.pkf = (1./[SWIFT.peakwaveperiod]').*[SWIFT.windspd10]' ./ g;
 nondim.fetch = g.*[SWIFT.fetch]'.*1000 ./ ([SWIFT.windspd10]').^2;
 nondim.energy = g.^2.*[SWIFT.sigwaveheight]' ./ (16*([SWIFT.windspd10]').^4);
 nondim.sigH = g.*[SWIFT.sigwaveheight]' ./ (([SWIFT.windspd10]').^2);
-nondim.fetcheff = ((g.*([nan; diff([SWIFT.time]')]).*(24*60*60)./[SWIFT.windspd10]')... % nondim duration
+nondim.fetcheff = ((g.*([nan; diff([SWIFT.time]'.*(24*60*60))])./[SWIFT.windspd10]')... % nondim duration
     ./68.8).^(3/2);
+nondim.teff = 68.8.*(nondim.fetch).^(2./3);
 
 nondim = struct2table(nondim);
 
