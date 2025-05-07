@@ -98,13 +98,17 @@ save([missiondir slash sname '_L2.mat'],'SWIFT','sinfo')
 
 if plotflag
     L2file = dir([missiondir slash '*L2.mat']);
-    if strcmp(sinfo.type,'V3')
-        fh = plotSWIFTV3(SWIFT);
-        else
-            fh = plotSWIFTV4(SWIFT);
-    end
+    try
+        if strcmp(sinfo.type,'V3')
+            fh = plotSWIFTV3(SWIFT);
+            else
+                fh = plotSWIFTV4(SWIFT);
+        end
     set(fh,'Name',L2file.name(1:end-4))
     print(fh,[L2file.folder slash L2file.name(1:end-4)],'-dpng')
+    catch ME
+        disp(['Plot failed: ' ME.message])
+    end
 end
 
 %% Close diary

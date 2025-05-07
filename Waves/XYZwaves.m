@@ -206,7 +206,6 @@ dir( eastdirs ) = dir ( eastdirs ) + 180; % take reciprocal such wave direction 
 % directional spread
 spread = 180 ./ 3.14 .* spread1;
 
-
 %% dominant direction
 
 Dp = dir(fpindex); % dominant (peak) direction, use peak f

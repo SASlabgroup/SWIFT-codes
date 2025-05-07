@@ -117,7 +117,7 @@ for iswift = 1:nswift
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,4);
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).driftu,'-o','color',rgb('grey'),...
+    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).driftspd,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 end

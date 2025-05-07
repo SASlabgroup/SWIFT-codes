@@ -59,14 +59,6 @@ for iburst = 1:length(bfiles)
         load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'],'sbgData')
     end
 
-    % % Find matching time index in the existing SWIFT structure
-    % % First entries are bad (no satellites acquired yet)
-    % [tdiff,tindex] = min(abs([SWIFT.time]-median(btime,'omitnan')));
-    % if tdiff > 1/(5*24) % If no close time index, skip burst
-    %     disp('No time match. Skipping...')
-    %     continue
-    % end
-
     % Find burst index in the existing SWIFT structure
     burstID = bfiles(iburst).name(13:end-4);
     sindex = find(strcmp(burstID,{SWIFT.burstID}'));

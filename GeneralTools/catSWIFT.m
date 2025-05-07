@@ -80,6 +80,7 @@ driftu(abs(driftu)>0.5) = NaN;
 driftv(abs(driftv)>0.5) = NaN;
 swift.driftu = driftu;
 swift.driftv = driftv;
+swift.driftspd = [SWIFT.driftspd];
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
@@ -89,6 +90,11 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
         swift.depth = SWIFT(it).signature.profile.z';
         nz = length(swift.depth);
         it = it + 1;
+        if it == nt
+            swift.depth = NaN;
+            nz = 1;
+           break
+        end
     end
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);

@@ -9,8 +9,8 @@ function [mdir,stddir] = meandir(heading)
 heading = deg2rad(heading);
 
 % Compute mean of sine and cosine components
-meanx = mean(sin(heading),'omitnan');
-meany = mean(cos(heading),'omitnan');
+meany = mean(sin(heading),'omitnan');
+meanx = mean(cos(heading),'omitnan');
 
 % Mean resultant length 
 r = sqrt(meanx.^2 + meany.^2);
