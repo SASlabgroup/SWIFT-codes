@@ -14,12 +14,12 @@ forcesimple = false;
 Sindex = 0;
 
 % Define name of concatenated structure
-var = 'hrSWIFT'
+var = 'SWIFT'
 
 
-for fi=1:length(filelist), 
+for fi=1:length(filelist)
     
-    load(filelist(fi).name),
+    load(filelist(fi).name);
     
     % Order fields to prevent misfiltering identical structures
     eval([var ' = orderfields(' var ');']);
@@ -87,11 +87,27 @@ for fi=1:length(filelist),
                 end
             end
         end
+
+        % Add in empty structs for struct fields
+        for i = 1:length(uniqueSWIFTFields);
+            if isstruct(eval([var,'(1).(uniqueSWIFTFields{i})']))
+                for k = 1:length(allSWIFT)
+                    allSWIFT(k).(uniqueSWIFTFields{i}) = struct();
+                end
+            end
+        end
+        for i = 1:length(uniqueallSWIFTFields);
+            if isstruct(allSWIFT(1).(uniqueallSWIFTFields{i}))
+                for k = 1:length(eval(var))
+                    eval([var,'(k).(uniqueallSWIFTFields{i}) = struct()']);
+                end
+            end
+        end
         
         % <<Can add more capability on fillers here>>
 
 
-        disp('Numeric fields filled in')
+        disp('Numeric and structure fields filled in')
 
         % Reevaluate what is not matching left
         names = fieldnames(eval(var));
@@ -101,7 +117,7 @@ for fi=1:length(filelist),
         uniqueallSWIFTFields = setdiff(allnames, names);
 
         fprintf('Removing SWIFT fields: %s\n',...
-            string([uniqueSWIFTFields;uniqueallSWIFTFields]) )
+            string([uniqueSWIFTFields;uniqueallSWIFTFields]) );
 
         for i = 1:length(uniqueSWIFTFields);
             eval([var,' = rmfield(',var,', uniqueSWIFTFields{i})']);
@@ -120,7 +136,7 @@ for fi=1:length(filelist),
         Sindex = length(allSWIFT);
         
     else
-        disp(['skip ' num2str(fi) ' of ' num2str(length(filelist))])
+        disp(['skip ' num2str(fi) ' of ' num2str(length(filelist))]);
     end
 end
 
@@ -140,5 +156,5 @@ wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
-save([wd '_all', var],var)
+save([wd '_all', var],var);
     
