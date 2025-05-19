@@ -74,32 +74,32 @@ for fi=1:length(filelist)
 
         % Add in nan to numeric fields as filler
         for i = 1:length(uniqueSWIFTFields);
-            if isnumeric(eval([var,'(1).(uniqueSWIFTFields{i})']))
-                for k = 1:length(allSWIFT)
+            if isnumeric(eval([var,'(1).(uniqueSWIFTFields{i});']));
+                for k = 1:length(allSWIFT);
                     allSWIFT(k).(uniqueSWIFTFields{i}) = nan;
                 end
             end
         end
         for i = 1:length(uniqueallSWIFTFields);
-            if isnumeric(allSWIFT(1).(uniqueallSWIFTFields{i}))
-                for k = 1:length(eval(var))
-                    eval([var,'(k).(uniqueallSWIFTFields{i}) = nan']);
+            if isnumeric(allSWIFT(1).(uniqueallSWIFTFields{i}));
+                for k = 1:length(eval(var));
+                    eval([var,'(k).(uniqueallSWIFTFields{i}) = nan;']);
                 end
             end
         end
 
         % Add in empty structs for struct fields
         for i = 1:length(uniqueSWIFTFields);
-            if isstruct(eval([var,'(1).(uniqueSWIFTFields{i})']))
-                for k = 1:length(allSWIFT)
+            if isstruct(eval([var,'(1).(uniqueSWIFTFields{i});']));
+                for k = 1:length(allSWIFT);
                     allSWIFT(k).(uniqueSWIFTFields{i}) = struct();
                 end
             end
         end
         for i = 1:length(uniqueallSWIFTFields);
-            if isstruct(allSWIFT(1).(uniqueallSWIFTFields{i}))
-                for k = 1:length(eval(var))
-                    eval([var,'(k).(uniqueallSWIFTFields{i}) = struct()']);
+            if isstruct(allSWIFT(1).(uniqueallSWIFTFields{i}));
+                for k = 1:length(eval(var));
+                    eval([var,'(k).(uniqueallSWIFTFields{i}) = struct();']);
                 end
             end
         end
@@ -120,14 +120,14 @@ for fi=1:length(filelist)
             string([uniqueSWIFTFields;uniqueallSWIFTFields]) );
 
         for i = 1:length(uniqueSWIFTFields);
-            eval([var,' = rmfield(',var,', uniqueSWIFTFields{i})']);
+            eval([var,' = rmfield(',var,', uniqueSWIFTFields{i});']);
         end
         for i = 1:length(uniqueallSWIFTFields);
             allSWIFT = rmfield(allSWIFT, uniqueallSWIFTFields{i});
         end
 
         % Order Fields to allSWIFT
-        eval([var,' = orderfields(',var,', fieldnames(allSWIFT))']);
+        eval([var,' = orderfields(',var,', fieldnames(allSWIFT));']);
         
         allSWIFT( Sindex + [1:length(eval(var))] ) = eval(var);
         
@@ -140,13 +140,13 @@ for fi=1:length(filelist)
     end
 end
 
-clear eval(var)
+clear eval(var);
 
-eval([var,' = allSWIFT']);
+eval([var,' = allSWIFT';]);
 
 [sortedtimes sti ] = sort([eval(var).time]);
 
-eval([var,' = ',var,'(sti)']);
+eval([var,' = ',var,'(sti);']);
 
 %trimSWIFT_SIGprofiles
 
