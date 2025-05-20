@@ -25,7 +25,7 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % Added in table conversion (no more manual indexing)
 %
 
-savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
+savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision';
 cd(savepath); fprintf('Savepath: %s', savepath);
 %% Time in Julian Day
 time = [SWIFT.time];
