@@ -1,4 +1,4 @@
-function [fluxes Qnet] = runCOAREonSWIFT( SWIFT );
+function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % function to run the COARE flux algoritm on a SWIFT data structure
 % using whatever fields are available
 % (and making assumptions about the rest)
