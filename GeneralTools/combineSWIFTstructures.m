@@ -13,41 +13,44 @@ forcesimple = false;
 
 Sindex = 0;
 
+% Define name of concatenated structure
+var = 'SWIFT'
 
-for fi=1:length(filelist), 
+
+for fi=1:length(filelist)
     
-    load(filelist(fi).name),
+    load(filelist(fi).name);
     
     % Order fields to prevent misfiltering identical structures
-    SWIFT = orderfields(SWIFT);
+    eval([var ' = orderfields(' var ');']);
 
     if forcesimple
-        for ii=1:length(SWIFT)
-        simpleSWIFT(ii).time = SWIFT(ii).time;
-        simpleSWIFT(ii).lat = SWIFT(ii).lat;
-        simpleSWIFT(ii).lon = SWIFT(ii).lon;
-        simpleSWIFT(ii).sigwaveheight = SWIFT(ii).sigwaveheight;
-        simpleSWIFT(ii).peakwaveperiod = SWIFT(ii).peakwaveperiod;
-        simpleSWIFT(ii).peakwavedirT = SWIFT(ii).peakwavedirT;
-        simpleSWIFT(ii).wavespectra = SWIFT(ii).wavespectra;
-        simpleSWIFT(ii).driftspd = SWIFT(ii).driftspd;
-        simpleSWIFT(ii).driftdirT = SWIFT(ii).driftdirT;
-        simpleSWIFT(ii).watertemp = SWIFT(ii).watertemp;
-        simpleSWIFT(ii).salinity = SWIFT(ii).salinity;
-        simpleSWIFT(ii).airtemp = SWIFT(ii).airtemp;
-        simpleSWIFT(ii).windspd = SWIFT(ii).windspd;
+        for ii=1:length(eval(var))
+        simpleSWIFT(ii).time = eval([var,'(ii)']).time;
+        simpleSWIFT(ii).lat = eval([var,'(ii)']).lat;
+        simpleSWIFT(ii).lon = eval([var,'(ii)']).lon;
+        simpleSWIFT(ii).sigwaveheight = eval([var,'(ii)']).sigwaveheight;
+        simpleSWIFT(ii).peakwaveperiod = eval([var,'(ii)']).peakwaveperiod;
+        simpleSWIFT(ii).peakwavedirT = eval([var,'(ii)']).peakwavedirT;
+        simpleSWIFT(ii).wavespectra = eval([var,'(ii)']).wavespectra;
+        simpleSWIFT(ii).driftspd = eval([var,'(ii)']).driftspd;
+        simpleSWIFT(ii).driftdirT = eval([var,'(ii)']).driftdirT;
+        simpleSWIFT(ii).watertemp = eval([var,'(ii)']).watertemp;
+        simpleSWIFT(ii).salinity = eval([var,'(ii)']).salinity;
+        simpleSWIFT(ii).airtemp = eval([var,'(ii)']).airtemp;
+        simpleSWIFT(ii).windspd = eval([var,'(ii)']).windspd;
         end
         
-        SWIFT = simpleSWIFT;
+        eval([var, '= simpleSWIFT']);
     
     end
 
-    names = fieldnames(SWIFT);
+    names = fieldnames(eval(var));
 
     % Edit by M. James 2025 to include ALL vars regardless of data or not
     if fi == 1
         
-        allSWIFT( Sindex + [1:length(SWIFT)] ) = SWIFT;
+        allSWIFT( Sindex + [1:length(eval(var))] ) = eval(var);
         
         allnames = fieldnames(allSWIFT);
         
@@ -55,7 +58,7 @@ for fi=1:length(filelist),
         
     elseif fi > 1 && length(names)==length(allnames) && all(all(char(names)==char(allnames)))
         
-        allSWIFT( Sindex + [1:length(SWIFT)] ) = SWIFT;
+        allSWIFT( Sindex + [1:length(eval(var))] ) = eval(var);
         
         allnames = fieldnames(allSWIFT);
         
@@ -71,16 +74,32 @@ for fi=1:length(filelist),
 
         % Add in nan to numeric fields as filler
         for i = 1:length(uniqueSWIFTFields);
-            if isnumeric(SWIFT(1).(uniqueSWIFTFields{i}))
-                for k = 1:length(allSWIFT)
+            if isnumeric(eval([var,'(1).(uniqueSWIFTFields{i});']));
+                for k = 1:length(allSWIFT);
                     allSWIFT(k).(uniqueSWIFTFields{i}) = nan;
                 end
             end
         end
         for i = 1:length(uniqueallSWIFTFields);
-            if isnumeric(allSWIFT(1).(uniqueallSWIFTFields{i}))
-                for k = 1:length(SWIFT)
-                    SWIFT(k).(uniqueallSWIFTFields{i}) = nan;
+            if isnumeric(allSWIFT(1).(uniqueallSWIFTFields{i}));
+                for k = 1:length(eval(var));
+                    eval([var,'(k).(uniqueallSWIFTFields{i}) = nan;']);
+                end
+            end
+        end
+
+        % Add in empty structs for struct fields
+        for i = 1:length(uniqueSWIFTFields);
+            if isstruct(eval([var,'(1).(uniqueSWIFTFields{i});']));
+                for k = 1:length(allSWIFT);
+                    allSWIFT(k).(uniqueSWIFTFields{i}) = struct();
+                end
+            end
+        end
+        for i = 1:length(uniqueallSWIFTFields);
+            if isstruct(allSWIFT(1).(uniqueallSWIFTFields{i}));
+                for k = 1:length(eval(var));
+                    eval([var,'(k).(uniqueallSWIFTFields{i}) = struct();']);
                 end
             end
         end
@@ -88,46 +107,46 @@ for fi=1:length(filelist),
         % <<Can add more capability on fillers here>>
 
 
-        disp('Numeric fields filled in')
+        disp('Numeric and structure fields filled in')
 
         % Reevaluate what is not matching left
-        names = fieldnames(SWIFT);
+        names = fieldnames(eval(var));
         allnames = fieldnames(allSWIFT);
 
         uniqueSWIFTFields = setdiff(names, allnames);
         uniqueallSWIFTFields = setdiff(allnames, names);
 
         fprintf('Removing SWIFT fields: %s\n',...
-            string([uniqueSWIFTFields;uniqueallSWIFTFields]) )
+            string([uniqueSWIFTFields;uniqueallSWIFTFields]) );
 
         for i = 1:length(uniqueSWIFTFields);
-            SWIFT = rmfield(SWIFT, uniqueSWIFTFields{i});
+            eval([var,' = rmfield(',var,', uniqueSWIFTFields{i});']);
         end
         for i = 1:length(uniqueallSWIFTFields);
             allSWIFT = rmfield(allSWIFT, uniqueallSWIFTFields{i});
         end
 
         % Order Fields to allSWIFT
-        SWIFT = orderfields(SWIFT, fieldnames(allSWIFT));
+        eval([var,' = orderfields(',var,', fieldnames(allSWIFT));']);
         
-        allSWIFT( Sindex + [1:length(SWIFT)] ) = SWIFT;
+        allSWIFT( Sindex + [1:length(eval(var))] ) = eval(var);
         
         allnames = fieldnames(allSWIFT);
         
         Sindex = length(allSWIFT);
         
     else
-        disp(['skip ' num2str(fi) ' of ' num2str(length(filelist))])
+        disp(['skip ' num2str(fi) ' of ' num2str(length(filelist))]);
     end
 end
 
-clear SWIFT
+clear eval(var);
 
-SWIFT = allSWIFT;
+eval([var,' = allSWIFT';]);
 
-[sortedtimes sti ] = sort([SWIFT.time]);
+[sortedtimes sti ] = sort([eval(var).time]);
 
-SWIFT = SWIFT(sti);
+eval([var,' = ',var,'(sti);']);
 
 %trimSWIFT_SIGprofiles
 
@@ -137,5 +156,5 @@ wd = pwd;
 wdi = find(wd == '/',1,'last');
 wd = wd((wdi+1):length(wd));
 
-save([wd '_allSWIFT'],'SWIFT')
+save([wd '_all', var],var);
     
