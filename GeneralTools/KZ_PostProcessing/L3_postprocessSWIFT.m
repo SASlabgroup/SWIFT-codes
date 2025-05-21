@@ -20,21 +20,21 @@ end
 %% Default processing toggles
 
 % MET
-rpWXT = true; % MET
-rpPB2 = true; % MET
-rpY81 = true; % MET
+rpWXT = false; % MET
+rpPB2 = false; % MET
+rpY81 = false; % MET
 
 % Waves
-rpIMU = true; % Waves
+rpIMU = false; % Waves
 rpSBG = true; % Waves
 
 % CT
-rpACS = true; % CT
+rpACS = false; % CT
 
 % ADCP
-rpSIG = true; % TKE 
-rpAQH = true; % TKE
-rpAQD = true; % TKE    
+rpSIG = false; % TKE 
+rpAQH = false; % TKE
+rpAQD = false; % TKE    
 
 %% Mission name
 

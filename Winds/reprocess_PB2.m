@@ -146,6 +146,9 @@ for iburst = 1:length(bfiles)
         relhumiditystddev = nanstd(relhumidity);
         relhumidity = nanmean(relhumidity);
 
+        % Bad if wind spd std dev > mean wind speed
+        if windspdstddev/windspd < 1
+
         % Save in SWIFT structure
         SWIFT(sindex).windspd = windspd;
         SWIFT(sindex).windspdstddev = windspdstddev; 
@@ -161,6 +164,7 @@ for iburst = 1:length(bfiles)
         SWIFT(sindex).relhumiditystddev = relhumiditystddev;
 
         SWIFTreplaced(sindex) = true;
+        end
 
 end
 

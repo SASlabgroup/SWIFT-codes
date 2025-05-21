@@ -149,9 +149,9 @@ for iburst = 1:length(bfiles)
         dirto = newDp;
         if dirto >=180
             newDp = dirto - 180;
-        elseif dirto <180
-            newDp = dirto + 180;
-        else
+            elseif dirto <180
+                newDp = dirto + 180;
+            else
         end
 
         % Replace new wave spectral variables in original SWIFT structure

@@ -12,6 +12,11 @@ end
 
 missions = dir([expdir slash 'SWIFT*']);
 
+if isempty(missions)
+    disp(['No missions found in ' expdir])
+    return
+end
+
 if isempty(allswift)
 
 allswift = struct;
@@ -62,6 +67,7 @@ nSN = length(SNs);
 % end
 
 %% MET
+
 fh = figure('color','w','Name',[expdir  ' ' level ' MET Data']);
 set(fh,'outerposition',MP(1,:));
 for iswift = 1:nswift
@@ -92,6 +98,15 @@ subplot(4,1,2);title([level ' Air Temperature']);ylabel('T [C^{\circ}]');axis ti
 subplot(4,1,3);title([level ' Air Pressure']);ylabel('P [dB]');axis tight;datetick('x','KeepLimits');ylim([950 1050])
 subplot(4,1,4);title([level ' Humidity']);ylabel('Rh [%]');axis tight;datetick('x','KeepLimits');ylim([0 100])
 h = findall(fh,'Type','axes');
+for ih = 1:length(h)
+    if isempty(h(ih).Children)
+        delete(h(ih))
+    end
+end
+h = findall(fh,'Type','axes');
+if isempty(h)
+    close(fh)
+else
 linkaxes(h,'x');
 subplot(4,1,1)
 axP = get(gca,'Position');
@@ -99,7 +114,7 @@ legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(gca, 'Position', axP);
 axis tight
 ylim([0 30])
-
+end
 %% CT & Drift Speed
 fh = figure('color','w','Name',[expdir  ' ' level ' CT +  Drift Data']);
 set(fh,'outerposition',MP(1,:));
@@ -122,16 +137,25 @@ for iswift = 1:nswift
     hold on
 end
 subplot(4,1,1);title([level ' Wind Speed']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits');ylim([0 30])
-subplot(4,1,2);title([level ' Sea Temperature']);ylabel('T [C^{\circ}]');axis tight;datetick('x','KeepLimits')
-subplot(4,1,3);title([level ' Salinity']);ylabel('S [psu]');axis tight;datetick('x','KeepLimits')
-subplot(4,1,4);title([level ' Drift Speed']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits')
+subplot(4,1,2);title([level ' Sea Temperature']);ylabel('T [C^{\circ}]');axis tight;datetick('x','KeepLimits');ylim([-2 25])
+subplot(4,1,3);title([level ' Salinity']);ylabel('S [psu]');axis tight;datetick('x','KeepLimits');ylim([34 38])
+subplot(4,1,4);title([level ' Drift Speed']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits');ylim([0 1])
 
 h = findall(fh,'Type','axes');
+for ih = 1:length(h)
+    if isempty(h(ih).Children)
+        delete(h(ih))
+    end
+end
+h = findall(fh,'Type','axes');
+if isempty(h)
+    close(fh)
+else
 linkaxes(h,'x');
 axP = get(gca,'Position');
 legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(gca, 'Position', axP);
-
+end
 %% Waves
 fh = figure('color','w','Name',[expdir  ' ' level ' Wave Data']);
 set(fh,'outerposition',MP(1,:));
@@ -152,21 +176,30 @@ for iswift = 1:nswift
     title(['SWIFT' SN])
     
 end
-axis tight
-datetick('x','KeepLimits')
-
 linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
+legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Wave Spectra'])
-legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(h(1:end-1),'XTickLabel',[])
-axes(h(end))
-datetick('x','KeepLimits')
+axes(h(end)); datetick('x','KeepLimits','KeepTicks')
+set(h(2:end),'YLim',[0 1],'YDir','Reverse','CLim',[-5 1])
 colormap(cmocean('thermal'))
-set(h,'CLim',[-5 1])
-set(h(2:end),'YLim',[0 1],'YDir','Reverse')
+
+% Delete if empty
+for ih = 1:length(h)
+    if isempty(h(ih).Children)
+        delete(h(ih))
+    end
+end
+h = findall(fh,'Type','axes');
+if isempty(h) || length(h) == 1
+    close(fh)
+        disp('No wave data.')
+
+end
+
 
 %% ADCP Velocities
 
@@ -174,6 +207,8 @@ fh = figure('color','w','Name',[expdir  ' ' level ' Velocity Data']);
 set(fh,'outerposition',MP(1,:));
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
+
+    if isfield(allswift.(swifts{iswift}),'relu')
     axes(h(1))
     plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
@@ -189,23 +224,32 @@ for iswift = 1:nswift
     shading flat
     hold on
     title(['SWIFT' SN])
+    end
     
 end
-axis tight
-datetick('x','KeepLimits')
-
 linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
-title([level ' Velocity'])
-legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
+legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
+title([level ' Zonal Velocity'])
 set(h(1:end-1),'XTickLabel',[])
-set(h(2:end),'YDir','Reverse')
-axes(h(end))
-datetick('x','KeepLimits')
+axes(h(end)); datetick('x','KeepLimits','KeepTicks')
+set(h(2:end),'YLim',[0 21],'YDir','Reverse','CLim',[-0.2 0.2])
 colormap(cmocean('balance'))
-set(h,'CLim',[-0.2 0.2])
+
+% Delete if empty
+for ih = 1:length(h)
+    if isempty(h(ih).Children)
+        delete(h(ih))
+    end
+end
+h = findall(fh,'Type','axes');
+if isempty(h) || length(h) == 1
+    close(fh)
+        disp('No velocity data.')
+end
+
 
 %% Alternative Speed Velocities
 
@@ -234,27 +278,36 @@ for iswift = 1:nswift
     end
     
 end
-axis tight
-datetick('x','KeepLimits')
 
 linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
+legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Scalar Speed'])
-legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(h(1:end-1),'XTickLabel',[])
-set(h(2:end),'YDir','Reverse')
-axes(h(end))
-datetick('x','KeepLimits')
-set(h,'CLim',[0 1])
+axes(h(end)); datetick('x','KeepLimits','KeepTicks')
+set(h(2:end),'YLim',[0 21],'YDir','Reverse','CLim',[0 1])
+colormap(cmocean('balance'))
 
+% Delete if empty
+for ih = 1:length(h)
+    if isempty(h(ih).Children)
+        delete(h(ih))
+    end
+end
+h = findall(fh,'Type','axes');
+if isempty(h) || length(h) == 1
+    close(fh)
+    disp('No scalar speed data.')
+end
 
 %% ADCP Dissipation Rate
 
 fh = figure('color','w','Name',[expdir  ' ' level ' Turbulence Data']);
 set(fh,'outerposition',MP(1,:));
 h = tight_subplot(nSN+1,1,0.025);
+
 for iswift = 1:nswift
     axes(h(1))
     plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
@@ -273,21 +326,28 @@ for iswift = 1:nswift
     title(['SWIFT' SN])
     
 end
-axis tight
-datetick('x','KeepLimits')
-
 linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
+legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Dissipation Rate'])
-legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(h(1:end-1),'XTickLabel',[])
-axes(h(end))
-datetick('x','KeepLimits')
-set(h,'CLim',[-7 -4])
+axes(h(end)); datetick('x','KeepLimits','KeepTicks')
+set(h(2:end),'YLim',[0 5.5],'YDir','Reverse','CLim',[-7 -4])
 colormap(jet)
-set(h(2:end),'YDir','Reverse')
+
+% Delete if empty
+for ih = 1:length(h)
+    if isempty(h(ih).Children)
+        delete(h(ih))
+    end
+end
+h = findall(fh,'Type','axes');
+if isempty(h) || length(h) == 1
+    close(fh)
+    disp('No scalar speed data.')
+end
 
 
 end

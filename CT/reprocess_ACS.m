@@ -39,7 +39,7 @@ for iburst = 1:length(bfiles)
     % Read mat file or load raw data
     if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
         try
-        [~, Temperature, Salinity, Density, ~]  = readSWIFTv3_ACS([bfiles(iburst).folder slash bfiles(iburst).name]);
+        [~, Temperature, Salinity, ~, ~]  = readSWIFTv3_ACS([bfiles(iburst).folder slash bfiles(iburst).name]);
         catch
             disp(['Cannot read ' bfiles(iburst).name '. Skipping...'])
         continue
@@ -56,9 +56,25 @@ for iburst = 1:length(bfiles)
         continue
     end
 
+    % Mean values
+    watertemp = mean(Temperature,'omitnan');
+    watertempstddev = std(Temperature,[],'omitnan');
+    salinity = mean(Salinity,'omitnan');
+    salinitystddev = std(Salinity,[],'omitnan');
+
+    % Unrealistic Values
+    if watertemp > 40
+        watertemp = NaN;
+        watertempstddev = NaN;
+        salinity = NaN;
+        salinitystddev = NaN;
+    end
+
     % Replace Values in SWIFT structure
-    SWIFT(sindex).watertemp = mean(Temperature,'omitnan');
-    SWIFT(sindex).salinityvariance = std(Salinity,[],'omitnan');
+    SWIFT(sindex).watertemp = watertemp;
+    SWIFT(sindex).watertempstddev = watertempstddev;
+    SWIFT(sindex).salinitystddev = salinitystddev;
+    SWIFT(sindex).salinity = salinity;
 
 end
     
