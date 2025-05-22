@@ -13,7 +13,7 @@ function [] = plotSWIFT(SWIFT)
 % M. Smith, 09/2018 update CT plotting to utilize CTdepth when available
 % J. Thomson, 09/2018 include spectrogram in wave spectral figure  and
 %               include met height legend in temp plot
-%
+% L. Crews 05/2025 plot info from vertical and horizontal acceleration histograms
 %
 % plotSWIFT creates the following figures if applicable data is available:
 %   figure 1: Wind and wave plot
@@ -27,6 +27,7 @@ function [] = plotSWIFT(SWIFT)
 %   figure 9: oxygen concentration and FDOM (fluorometer dissolved organic matter?)
 %   figure 10: radiometers
 %   figure 11: drift spd and direction
+%   figure 12: acceleration histogram info (slow, turned off by default - set plot_wavehistogram = true)
 
 if ispc
     slash = '\';
@@ -59,6 +60,8 @@ set(0,'defaultaxesfontsize',14,'defaultaxesfontweight','demi');
 % finished or terminates for any reason
 cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw) );
 
+% Plot info from wave histograms? Slow due to plotting many individual patches
+plot_wavehistogram = false;
 
 %% Figure 1: Wind and wave plot
 % Available for all SWIFT, although v4s do not have winds
@@ -668,4 +671,97 @@ if isfield(SWIFT,'driftspd') && any(~isnan([SWIFT.driftspd]))
 
 end
 
-end %function
+%% Figure 12: horizontal and acceleration histogram pcolor plots, skewness, kurtosis
+
+if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
+    dirs = {'hor', 'vert'}; %Iterate and make plots for horizontal and vertical accelerations
+    for dir_num = 1:numel(dirs)
+        dir = char(dirs(dir_num));
+     
+        figure; set(gcf, 'color', 'w')
+    
+        % Find min and max values of entire dataset for color axes
+        minacc = inf; maxacc = -inf;
+        minacc_count = inf; maxacc_count = -inf;
+    
+        % Data for plots of skew and kurtosis over time
+        skews = nan(numel(SWIFT), 1);
+        kurtos = nan(numel(SWIFT), 1);
+        times = nan(numel(SWIFT), 1);
+    
+        % Make pseudo p-color plot of all histograms over time
+        subplot(1, 3, 1); hold on; box on
+        for j = 1:numel(SWIFT)
+             
+            bins = SWIFT(j).wavehistogram.([dir, 'accbins']);
+            counts = SWIFT(j).wavehistogram.([dir, 'acc']);
+    
+            time = SWIFT(j).time;  % For vertical axis
+            if j < numel(SWIFT) %Otherwise default to the last used dt
+                dt = SWIFT(j+1).time - time; %Time bin width for pseudo-pcolor
+            end
+        
+            % Convert bin centers to edges
+            bins = bins(:)'; %Force it to be a row vector
+            dx = diff(bins);
+            edges = [bins(1)-dx(1)/2, bins(1:end-1)+dx/2, bins(end)+dx(end)/2];
+            
+            % Plot each bin as a colored rectangle (simulate pcolor, 
+            % but accomodate adaptive histogram bin edges across SWIFT entries)
+            for k = 1:length(counts)
+                data = [edges(k), edges(k+1), edges(k+1), edges(k)]; 
+                y = [time, time, time+dt, time+dt]; 
+                patch(data, y, counts(k), 'EdgeColor', 'none');
+            end
+    
+            %Calculate and save needeed info for skewness andd kurtosis plots
+            data = repelem(bins, counts); % Reconstruct pseudo-data 
+            skews(j) = skewness(data);
+            kurtos(j) = kurtosis(data); 
+            times(j) = time; 
+    
+            %Optionally plot to see that data reconstruction worked
+            % figure; clf; hold on
+            % histogram(data)
+            % plot(bins, counts);
+    
+            %Update min and max values of the entire dataset
+            minacc = min(minacc, min(bins));
+            maxacc = max(maxacc, max(bins));
+            minacc_count = min(minacc_count, min(counts));
+            maxacc_count = max(maxacc_count, max(counts));
+        end
+    
+        %Format "pcolor" plot - additional formatting for all subplots done at the end
+        subplot(1, 3, 1)
+        xlabel([dir, ' acc [g]'], 'FontSize', 12)
+        cb = colorbar;
+        ylabel(cb, 'observations [counts]', 'FontSize', 12)
+        clim([minacc_count maxacc_count]) 
+        xlim([minacc, maxacc])
+        
+        %% Plot skew and kurtosis
+    
+        %Smooth with 1-day moving window
+        smooth_skews = movmean(skews, 1, 'SamplePoints', times);
+        smooth_kurtos = movmean(kurtos, 1, 'SamplePoints', times);
+    
+        subplot(1, 3, 2); hold on; 
+        plot(smooth_skews, times, 'color', 'k', 'linewidth', 1);  
+        xlabel('skewness', 'FontSize', 12)
+        
+        subplot(1, 3, 3); hold on; 
+        plot(smooth_kurtos, times, 'color', 'k', 'linewidth', 1); 
+        xlabel('kurtosis', 'FontSize', 12)
+    
+        %Plot formatting
+        for splot = 1:3
+            subplot(1, 3, splot)
+            ylim([SWIFT(1).time, SWIFT(end).time])
+            datetick('y', 'keeplimits')
+            set(gca, 'FontSize', 12)
+            box on; grid on
+        end
+    end %End of loop for acceleration direction (horizontal or vertical)
+    
+end 
