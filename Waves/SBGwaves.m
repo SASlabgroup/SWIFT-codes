@@ -31,6 +31,9 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = SBGwaves(u,v,heave,fs)
 %               1/2018  add RC filter to heave also (helps a little in small wind-waves)       
 % 
 %#codegen
+
+% K. Zeiden 05/2025  define window of data to process from the start of the
+% burst, to avoid including start-up artifact if the burst is short. 
   
 
 %% fixed parameters
@@ -45,7 +48,7 @@ fmax = 1;   % upper frequency limit (usually 1 Hz)
 %% begin processing, if data sufficient
 pts = length(u);       % record length in data points
 
-if pts >= 2*wsecs && fs>1,  % minimum length and sampling for processing
+if pts >= 2*wsecs && fs>1  % minimum length and sampling for processing
 
     
 %% high-pass filter the GPS velocities
@@ -57,7 +60,7 @@ heavefiltered = heave;
 
 alpha = RC / (RC + 1./fs); 
 
-for ui = 2:length(u),
+for ui = 2:length(u)
     ufiltered(ui) = alpha * ufiltered(ui-1) + alpha * ( u(ui) - u(ui-1) );
     vfiltered(ui) = alpha * vfiltered(ui-1) + alpha * ( v(ui) - v(ui-1) );
     heavefiltered(ui) = alpha * heavefiltered(ui-1) + alpha * ( heave(ui) - heave(ui-1) );
@@ -76,14 +79,14 @@ dof = 2*windows*merge; % degrees of freedom
 uwindow = zeros(w,windows);
 vwindow = zeros(w,windows);
 heavewindow = zeros(w,windows);
-for q=1:windows, 
+for q = 1:windows
 	uwindow(:,q) = u(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
 	vwindow(:,q) = v(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
   	heavewindow(:,q) = heave(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
 end
 
 %% detrend individual windows 
-for q=1:windows
+for q = 1:windows
 uwindow(:,q) = detrend(uwindow(:,q));
 vwindow(:,q) = detrend(vwindow(:,q));
 heavewindow(:,q) = detrend(heavewindow(:,q));
@@ -211,8 +214,6 @@ E = Ezz;  % (use heave spectra as scalar energy spectra... in some cases Exx + E
 %% wave stats
 fwaves = f>fmin & f<fmax; % frequency cutoff for wave stats, 
 
-E( ~fwaves ) = 0;
-
 % significant wave height
 Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
 
@@ -264,14 +265,14 @@ end
 
 
 %% prune high frequency results
-E( f > maxf ) = [];
-dir( f > maxf ) = [];
-a1( f > maxf ) = [];
-b1( f > maxf ) = [];
-a2( f > maxf ) = [];
-b2( f > maxf ) = [];
-check( f > maxf ) = [];
-f( f > maxf ) = [];
+E( f > fmax ) = [];
+dir( f > fmax ) = [];
+a1( f > fmax ) = [];
+b1( f > fmax ) = [];
+a2( f > fmax ) = [];
+b2( f > fmax ) = [];
+check( f > fmax ) = [];
+f( f > fmax ) = [];
 
 % Mike S: Prune to exactly 42 frequency bands - assumes fs = 5 Hz!!
 % E = E(1:42);
@@ -285,6 +286,7 @@ f( f > maxf ) = [];
 
 else % if not enough points or sufficent sampling rate or data, give 9999
   
+    disp('Timeseries too short. Returning 9999.')
      Hs = 9999;
      Tp = 9999; 
      Dp = 9999; 
@@ -301,9 +303,10 @@ end
 
 
 % quality control
-if Tp>20,   
+if Tp>20 
      Hs = 9999;
      Tp = 9999; 
      Dp = 9999; 
 else 
+
 end

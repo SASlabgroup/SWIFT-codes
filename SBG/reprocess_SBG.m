@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf)
+function [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf,tstart)
 
 
 % Batch Matlab read-in and reprocess of SWIFT v4 SBG wave data
@@ -12,6 +12,8 @@ function [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf)
 %   reformatting for use in master postprocessing script,
 %   'postprocess_SWIFT'. 
 %   Turned into function with mission directory as input
+
+% Changed to fixed start (tstart, in seconds)
 
 if ispc 
     slash = '\';
@@ -36,7 +38,8 @@ else %  Exit reprocessing if no L2 or L3 product exists
 end
 
 %% Length of raw burst data to process, from end of burst (must be > 1536/5 = 307.2 s)
-tproc = 475;% seconds
+% tproc = 475;% seconds
+% Moved to input, changed to fixed start, K. Zeiden 05/22/2025
 
 %% Flag bad wave data
 badwaves = false(1,length(SWIFT));
@@ -73,30 +76,48 @@ for iburst = 1:length(bfiles)
     %     continue
     % end
 
+    % Data to use
+    z = sbgData.ShipMotion.heave;
+    x = sbgData.ShipMotion.surge;
+    y = sbgData.ShipMotion.sway;
+    lat = sbgData.GpsPos.lat;
+    lon = sbgData.GpsPos.long;
+    u = sbgData.GpsVel.vel_e;
+    v = sbgData.GpsVel.vel_n;
+
     % If not enough data to work with, skip burst
-    if isempty(sindex) || length(sbgData.UtcTime.year)<tproc*5 || length(sbgData.ShipMotion.heave)<tproc*5 || ... 
-            length(sbgData.GpsPos.lat)<tproc*5 || length(sbgData.GpsVel.vel_e)<tproc*5
+    if length(z)-tstart*5 < 2*256
             disp('Not enough data. Skipping...')
             continue
     end
 
-        % Despike data and make convenience variables
-   
-        z = sbgData.ShipMotion.heave(end-tproc*5+1:end);
-        z = filloutliers(z,'linear');
-        x = sbgData.ShipMotion.surge(end-tproc*5+1:end);
-        x = filloutliers(x,'linear');
-        y = sbgData.ShipMotion.sway(end-tproc*5+1:end);
-        y = filloutliers(y,'linear');
-        lat = sbgData.GpsPos.lat(end-tproc*5+1:end);
-        lat = filloutliers(lat, 'linear');
-        lon = sbgData.GpsPos.long(end-tproc*5+1:end);
-        lon = filloutliers(lon, "linear");
-        u = sbgData.GpsVel.vel_e(end-tproc*5+1:end);
-        u = filloutliers(u,'linear');
-        v = sbgData.GpsVel.vel_n(end-tproc*5+1:end);
-        v = filloutliers(v,'linear');
-        
+    % Remove start-up time and despike data
+    z = filloutliers(z(tstart*5:end),'linear');
+    x = filloutliers(x(tstart*5:end),'linear');
+    y = filloutliers(y(tstart*5:end),'linear');
+    lat = filloutliers(lat(tstart*5:end), 'linear');
+    lon = filloutliers(lon(tstart*5:end), 'linear');
+    u = filloutliers(u(tstart*5:end),'linear');
+    v = filloutliers(v(tstart*5:end),'linear');
+
+    % Force same size
+    ndiff = length(z)-length(u);
+    if ndiff > 0
+        u = [u zeros(1,ndiff)];
+        v = [v zeros(1,ndiff)];
+    elseif ndiff < 0
+        u = u(1:length(z));
+        v = v(1:length(z));
+    end
+    ndiff = length(z) - length(lon);
+    if ndiff > 0
+        lon = [lon zeros(1,ndiff)];
+        lat = [lat zeros(1,ndiff)];
+    elseif ndiff < 0 
+        lon = lon(1:length(z));
+        lat = lat(1:length(z));
+    end
+
         % Remove NaNs?
         ibad = isnan(z + x + y + u + v + lat + lon);
         z(ibad) = []; x(ibad) = []; y(ibad)=[]; u(ibad)=[]; 
@@ -109,11 +130,7 @@ for iburst = 1:length(bfiles)
         [newHs,newTp,newDp,newE,newf,newa1,newb1,newa2,newb2,newcheck] = SBGwaves(u,v,z,fs);
 
         % Alternative results using GPS velocites
-        [altHs,altTp,altDp,altE,altf,alta1,altb1,alta2,altb2] = GPSwaves(u,v,[],fs);
-
-        % reprocess using GPS positions
-        [Elat,~] = pwelch(detrend(deg2km(lat)*1000),[],[],[], fs );
-        [Elon,fgps] = pwelch(detrend(deg2km(lon,cosd(median(lat))*6371)*1000),[],[],[],fs);
+        [altHs,altTp,altDp,altE,altf,alta1,altb1,alta2,altb2] = GPSwaves(u,v,[],fs);    
 
 
         % Interpolate results to L1 frequency bands
@@ -140,8 +157,10 @@ for iburst = 1:length(bfiles)
             check = newcheck;
         end
 
-        % Use spectra computed from GPS as alternative if specified
+        % Spectra computed from GPS positions as alternative to GPS velocities if specified
         if useGPS
+            [Elat,~] = pwelch(detrend(deg2km(lat)*1000),[],[],[], fs );
+            [Elon,fgps] = pwelch(detrend(deg2km(lon,cosd(median(lat))*6371)*1000),[],[],[],fs);
             altE = interp1(fgps, Elat + Elon, f);
         end
 
@@ -245,9 +264,10 @@ end
 
 %% Log reprocessing and flags, then save new L3 file or overwrite existing one
 
-params.AltGPS = useGPS;
+params.useGPS = useGPS;
 params.saveraw = saveraw;
 params.interpf = interpf;
+params.tstart = tstart;
 
 if isfield(sinfo,'postproc')
 ip = length(sinfo.postproc)+1; 

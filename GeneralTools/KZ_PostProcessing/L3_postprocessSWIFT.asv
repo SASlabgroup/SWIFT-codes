@@ -87,8 +87,8 @@ if rpSBG
         saveraw = false;
         useGPS = true;
         interpf = false;
-        tstart = 90;
-        [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf,tstart);
+        tproc = 475;
+        [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf,tproc);
     else
         disp('No SBG data...')
     end
