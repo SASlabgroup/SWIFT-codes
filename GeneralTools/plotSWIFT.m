@@ -60,7 +60,7 @@ set(0,'defaultaxesfontsize',14,'defaultaxesfontweight','demi');
 % finished or terminates for any reason
 cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw) );
 
-% Plot info from wave histograms? Slow due to plotting many individual patches
+% Plot info from wave histograms? Slow due to interpolating to common bins
 plot_wavehistogram = false;
 
 %% Figure 1: Wind and wave plot
@@ -674,67 +674,61 @@ end
 %% Figure 12: horizontal and acceleration histogram pcolor plots, skewness, kurtosis
 
 if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
-    dirs = {'hor', 'vert'}; %Iterate and make plots for horizontal and vertical accelerations
-    for dir_num = 1:numel(dirs)
-        dir = char(dirs(dir_num));
+    direcs = {'hor', 'vert'}; %Iterate and make plots for horizontal and vertical accelerations
+    for direc_num = 1:numel(direcs)
+        direc = char(direcs(direc_num));
      
         figure; set(gcf, 'color', 'w')
     
-        % Find min and max values of entire dataset for color axes
+        % Find min and max values of entire dataset for common bin edges
         minacc = inf; maxacc = -inf;
         minacc_count = inf; maxacc_count = -inf;
-    
-        % Data for plots of skew and kurtosis over time
-        skews = nan(numel(SWIFT), 1);
-        kurtos = nan(numel(SWIFT), 1);
-        times = nan(numel(SWIFT), 1);
-    
-        % Make pseudo p-color plot of all histograms over time
-        subplot(1, 3, 1); hold on; box on
-        for j = 1:numel(SWIFT)
-             
-            bins = SWIFT(j).wavehistogram.([dir, 'accbins']);
-            counts = SWIFT(j).wavehistogram.([dir, 'acc']);
-    
-            time = SWIFT(j).time;  % For vertical axis
-            if j < numel(SWIFT) %Otherwise default to the last used dt
-                dt = SWIFT(j+1).time - time; %Time bin width for pseudo-pcolor
-            end
-        
-            % Convert bin centers to edges
-            bins = bins(:)'; %Force it to be a row vector
-            dx = diff(bins);
-            edges = [bins(1)-dx(1)/2, bins(1:end-1)+dx/2, bins(end)+dx(end)/2];
-            
-            % Plot each bin as a colored rectangle (simulate pcolor, 
-            % but accomodate adaptive histogram bin edges across SWIFT entries)
-            for k = 1:length(counts)
-                data = [edges(k), edges(k+1), edges(k+1), edges(k)]; 
-                y = [time, time, time+dt, time+dt]; 
-                patch(data, y, counts(k), 'EdgeColor', 'none');
-            end
-    
-            %Calculate and save needeed info for skewness andd kurtosis plots
-            data = repelem(bins, counts); % Reconstruct pseudo-data 
-            skews(j) = skewness(data);
-            kurtos(j) = kurtosis(data); 
-            times(j) = time; 
-    
-            %Optionally plot to see that data reconstruction worked
-            % figure; clf; hold on
-            % histogram(data)
-            % plot(bins, counts);
-    
+        nbins = 32; %Consistent with existing bin number
+
+        for j = 1:numel(SWIFT)            
+            bins = SWIFT(j).wavehistogram.([direc, 'accbins']);
+            counts = SWIFT(j).wavehistogram.([direc, 'acc']);
+
             %Update min and max values of the entire dataset
             minacc = min(minacc, min(bins));
             maxacc = max(maxacc, max(bins));
             minacc_count = min(minacc_count, min(counts));
             maxacc_count = max(maxacc_count, max(counts));
         end
+
+        %Common bins to grid all data to 
+        interp_bin_centers = linspace(minacc, maxacc, nbins);
+       
+        interp_counts = nan(numel(SWIFT), nbins);  %Initialize
     
-        %Format "pcolor" plot - additional formatting for all subplots done at the end
+        % Data for plots of skew and kurtosis over time
+        skews = nan(numel(SWIFT), 1);
+        kurtos = nan(numel(SWIFT), 1);
+        times = nan(numel(SWIFT), 1);
+    
+        for j = 1:numel(SWIFT)
+             
+            bins = SWIFT(j).wavehistogram.([direc, 'accbins']);
+            counts = SWIFT(j).wavehistogram.([direc, 'acc']);
+            interp_counts(j, :) = interp1(bins, counts, interp_bin_centers, 'linear');
+        
+            %Calculate and save needeed info for skewness andd kurtosis plots
+            data = repelem(bins, counts); % Reconstruct pseudo-data 
+            skews(j) = skewness(data);
+            kurtos(j) = kurtosis(data); 
+            times(j) = SWIFT(j).time;  % For vertical axis; 
+    
+            %Optionally plot to see that data reconstruction worked
+            % figure; clf; hold on
+            % histogram(data)
+            % plot(bins, counts);
+    
+        end
+    %%
+        %Pcolor of all histograms over time - additional formatting for all subplots done at the end
         subplot(1, 3, 1)
-        xlabel([dir, ' acc [g]'], 'FontSize', 12)
+        pcolor(interp_bin_centers, times, interp_counts); shading flat
+        xlabel([direc, ' acc [g]'], 'FontSize', 12)
         cb = colorbar;
         ylabel(cb, 'observations [counts]', 'FontSize', 12)
         clim([minacc_count maxacc_count]) 
