@@ -211,12 +211,12 @@ f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ;
 % and divide by N*samplerate to get power spectral density
 % the two is b/c Matlab's fft output is the symmetric FFT, 
 % and we did not use the redundant half (so need to multiply the psd by 2)
-UU = mean( UUwindowmerged.' ) / (win/2 * fs  );
-VV = mean( VVwindowmerged.' ) / (win/2 * fs  );
-ZZ = mean( ZZwindowmerged.' ) / (win/2 * fs  );
-UV = mean( UVwindowmerged.' ) / (win/2 * fs  ); 
-UZ = mean( UZwindowmerged.' ) / (win/2 * fs  ); 
-VZ = mean( VZwindowmerged.' ) / (win/2 * fs  ); 
+UU = mean( UUwindowmerged,2,'omitnan' )' / (win/2 * fs  );
+VV = mean( VVwindowmerged,2,'omitnan' )' / (win/2 * fs  );
+ZZ = mean( ZZwindowmerged,2,'omitnan' )' / (win/2 * fs  );
+UV = mean( UVwindowmerged,2,'omitnan' )' / (win/2 * fs  ); 
+UZ = mean( UZwindowmerged,2,'omitnan' )' / (win/2 * fs  ); 
+VZ = mean( VZwindowmerged,2,'omitnan' )' / (win/2 * fs  ); 
 
 
 %% convert to displacement spectra (from velocity and heave)

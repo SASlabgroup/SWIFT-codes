@@ -288,7 +288,6 @@ title([level ' Scalar Speed'])
 set(h(1:end-1),'XTickLabel',[])
 axes(h(end)); datetick('x','KeepLimits','KeepTicks')
 set(h(2:end),'YLim',[0 21],'YDir','Reverse','CLim',[0 1])
-colormap(cmocean('balance'))
 
 % Delete if empty
 for ih = 1:length(h)

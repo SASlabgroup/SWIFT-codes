@@ -228,7 +228,8 @@ if length(SWIFT) > 3
     direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90 -> 0
 
     for si = 1:length(SWIFT)
-        if si == 1 || dt(si-1) > 2*burstinterval/(60*24) %
+        % Do not include drift speeds associated with large time gaps
+        if si == 1 || dt(si-1) > 2*burstinterval/(60*24)
             SWIFT(si).driftspd = NaN;
             SWIFT(si).driftdirT = NaN;
         else

@@ -39,7 +39,6 @@ function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = SBGwaves(u,v,heave,fs)
 %% fixed parameters
 wsecs = 256;   % window length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
-maxf = 2;       % frequency cutoff for telemetry Hz
 recip = true;   % flip wave directions (but not moments)
 RC = 3.5;   % RC fitler... cuttoff freq is 1/(2*pi*RC), so nominal value is RC = 3.5
 fmin = 0.05;  % lower frequency limit (usually 0.05 Hz)
@@ -48,7 +47,7 @@ fmax = 1;   % upper frequency limit (usually 1 Hz)
 %% begin processing, if data sufficient
 pts = length(u);       % record length in data points
 
-if pts >= 2*wsecs && fs>1  % minimum length and sampling for processing
+if pts >= wsecs*fs && fs>1  % minimum length and sampling for processing
 
     
 %% high-pass filter the GPS velocities
@@ -73,20 +72,20 @@ heave = heavefiltered;
 %% break into windows (use 75 percent overlap)
 w = round(fs * wsecs);  % window length in data points
 if rem(w,2)~=0, w = w-1; else end  % make w an even number
-windows = floor( 4*(pts/w - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
-dof = 2*windows*merge; % degrees of freedom
+nwin = floor( 4*(pts/w - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
+dof = 2*nwin*merge; % degrees of freedom
 % loop to create a matrix of time series, where COLUMN = WINDOW 
-uwindow = zeros(w,windows);
-vwindow = zeros(w,windows);
-heavewindow = zeros(w,windows);
-for q = 1:windows
+uwindow = zeros(w,nwin);
+vwindow = zeros(w,nwin);
+heavewindow = zeros(w,nwin);
+for q = 1:nwin
 	uwindow(:,q) = u(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
 	vwindow(:,q) = v(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
   	heavewindow(:,q) = heave(  (q-1)*(.25*w)+1  :  (q-1)*(.25*w)+w  );  
 end
 
 %% detrend individual windows 
-for q = 1:windows
+for q = 1:nwin
 uwindow(:,q) = detrend(uwindow(:,q));
 vwindow(:,q) = detrend(vwindow(:,q));
 heavewindow(:,q) = detrend(heavewindow(:,q));
@@ -94,7 +93,7 @@ end
 
 %% taper and rescale (to preserve variance)
 % form taper matrix (columns of taper coef)
-taper = sin ( (1:w) * pi/w )' * ones(1,windows); 
+taper = sin ( (1:w) * pi/w )' * ones(1,nwin); 
 % taper each window
 uwindowtaper = uwindow .* taper;
 vwindowtaper = vwindow .* taper;
@@ -135,15 +134,14 @@ UVwindow = ( Uwindow .* conj(Vwindow) );
 UZwindow = ( Uwindow .* conj(Zwindow) );
 VZwindow = ( Vwindow .* conj(Zwindow) );
 
-
 %% merge neighboring freq bands (number of bands to merge is a fixed parameter)
 % initialize
-UUwindowmerged = zeros(floor(w/(2*merge)),windows);
-VVwindowmerged = zeros(floor(w/(2*merge)),windows);
-ZZwindowmerged = zeros(floor(w/(2*merge)),windows);
-UVwindowmerged = 1i*ones(floor(w/(2*merge)),windows);
-UZwindowmerged = 1i*ones(floor(w/(2*merge)),windows);
-VZwindowmerged = 1i*ones(floor(w/(2*merge)),windows);
+UUwindowmerged = zeros(floor(w/(2*merge)),nwin);
+VVwindowmerged = zeros(floor(w/(2*merge)),nwin);
+ZZwindowmerged = zeros(floor(w/(2*merge)),nwin);
+UVwindowmerged = 1i*ones(floor(w/(2*merge)),nwin);
+UZwindowmerged = 1i*ones(floor(w/(2*merge)),nwin);
+VZwindowmerged = 1i*ones(floor(w/(2*merge)),nwin);
 
 for mi = merge:merge:(w/2) 
 	UUwindowmerged(mi/merge,:) = mean( UUwindow((mi-merge+1):mi , : ) );
@@ -165,12 +163,12 @@ f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ;
 % take the average of all windows at each freq-band
 % and divide by N*samplerate to get power spectral density
 % the two is b/c Matlab's fft output is the symmetric FFT, and we did not use the redundant half (so need to multiply the psd by 2)
-UU = mean( UUwindowmerged.' ) / (w/2 * fs  );
-VV = mean( VVwindowmerged.' ) / (w/2 * fs  );
-ZZ = mean( ZZwindowmerged.' ) / (w/2 * fs  );
-UV = mean( UVwindowmerged.' ) / (w/2 * fs  ); 
-UZ = mean( UZwindowmerged.' ) / (w/2 * fs  ); 
-VZ = mean( VZwindowmerged.' ) / (w/2 * fs  ); 
+UU = mean( UUwindowmerged,2,'omitnan')' / (w/2 * fs  );
+VV = mean( VVwindowmerged,2,'omitnan')' / (w/2 * fs  );
+ZZ = mean( ZZwindowmerged,2,'omitnan')' / (w/2 * fs  );
+UV = mean( UVwindowmerged,2,'omitnan')' / (w/2 * fs  ); 
+UZ = mean( UZwindowmerged,2,'omitnan')' / (w/2 * fs  ); 
+VZ = mean( VZwindowmerged,2,'omitnan')' / (w/2 * fs  ); 
 
 
 %% convert to displacement spectra from GPS velocities

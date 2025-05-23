@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = L3_postprocessSWIFT(missiondir,plotflag)
+function [SWIFT,sinfo] = L3_postprocessSWIFT(missiondir,plotflag,burstinterval)
 
 % Master post-processing function, that calls sub-functions to reprocess
 % each different type of raw SWIFT data and create an L3 product.
@@ -20,21 +20,21 @@ end
 %% Default processing toggles
 
 % MET
-rpWXT = false; % MET
-rpPB2 = false; % MET
-rpY81 = false; % MET
+rpWXT = true; % MET
+rpPB2 = true; % MET
+rpY81 = true; % MET
 
 % Waves
-rpIMU = false; % Waves
+rpIMU = true; % Waves
 rpSBG = true; % Waves
 
 % CT
-rpACS = false; % CT
+rpACS = true; % CT
 
 % ADCP
-rpSIG = false; % TKE 
-rpAQH = false; % TKE
-rpAQD = false; % TKE    
+rpSIG = true; % TKE 
+rpAQH = true; % TKE
+rpAQD = true; % TKE    
 
 %% Mission name
 
@@ -64,6 +64,55 @@ else
     load([L2file.folder slash L2file.name],'SWIFT','sinfo');
 end
 
+%% Despike GPS Positions and recompute drift speed
+
+if length(SWIFT) > 3
+
+    time = [SWIFT.time];
+    lat = [SWIFT.lat];
+    lon = [SWIFT.lon];
+    
+    % De-spike
+    lat = filloutliers(lat,'linear');
+    lon = filloutliers(lon,'linear');
+
+    % Recompute drift speeds
+    dt = diff(time);
+    dlondt = diff(lon)./dt;
+    dxdt = deg2km(dlondt,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( 24*3600 ); % m/s
+    dlatdt = diff(lat)./dt; % deg per day
+    dydt = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
+    dxdt(isinf(dxdt)) = NaN;
+    dydt(isinf(dydt)) = NaN;
+    speed = sqrt(dxdt.^2 + dydt.^2); % m/s
+    direction = -180 ./ 3.14 .* atan2(dydt,dxdt); % cartesian direction [deg]
+    direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
+    direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90 -> 0
+
+    % Repopulate SWIFT structure w/new drift speeds + positions
+    for si = 1:length(SWIFT)
+        % Do not include drift speeds associated with large time gaps
+        SWIFT(si).lon = lon(si);
+        SWIFT(si).lat = lat(si);
+        if si == 1 || dt(si-1) > 2*burstinterval/(60*24)
+            SWIFT(si).driftspd = NaN;
+            SWIFT(si).driftdirT = NaN;
+        else
+            SWIFT(si).driftspd = speed(si-1);
+            SWIFT(si).driftdirT = direction(si-1);
+        end
+    end
+    
+else
+
+    for si = 1:length(SWIFT)
+        SWIFT(si).driftspd = NaN;
+        SWIFT(si).driftdirT = NaN;
+    end
+
+end
+
+
 %% Reprocess IMU
 
 if rpIMU
@@ -88,7 +137,8 @@ if rpSBG
         useGPS = true;
         interpf = false;
         tstart = 90;
-        [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf,tstart);
+        plotburst = true;
+        [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,interpf,tstart);
     else
         disp('No SBG data...')
     end
@@ -148,7 +198,7 @@ if rpSIG
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
         disp('Reprocessing Signature1000 data...')
         readraw = false;
-        plotburst = false; 
+        plotburst = true; 
         [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst);
     else
         disp('No SIG data...')

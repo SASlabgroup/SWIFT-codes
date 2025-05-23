@@ -286,11 +286,11 @@ for iburst = 1:nburst
             print(figname,'-dpng')
             close gcf
             
-            figure(fh(2))
-            set(gcf,'Name',[bname '_bband_profiles'])
-            figname = [bfiles(iburst).folder slash get(gcf,'Name')];
-            print(figname,'-dpng')
-            close gcf
+            % figure(fh(2))
+            % set(gcf,'Name',[bname '_bband_profiles'])
+            % figname = [bfiles(iburst).folder slash get(gcf,'Name')];
+            % print(figname,'-dpng')
+            % close gcf
         end
        
 
@@ -377,7 +377,7 @@ for iburst = 1:nburst
             SWIFT(sindex).signature.HRprofile = [];
             SWIFT(sindex).signature.HRprofile.w = HRprofile.w;
             SWIFT(sindex).signature.HRprofile.wvar = HRprofile.wvar;
-            SWIFT(sindex).signature.HRprofile.z = HRprofile.z';
+            SWIFT(sindex).signature.HRprofile.z = HRprofile.z;
             SWIFT(sindex).signature.HRprofile.tkedissipationrate = ...
                 HRprofile.eps;
             % Broadband data
@@ -404,7 +404,7 @@ for iburst = 1:nburst
             SWIFT(sindex).signature.HRprofile = [];
             SWIFT(sindex).signature.HRprofile.w = NaN(size(HRprofile.w));
             SWIFT(sindex).signature.HRprofile.wvar = NaN(size(HRprofile.w));
-            SWIFT(sindex).signature.HRprofile.z = HRprofile.z';
+            SWIFT(sindex).signature.HRprofile.z = HRprofile.z;
             SWIFT(sindex).signature.HRprofile.tkedissipationrate = ...
                 NaN(size(HRprofile.w'));
             % Broadband data
@@ -469,7 +469,7 @@ end
 %% Save SIG Structure + Plot %%%%%%%%
 
 if opt.saveSIG
-   save([sfile.folder slash sfile.name(1:end-7) '_burstavgSIG.mat'],'SIG')
+   save([sfile.folder slash sfile.name(1:end-7) '_SIG.mat'],'SIG')
 end
 
 % Plot burst Averaged SWIFT Signature Data

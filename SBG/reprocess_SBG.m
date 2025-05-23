@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_SBG(missiondir,saveraw,useGPS,interpf,tstart)
+function [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,interpf,tstart)
 
 
 % Batch Matlab read-in and reprocess of SWIFT v4 SBG wave data
@@ -40,6 +40,9 @@ end
 %% Length of raw burst data to process, from end of burst (must be > 1536/5 = 307.2 s)
 % tproc = 475;% seconds
 % Moved to input, changed to fixed start, K. Zeiden 05/22/2025
+
+%% Sampling Rate
+fs = 5; % should be 5 Hz for standard SBG settings
 
 %% Flag bad wave data
 badwaves = false(1,length(SWIFT));
@@ -85,8 +88,45 @@ for iburst = 1:length(bfiles)
     u = sbgData.GpsVel.vel_e;
     v = sbgData.GpsVel.vel_n;
 
+    if plotburst
+            tproc = 475;
+            figure('color','w')
+            MP = get(0,'monitorposition');
+            set(gcf,'outerposition',MP(1,:));
+            subplot(3,1,1)
+            plot(z,'-kx')
+            hold on;
+            plot(filloutliers(z,'linear'),'-rx')
+            xlabel('NSamp');xlim([0 2750])
+            ylabel('\eta [m]');ylim([-2 2])
+            plot((length(z)-tproc*5+1)*[1 1],ylim,'--k','LineWidth',2)
+            plot(tstart*[1 1],ylim,':k','LineWidth',2)
+            title(bfiles(iburst).name,'interpreter','none')
+            legend('Raw','Despiked','Variable Window','Fixed Start')
+        
+            subplot(3,1,2)
+            plot(u,'-kx')
+            hold on;
+            plot(filloutliers(u,'linear'),'-rx')
+            xlabel('NSamp');xlim([0 2750])
+            ylabel('u [ms^{-2}]');ylim([-2 2])
+            plot((length(z)-tproc*5+1)*[1 1],ylim,'--b','LineWidth',2)
+            plot(tstart*[1 1],ylim,':b','LineWidth',2)
+        
+            subplot(3,1,3)
+            plot(v,'-kx')
+            hold on;axis tight
+            plot(filloutliers(v,'linear'),'-rx')
+            xlabel('NSamp');xlim([0 2750])
+            ylabel('v [ms^{-2}]');ylim([-2 2])
+            plot((length(z)-tproc*5+1)*[1 1],ylim,'--b','LineWidth',2)
+        
+            print([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4)],'-dpng')
+            close gcf
+    end
+
     % If not enough data to work with, skip burst
-    if length(z)-tstart*5 < 2*256
+    if length(z)-tstart*5 < 256*fs
             disp('Not enough data. Skipping...')
             continue
     end
@@ -126,7 +166,6 @@ for iburst = 1:length(bfiles)
         % Recalculate wave spectra to get proper directional moments 
         %   (bug fix in 11/2017)
         f = SWIFT(sindex).wavespectra.freq;  % original frequency bands
-        fs = 5; % should be 5 Hz for standard SBG settings
         [newHs,newTp,newDp,newE,newf,newa1,newb1,newa2,newb2,newcheck] = SBGwaves(u,v,z,fs);
 
         % Alternative results using GPS velocites
