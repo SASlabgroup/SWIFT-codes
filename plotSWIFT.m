@@ -726,7 +726,7 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
         end
     %%
         %Pcolor of all histograms over time - additional formatting for all subplots done at the end
-        subplot(1, 3, 1)
+        subplot(1, 3, 1); hold on; box on
         pcolor(interp_bin_centers, times, interp_counts); shading flat
         xlabel([direc, ' acc [g]'], 'FontSize', 12)
         cb = colorbar;
