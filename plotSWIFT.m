@@ -28,6 +28,7 @@ function [] = plotSWIFT(SWIFT)
 %   figure 10: radiometers
 %   figure 11: drift spd and direction
 %   figure 12: acceleration histogram info (slow, turned off by default - set plot_wavehistogram = true)
+%   figure 13: shortwave radiation and atmos pressure
 
 if ispc
     slash = '\';
@@ -678,7 +679,7 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
     for direc_num = 1:numel(direcs)
         direc = char(direcs(direc_num));
      
-        figure; set(gcf, 'color', 'w')
+        figure(12), clf; set(gcf, 'color', 'w')
     
         % Find min and max values of entire dataset for common bin edges
         minacc = inf; maxacc = -inf;
@@ -758,4 +759,36 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
         end
     end %End of loop for acceleration direction (horizontal or vertical)
     
+    print('-dpng',['SWIFT' wd '_acchist.png']) 
+
 end 
+
+%% figure 13: shortwave radiation
+if isfield(SWIFT,'solarrad') && isfield(SWIFT,'airpres') && isfield(SWIFT,'airtemp') && isfield(SWIFT,'windspd') % check field exists
+    
+    figure(13), clf
+    
+    subplot(4,1,1)
+    plot([SWIFT.time],[SWIFT.solarrad],'linewidth',2)
+    datetick
+    ylabel('Solar rad. [W/m^2]')
+
+    subplot(4,1,2)
+    plot([SWIFT.time],[SWIFT.airtemp],'linewidth',2)
+    datetick
+    ylabel('Air temp [C]')
+
+    subplot(4,1,3)
+    plot([SWIFT.time],[SWIFT.airpres],'linewidth',2)
+    datetick
+    ylabel('Air pres [mb]')
+
+    subplot(4,1,4)
+    plot([SWIFT.time],[SWIFT.windspd],'linewidth',2)
+    datetick
+    ylabel('Wind spd [m/s]')
+
+    print('-dpng',['SWIFT' wd '_solarrad_met.png']) 
+
+end
+
