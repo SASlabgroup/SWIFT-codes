@@ -226,11 +226,14 @@ while 1
         SWIFT.lon = fread(fid,1,'float'); % Longitude
         if size > 1200 & size < 10000,
             disp('reading wave histograms')
-            SWIFT.wavehistogram.vertacc = fread(fid,32,'int'); % vertical accelerations
+            SWIFT.wavehistogram.vertacc = fread(fid,32,'uint32'); % vertical accelerations
+            %SWIFT.wavehistogram.vertacc(32) = fread(fid,1,'float'); % vertical accelerations
             SWIFT.wavehistogram.vertaccbins = fread(fid,32,'float'); % bins centers of vertical accelerations
-            SWIFT.wavehistogram.horacc = fread(fid,32,'int'); % horizontal accelerations
+            SWIFT.wavehistogram.horacc = fread(fid,32,'uint32'); % horizontal accelerations
+            %SWIFT.wavehistogram.horacc(32) = fread(fid,1,'float'); % horizontal accelerations
             SWIFT.wavehistogram.horaccbins = fread(fid,32,'float'); % bins centers of horizontal accelerations
-            SWIFT.wavehistogram.horspd = fread(fid,32,'int'); % horizontal speeds
+            SWIFT.wavehistogram.horspd = fread(fid,32,'uint32'); % horizontal speeds
+            %SWIFT.wavehistogram.horspd(32) = fread(fid,1,'float'); % horizontal speeds
             SWIFT.wavehistogram.horspdbins = fread(fid,32,'float'); % bin centers of horizontal speeds
         else
         end
