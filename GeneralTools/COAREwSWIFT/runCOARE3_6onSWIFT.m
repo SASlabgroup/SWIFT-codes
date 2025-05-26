@@ -23,7 +23,11 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % Added in drift to correct wind spd
 % Added input plots
 % Added in table conversion (no more manual indexing)
-%
+% 
+% M. James 5/2025
+% Changed to .fig outputs
+% Used diurnal warming COARE script
+
 
 savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision';
 cd(savepath); fprintf('Savepath: %s', savepath);
@@ -54,7 +58,7 @@ title('COARE input');
 datetick
 ylabel('Wind [m/s]')
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputwind.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputwind',SWIFT(1).ID)])
 
 %% air temp and height
 if isfield(SWIFT,'airtemp') && any(~isnan([SWIFT.airtemp])),
@@ -73,7 +77,7 @@ title('COARE input');
 datetick
 ylabel('Air temp [deg C]')
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputairtemp.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputairtemp',SWIFT(1).ID)])
 
 %% relative humidity and height
 if isfield(SWIFT,'relhumidity') && any(~isnan([SWIFT.relhumidity])),
@@ -91,7 +95,7 @@ title('COARE input');
 datetick
 ylabel('Humidity [%]')
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputhumidity.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputhumidity',SWIFT(1).ID)])
 
 %% air pressure
 if isfield(SWIFT,'airpres') && any(~isnan([SWIFT.airpres])),
@@ -107,7 +111,7 @@ title('COARE input');
 datetick
 ylabel('Air pressure [mbar]')
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputairpressure.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputairpressure',SWIFT(1).ID)])
 
 %% water temp
 if isfield(SWIFT,'watertemp') && any(~isnan([SWIFT.watertemp])),
@@ -147,7 +151,7 @@ title('COARE input');
 datetick
 ylabel('Water temp [deg C]')
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputwatertemp.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputwatertemp',SWIFT(1).ID)])
 
 %% Water Salinity
 if isfield(SWIFT,'salinity') && any(~isnan([SWIFT.salinity])),
@@ -163,7 +167,7 @@ title('COARE input');
 datetick
 ylabel('Salinity [PSU]')
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputsalinity.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputsalinity',SWIFT(1).ID)])
 
 %% downwelling radiation
 if isfield(SWIFT,'SWrad') && any(~isnan([SWIFT.SWrad])),
@@ -189,7 +193,7 @@ plot(time,sw_dn,'o')
 ylabel('SW Radiation Downwelling [W/m^2]');
 title('COARE input');
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputraddwnwell.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputraddwnwell',SWIFT(1).ID)])
 %% latitude and lon
 % lat = nanmean([SWIFT.lat]); % single value, not vector
 % lon = nanmean([SWIFT.lon]); % single value, not vector
@@ -204,7 +208,7 @@ lon(isnan(lon)) = nanmean(lon);
 
 geoplot(lat, lon);
 title('COARE input');
-print('-djpeg',[cd '\' sprintf('%s_COAREinputlatlon.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputlatlon',SWIFT(1).ID)])
 
 %% atmospheric PBL height
 zi = NaN;
@@ -222,7 +226,7 @@ title('COARE input');
 datetick
 ylabel('Rain Rate')
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputrain.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputrain',SWIFT(1).ID)])
 
 %% waves
 if isfield(SWIFT,'peakwaveperiod') && any(~isnan([SWIFT.peakwaveperiod])),
@@ -268,7 +272,7 @@ plot(time, cp,'x'); grid on;
 datetick
 ylabel("Wave Speed (m/s)")
 
-print('-djpeg',[cd '\' sprintf('%s_COAREinputwaveheight.jpeg',SWIFT(1).ID)])
+savefig([cd '\' sprintf('%s_COAREinputwaveheight',SWIFT(1).ID)])
 
 %% Default val fill (Moved from the COARE algorithm to here for better reference)
 

@@ -50,9 +50,9 @@ legend('measured wind','U_{10}')
 ylabel('[m/s]')
 linkaxes(findobj(gcf,'Type', 'Axes'),'x')
 if isfield(SWIFT,'ID'),
-    print('-dpng',[SWIFT(1).ID '_COAREfluxes.png'])
+    savefig([SWIFT(1).ID '_COAREfluxes'])
 else
-    print('-dpng',['COAREfluxes.png'])
+    savefig(['COAREfluxes'])
 end
 
 
@@ -78,9 +78,9 @@ datetick
 ylabel('[W/m^2]')
 linkaxes(ax,'x')
 if isfield(SWIFT,'ID'),
-    print('-dpng',[SWIFT(1).ID '_radfluxes.png'])
+    savefig([SWIFT(1).ID '_radfluxes'])
 else
-    print('-dpng',['radfluxes.png'])
+    savefig(['radfluxes'])
 end
 
 if isfield(SWIFT,'windustar') && length(fluxes.usr) == length([SWIFT.windustar]),
@@ -101,9 +101,9 @@ if isfield(SWIFT,'windustar') && length(fluxes.usr) == length([SWIFT.windustar])
     if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
 
     if isfield(SWIFT,'ID'),
-        print('-dpng',[SWIFT(1).ID '_ustar.png'])
+        savefig([SWIFT(1).ID '_ustar'])
     else
-        print('-dpng',['ustar.png'])
+        savefig(['ustar'])
     end
     
     
@@ -130,9 +130,9 @@ if isfield(SWIFT,'windustar') && length(fluxes.usr) == length([SWIFT.windustar])
     if isfield(SWIFT,'ID'), title(sprintf('COARE Comparision of U_* SWIFT %s',SWIFT(1).ID)), else, end
 
     if isfield(SWIFT,'ID'),
-        print('-dpng',[SWIFT(1).ID '_ustarCDF.png'])
+        savefig([SWIFT(1).ID '_ustarCDF'])
     else
-        print('-dpng',['ustarCDF.png'])
+        savefig(['ustarCDF'])
     end
 else
 end
@@ -159,9 +159,9 @@ if isfield(SWIFT,'windustar') && length(fluxes.tau) == length([SWIFT.time]),
     if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
 
     if isfield(SWIFT,'ID'),
-        print('-dpng',[SWIFT(1).ID '_tau.png'])
+        savefig([SWIFT(1).ID '_tau'])
     else
-        print('-dpng',['_tau.png'])
+        savefig(['_tau'])
     end
 
 else
@@ -231,9 +231,9 @@ if length(fluxes.tau) == length([SWIFT.time]),
 
 
     if isfield(SWIFT,'ID'),
-        print('-dpng',[SWIFT(1).ID '_COAREpredictionsummary.png'])
+        savefig([SWIFT(1).ID '_COAREpredictionsummary'])
     else
-        print('-dpng',['_COAREpredictionsummary.png'])
+        savefig(['_COAREpredictionsummary'])
     end
 
 end
