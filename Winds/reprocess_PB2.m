@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw)
+function [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw,plotburst)
 
 % Reprocess Airmar Weather Station model 200WX files
 % loop thru raw data for a given SWIFT deployment, then
@@ -6,7 +6,7 @@ function [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw)
 % (assuming concatSWIFTv3_processed.m has already been run.
 
 % K. Zeiden 03/2025 based on reprocess_WXT
-plotburst = false;
+% plotburst = false;
 
 if ispc 
     slash = '\';
@@ -48,7 +48,7 @@ for iburst = 1:length(bfiles)
             
         % Read mat file or load raw data
         if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
-            [~,windspd,winddirT,airtemp,airpres,~,~,~,~,~,~,relhumidity,windspdR,winddirR] = ...
+            [~,windspd,winddirT,airtemp,airpres,~,~,~,~,pitch,roll,relhumidity,windspdR,winddirR] = ...
                 readSWIFTv3_PB2([bfiles(iburst).folder slash bfiles(iburst).name]);
         else
             load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
@@ -87,64 +87,85 @@ for iburst = 1:length(bfiles)
             continue
         end
 
+        % Despike
+        ispike = windspd > median(windspd)+3*std(windspd,'omitnan');
+        if sum(~ispike) > 3; windspddsp = interp1(find(~ispike),windspd(~ispike),1:length(windspd)); end
+        ispike = winddirT > median(winddirT)+3*std(winddirT,'omitnan');
+        if sum(~ispike) > 3; winddirTdsp = interp1(find(~ispike),winddirT(~ispike),1:length(winddirT));end
+        ispike = windspdR > median(windspdR)+3*std(windspdR,'omitnan');
+        if sum(~ispike) > 3; windspdRdsp = interp1(find(~ispike),windspdR(~ispike),1:length(windspdR));end
+        ispike = winddirR > median(winddirR)+3*std(winddirR,'omitnan');
+        if sum(~ispike) > 3; winddirRdsp = interp1(find(~ispike),winddirR(~ispike),1:length(winddirR));end
+        ispike = airtemp > median(airtemp)+3*std(airtemp,'omitnan');
+        if sum(~ispike) > 3; airtempdsp = interp1(find(~ispike),airtemp(~ispike),1:length(airtemp));end
+        ispike = airpres > median(airpres)+3*std(airpres,'omitnan');
+        if sum(~ispike) > 3; airpresdsp = interp1(find(~ispike),airpres(~ispike),1:length(airpres));end
+        ispike = relhumidity > median(relhumidity)+3*std(relhumidity,'omitnan');
+        if sum(~ispike) > 3; relhumiditydsp = interp1(find(~ispike),relhumidity(~ispike),1:length(relhumidity));end
+
+        % Compute tilt
+        tilt = acosd(cosd(pitch).*cosd(roll));
+
         % Plotdata
         if plotburst
             figure('color','w')
+            fullscreen
             subplot(5,1,1)
-            plot(windspd)
+            plot(windspd,'-kx')
             hold on
-            plot(windspdR)
-            axis tight;title('Wind Speed');legend('True','Relative')
+            plot(windspdR,'-x','color',rgb('grey'))
+            plot(windspddsp,'-rx')
+            plot(windspdR,'-x','color',rgb('coral'))
+            axis tight;ylim([0 20]);title('Wind Speed');legend('True','Relative','T Despike','R Despiked')
             subplot(5,1,2)
-            plot(winddirT)
+            plot(winddirT,'-kx')
             hold on
-            plot(winddirR)
+            plot(winddirR,'-x','color',rgb('grey'))
             axis tight;title('Wind Direction');legend('True','Relative')
             subplot(5,1,3)
-            plot(airtemp);
+            plot(airtemp,'-kx');
+            hold on
+            plot(airtempdsp,'-rx')
             axis tight;title('Air Temperature');
             subplot(5,1,4)
-            plot(airpres);
+            plot(airpres,'-kx')
+            hold on
+            plot(airpresdsp,'-rx')
             axis tight;title('Air Pressure');
             subplot(5,1,5)
+            plot(relhumidity,'-kx')
+            hold on
+            plot(relhumiditydsp,'-rx')
             axis tight;title('Humidity');
+            print([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4)],'-dpng')
+            close gcf
         end
 
-        % Despike
-        ispike = windspd > median(windspd)+2*std(windspd,'omitnan');
-        if sum(~ispike) > 3; windspd = interp1(find(~ispike),windspd(~ispike),1:length(windspd)); end
-        ispike = winddirT > median(winddirT)+2*std(winddirT,'omitnan');
-        if sum(~ispike) > 3; winddirT = interp1(find(~ispike),winddirT(~ispike),1:length(winddirT));end
-        ispike = windspdR > median(windspdR)+2*std(windspdR,'omitnan');
-        if sum(~ispike) > 3; windspdR = interp1(find(~ispike),windspdR(~ispike),1:length(windspdR));end
-        ispike = winddirR > median(winddirR)+2*std(winddirR,'omitnan');
-        if sum(~ispike) > 3; winddirR = interp1(find(~ispike),winddirR(~ispike),1:length(winddirR));end
-        ispike = airtemp > median(airtemp)+2*std(airtemp,'omitnan');
-        if sum(~ispike) > 3; airtemp = interp1(find(~ispike),airtemp(~ispike),1:length(airtemp));end
-        ispike = airpres > median(airpres)+2*std(airpres,'omitnan');
-        if sum(~ispike) > 3; airpres = interp1(find(~ispike),airpres(~ispike),1:length(airpres));end
-        ispike = relhumidity > median(relhumidity)+2*std(relhumidity,'omitnan');
-        if sum(~ispike) > 3; relhumidity = interp1(find(~ispike),relhumidity(~ispike),1:length(relhumidity));end
-
         % Mean + Std Dev values
-        windspdstddev = nanstd(windspd); %#ok<*NANSTD> % std dev of wind spd (m/s) 
-        windspd = nanmean(windspd); %#ok<*NANMEAN> % mean wind speed (m/s)
-            % If wind is NaN, use relative wind speed if not NaN
-            if isnan(windspd) && ~isnan(nanmean(windspdR))
-                windspdstddev = nanstd(windspdR);
-                windspd = nanmean(windspdR);
-                relwind(sindex) = true;
-            end
-        winddirTstddev = nanstd(winddirT);% std dev of wind direction (deg)
-        winddirT = meandir(winddirT);% mean wind direction (deg true)
-        winddirRstddev = nanstd(winddirR);% std dev of wind direction (deg)
-        winddirR = meandir(winddirR);% mean wind direction (deg relative)
-        airtempstddev = nanstd(airtemp);
-        airtemp = nanmean(airtemp);
-        airpresstddev = nanstd(airpres);
-        airpres = nanmean(airpres);
-        relhumiditystddev = nanstd(relhumidity);
-        relhumidity = nanmean(relhumidity);
+        windspdstddev = std(windspddsp,[],'omitnan'); %#ok<*NANSTD> % std dev of wind spd (m/s) 
+        windspdskew = skewness(windspddsp,[],'omitnan');
+        windspdkurt = kurtosis(windspddsp,[],'omitnan');
+        windspd = nanmean(windspddsp); %#ok<*NANMEAN> % mean wind speed (m/s)
+        % If wind is NaN, use relative wind speed if not NaN
+        if isnan(windspd) && ~isnan(nanmean(windspdRdsp))
+            windspdstddev = nanstd(windspdRdsp);
+            windspdskew = skewness(windspdRdsp,[],'omitnan');
+            windspdkurt = kurtosis(windspdRdsp,[],'omitnan');
+            windspd = nanmean(windspdRdsp);
+            relwind(sindex) = true;
+        end
+        winddirTstddev = nanstd(winddirTdsp);% std dev of wind direction (deg)
+        winddirT = meandir(winddirTdsp);% mean wind direction (deg true)
+        winddirRstddev = nanstd(winddirRdsp);% std dev of wind direction (deg)
+        winddirR = meandir(winddirRdsp);% mean wind direction (deg relative)
+        airtempstddev = nanstd(airtempdsp);
+        airtemp = nanmean(airtempdsp);
+        airpresstddev = nanstd(airpresdsp);
+        airpres = nanmean(airpresdsp);
+        relhumiditystddev = nanstd(relhumiditydsp);
+        relhumidity = nanmean(relhumiditydsp);
+        tiltstd = std(tilt,[],'omitnan');
+        tilt = mean(tilt,'omitnan');
 
         % Bad if wind spd std dev > mean wind speed
         if windspdstddev/windspd < 1
@@ -152,6 +173,8 @@ for iburst = 1:length(bfiles)
         % Save in SWIFT structure
         SWIFT(sindex).windspd = windspd;
         SWIFT(sindex).windspdstddev = windspdstddev; 
+        SWIFT(sindex).windspdskew = windspdskew;
+        SWIFT(sindex).windspdkurt = windspdkurt;
         SWIFT(sindex).winddirT = winddirT;
         SWIFT(sindex).winddirTstddev =  winddirTstddev;
         SWIFT(sindex).winddirR = winddirR; 
@@ -162,6 +185,10 @@ for iburst = 1:length(bfiles)
         SWIFT(sindex).airpresstddev = airpresstddev; 
         SWIFT(sindex).relhumidity = relhumidity;
         SWIFT(sindex).relhumiditystddev = relhumiditystddev;
+
+        % Save tilt
+        SWIFT(sindex).tilt = tilt;
+        SWIFT(sindex).tiltstd = tiltstd;
 
         SWIFTreplaced(sindex) = true;
         end
@@ -175,6 +202,8 @@ if any(~SWIFTreplaced)
 
     [SWIFT(~SWIFTreplaced).windspd] = deal(NaN);
     [SWIFT(~SWIFTreplaced).windspdstddev] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).windspdskew] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).windspdkurt] = deal(NaN);
     [SWIFT(~SWIFTreplaced).winddirT] = deal(NaN);
     [SWIFT(~SWIFTreplaced).winddirTstddev] =  deal(NaN);
     [SWIFT(~SWIFTreplaced).winddirR] = deal(NaN);
@@ -185,6 +214,9 @@ if any(~SWIFTreplaced)
     [SWIFT(~SWIFTreplaced).airpresstddev] = deal(NaN);
     [SWIFT(~SWIFTreplaced).relhumidity] = deal(NaN);
     [SWIFT(~SWIFTreplaced).relhumiditystddev] = deal(NaN);
+
+    [SWIFT(~SWIFTreplaced).tilt] = deal(NaN);
+    [SWIFT(~SWIFTreplaced).tiltstd] = deal(NaN);
 
 end
 

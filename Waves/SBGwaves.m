@@ -44,10 +44,24 @@ RC = 3.5;   % RC fitler... cuttoff freq is 1/(2*pi*RC), so nominal value is RC =
 fmin = 0.05;  % lower frequency limit (usually 0.05 Hz)
 fmax = 1;   % upper frequency limit (usually 1 Hz)
 
-%% begin processing, if data sufficient
 pts = length(u);       % record length in data points
+w = round(fs * wsecs);  % window length in data points
+if rem(w,2)~=0, w = w-1; else end  % make w an even number
+nwin = floor( 4*(pts/w - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
+dof = 2*nwin*merge; % degrees of freedom
 
-if pts >= wsecs*fs && fs>1  % minimum length and sampling for processing
+% freq range and bandwidth
+n = (w/2) / merge;                         % number of f bands
+Nyquist = .5 * fs;                % highest spectral frequency 
+bandwidth = Nyquist/n ;                    % freq (Hz) bandwitdh
+
+% find middle of each freq band, ONLY WORKS WHEN MERGING ODD NUMBER OF BANDS!
+f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ; 
+
+
+%% begin processing, if data sufficient
+
+if pts >= w && fs > 1  % minimum length and sampling for processing
 
     
 %% high-pass filter the GPS velocities
@@ -70,10 +84,7 @@ v = vfiltered;
 heave = heavefiltered;
 
 %% break into windows (use 75 percent overlap)
-w = round(fs * wsecs);  % window length in data points
-if rem(w,2)~=0, w = w-1; else end  % make w an even number
-nwin = floor( 4*(pts/w - 1)+1 );   % number of windows, the 4 comes from a 75% overlap
-dof = 2*nwin*merge; % degrees of freedom
+
 % loop to create a matrix of time series, where COLUMN = WINDOW 
 uwindow = zeros(w,nwin);
 vwindow = zeros(w,nwin);
@@ -151,12 +162,6 @@ for mi = merge:merge:(w/2)
   	UZwindowmerged(mi/merge,:) = mean( UZwindow((mi-merge+1):mi , : ) );
 	VZwindowmerged(mi/merge,:) = mean( VZwindow((mi-merge+1):mi , : ) );
 end
-% freq range and bandwidth
-n = (w/2) / merge;                         % number of f bands
-Nyquist = .5 * fs;                % highest spectral frequency 
-bandwidth = Nyquist/n ;                    % freq (Hz) bandwitdh
-% find middle of each freq band, ONLY WORKS WHEN MERGING ODD NUMBER OF BANDS!
-f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ; 
 
 
 %% ensemble average windows together
@@ -283,22 +288,23 @@ f( f > fmax ) = [];
 % f = f(1:42);
 
 else % if not enough points or sufficent sampling rate or data, give 9999
+
+    f( f > fmax ) = [];
+    nf = length(f);
   
     disp('Timeseries too short. Returning 9999.')
      Hs = 9999;
      Tp = 9999; 
      Dp = 9999; 
      % Mike S: Fix E,f, etc to 42 frequency bands - assumes fs = 5 Hz!!
-     E = 9999*ones(1,42); 
-     f = 9999*ones(1,42);
-     a1 = 9999*ones(1,42);
-     b1 = 9999*ones(1,42);
-     a2 = 9999*ones(1,42);
-     b2 = 9999*ones(1,42);
-     check = 9999*ones(1,42);
+     E = 9999*ones(size(1,nf)); 
+     a1 = 9999*ones(size(1,nf));
+     b1 = 9999*ones(size(1,nf));
+     a2 = 9999*ones(size(1,nf));
+     b2 = 9999*ones(size(1,nf));
+     check = 9999*ones(size(1,nf));
 
 end
-
 
 % quality control
 if Tp>20 

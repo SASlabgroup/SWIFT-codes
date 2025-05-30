@@ -258,6 +258,7 @@ for iburst = 1:length(bfiles)
             SWIFT(sindex).peakwaveperiod = NaN;
             SWIFT(sindex).peakwaveperiod = NaN;
             SWIFT(sindex).peakwavedirT = NaN;
+            SWIFTreplaced(sindex) = false;
             badwaves(sindex) = true;
         end
 

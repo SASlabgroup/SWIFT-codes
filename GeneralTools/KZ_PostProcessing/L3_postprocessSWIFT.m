@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = L3_postprocessSWIFT(missiondir,plotflag,burstinterval)
+function [SWIFT,sinfo] = L3_postprocessSWIFT(missiondir,plotflag)
 
 % Master post-processing function, that calls sub-functions to reprocess
 % each different type of raw SWIFT data and create an L3 product.
@@ -64,55 +64,6 @@ else
     load([L2file.folder slash L2file.name],'SWIFT','sinfo');
 end
 
-%% Despike GPS Positions and recompute drift speed
-
-if length(SWIFT) > 3
-
-    time = [SWIFT.time];
-    lat = [SWIFT.lat];
-    lon = [SWIFT.lon];
-    
-    % De-spike
-    lat = filloutliers(lat,'linear');
-    lon = filloutliers(lon,'linear');
-
-    % Recompute drift speeds
-    dt = diff(time);
-    dlondt = diff(lon)./dt;
-    dxdt = deg2km(dlondt,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( 24*3600 ); % m/s
-    dlatdt = diff(lat)./dt; % deg per day
-    dydt = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
-    dxdt(isinf(dxdt)) = NaN;
-    dydt(isinf(dydt)) = NaN;
-    speed = sqrt(dxdt.^2 + dydt.^2); % m/s
-    direction = -180 ./ 3.14 .* atan2(dydt,dxdt); % cartesian direction [deg]
-    direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
-    direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90 -> 0
-
-    % Repopulate SWIFT structure w/new drift speeds + positions
-    for si = 1:length(SWIFT)
-        % Do not include drift speeds associated with large time gaps
-        SWIFT(si).lon = lon(si);
-        SWIFT(si).lat = lat(si);
-        if si == 1 || dt(si-1) > 2*burstinterval/(60*24)
-            SWIFT(si).driftspd = NaN;
-            SWIFT(si).driftdirT = NaN;
-        else
-            SWIFT(si).driftspd = speed(si-1);
-            SWIFT(si).driftdirT = direction(si-1);
-        end
-    end
-    
-else
-
-    for si = 1:length(SWIFT)
-        SWIFT(si).driftspd = NaN;
-        SWIFT(si).driftdirT = NaN;
-    end
-
-end
-
-
 %% Reprocess IMU
 
 if rpIMU
@@ -134,10 +85,10 @@ if rpSBG
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SBG_*.dat']))
         disp('Reprocessing SBG data...')
         saveraw = false;
-        useGPS = true;
+        useGPS = false;
         interpf = false;
         tstart = 90;
-        plotburst = true;
+        plotburst = false;
         [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,interpf,tstart);
     else
         disp('No SBG data...')
@@ -163,7 +114,8 @@ if rpPB2
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_PB2_*.dat']))
         disp('Reprocessing Airmar Anemometer (PB2) data...')
         readraw = false;
-        [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw);
+        plotburst = false;
+        [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw,plotburst);
     else
         disp('No PB2 data...')
     end
@@ -198,7 +150,7 @@ if rpSIG
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
         disp('Reprocessing Signature1000 data...')
         readraw = false;
-        plotburst = true; 
+        plotburst = false; 
         [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst);
     else
         disp('No SIG data...')
@@ -238,9 +190,11 @@ if rpAQH
     end
 end
 
-%% Plot
 
+
+%% Plot
 L3file = dir([missiondir slash '*L3.mat']);
+load([L3file.folder slash L3file.name],'SWIFT','sinfo')
 
 if plotflag
     if strcmp(sinfo.type,'V3')

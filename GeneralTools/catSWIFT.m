@@ -12,28 +12,87 @@ if isfield(SWIFT,'battery')
 swift.battery = [SWIFT.battery];
 end
 
-% Air & sea temperature & pressure & salinity
+% Wind Speed, Air & sea temperature & pressure & salinity
+ if isfield(SWIFT,'windspd')
+    swift.windu = [SWIFT.windspd];
+ else
+    swift.windu = NaN(1,nt);
+ end
+  if isfield(SWIFT,'windspdstddev')
+    swift.windustd = [SWIFT.windspdstddev];
+ else
+    swift.windustd = NaN(1,nt);
+  end
+    if isfield(SWIFT,'windspdskew')
+    swift.winduskew = [SWIFT.windspdskew];
+ else
+    swift.winduskew = NaN(1,nt);
+    end
+      if isfield(SWIFT,'windspdkurt')
+    swift.windukurt = [SWIFT.windspdkurt];
+ else
+    swift.windukurt = NaN(1,nt);
+      end
+
+if isfield(SWIFT,'tilt')
+    swift.tilt = [SWIFT.tilt];
+ else
+    swift.tilt = NaN(1,nt);
+end
+if isfield(SWIFT,'tiltstd')
+    swift.tiltstd = [SWIFT.tiltstd];
+ else
+    swift.tiltstd = NaN(1,nt);
+end
+
+
 if isfield(SWIFT,'watertemp')
+    swift.tsea = NaN(1,nt);
     for it = 1:nt
         swift.tsea(it) = max(SWIFT(it).watertemp);
     end
 else
     swift.tsea = NaN(1,nt);
 end
+if isfield(SWIFT,'watertempstddev')
+    swift.tseastd = NaN(1,nt);
+    for it = 1:nt
+        swift.tseastd(it) = max(SWIFT(it).watertempstddev);
+    end
+else
+    swift.tseastd = NaN(1,nt);
+end
 if isfield(SWIFT,'airtemp')
 swift.tair = [SWIFT.airtemp];
 else
     swift.tair = NaN(1,nt);
+end
+if isfield(SWIFT,'airtempstddev')
+swift.tairstd = [SWIFT.airtempstddev];
+else
+    swift.tairstd = NaN(1,nt);
 end
 if isfield(SWIFT,'salinity')
     swift.sal = [SWIFT.salinity];
 else
     swift.sal = NaN(1,nt);
 end
+if isfield(SWIFT,'salinitystddev')
+    swift.salstd = [SWIFT.salinitystddev];
+else
+    swift.salstd = NaN(1,nt);
+end
 if isfield(SWIFT,'airpres')
     swift.press = [SWIFT.airpres];
 else
     swift.press = NaN(1,nt);
+
+end
+if isfield(SWIFT,'airpresstddev')
+    swift.pressstd = [SWIFT.airpresstddev];
+else
+    swift.pressstd = NaN(1,nt);
+
 end
 
 % Rain
@@ -48,6 +107,11 @@ if isfield(SWIFT,'relhumidity')
     swift.humid = [SWIFT.relhumidity];
 else
     swift.humid = NaN(1,nt);
+end
+if isfield(SWIFT,'relhumiditystddev')
+    swift.humidstd = [SWIFT.relhumiditystddev];
+else
+     swift.humidstd = NaN(1,nt);
 end
 
 % Radiometer
@@ -265,14 +329,9 @@ wavevar = sum(wavepower,1,'omitnan');
 waveweight = sum(wavepower.*repmat(wavefreq,1,size(wavepower,2)),1,'omitnan');
 swift.wavepeakT = 1./(waveweight./wavevar);
 
- % Wind
+ % Wind Spectra
  if isfield(SWIFT,'windustar')
      swift.windustar = [SWIFT.windustar];
- end
- if isfield(SWIFT,'windspd')
-    swift.windu = [SWIFT.windspd];
- else
-    swift.windu = NaN(size(swift.driftspd));
  end
   if isfield(SWIFT,'windspdR')
     swift.winduR = [SWIFT.windspdR];
