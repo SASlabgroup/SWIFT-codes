@@ -5,7 +5,7 @@
 
 clear all, close all
 
-type='txt'
+type='kml'
 
 flist = dir('./*.mat');
 
@@ -25,6 +25,10 @@ time = datevec([SWIFT.time]);
 %METWaveoutput = [time [SWIFT.lat]' [SWIFT.lon]' [SWIFT.driftspd]' 	[SWIFT.driftdirT]'	[SWIFT.airpres]'	[SWIFT.airpresstddev]' 	[SWIFT.airtemp]' 	[SWIFT.airtempstddev]'	[SWIFT.windspd]'	[SWIFT.windspdstddev]'	[SWIFT.winddirT]'	[SWIFT.winddirTstddev]'	[SWIFT.sigwaveheight]'	[SWIFT.peakwaveperiod]'	[SWIFT.peakwavedirT]' ];
 METWaveoutput = [time [SWIFT.lat]' [SWIFT.lon]' [SWIFT.driftspd]' 	[SWIFT.driftdirT]'	[SWIFT.airtemp]' 	[SWIFT.windspd]'	[SWIFT.sigwaveheight]'	[SWIFT.peakwaveperiod]'	[SWIFT.peakwavedirT]' ];
 %METWaveoutput = single(METWaveoutput);
+
+% solar option (Lufft WS700 sensor)
+%output = [time [SWIFT.solarrad]' ];
+%save(['SWIFTsolar.txt'],'output','-ascii', '-tabs')
 
 % spectra
 for si = 1:length(SWIFT), 
@@ -48,7 +52,7 @@ save([filename '_b2_energy.txt'],'b2output','-ascii', '-tabs')
 %% kml export
 elseif type=='kml',
   
-    gescatter([ filename '.kml' ],[SWIFT.lon],[SWIFT.lat],[SWIFT.driftspd],'time',[SWIFT.time])
+    gescatter([ filename '.kml' ],[SWIFT.lon],[SWIFT.lat],[SWIFT.sigwaveheight],'time',[SWIFT.time])
     
 end
 

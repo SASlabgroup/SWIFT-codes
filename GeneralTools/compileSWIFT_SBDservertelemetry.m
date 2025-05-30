@@ -18,7 +18,8 @@
 %                   and give messages for burst screening
 %             9/2019   force timestamp from filename always, rather than Airmar
 %             7/2022    allow microSWIFT timestamps (not from filename)
-clear all,
+%             4/2025    merge microSWIFT light sensor sbds with waves sbds
+clear all
 
 plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
 fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
@@ -29,7 +30,7 @@ disp('Check QC settings... currently using:')
 
 minwaveheight = 0 % minimum wave height in data screening
 
-minsalinity = 0 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = -10 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
 maxdriftspd = 5  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
 
@@ -45,27 +46,38 @@ wd = wd((wdi+1):length(wd));
 flist = dir('*.sbd');
 %flist = dir('*.dat');
 
+lightsensorcounter = 0; % count light sensor reports
 
-for ai = 1:length(flist),
+for ai = 1:length(flist)
     
     badburst(ai) = false;  % intialize bad burst flag
+    lightsensor(ai) = false; % intialize light data
     
     [ oneSWIFT voltage ]= readSWIFT_SBD( flist(ai).name , 0);
-    
+
     if voltage==9999 % error flag from SBD message
-        badburst(ai) = true; 
+        badburst(ai) = true;
     end
-    
-    if isempty(voltage),
+
+    if isempty(voltage)
         battery(ai) = NaN;
     else
         battery(ai) = voltage;
     end
-    
-    if isempty(oneSWIFT.lat) | isempty(oneSWIFT.lon),
+    %oneSWIFT.battery = battery;
+
+    if isfield(oneSWIFT,'lightchannels')
+        SWIFTlightdata(lightsensorcounter + [1:6]) = oneSWIFT;  clear oneSWIFT
+        lightsensor(ai) = true;
+        lightsensorcounter = lightsensorcounter + 6;
+        oneSWIFT.lat = []; oneSWIFT.lon = []; oneSWIFT.time = NaN; % force removal of this index from primary structure
+    end
+
+    if isempty(oneSWIFT.lat) | isempty(oneSWIFT.lon)
         oneSWIFT.lat = NaN;
         oneSWIFT.lon = NaN;
     end
+
     
     %% time stamp
     
@@ -139,7 +151,7 @@ for ai = 1:length(flist),
     lengthofnames(ai) = length(onenames);
     
     % if first sbd, set the structure fields as the standard
-    if ai == 1 && voltage~=9999 
+    if ai == 1 && voltage~=9999 && ~lightsensor(ai)
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(SWIFT));
 
@@ -148,11 +160,11 @@ for ai = 1:length(flist),
         allnames = [];
 
         % if payloads match, increment
-    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames)
+    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames) && ~lightsensor(ai)
         SWIFT(ai) = oneSWIFT;
         
         % if additional payloads, favor that new structure (removing other)
-    elseif ai > 1 && length(onenames) > length(allnames)
+    elseif ai > 1 && length(onenames) > length(allnames) && ~lightsensor(ai)
         clear SWIFT
         badburst(ai-1) = true;
         SWIFT(ai) = oneSWIFT;
@@ -162,9 +174,13 @@ for ai = 1:length(flist),
         disp(allnames)
         
         % if fewer paylaods, skip that burst
-    elseif ai > 1 && length(onenames) < length(allnames) || voltage==9999
+    elseif ai > 1 && length(onenames) < length(allnames) && ~lightsensor(ai)
         disp('=================================')
         disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
+        SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
+        badburst(ai) = true;
+
+    else
         SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
         badburst(ai) = true;
     end
@@ -333,6 +349,15 @@ GPS = find(battery==1);
 if ~isempty(IMU), SWIFT_IMU = SWIFT(IMU); end
 if ~isempty(GPS), SWIFT_GPS = SWIFT(GPS); end
 
+clear SWIFT_IMU % IMU deprecated, so remove it
+
+%% if all salinity is zero, the CT is probably not present, so assign NaN
+
+if isfield(SWIFT,'salinity') && all([SWIFT.salinity]==0)
+    for si=1:length(SWIFT)
+        SWIFT(si).salinity = NaN;
+    end
+end
 
 %% save
 %save([ flist(ai).name(6:13) '.mat'], 'SWIFT')
@@ -343,7 +368,6 @@ elseif length([SWIFT.time]) > 1
     save(['SWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT')
 else
 end
-
 
 
 %% ploting

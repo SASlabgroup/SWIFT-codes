@@ -41,24 +41,24 @@ while (~feof(fid))
     
     Sync = fread(fid,1,'uint8','ieee-le'); % sync byte A5 (hex = 165)
     
-    if strcmp('A5',dec2hex(Sync)), % if found a sync byte, try reading the rest of the header
+    if strcmp('A5',dec2hex(Sync)) % if found a sync byte, try reading the rest of the header
         
         HeaderSize = fread(fid,1,'uint8','ieee-le'); % header size, usually 10 bytes
         
-        if HeaderSize == 10, % if header size correct, try reading data ID and family
+        if HeaderSize == 10 % if header size correct, try reading data ID and family
             
             ID = fread(fid,1,'uint8','ieee-le'); % ID byte ('15' for burst, '16' for avg, '1C' for echo)
             Family = fread(fid,1,'uint8','ieee-le');    % instrument family, should be '10' (hex = 16) for AD2CP
             
             %% read burst data
-            if  strcmp('15',dec2hex(ID)) &&  strcmp('10',dec2hex(Family)),
+            if  strcmp('15',dec2hex(ID)) &&  strcmp('10',dec2hex(Family))
                 
                 % check data to be read is not longer than file
                 DataSize = fread(fid,1,'uint16','ieee-le');    % data size (in bytes)
                 presentposition = ftell(fid);
                 fseek(fid,0,'eof');
                 filelength = ftell(fid);
-                if (presentposition + DataSize) < filelength,
+                if (presentposition + DataSize) < filelength
                     
                     fseek(fid,presentposition,'bof');
                     DataChecksum = fread(fid,1,'uint16','ieee-le');    % data checksum
@@ -121,7 +121,7 @@ while (~feof(fid))
                     burst.Accelerometer(ensemblecount_burst,1) = fread(fid,1,'int16','ieee-le');
                     burst.Accelerometer(ensemblecount_burst,2) = fread(fid,1,'int16','ieee-le');
                     burst.Accelerometer(ensemblecount_burst,3) = fread(fid,1,'int16','ieee-le');
-                    AmbiquityVelocity(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
+                    AmbiuityVelocity(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                     DataSetDescription(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                     TransmitEnergy(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                     VelocityScaling_burst(ensemblecount_burst) = fread(fid,1,'int8','ieee-le');
@@ -133,32 +133,32 @@ while (~feof(fid))
                     Status(ensemblecount_burst) = fread(fid,1,'uint32','ieee-le');
                     EnsembleCounter(ensemblecount_burst) = fread(fid,1,'uint32','ieee-le');
                     
-                    if Configuration_velocity==1,
-                        for ni=1:NB,
+                    if Configuration_velocity==1
+                        for ni=1:NB
                             burst.VelocityData(ensemblecount_burst,1:NC,ni) = fread(fid,NC,'int16','ieee-le') .* 10^VelocityScaling_burst(ensemblecount_burst);
                         end
                     else
                     end
-                    if Configuration_amplitude==1,
-                        for ni=1:NB,
+                    if Configuration_amplitude==1
+                        for ni=1:NB
                             burst.AmplitudeData(ensemblecount_burst,1:NC,ni) = fread(fid,NC,'uint8','ieee-le');
                         end
                     else
                     end
-                    if Configuration_correlation==1,
-                        for ni=1:NB,
+                    if Configuration_correlation==1
+                        for ni=1:NB
                             
                             burst.CorrelationData(ensemblecount_burst,1:NC,ni) = fread(fid,NC,'uint8','ieee-le');
                         end
                     else
                     end
-                    if Configuration_altimeter==1,
+                    if Configuration_altimeter==1
                         burst.AltimeterDistance(ensemblecount_burst) = fread(fid,1,'float32','ieee-le');
                         burst.AltimeterQuality(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                         burst.AltimeterStatus(ensemblecount_burst) = fread(fid,1,'ubit16','ieee-le');
                     else
                     end
-                    if Configuration_AST==1,
+                    if Configuration_AST==1
                         burst.ASTDistance(ensemblecount_burst) = fread(fid,1,'float32','ieee-le');
                         burst.ASTQuality(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                         burst.ASToffsetStatus(ensemblecount_burst) = fread(fid,1,'int16','ieee-le');
@@ -166,17 +166,17 @@ while (~feof(fid))
                         burst.AltimeterSpare(ensemblecount_burst) = fread(fid,1,'ubit64','ieee-le');
                     else
                     end
-                    if Configuration_altimeterraw==1,
+                    if Configuration_altimeterraw==1
                         burst.AltimeterRawNumberSamples(ensemblecount_burst) = fread(fid,1,'uint32','ieee-le');
                         burst.AltimeterRawSampleDistance(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                         burst.AltimeterRawSamples(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le');
                     else
                     end
-                    if Configuration_echosounder==1,
+                    if Configuration_echosounder==1
                         burst.EchoSounder(ensemblecount_burst,1:NC) = fread(fid,NC,'uint16','ieee-le');
                     else
                     end
-                    if Configuration_AHRS==1,
+                    if Configuration_AHRS==1
                         burst.AHRS_M11(ensemblecount_burst) = fread(fid,1,'float32','ieee-le');
                         burst.AHRS_M12(ensemblecount_burst) = fread(fid,1,'float32','ieee-le');
                         burst.AHRS_M13(ensemblecount_burst) = fread(fid,1,'float32','ieee-le');
@@ -192,11 +192,11 @@ while (~feof(fid))
                         burst.AHRS_GyroZ(ensemblecount_burst) = fread(fid,1,'float32','ieee-le');
                     else
                     end
-                    if Configuration_PG==1,
+                    if Configuration_PG==1
                         burst.PercentGood(ensemblecount_burst,NC) = fread(fid,NC,'uint8','ieee-le');
                     else
                     end
-                    if Configuration_SD==1,
+                    if Configuration_SD==1
                         burst.SDpitch(ensemblecount_burst) = fread(fid,1,'int16','ieee-le');
                         burst.SDroll(ensemblecount_burst) = fread(fid,1,'int16','ieee-le');
                         burst.SDheading(ensemblecount_burst) = fread(fid,1,'int16','ieee-le');
@@ -207,7 +207,7 @@ while (~feof(fid))
                     
                     %% make sure that the DataSize from the header was the data read
                     endposition = ftell(fid);
-                    if endposition > startposition + DataSize,
+                    if endposition > startposition + DataSize
                         disp('read too far, saving partial file')
                         save([filename(1:end-4) '_partial.mat'],'burst','avg','battery','echo')
                         fclose (fid);
@@ -227,14 +227,14 @@ while (~feof(fid))
                 
                 
                 %% read avg data
-            elseif  strcmp('16',dec2hex(ID)) &  strcmp('10',dec2hex(Family)),
+            elseif  strcmp('16',dec2hex(ID)) &  strcmp('10',dec2hex(Family))
                 
                                 % check data to be read is not longer than file
                 DataSize = fread(fid,1,'uint16','ieee-le');    % data size (in bytes)
                 presentposition = ftell(fid);
                 fseek(fid,0,'eof');
                 filelength = ftell(fid);
-                if (presentposition + DataSize) < filelength,
+                if (presentposition + DataSize) < filelength
                     
                     fseek(fid,presentposition,'bof');
                     DataChecksum = fread(fid,1,'uint16','ieee-le');    % data checksum
@@ -309,31 +309,31 @@ while (~feof(fid))
                     Status(ensemblecount_avg) = fread(fid,1,'uint32','ieee-le');
                     EnsembleCounter(ensemblecount_avg) = fread(fid,1,'uint32','ieee-le');
                     
-                    if Configuration_velocity==1,
-                        for ni=1:NB,
+                    if Configuration_velocity==1
+                        for ni=1:NB
                             avg.VelocityData(ensemblecount_avg,1:NC,ni) = fread(fid,NC,'int16','ieee-le') .* 10^VelocityScaling_avg(ensemblecount_avg);
                         end
                     else
                     end
-                    if Configuration_amplitude==1,
-                        for ni=1:NB,
+                    if Configuration_amplitude==1
+                        for ni=1:NB
                             avg.AmplitudeData(ensemblecount_avg,1:NC,ni) = fread(fid,NC,'uint8','ieee-le');
                         end
                     else
                     end
-                    if Configuration_correlation==1,
-                        for ni=1:NB,                      
+                    if Configuration_correlation==1
+                        for ni=1:NB                      
                             avg.CorrelationData(ensemblecount_avg,1:NC,ni) = fread(fid,NC,'uint8','ieee-le');
                         end
                     else
                     end
-                    if Configuration_altimeter==1,
+                    if Configuration_altimeter==1
                         avg.AltimeterDistance(ensemblecount_avg) = fread(fid,1,'float32','ieee-le');
                         avg.AltimeterQuality(ensemblecount_avg) = fread(fid,1,'uint16','ieee-le');
                         avg.AltimeterStatus(ensemblecount_avg) = fread(fid,1,'ubit16','ieee-le');
                     else
                     end
-                    if Configuration_AST==1,
+                    if Configuration_AST==1
                         avg.ASTDistance(ensemblecount_avg) = fread(fid,1,'float32','ieee-le');
                         avg.ASTQuality(ensemblecount_avg) = fread(fid,1,'uint16','ieee-le');
                         avg.ASToffsetStatus(ensemblecount_avg) = fread(fid,1,'int16','ieee-le');
@@ -341,17 +341,17 @@ while (~feof(fid))
                         avg.AltimeterSpare(ensemblecount_avg) = fread(fid,1,'ubit64','ieee-le');
                     else
                     end
-                    if Configuration_altimeterraw==1,
+                    if Configuration_altimeterraw==1
                         avg.AltimeterRawNumberSamples(ensemblecount_avg) = fread(fid,1,'uint32','ieee-le');
                         avg.AltimeterRawSampleDistance(ensemblecount_avg) = fread(fid,1,'uint16','ieee-le');
                         avg.AltimeterRawSamples(ensemblecount_avg) = fread(fid,1,'uint16','ieee-le');
                     else
                     end
-                    if Configuration_echosounder==1,
+                    if Configuration_echosounder==1
                         avg.EchoSounder(ensemblecount_avg) = fread(fid,NC,'uint16','ieee-le');
                     else
                     end
-                    if Configuration_AHRS==1,
+                    if Configuration_AHRS==1
                         avg.AHRS_M11(ensemblecount_avg) = fread(fid,1,'float32','ieee-le');
                         avg.AHRS_M12(ensemblecount_avg) = fread(fid,1,'float32','ieee-le');
                         avg.AHRS_M13(ensemblecount_avg) = fread(fid,1,'float32','ieee-le');
@@ -367,11 +367,11 @@ while (~feof(fid))
                         avg.AHRS_GyroZ(ensemblecount_avg) = fread(fid,1,'float32','ieee-le');
                     else
                     end
-                    if Configuration_PG==1,
+                    if Configuration_PG==1
                         avg.PercentGood(ensemblecount_avg) = fread(fid,NC,'uint8','ieee-le');
                     else
                     end
-                    if Configuration_SD==1,
+                    if Configuration_SD==1
                         avg.SDpitch(ensemblecount_avg) = fread(fid,1,'int16','ieee-le');
                         avg.SDroll(ensemblecount_avg) = fread(fid,1,'int16','ieee-le');
                         avg.SDheading(ensemblecount_avg) = fread(fid,1,'int16','ieee-le');
@@ -382,7 +382,7 @@ while (~feof(fid))
                     
                     %% make sure that the DataSize from the header was the data read
                     endposition = ftell(fid);
-                    if endposition > startposition + DataSize,
+                    if endposition > startposition + DataSize
                         disp('read too far')
                         fseek(fid, -1, startposition + DataSize)
                     else
@@ -398,14 +398,14 @@ while (~feof(fid))
                 end
                 
             %% read echo data
-            elseif  strcmp('1C',dec2hex(ID)) &&  strcmp('10',dec2hex(Family)),
+            elseif  strcmp('1C',dec2hex(ID)) &&  strcmp('10',dec2hex(Family))
                 
                 % check data to be read is not longer than file
                 DataSize = fread(fid,1,'uint16','ieee-le');    % data size (in bytes)
                 presentposition = ftell(fid);
                 fseek(fid,0,'eof');
                 filelength = ftell(fid);
-                if (presentposition + DataSize) < filelength,
+                if (presentposition + DataSize) < filelength
                     
                     fseek(fid,presentposition,'bof');
                     DataChecksum = fread(fid,1,'uint16','ieee-le');    % data checksum
@@ -480,31 +480,31 @@ while (~feof(fid))
                     Status(ensemblecount_echo) = fread(fid,1,'uint32','ieee-le');
                     EnsembleCounter(ensemblecount_echo) = fread(fid,1,'uint32','ieee-le');
                     
-                    if Configuration_velocity==1,
-                        for ni=1:NB,
+                    if Configuration_velocity==1
+                        for ni=1:NB
                             echo.VelocityData(ensemblecount_echo,1:NC,ni) = fread(fid,NC,'int16','ieee-le') .* 10^VelocityScaling_echo(ensemblecount_echo);
                         end
                     else
                     end
-                    if Configuration_amplitude==1,
-                        for ni=1:NB,
+                    if Configuration_amplitude==1
+                        for ni=1:NB
                             echo.AmplitudeData(ensemblecount_echo,1:NC,ni) = fread(fid,NC,'uint8','ieee-le');
                         end
                     else
                     end
-                    if Configuration_correlation==1,
-                        for ni=1:NB,             
+                    if Configuration_correlation==1
+                        for ni=1:NB             
                             echo.CorrelationData(ensemblecount_echo,1:NC,ni) = fread(fid,NC,'uint8','ieee-le');
                         end
                     else
                     end
-                    if Configuration_altimeter==1,
+                    if Configuration_altimeter==1
                         echo.AltimeterDistance(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
                         echo.AltimeterQuality(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
                         echo.AltimeterStatus(ensemblecount_echo) = fread(fid,1,'ubit16','ieee-le');
                     else
                     end
-                    if Configuration_AST==1,
+                    if Configuration_AST==1
                         echo.ASTDistance(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
                         echo.ASTQuality(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
                         echo.ASToffsetStatus(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
@@ -512,17 +512,17 @@ while (~feof(fid))
                         echo.AltimeterSpare(ensemblecount_echo) = fread(fid,1,'ubit64','ieee-le');
                     else
                     end
-                    if Configuration_altimeterraw==1,
+                    if Configuration_altimeterraw==1
                         echo.AltimeterRawNumberSamples(ensemblecount_echo) = fread(fid,1,'uint32','ieee-le');
                         echo.AltimeterRawSampleDistance(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
                         echo.AltimeterRawSamples(ensemblecount_echo) = fread(fid,1,'uint16','ieee-le');
                     else
                     end
-                    if Configuration_echosounder==1,
+                    if Configuration_echosounder==1
                         echo.EchoSounder(ensemblecount_echo,1:NC) = fread(fid,NC,'uint16','ieee-le');
                     else
                     end
-                    if Configuration_AHRS==1,
+                    if Configuration_AHRS==1
                         echo.AHRS_M11(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
                         echo.AHRS_M12(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
                         echo.AHRS_M13(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
@@ -538,11 +538,11 @@ while (~feof(fid))
                         echo.AHRS_GyroZ(ensemblecount_echo) = fread(fid,1,'float32','ieee-le');
                     else
                     end
-                    if Configuration_PG==1,
+                    if Configuration_PG==1
                         echo.PercentGood(ensemblecount_echo,NC) = fread(fid,NC,'uint8','ieee-le');
                     else
                     end
-                    if Configuration_SD==1,
+                    if Configuration_SD==1
                         echo.SDpitch(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
                         echo.SDroll(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
                         echo.SDheading(ensemblecount_echo) = fread(fid,1,'int16','ieee-le');
@@ -553,7 +553,7 @@ while (~feof(fid))
                     
                     %% make sure that the DataSize from the header was the data read
                     endposition = ftell(fid);
-                    if endposition > startposition + DataSize,
+                    if endposition > startposition + DataSize
                         disp('read too far, saving partial file')
                         save([filename(1:end-4) '_partial.mat'],'burst','avg','battery','echo')
                         fclose (fid);

@@ -91,8 +91,8 @@ end
 %                             MESH DEFINITION
 %                           ------------------
 %                           ------------------
-Nangle = 10; % number of displayed graduation for the angle
-Nradius = 7; % number of displayed graduation for the radius
+Nangle = 5; % number of displayed graduation for the angle
+Nradius = 3; % number of displayed graduation for the radius
 
 % Definition of the mesh
 radiusMesh = linspace(min(R),max(R),Nradius);
@@ -144,10 +144,10 @@ set(gca,'dataaspectratio',[1 1 1]);axis off;
     for kk = 1:length(angleMesh)
         plot(cost(kk)*contour,sint(kk)*contour,ls,'color','black','linewidth',1,...
             'handlevisibility','off');
-        % plot graduations of angles
-        text(1.07.*contour(end).*cost(kk),1.07.*contour(end).*sint(kk),...
-            sprintf('%.3g^{o}',angleMesh(kk)),...
-            'horiz', 'center', 'vert', 'middle');
+        % % plot graduations of angles
+        % text(1.07.*contour(end).*cost(kk),1.07.*contour(end).*sint(kk),...
+        %     sprintf('%.3g^{o}',angleMesh(kk)),...
+        %     'horiz', 'center', 'vert', 'middle');
     end
     
     
@@ -160,11 +160,11 @@ end
 
 
 % radius tick label
-for kk=1:Nradius
-    text((contour(kk)).*cosd(90-mean(angleMesh)),(contour(kk)).*sind(90-mean(angleMesh)),...
-        num2str(radiusMesh(kk),2),'verticalalignment','bottom',...
-        'handlevisibility','off','parent',cax,'fontsize',14);
-end
+% for kk=1:Nradius
+%     text((contour(kk)).*cosd(90-mean(angleMesh)),(contour(kk)).*sind(90-mean(angleMesh)),...
+%         num2str(radiusMesh(kk),2),'verticalalignment','bottom',...
+%         'handlevisibility','off','parent',cax,'fontsize',14);
+% end
 
 
 

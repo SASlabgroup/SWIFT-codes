@@ -1,56 +1,80 @@
-function [PS,F,PH,err] = hannwinPSD2(data,M,fs,norm)
+function [PX,F,Ph,err,PXstd] = hannwinPSD2(datax,nwin,fs,norm)
 % hannwinPSD2 Computes spectra via windowing
 % PS is either unitless (if normalized to integrate to 1) or units of
 % variance of data (e.g. m^2/s^2 for velocity (m/s)).
 
-data = data(:)'; %force row
+datax = datax(:)'; %force row
 
-N = length(data); %Total number of data points (whole timeseries)
-nwin = 2*(floor(N/M))-1; %Number of windows (%50 overlap)
-h = sqrt(8/3)*hann(M);% Hanning window variance preservation
+% Create taper (window)
+N = length(datax); %Total number of data points (whole timeseries)
+M = 2*(floor(N/nwin))-1; % Number of windows (%50 overlap)
+h = sqrt(8/3)*hanning(nwin);% Hanning window variance preservation
 
-PS = NaN(nwin,floor(M/2));
-PH = NaN(nwin,floor(M/2));
-for i=1:nwin 
-    k1 = (i-1)*M/2 + 1;
-    k2 = (i+1)*M/2;
-    datai = data(k1:k2);
-    ts = datai;
-    ts(isnan(ts)) = nanmean(ts); % Replace NaN w/mean
-    ts = ts - nanmean(ts); % Remove mean
-    ts = detrend(ts); % Remove trend
-    %(IMPORTANT TO REMOVE MEAN BEFORE WINDOW!)
-    ts = h.*ts'; % Window using normalized hanning window
-    ph = angle(fft(ts));
-    ps = (abs(fft(ts)).^2);
-    ph = ph(1:floor(end/2));
-    ps = ps(1:floor(end/2));
-    ps(2:end) = 2*ps(2:end);
-    PS(i,:) = ps;
-    PH(i,:) = ph;
-end
-%Average
-PS = nanmean(PS,1);
-PH = nanmean(PH,1);
-
-%Frequencies Computed
-T = M/fs; 
-ff = 1/T; 
-F = (0:M-1)*ff; 
+% Frequencies
+T = nwin/fs; 
+df = 1/T; 
+F = (0:nwin-1)*df; 
 F = F(1:floor(end/2));
 
-%Take Positive Frequencies only
+PX = NaN(M,floor(nwin/2));
+Ph = NaN(M,floor(nwin/2));
+DX = NaN(M,nwin);
+for i = 1:M 
 
-%Normalize to satisfy Parsevals Theorem or produce PSD
+    % Select window
+    k1 = (i-1)*nwin/2 + 1;
+    k2 = (i+1)*nwin/2;
+    dataxi = datax(k1:k2);
+    
+    % Remove mean, trend and apply hanning window
+    inan = isnan(dataxi);
+    % if sum(inan)/length(dataxi) > 0.2
+    %     dataxi = NaN(size(dataxi));% NaN out entire window if too many NaNs
+    % end
+    dataxi(inan) = mean(dataxi,'omitnan'); % Replace NaN w/mean
+    dataxi = dataxi - mean(dataxi,'omitnan'); % Remove mean
+    dataxi = detrend(dataxi); % Remove trend
+    dataxi = h.*dataxi'; % Window using normalized hanning window
+
+    % Take fft and square
+    ph = angle(fft(dataxi));% phase
+    px = abs(fft(dataxi)).^2;% power (magnitude)
+
+    % Select for positive frequencies + double magnitude of PS
+    ph = ph(1:floor(end/2));
+    px = px(1:floor(end/2));
+    px(2:end) = 2*px(2:end);
+
+    % Save in matrix for averaging
+    PX(i,:) = px;
+    Ph(i,:) = ph;
+    DX(i,:) = dataxi;
+end
+
+% Average
+PXstd = std(PX,[],1,'omitnan');
+PX = mean(PX,'omitnan');
+Ph = mean(Ph,'omitnan');
+
+% Normalize to satisfy Parsevals Theorem or produce PSD
 if strcmp(norm,'psd')
-    PS = PS/sum(PS);
+    PXstd = PXstd./sum(PX);
+    PX = PX/sum(PX);
 elseif strcmp(norm,'par')
-    PS = PS/(ff*M^2);
+    PX = PX/(df*nwin^2);
+    PXstd = PXstd/(df*nwin^2);
+    % vard = mean(var(DX,[],2,'omitnan'),'omitnan');
+    % varPS = sum(PX,'omitnan').*df;
+    % pvardiff = 100*(varPS-vard)/vard;
+    % if abs(pvardiff) > 5
+    %     warning('Parseval''s Theorom not satisifed to within 5%')
+    % else
+    % end
 end
     
-%Confidence Intervals
-err_low = (2*nwin)/chi2inv(.05/2,2*nwin);
-err_high = (2*nwin)/chi2inv(1-.05/2,2*nwin);
+% Confidence Intervals
+err_low = (2*M)/chi2inv(.05/2,2*M);
+err_high = (2*M)/chi2inv(1-.05/2,2*M);
 err = [err_low err_high];
 
 end

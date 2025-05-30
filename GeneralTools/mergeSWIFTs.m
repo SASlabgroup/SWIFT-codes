@@ -17,7 +17,7 @@ counter = 0;
 
 for fi = 1:length(flist),
    
-    load(flist(fi).name)
+    load(flist(fi).name,'SWIFT')
     
     if makeallSWIFT
         allSWIFT( counter + [1:length(SWIFT)] ) = SWIFT;

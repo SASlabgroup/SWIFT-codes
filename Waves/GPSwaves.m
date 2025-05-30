@@ -1,4 +1,4 @@
-function [ Hs, Tp, Dp, E, f, a1, b1, a2, b2] = GPSwaves(u,v,z,fs) 
+function [Hs,Tp,Dp,E,f,a1,b1,a2,b2,check] = GPSwaves(u,v,z,fs) 
 
 % matlab function to read and process GPS data
 %   to estimate wave height, period, direction, and spectral moments
@@ -65,7 +65,7 @@ testing = false;
 %% fixed parameters (which will produce 42 frequency bands)
 wsecs = 256;   % windoz length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
-maxf = .5;       % frequency cutoff for telemetry Hz
+% maxf = .5;       % frequency cutoff for telemetry Hz
 
 %% deal with variable input data, with priority for GPS velocity
 
@@ -211,12 +211,12 @@ f = 1/(wsecs) + bandwidth/2 + bandwidth.*(0:(n-1)) ;
 % and divide by N*samplerate to get power spectral density
 % the two is b/c Matlab's fft output is the symmetric FFT, 
 % and we did not use the redundant half (so need to multiply the psd by 2)
-UU = mean( UUwindowmerged.' ) / (win/2 * fs  );
-VV = mean( VVwindowmerged.' ) / (win/2 * fs  );
-ZZ = mean( ZZwindowmerged.' ) / (win/2 * fs  );
-UV = mean( UVwindowmerged.' ) / (win/2 * fs  ); 
-UZ = mean( UZwindowmerged.' ) / (win/2 * fs  ); 
-VZ = mean( VZwindowmerged.' ) / (win/2 * fs  ); 
+UU = mean( UUwindowmerged,2,'omitnan' )' / (win/2 * fs  );
+VV = mean( VVwindowmerged,2,'omitnan' )' / (win/2 * fs  );
+ZZ = mean( ZZwindowmerged,2,'omitnan' )' / (win/2 * fs  );
+UV = mean( UVwindowmerged,2,'omitnan' )' / (win/2 * fs  ); 
+UZ = mean( UZwindowmerged,2,'omitnan' )' / (win/2 * fs  ); 
+VZ = mean( VZwindowmerged,2,'omitnan' )' / (win/2 * fs  ); 
 
 
 %% convert to displacement spectra (from velocity and heave)
@@ -307,17 +307,17 @@ Hs  = 4*sqrt( sum( E(fwaves) ) * bandwidth);
 %  energy period
 fe = sum( f(fwaves).*E(fwaves) )./sum( E(fwaves) );
 [~ , feindex] = min(abs(f-fe));
-Ta = 1./fe;
+Te = 1./fe;
 
 % peak period
 %[~ , fpindex] = max(UU+VV); % can use velocity (picks out more distint peak)
 [~ , fpindex] = max(E);
 Tp = 1./f(fpindex);
 
-if Tp > 18, % if peak not found, use centroid
-    Tp = Ta;
+%if Tp > 18, % if peak not found, use centroid
+    Tp = Te;
     fpindex = feindex;
-end
+%end
 
 %% spectral directions
 dir = - 180 ./ 3.14 * dir1;  % switch from rad to deg, and CCz to Cz (negate)
@@ -364,18 +364,18 @@ end
 
 
 %% prune high frequency results
-E( f > maxf ) = [];
-Exx( f > maxf ) = [];
-Eyy( f > maxf ) = [];
-Ezz( f > maxf ) = [];
-dir( f > maxf ) = [];
-spread( f > maxf ) = [];
-a1( f > maxf ) = [];
-b1( f > maxf ) = [];
-a2( f > maxf ) = [];
-b2( f > maxf ) = [];
-check( f > maxf ) = [];
-f( f > maxf ) = [];
+% E( f > maxf ) = [];
+% Exx( f > maxf ) = [];
+% Eyy( f > maxf ) = [];
+% Ezz( f > maxf ) = [];
+% dir( f > maxf ) = [];
+% spread( f > maxf ) = [];
+% a1( f > maxf ) = [];
+% b1( f > maxf ) = [];
+% a2( f > maxf ) = [];
+% b2( f > maxf ) = [];
+% check( f > maxf ) = [];
+% f( f > maxf ) = [];
 
 
 else % if not enough points or sufficent sampling rate or data, give 9999

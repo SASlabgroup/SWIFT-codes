@@ -13,7 +13,7 @@ function [] = plotSWIFT(SWIFT)
 % M. Smith, 09/2018 update CT plotting to utilize CTdepth when available
 % J. Thomson, 09/2018 include spectrogram in wave spectral figure  and
 %               include met height legend in temp plot
-%
+% L. Crews 05/2025 plot info from vertical and horizontal acceleration histograms
 %
 % plotSWIFT creates the following figures if applicable data is available:
 %   figure 1: Wind and wave plot
@@ -25,6 +25,15 @@ function [] = plotSWIFT(SWIFT)
 %   figure 7: Rain and humidity
 %   figure 8: Wind spectra
 %   figure 9: oxygen concentration and FDOM (fluorometer dissolved organic matter?)
+%   figure 10: radiometers
+%   figure 11: drift spd and direction
+%   figure 12: acceleration histogram info (slow, turned off by default - set plot_wavehistogram = true)
+
+if ispc
+    slash = '\';
+else
+    slash = '/';
+end
 
 
 %% Initialize 
@@ -38,7 +47,7 @@ if isfield(SWIFT(1),'ID')
     wd = SWIFT(1).ID;
 else
     wd = pwd;
-    wdi = find(wd == '/',1,'last');
+    wdi = find(wd == slash,1,'last');
     wd = wd((wdi+1):length(wd));
 end
 
@@ -51,8 +60,8 @@ set(0,'defaultaxesfontsize',14,'defaultaxesfontweight','demi');
 % finished or terminates for any reason
 cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw) );
 
-
-
+% Plot info from wave histograms? Slow due to interpolating to common bins
+plot_wavehistogram = false;
 
 %% Figure 1: Wind and wave plot
 % Available for all SWIFT, although v4s do not have winds
@@ -104,7 +113,7 @@ end %if
 
 linkaxes(ax,'x')
 set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)] )
-print('-dpng',[wd  '_windandwaves.png'])
+print('-dpng',['SWIFT' wd  '_windandwaves.png'])
 
 
 
@@ -207,7 +216,7 @@ end
 if isfield(SWIFT,'airtemp') | isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity'),
     linkaxes(tax,'x');
     set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
-    print('-dpng',[wd '_tempandsalinity.png'])
+    print('-dpng',['SWIFT' wd '_tempandsalinity.png'])
 else
 end
 % -------------------------------------------------------------------------
@@ -269,7 +278,7 @@ if isfield(SWIFT,'wavespectra')
     else 
     end
     
-    print('-dpng',[ wd '_wavespectra.png'])
+    print('-dpng',[ 'SWIFT' wd '_wavespectra.png'])
 else
 end %if
 
@@ -346,7 +355,7 @@ if nansum([turb.epsilon]) ~= 0 % check if there is something to plot
         xlabel('\epsilon [W/kg]')
     end %try/catch
 
-    print('-dpng',[ wd '_HRprofile_turbulence.png'])
+    print('-dpng',['SWIFT' wd '_HRprofile_turbulence.png'])
 end %if
 
 
@@ -409,6 +418,7 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         set(gca,'YDir','reverse');
         ylabel('z [m]');
         xlabel('East [m/s]');
+        set(gca,'XLim',[-1 1])
         
         % Plot north velocity profiles
         axes('position',[0.1 0.1 0.2 0.35]);
@@ -416,6 +426,7 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         set(gca,'YDir','reverse');
         ylabel('z [m]');
         xlabel('North [m/s]');
+        set(gca,'XLim',[-1 1])
         
         if size(east_array,2) > 1
         % Plot east velocity Hovmueller-type plot
@@ -426,6 +437,8 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         datetick; 
         colorbar;
         title('East [m/s]')
+        cmocean('balance')
+        caxis([-1 1])
         
         % Plot north velocity Hovmueller-type plot
         axes('position',[0.35 0.1 0.6 0.35])
@@ -435,6 +448,9 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         datetick; 
         colorbar;
         title('North [m/s]')
+        cmocean('balance')
+        caxis([-1 1])
+
         end %if
         
     catch
@@ -459,7 +475,7 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         
     end %try/catch
     
-    print('-dpng', [wd '_Avgvelocityprofiles.png']);      
+    print('-dpng', ['SWIFT' wd '_Avgvelocityprofiles.png']);      
 elseif nansum([prof.spd]) ~= 0 % no separate profiles, but speeds exist
     figure(5); clf;
     
@@ -495,7 +511,7 @@ elseif nansum([prof.spd]) ~= 0 % no separate profiles, but speeds exist
         xlabel('Magnitude [m/s]');      
     end %try/catch
     
-    print('-dpng', [wd '_Avgvelocityprofiles.png']);  
+    print('-dpng', ['SWIFT' wd '_Avgvelocityprofiles.png']);  
 end %if
 
 
@@ -504,21 +520,25 @@ end %if
 % Available for all SWIFTs
 
 if isfield( SWIFT, 'driftspd' ) && isfield( SWIFT, 'driftdirT' )
-    figure(6);
-    clf;
+    if any(~isnan([SWIFT.lat]))
+        figure(6);
+        clf;
 
-    quiver([SWIFT.lon],[SWIFT.lat],...
-           [SWIFT.driftspd].*sind([SWIFT.driftdirT]),...
-           [SWIFT.driftspd].*cosd([SWIFT.driftdirT]),...
-           1,'r','linewidth',2);
-    hold on;
-    plot([SWIFT.lon],[SWIFT.lat],'bo','markersize',2);
+        quiver([SWIFT.lon],[SWIFT.lat],...
+            [SWIFT.driftspd].*sind([SWIFT.driftdirT]),...
+            [SWIFT.driftspd].*cosd([SWIFT.driftdirT]),...
+            1,'r','linewidth',2);
+        hold on;
+        plot([SWIFT.lon],[SWIFT.lat],'bo','markersize',2);
 
-    xlabel('longitude');
-    ylabel('latitude');
-    ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,1];  % ratio of lat to lon distances at a given latitude
-    daspect(ratio)
-    print('-dpng',[wd '_drift.png'])
+        xlabel('longitude');
+        ylabel('latitude');
+        ratio = [1./abs(cosd(nanmean([SWIFT.lat]))),1,1];  % ratio of lat to lon distances at a given latitude
+        daspect(ratio)
+        print('-dpng',['SWIFT' wd '_drift.png'])
+    else
+        disp('*** ALL POSITIONS ARE NAN, cannot make drift plot ***')
+    end
 end %if
 
 %% Figure 7: Rain
@@ -547,7 +567,7 @@ if isfield(SWIFT,'rainaccum') && any(~isnan([SWIFT.rainaccum])) && any(~isempty(
     
     linkaxes(rax,'x');
     set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
-    print('-dpng',[wd '_rain.png'])
+    print('-dpng',['SWIFT' wd '_rain.png'])
     
 end %if 
 
@@ -575,7 +595,7 @@ if isfield(SWIFT,'windspectra') &&... % check field exists
     ylabel('Energy [m^2/Hz]')
     title('Wind Spectra')
     set(gca,'XLim',[1e-2 1e1])
-    print('-dpng',[wd '_wind.png'])
+    print('-dpng',['SWIFT' wd '_wind.png'])
 else
 end
 
@@ -587,7 +607,7 @@ if isfield(SWIFT,'O2conc') && any(~isnan([SWIFT.O2conc])) && any(~isempty([SWIFT
     plot([SWIFT.time],[SWIFT.O2conc],'x')
     datetick
     ylabel('O_2 conc [uM/Kg]')
-    print('-dpng',[wd '_oxygen_FDOM.png'])
+    print('-dpng',['SWIFT' wd '_oxygen_FDOM.png'])
 end
     
 if isfield(SWIFT,'FDOM') && any(~isnan([SWIFT.FDOM])) && any(~isempty([SWIFT.FDOM])),
@@ -596,8 +616,146 @@ if isfield(SWIFT,'FDOM') && any(~isnan([SWIFT.FDOM])) && any(~isempty([SWIFT.FDO
     plot([SWIFT.time],[SWIFT.FDOM],'x')
     datetick
     ylabel('FDOM [ppb]')
-    print('-dpng',[wd '_oxygen_FDOM.png'])
+    print('-dpng',['SWIFT' wd '_oxygen_FDOM.png'])
 end
 
 
-end %function
+%% Figure 10: SST radiometers (CT15)
+
+if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mean]))
+    nrad = length( SWIFT(1).radiometertemp1mean );
+    RadT1 = reshape([SWIFT.radiometertemp1mean],nrad,length(SWIFT));
+    RadT2 = reshape([SWIFT.radiometertemp2mean],nrad,length(SWIFT));
+    if isfield(SWIFT, 'radiometerrad1')
+        RadR1 = reshape([SWIFT.radiometerrad1],nrad,length(SWIFT));
+        RadR2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
+    else
+        RadR1 = NaN;
+        RadR2 = NaN;  
+    end
+    
+    figure(10), hold off
+    subplot(2,1,1)
+    plot([SWIFT.time],RadT1)
+    hold on
+    plot([SWIFT.time],RadT2,'color',rgb('lightgrey'))
+    datetick
+    ylabel('Temperature [C]')
+    subplot(2,1,2)
+    plot([SWIFT.time],RadR1)
+    hold on
+    plot([SWIFT.time],RadR2,'color',rgb('lightgrey'))
+    datetick
+    ylabel('Radiance [mV]')
+    print('-dpng',['SWIFT' wd '_radiometer.png'])
+
+end
+
+%% Figure 11: drift speed and direction
+
+if isfield(SWIFT,'driftspd') && any(~isnan([SWIFT.driftspd]))
+
+    figure(11), clf
+    subplot(2,1,1)
+    plot([SWIFT.time],[SWIFT.driftspd])
+    hold on
+    datetick
+    ylabel('Drift Spd [m/s]')
+    subplot(2,1,2)
+    plot([SWIFT.time],[SWIFT.driftdirT],'.')
+    hold on
+    datetick
+    ylabel('Drift dir [deg T]')
+    set(gca,'YLim',[0 360])
+    print('-dpng',['SWIFT' wd '_driftspd_driftdir.png']) 
+
+end
+
+%% Figure 12: horizontal and acceleration histogram pcolor plots, skewness, kurtosis
+
+if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
+    direcs = {'hor', 'vert'}; %Iterate and make plots for horizontal and vertical accelerations
+    for direc_num = 1:numel(direcs)
+        direc = char(direcs(direc_num));
+     
+        figure; set(gcf, 'color', 'w')
+    
+        % Find min and max values of entire dataset for common bin edges
+        minacc = inf; maxacc = -inf;
+        minacc_count = inf; maxacc_count = -inf;
+        nbins = 32; %Consistent with existing bin number
+
+        for j = 1:numel(SWIFT)            
+            bins = SWIFT(j).wavehistogram.([direc, 'accbins']);
+            counts = SWIFT(j).wavehistogram.([direc, 'acc']);
+
+            %Update min and max values of the entire dataset
+            minacc = min(minacc, min(bins));
+            maxacc = max(maxacc, max(bins));
+            minacc_count = min(minacc_count, min(counts));
+            maxacc_count = max(maxacc_count, max(counts));
+        end
+
+        %Common bins to grid all data to 
+        interp_bin_centers = linspace(minacc, maxacc, nbins);
+       
+        interp_counts = nan(numel(SWIFT), nbins);  %Initialize
+    
+        % Data for plots of skew and kurtosis over time
+        skews = nan(numel(SWIFT), 1);
+        kurtos = nan(numel(SWIFT), 1);
+        times = nan(numel(SWIFT), 1);
+    
+        for j = 1:numel(SWIFT)
+             
+            bins = SWIFT(j).wavehistogram.([direc, 'accbins']);
+            counts = SWIFT(j).wavehistogram.([direc, 'acc']);
+            interp_counts(j, :) = interp1(bins, counts, interp_bin_centers, 'linear');
+        
+            %Calculate and save needeed info for skewness andd kurtosis plots
+            data = repelem(bins, counts); % Reconstruct pseudo-data 
+            skews(j) = skewness(data);
+            kurtos(j) = kurtosis(data); 
+            times(j) = SWIFT(j).time;  % For vertical axis; 
+    
+            %Optionally plot to see that data reconstruction worked
+            % figure; clf; hold on
+            % histogram(data)
+            % plot(bins, counts);
+    
+        end
+    %%
+        %Pcolor of all histograms over time - additional formatting for all subplots done at the end
+        subplot(1, 3, 1)
+        pcolor(interp_bin_centers, times, interp_counts); shading flat
+        xlabel([direc, ' acc [g]'], 'FontSize', 12)
+        cb = colorbar;
+        ylabel(cb, 'observations [counts]', 'FontSize', 12)
+        clim([minacc_count maxacc_count]) 
+        xlim([minacc, maxacc])
+        
+        %% Plot skew and kurtosis
+    
+        %Smooth with 1-day moving window
+        smooth_skews = movmean(skews, 1, 'SamplePoints', times);
+        smooth_kurtos = movmean(kurtos, 1, 'SamplePoints', times);
+    
+        subplot(1, 3, 2); hold on; 
+        plot(smooth_skews, times, 'color', 'k', 'linewidth', 1);  
+        xlabel('skewness', 'FontSize', 12)
+        
+        subplot(1, 3, 3); hold on; 
+        plot(smooth_kurtos, times, 'color', 'k', 'linewidth', 1); 
+        xlabel('kurtosis', 'FontSize', 12)
+    
+        %Plot formatting
+        for splot = 1:3
+            subplot(1, 3, splot)
+            ylim([SWIFT(1).time, SWIFT(end).time])
+            datetick('y', 'keeplimits')
+            set(gca, 'FontSize', 12)
+            box on; grid on
+        end
+    end %End of loop for acceleration direction (horizontal or vertical)
+    
+end 

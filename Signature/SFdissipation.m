@@ -24,6 +24,8 @@ function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 %                           12/2022: Added 'log', which does the linear fit
 %                           in log space instead. Assumes noise term is
 %                           very low.
+%                           9/2024: removed 'log', and just compute the
+%                           slope to know what it is
 %           avgtype     either 'mean','logmean' or 'median', determines whether the
 %                           mean of squares, mean of the log of squares, or median of squares
 %                           is taken to determine the expected value of the squared velocity difference
@@ -92,10 +94,10 @@ if strcmp(avgtype,'mean')
         error('Average estimator must be ''mean'', ''logmean'' or ''median''.')
 end
 
-%Standard Error on the mean
+% Standard Error on the mean
 Derr = sqrt(var(dW.^2,[],3,'omitnan')./sum(~isnan(dW),3));
 
-%Fit structure function to theoretical curve
+% Fit structure function to theoretical curve
 Cv2 = 2.1;
 eps = NaN(size(z));
 epserr = eps;
@@ -107,7 +109,7 @@ mspe = NaN(size(z));
 slope = NaN(size(z));
 for ibin = 1:length(z)
 
-    %Find points in z0 bin
+    % Find points in z0 bin
     iplot = Z0 >= z(ibin)- nzfit*dz/2 & Z0 <= z(ibin)+ nzfit*dz/2;
     Di = D(iplot);
     Dierr = Derr(iplot);
@@ -116,7 +118,7 @@ for ibin = 1:length(z)
     Di = Di(isort);
     Dierr = Dierr(isort);
 
-    %Select points within specified separation scale range
+    % Select points within specified separation scale range
     ifit = Ri <= rmax & Ri >= rmin; 
     nfit = sum(ifit);
     if nfit < 3 % Must contain more than 3 points
@@ -124,12 +126,13 @@ for ibin = 1:length(z)
         
     end
     xN = ones(nfit,1);
-    x1 = Ri(ifit).^(2/3);
-    x3 = x1.^3;
+    x1 = Ri(ifit);
+    x23 = Ri(ifit).^(2/3);
+    x2 = x23.^3;
     d = Di(ifit);
     derr = mean(Dierr(ifit),'omitnan');
     
-    %Best-fit power-law to the structure function
+    % Best-fit power-law to the structure function
     ilog = x1 > 0 & d > 0;% log(0) = -Inf
     x1log = log10(x1(ilog));
     dlog = log10(d(ilog));
@@ -143,26 +146,25 @@ for ibin = 1:length(z)
     if strcmp(fittype,'cubic')
         
         % Fit structure function to D(z,r) = Br^2 + Ar^(2/3) + N
-        G = [x3(:) x1(:) xN(:)];
+        G = [x2(:) x23(:) xN(:)];
         Gg = (G'*G)\G';
         m = Gg*d(:);
         B(ibin) = m(1);
-        A(ibin) = m(1);
+        A(ibin) = m(2);
         
-        %Remove model shear term & fit Ar^(2/3) to residual
-        dmod = d-B(ibin)*x3;
-        G = [x1(:) xN(:)];
+        % Remove model shear term & fit Ar^(2/3) to residual (to get mspe)
+        dmod = d-B(ibin)*x2;
+        G = [x23(:) xN(:)];
         Gg = (G'*G)\G';
         m = Gg*dmod(:);
         dm = G*m;
         imse = abs(dm) > 10^(-8);
         mspe(ibin) =  mean(((dm(imse)-dmod(imse))./dm(imse)).^2);
-        A(ibin) = m(1);
         N(ibin) = m(2);
         merr = sqrt(diag(derr.^2*((G'*G)^(-1))));
         Aerr(ibin) = merr(1);
         
-        % Slope of residual structure function
+        % update w/slope of residual structure function
         ilog = x1 > 0 & dmod > 0;% log(0) = -Inf
         x1log = log10(x1(ilog));
         dlog = log10(dmod(ilog));
@@ -175,7 +177,7 @@ for ibin = 1:length(z)
     elseif strcmp(fittype,'linear')
         
             % Fit structure function to D(z,r) = Ar^(2/3) + N
-            G = [x1(:) xN(:)];
+            G = [x23(:) xN(:)];
             Gg = (G'*G)\G';
             m = Gg*d(:);
             dm = G*m;
@@ -186,26 +188,8 @@ for ibin = 1:length(z)
             merr = sqrt(diag(derr.^2*((G'*G)^(-1))));
             Aerr(ibin) = merr(1);
             
-    elseif strcmp(fittype,'log')
-        
-            d = d(x1>0);
-            xN = xN(x1>0);
-            x1 = x1(x1>0);
-            x1log = log10(x1);
-            dlog = log10(d);
-            G = [x1log(:) xN(:)];
-            Gg = (G'*G)\G';
-            m = Gg*dlog(:);
-            dm = G*m;
-            imse = abs(dm) > 10^(-8);
-            mspe(ibin) =  mean(((dm(imse)-d(imse))./dm(imse)).^2);
-            slope(ibin) = m(1);
-            A(ibin) = 10.^(m(2));   
-            merr = sqrt(diag(derr.^2*((G'*G)^(-1))));
-            Aerr(ibin) = merr(2);
-            
     else
-        error('Fit type must be ''linear'', ''cubic'' or ''log''')
+        error('Fit type must be ''linear'' or ''cubic''')
     end
     eps(ibin) = (A(ibin)./Cv2).^(3/2);
     epserr(ibin) = Aerr(ibin)*(3/2)*eps(ibin)./A(ibin);

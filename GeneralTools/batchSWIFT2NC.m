@@ -4,11 +4,11 @@
 
 close all, clear all
 
-flist = dir('SWIFT*.mat');
+flist = dir('*SWIFT*.mat');
 
 for fi=1:length(flist)
     try
-        load(flist(fi).name)
+        load(flist(fi).name,'SWIFT')
         SWIFT2NC(SWIFT,[ flist(fi).name(1:end-4) '.nc'] )
         fprintf('Successfully processed: %s\n', flist(fi).name);
     catch ME

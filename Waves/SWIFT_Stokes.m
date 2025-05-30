@@ -137,7 +137,6 @@ SWIFT(ii).wavebias.bulk.bias.east = WaveBias.*sind(peakwavedirT);
 SWIFT(ii).wavebias.bulk.bias.north = WaveBias.*cosd(peakwavedirT);
 SWIFT(ii).wavebias.bulk.bias.z = zsave;
 
-
 % Compute Spectral Stokes and Wave Bias Estimates (using Fourier moments)
 
 % Initialize with zero value prior to summing component-wise over freq
@@ -159,7 +158,7 @@ for jj=1:length(frequency)
     om = 2*pi.*frequency(jj);
     
     % Compute Stokes drift and Wave Bias for this frequency
-    if strcmp(depthflag,'intermediate')==1
+    if strcmp(depthflag,'intermediate') == 1
         k = wavenumber(frequency(jj), h);
         Stokes_jj_0 = om*k*cosh(2*k*h)./(sinh(k*h).^2)*energy(jj);
         Stokes_jj = om*k*cosh(2*k*(z+h))./(sinh(k*h).^2)*energy(jj);

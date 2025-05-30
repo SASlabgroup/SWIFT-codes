@@ -1,4 +1,4 @@
-function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
+function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 % Matlab readin of SWIFT Iridum SBD (short burst data) messages
 % which are binary files with onboard processed results
 % see Sutron documentation for message format
@@ -64,7 +64,10 @@ function [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %
 %   J. Thomson, 6/2023  use com port field in microSWIFT payload type (52) 
 %                       to report number of raw GPS velocities replaced before processing 
-%
+%   K. Zeiden, 6/2024  change default signature profile size to 128, when
+%                       empty and filling w/NaN
+%   J. Thomson, 3/2025 add microSWIFT light sensor (payload type 54)
+%   J. Thomson, 3/2025 add Lufft WS700 sensor (payload types 100-104)
 
 recip = true; % binary flag to change wave direction to FROM
 errorfile = false; % initialize
@@ -81,15 +84,15 @@ SWIFTversion = NaN; % placeholder
 %% SWIFT id flag from file name
 % note that all telemetry files from server start with 5 char 'buoy-'
 % this will fail for any other prefix of file naming convention
+ibuoy = strfind(fname,'buoy');
 
-if fname(6)=='S', % SWIFT v3 and v4
-    SWIFT.ID = fname(12:13);
-elseif fname(6)=='m', % microSWIFT
-    SWIFT.ID = fname(17:19);
+if fname(ibuoy + 5)=='S' % SWIFT v3 and v4
+    SWIFT.ID = fname(ibuoy + (11:12));
+elseif fname(ibuoy + 5)=='m' % microSWIFT
+    SWIFT.ID = fname(ibuoy + (16:18));
 else
     SWIFT.ID = NaN;
 end
-
 
 %% begin reading file
 % Note that the actual email attachment from the Iridium system has an
@@ -105,11 +108,12 @@ if firstchar == '7'
 
 %%
 CTcounter = 0; % count the number of CT sensors in the file
+Radcounter = 0; % count the number of radiometers in the file
 picflag = false; % initialize picture binary flag
 
 while 1
     
-    disp('-----------------')
+    % disp('-----------------')
     type = fread(fid,1,'uint8');
     port = fread(fid,1,'uint8');
     size = fread(fid,1,'uint16');
@@ -221,11 +225,15 @@ while 1
         SWIFT.lat = fread(fid,1,'float'); % Latitude
         SWIFT.lon = fread(fid,1,'float'); % Longitude
         if size > 1200 & size < 10000,
-            SWIFT.wavehistogram.vertacc = fread(fid,32,'float'); % vertical accelerations
+            disp('reading wave histograms')
+            SWIFT.wavehistogram.vertacc = fread(fid,32,'uint32'); % vertical accelerations
+            %SWIFT.wavehistogram.vertacc(32) = fread(fid,1,'float'); % vertical accelerations
             SWIFT.wavehistogram.vertaccbins = fread(fid,32,'float'); % bins centers of vertical accelerations
-            SWIFT.wavehistogram.horacc = fread(fid,32,'float'); % horizontal accelerations
+            SWIFT.wavehistogram.horacc = fread(fid,32,'uint32'); % horizontal accelerations
+            %SWIFT.wavehistogram.horacc(32) = fread(fid,1,'float'); % horizontal accelerations
             SWIFT.wavehistogram.horaccbins = fread(fid,32,'float'); % bins centers of horizontal accelerations
-            SWIFT.wavehistogram.horspd = fread(fid,32,'float'); % horizontal speeds
+            SWIFT.wavehistogram.horspd = fread(fid,32,'uint32'); % horizontal speeds
+            %SWIFT.wavehistogram.horspd(32) = fread(fid,1,'float'); % horizontal speeds
             SWIFT.wavehistogram.horspdbins = fread(fid,32,'float'); % bin centers of horizontal speeds
         else
         end
@@ -315,8 +323,8 @@ while 1
         SWIFT.signature.profile.z = blanking + res./2 + [0:(cells-1)]*res;
     elseif type == 9 & size == 0, % Nortek Signature present, but empty results
         disp('Signature results are empty!')
-        SWIFT.signature.HRprofile.tkedissipationrate = NaN(64,1);
-        SWIFT.signature.HRprofile.z = NaN(1,64);
+        SWIFT.signature.HRprofile.tkedissipationrate = NaN(128,1);
+        SWIFT.signature.HRprofile.z = NaN(1,128);
         SWIFT.signature.profile.east = NaN(40,1);
         SWIFT.signature.profile.north = NaN(40,1);
         SWIFT.signature.profile.z = NaN(1,40);
@@ -370,14 +378,25 @@ while 1
         disp('reading SeaOWl results')
         SWIFT.FDOM = fread(fid,1,'float');
         
-    elseif type == 14 & size > 0, % CT15 radiometer
-        disp('reading CT15 Radiometer results')
-        SWIFT.radiometertemp1mean = fread(fid,1,'float');
-        SWIFT.radiometertemp1std = fread(fid,1,'float');
-        SWIFT.radiometertemp2mean = fread(fid,1,'float');
-        SWIFT.radiometertemp2std = fread(fid,1,'float');
+    elseif type == 14 & size == 24, % CT15 radiometer with radiance (newer)
+        disp(['reading CT15 Radiometer results, size = ' num2str(size)])
+        SWIFT.infraredtempmean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.infraredtempstd(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.ambienttempmean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.ambienttempstd(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiancemean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.radiancestd(Radcounter + 1) = fread(fid,1,'float');
+        Radcounter = Radcounter + 1;
+
+    elseif type == 14 & size == 16, % CT15 radiometer without radiance (older)
+        disp(['reading CT15 Radiometer results, size = ' num2str(size)])
+        SWIFT.infraredtempmean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.infraredtempstd(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.ambienttempmean(Radcounter + 1) = fread(fid,1,'float');
+        SWIFT.ambienttempstd(Radcounter + 1) = fread(fid,1,'float');
+        Radcounter = Radcounter + 1;
         
-    elseif type == 50 & size > 0, % microSWIFT, size should be 1228 bytes
+    elseif type == 50 & size ==1228, % microSWIFT, size should be 1228 bytes
         disp('reading microSWIFT')
         SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
         SWIFT.peakwaveperiod = fread(fid,1,'float'); % dominant period
@@ -409,7 +428,7 @@ while 1
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
         
-    elseif type == 51 & size > 0, % microSWIFT, size should be 237 bytes
+    elseif type == 51 & size == 237, % microSWIFT, size should be 237 bytes
         disp('reading microSWIFT (light)')
         SWIFT.sigwaveheight = fread(fid,1,'float'); % sig wave height
         SWIFT.peakwaveperiod = fread(fid,1,'float'); % dominant period
@@ -443,10 +462,9 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
-    elseif type == 52 & size > 0, % microSWIFT, size should be 327 bytes
-        disp('reading microSWIFT (compact)')
-        replacedrawvalues = port*10 % microSWIFTs do not give com port, so we are using a diagnostic for raw data QC (and replacement)
-        SWIFT.replacedrawvalues = replacedrawvalues;
+    elseif type == 52 & size >= 327, % microSWIFT, size should be 327 bytes for v2.1, or 331 bytes for v2.2
+        disp('reading microSWIFT NEDwaves (payload 52)')
+        GNSSdebug = port; % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
@@ -470,21 +488,59 @@ while 1
         epochTime                = fread(fid, 1,'float'); % epoch time
         asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
         SWIFT.time               = datenum(asDatetime); % time at end of burst
+        errorcodes = fread(fid,inf,'uchar');  % error codes at end of v2.2 micro messages
         % also get the time from the filename and see how they compare
-        year = fname(26:29);
-        month = fname(23:25);
-        day = fname(21:22);
-        hour = fname(31:32);
-        minutes = fname(33:34);
-        seconds = fname(35:36);
-        filetime = datenum([day '-' month '-' year ' ' hour ':' minutes ':' seconds ]);  
-        tooearly = 3; % maximum time gaps (in days) to tolerate between embedded time and file received time
-        if SWIFT.time < ( filetime - tooearly) 
-            SWIFT.time = filetime;
+        %year = fname(26:29);
+        %month = fname(23:25);
+        %day = fname(21:22);
+        %hour = fname(31:32);
+        %minutes = fname(33:34);
+        %seconds = fname(35:36);
+        %filetime = datenum([day '-' month '-' year ' ' hour ':' minutes ':' seconds ]);  
+        %tooearly = 3; % maximum time gaps (in days) to tolerate between embedded time and file received time
+        %if SWIFT.time < ( filetime - tooearly) 
+        %    SWIFT.time = filetime;
+        %end
+    elseif type == 54 & size == 303 % microSWIFT light sensor, size usually 303
+        disp('reading microSWIFT light sensor (payload 54)')
+        for sw = 1:6 % usually six sampling windows with each light sensor message
+            startlat = fread(fid,1,'int32') * 1e-7;
+            startlon = fread(fid,1,'int32') * 1e-7;
+            endlat = fread(fid,1,'int32') * 1e-7;
+            endlon = fread(fid,1,'int32') * 1e-7;
+            starttime = fread(fid,1,'uint32');
+            endtime = fread(fid,1,'uint32');
+            SWIFT(sw).lat = endlat;
+            SWIFT(sw).lon = endlon;
+            SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            SWIFT(sw).lightmax = fread(fid,1,'uint16');
+            SWIFT(sw).lightmin = fread(fid,1,'uint16');
+            SWIFT(sw).lightchannels = fread(fid,11,'uint16');
+            SWIFT(sw).ID = SWIFT.ID;
         end
 
+    elseif type == 100   %  Lufft WS700 wind speed and dir
+        disp('reading Lufft wind speeds')
+        SWIFT.windspd = fread(fid, 1,'float'); % m/s
+        SWIFT.winddirR = fread(fid, 1,'float'); % deg
+
+    elseif type == 101   %  Lufft WS700 air temp
+        disp('reading Lufft air temp')
+        SWIFT.airtemp = fread(fid, 1,'float'); % C
+
+    elseif type == 102   %  Lufft WS700 humidity
+        disp('reading Lufft humidity')
+        SWIFT.relhumidity = fread(fid, 1,'float'); % percent
+    
+    elseif type == 103   %  Lufft WS700 atmos pressure
+        disp('reading Lufft barometer')
+        SWIFT.airpres = fread(fid, 1,'float'); % percent
+
+    elseif type == 104   %  Lufft WS700 radiation
+        disp('reading Lufft humidity')
+        SWIFT.solarrad = fread(fid, 1,'float'); % W/m^2
     else
-        
+
     end
     
     if isempty(type),% & size == 0,
@@ -511,7 +567,7 @@ if ~isfield(SWIFT,'lat'), % if no IMU, use this one
     SWIFT.lat = PBlat;
     SWIFT.lon = PBlon;
 end
-if isfield(SWIFT,'lat') & ( SWIFT.lat == 0 | isempty(SWIFT.lat) ), % if IMU did not give position, use this one
+if isfield(SWIFT,'lat') & ( SWIFT(1).lat == 0 | isempty(SWIFT(1).lat) ), % if IMU did not give position, use this one
     disp('Using Airmar positions')
     SWIFT.lat = PBlat;
     SWIFT.lon = PBlon;
@@ -587,12 +643,25 @@ if isfield(SWIFT,'sigwaveheight'),
         SWIFT.peakwavedirT = NaN;
     end
 else
-    SWIFT.sigwaveheight = NaN;
-    SWIFT.peakwaveperiod = NaN;
-    SWIFT.peakwavedirT = NaN;
+%    SWIFT.sigwaveheight = NaN;
+%    SWIFT.peakwaveperiod = NaN;
+%    SWIFT.peakwavedirT = NaN;
 end
 
+%% change indicator for no conductivity - temperature
 
+% use NaN instead of 9999 for no data
+if isfield(SWIFT,'salinity')
+    if all(SWIFT.salinity >= 9999),
+        SWIFT.salinity = NaN;
+    end
+end
+
+if isfield(SWIFT,'watertemp')
+    if all(SWIFT.watertemp >= 9999),
+        SWIFT.watertemp = NaN;
+    end
+end
 
 %% fill in time if none read (time is a required field)
 
@@ -605,7 +674,7 @@ end
 
 %% take reciprocal of wave directions
 
-if recip,
+if recip & isfield(SWIFT,'peakwavedirT')
     dirto = SWIFT.peakwavedirT;
     if dirto >=180,
         SWIFT.peakwavedirT = dirto - 180;

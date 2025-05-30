@@ -34,7 +34,6 @@ wsecs = 256;   % window length in seconds, should make 2^N samples
 merge = 3;      % freq bands to merge, must be odd?
 maxf = .5;       % frequency cutoff for telemetry Hz
    
-
 %% begin processing, if data sufficient
 pts = length(z);       % record length in data points
 
@@ -207,7 +206,6 @@ dir( eastdirs ) = dir ( eastdirs ) + 180; % take reciprocal such wave direction 
 % directional spread
 spread = 180 ./ 3.14 .* spread1;
 
-
 %% dominant direction
 
 Dp = dir(fpindex); % dominant (peak) direction, use peak f
@@ -232,15 +230,15 @@ Dp = dir(fpindex); % dominant (peak) direction, use peak f
 
 
 %% prune high frequency results
-E( f > maxf ) = [];
-dir( f > maxf ) = [];
-spread( f > maxf ) = [];
-a1( f > maxf ) = [];
-b1( f > maxf ) = [];
-a2( f > maxf ) = [];
-b2( f > maxf ) = [];
-check( f > maxf ) = [];
-f( f > maxf ) = [];
+% E( f > maxf ) = [];
+% dir( f > maxf ) = [];
+% spread( f > maxf ) = [];
+% a1( f > maxf ) = [];
+% b1( f > maxf ) = [];
+% a2( f > maxf ) = [];
+% b2( f > maxf ) = [];
+% check( f > maxf ) = [];
+% f( f > maxf ) = [];
 
 
 else % if not enough points or sufficent sampling rate or data, give 9999

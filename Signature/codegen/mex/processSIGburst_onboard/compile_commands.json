@@ -1,0 +1,254 @@
+[
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  processSIGburst_onboard_data.cpp -o build/win64/processSIGburst_onboard_data.o",
+    "file": "processSIGburst_onboard_data.cpp",
+    "output": "build/win64/processSIGburst_onboard_data.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  rt_nonfinite.cpp -o build/win64/rt_nonfinite.o",
+    "file": "rt_nonfinite.cpp",
+    "output": "build/win64/rt_nonfinite.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  processSIGburst_onboard_initialize.cpp -o build/win64/processSIGburst_onboard_initialize.o",
+    "file": "processSIGburst_onboard_initialize.cpp",
+    "output": "build/win64/processSIGburst_onboard_initialize.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  processSIGburst_onboard_terminate.cpp -o build/win64/processSIGburst_onboard_terminate.o",
+    "file": "processSIGburst_onboard_terminate.cpp",
+    "output": "build/win64/processSIGburst_onboard_terminate.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  processSIGburst_onboard.cpp -o build/win64/processSIGburst_onboard.o",
+    "file": "processSIGburst_onboard.cpp",
+    "output": "build/win64/processSIGburst_onboard.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  nanmean.cpp -o build/win64/nanmean.o",
+    "file": "nanmean.cpp",
+    "output": "build/win64/nanmean.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  movmedian.cpp -o build/win64/movmedian.o",
+    "file": "movmedian.cpp",
+    "output": "build/win64/movmedian.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  movsortfun.cpp -o build/win64/movsortfun.o",
+    "file": "movsortfun.cpp",
+    "output": "build/win64/movsortfun.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  abs.cpp -o build/win64/abs.o",
+    "file": "abs.cpp",
+    "output": "build/win64/abs.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  find.cpp -o build/win64/find.o",
+    "file": "find.cpp",
+    "output": "build/win64/find.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  indexShapeCheck.cpp -o build/win64/indexShapeCheck.o",
+    "file": "indexShapeCheck.cpp",
+    "output": "build/win64/indexShapeCheck.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  interp1.cpp -o build/win64/interp1.o",
+    "file": "interp1.cpp",
+    "output": "build/win64/interp1.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  combineVectorElements.cpp -o build/win64/combineVectorElements.o",
+    "file": "combineVectorElements.cpp",
+    "output": "build/win64/combineVectorElements.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  sumMatrixIncludeNaN.cpp -o build/win64/sumMatrixIncludeNaN.o",
+    "file": "sumMatrixIncludeNaN.cpp",
+    "output": "build/win64/sumMatrixIncludeNaN.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  eml_mtimes_helper.cpp -o build/win64/eml_mtimes_helper.o",
+    "file": "eml_mtimes_helper.cpp",
+    "output": "build/win64/eml_mtimes_helper.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  mtimes.cpp -o build/win64/mtimes.o",
+    "file": "mtimes.cpp",
+    "output": "build/win64/mtimes.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  eig.cpp -o build/win64/eig.o",
+    "file": "eig.cpp",
+    "output": "build/win64/eig.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  anyNonFinite.cpp -o build/win64/anyNonFinite.o",
+    "file": "anyNonFinite.cpp",
+    "output": "build/win64/anyNonFinite.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  warning.cpp -o build/win64/warning.o",
+    "file": "warning.cpp",
+    "output": "build/win64/warning.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  eigSkewHermitianStandard.cpp -o build/win64/eigSkewHermitianStandard.o",
+    "file": "eigSkewHermitianStandard.cpp",
+    "output": "build/win64/eigSkewHermitianStandard.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  sortLE.cpp -o build/win64/sortLE.o",
+    "file": "sortLE.cpp",
+    "output": "build/win64/sortLE.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  diff.cpp -o build/win64/diff.o",
+    "file": "diff.cpp",
+    "output": "build/win64/diff.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  mean.cpp -o build/win64/mean.o",
+    "file": "mean.cpp",
+    "output": "build/win64/mean.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  meshgrid.cpp -o build/win64/meshgrid.o",
+    "file": "meshgrid.cpp",
+    "output": "build/win64/meshgrid.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  repmat.cpp -o build/win64/repmat.o",
+    "file": "repmat.cpp",
+    "output": "build/win64/repmat.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  permute.cpp -o build/win64/permute.o",
+    "file": "permute.cpp",
+    "output": "build/win64/permute.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  std.cpp -o build/win64/std.o",
+    "file": "std.cpp",
+    "output": "build/win64/std.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  error.cpp -o build/win64/error.o",
+    "file": "error.cpp",
+    "output": "build/win64/error.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  power.cpp -o build/win64/power.o",
+    "file": "power.cpp",
+    "output": "build/win64/power.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  mldivide.cpp -o build/win64/mldivide.o",
+    "file": "mldivide.cpp",
+    "output": "build/win64/mldivide.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  interface/_coder_processSIGburst_onboard_api.cpp -o build/win64/_coder_processSIGburst_onboard_api.o",
+    "file": "interface/_coder_processSIGburst_onboard_api.cpp",
+    "output": "build/win64/_coder_processSIGburst_onboard_api.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  interface/_coder_processSIGburst_onboard_mex.cpp -o build/win64/_coder_processSIGburst_onboard_mex.o",
+    "file": "interface/_coder_processSIGburst_onboard_mex.cpp",
+    "output": "build/win64/_coder_processSIGburst_onboard_mex.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  strcmp.cpp -o build/win64/strcmp.o",
+    "file": "strcmp.cpp",
+    "output": "build/win64/strcmp.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  eml_int_forloop_overflow_check.cpp -o build/win64/eml_int_forloop_overflow_check.o",
+    "file": "eml_int_forloop_overflow_check.cpp",
+    "output": "build/win64/eml_int_forloop_overflow_check.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  sort.cpp -o build/win64/sort.o",
+    "file": "sort.cpp",
+    "output": "build/win64/sort.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  round.cpp -o build/win64/round.o",
+    "file": "round.cpp",
+    "output": "build/win64/round.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  log10.cpp -o build/win64/log10.o",
+    "file": "log10.cpp",
+    "output": "build/win64/log10.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  sortIdx.cpp -o build/win64/sortIdx.o",
+    "file": "sortIdx.cpp",
+    "output": "build/win64/sortIdx.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  div.cpp -o build/win64/div.o",
+    "file": "div.cpp",
+    "output": "build/win64/div.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  SortedBuffer.cpp -o build/win64/SortedBuffer.o",
+    "file": "SortedBuffer.cpp",
+    "output": "build/win64/SortedBuffer.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  interface/_coder_processSIGburst_onboard_info.cpp -o build/win64/_coder_processSIGburst_onboard_info.o",
+    "file": "interface/_coder_processSIGburst_onboard_info.cpp",
+    "output": "build/win64/_coder_processSIGburst_onboard_info.o"
+  },
+  {
+    "directory": "C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard",
+    "command": "C:\\ProgramData\\MATLAB\\SupportPackages\\R2023a\\3P.instrset\\mingw_w64.instrset\\bin\\g++ -c -fexceptions -fno-omit-frame-pointer -m64 -DMATLAB_MEX_FILE  -DMATLAB_MEX_FILE -O2 -fwrapv -DNDEBUG -std=c++11 -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\" -I \"C:\\Users\\Kristin Zeiden\\GitHub\\MATLAB\\SWIFT-codes\\Signature\\codegen\\mex\\processSIGburst_onboard\\interface\" -I \"C:\\Program Files\\MATLAB\\R2023a\\extern\\include\" -I \".\" -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE -DMW_HAVE_LAPACK_DECLS -DMODEL=processSIGburst_onboard_mex -D__USE_MINGW_ANSI_STDIO=1 -DMW_NEEDS_VERSION_H -msse2 -fopenmp  \"C:/Program Files/MATLAB/R2023a/extern/version/cpp_mexapi_version.cpp\" -o build/win64/cpp_mexapi_version.o",
+    "file": "C:/Program Files/MATLAB/R2023a/extern/version/cpp_mexapi_version.cpp",
+    "output": "build/win64/cpp_mexapi_version.o"
+  }
+]

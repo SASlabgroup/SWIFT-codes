@@ -1,11 +1,19 @@
 function [profile,fh] = processSIGavg(avg,opt)
 
+%    Check to make sure dimensions correct
+    if size(avg.VelocityData,3) ~= 4
+        disp('   Broadband data dimensions bad')
+        profile = [];
+        fh = [];
+        return
+    end
+
     % Data
     time = avg.time;
     amp = avg.AmplitudeData;
     corr = avg.CorrelationData;
     vel = avg.VelocityData;
-    z = opt.xz + avg.Blanking + avg.CellSize*(1:size(avg.VelocityData,2));
+    z = opt.xz + avg.Blanking + avg.CellSize*(1:size(avg.VelocityData,2))';
     temp = filloutliers(avg.Temperature,'linear');
 
     % Raw velocity profiles & standard error
@@ -45,8 +53,11 @@ function [profile,fh] = processSIGavg(avg,opt)
     if opt.QCfish; iQC(badfish) = true; end
     velqc = vel;
     velqc(iQC) = NaN;
-    u = squeeze(nanmean(velqc,1));
+    u = squeeze(mean(velqc,1,'omitnan'));
     uvar = squeeze(var(velqc,[],1,'omitnan'));
+
+    % Get alternate shear profile (compute spd before averaging, fix for bad HPR)
+    [~,spd_alt,~] = altSIGenu(avg,mean(avg.Heading,'omitnan'));
 
     % Plot beam data and QC flags
     if opt.plotburst
@@ -102,43 +113,43 @@ function [profile,fh] = processSIGavg(avg,opt)
         c(5).Label.String = 'Bin #';c(5).TickLabels = num2str([c(5).Ticks']*nbin);
         drawnow
 
-        fh(2) = figure('color','w');
-        set(gcf,'outerposition',MP(1,:).*[1 1 0.5 1]);
-        clear b1 b2 b3 p1 p2 p3
-        for ibeam = 1:4
-            subplot(2,3,ibeam)
-            errorbar(-z,avgu_noqc(:,ibeam),avguerr_noqc(:,ibeam));
-            hold on
-            errorbar(-z,u(:,ibeam),uvar(:,ibeam));
-            grid
-            xlim([min(-z) max(-z)])
-            ylim(nanmean(avgu_noqc(:,ibeam))+[-0.1 0.1])
-            plot(xlim,[0 0],'--k')
-            view(gca,[90 -90])
-            title(['Beam ' num2str(ibeam)])
-            ylabel('u_{r} [m/s]');xlabel('z[m]')
-        end
-        subplot(2,3,5)
-        p1 = plot(squeeze(nanmean(amp)),-z,'linewidth',1.5);
-        hold on
-        ylim([min(-z) max(-z)])
-        xlim([50 175])
-        hold on
-        legend(p1,'Beam 1','Beam 2','Beam 3','Beam 4',...
-            'location','southeast')
-        xlabel('A [dB]')
-        ylabel('z [m]')
-        title('Amplitude')
-        subplot(2,3,6)
-        plot(squeeze(nanmean(corr)),-z,'linewidth',1.5);
-        hold on
-        ylim([min(-z) max(-z)])
-        xlim([40 100])
-        plot(opt.mincorr*[1 1],ylim,'r');
-        title('Correlation')
-        xlabel('C [%]')
-        ylabel('z [m]')
-        drawnow
+        % fh(2) = figure('color','w');
+        % set(gcf,'outerposition',MP(1,:).*[1 1 0.5 1]);
+        % clear b1 b2 b3 p1 p2 p3
+        % for ibeam = 1:4
+        %     subplot(2,3,ibeam)
+        %     errorbar(-z,avgu_noqc(:,ibeam),avguerr_noqc(:,ibeam));
+        %     hold on
+        %     errorbar(-z,u(:,ibeam),uvar(:,ibeam));
+        %     grid
+        %     xlim([min(-z) max(-z)])
+        %     ylim(nanmean(avgu_noqc(:,ibeam))+[-0.1 0.1])
+        %     plot(xlim,[0 0],'--k')
+        %     view(gca,[90 -90])
+        %     title(['Beam ' num2str(ibeam)])
+        %     ylabel('u_{r} [m/s]');xlabel('z[m]')
+        % end
+        % subplot(2,3,5)
+        % p1 = plot(squeeze(nanmean(amp)),-z,'linewidth',1.5);
+        % hold on
+        % ylim([min(-z) max(-z)])
+        % xlim([50 175])
+        % hold on
+        % legend(p1,'Beam 1','Beam 2','Beam 3','Beam 4',...
+        %     'location','southeast')
+        % xlabel('A [dB]')
+        % ylabel('z [m]')
+        % title('Amplitude')
+        % subplot(2,3,6)
+        % plot(squeeze(nanmean(corr)),-z,'linewidth',1.5);
+        % hold on
+        % ylim([min(-z) max(-z)])
+        % xlim([40 100])
+        % plot(opt.mincorr*[1 1],ylim,'r');
+        % title('Correlation')
+        % xlabel('C [%]')
+        % ylabel('z [m]')
+        % drawnow
     else
         fh = [];
     end
@@ -159,6 +170,8 @@ function [profile,fh] = processSIGavg(avg,opt)
     profile.vvar = uvar(:,2);
     profile.uvar = uvar(:,1);
     profile.temp = mean(temp(1:round(end/4)),'omitnan');
+    profile.spd_alt = spd_alt;
+
     % QC
     profile.QC.ucorr = squeeze(mean(corr(:,:,1)));
     profile.QC.vcorr = squeeze(mean(corr(:,:,2)));

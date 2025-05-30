@@ -1,0 +1,136 @@
+<html>
+<head><title>SWIFT data request 
+</title>
+</head>
+
+<body BGCOLOR=white>
+
+<img width=60 src="SWIFTlogo.png">
+<font size="6">
+SWIFT data 
+</font>
+<br>
+<br>
+
+The main page for the Surface Wave Instrument Float with Tracking is <a href="http://www.apl.washington.edu/swift">apl.uw.edu/swift</a><br>
+<br>
+<hr>
+<font size="6">
+Telemetry data
+</font>
+<br>
+Telemetry formats and automation are documented at <a href="https://github.com/SASlabgroup/SWIFT-codes/blob/master/Documents/SWIFT_telemetry_access.pdf">SWIFT_telemetry_access.pdf</a><br>
+A live map with any buoys reporting within the last 3 hours is at <a href="http://swiftserver.apl.washington.edu/map/">swiftserver.apl.uw.edu/map</a>, and this <a href="http://swiftserver.apl.washington.edu/services/buoy?action=get_data&buoy_name=all&start=recent&format=kml">kml file</a> has the same information for viewing in  any GIS software.
+<br>
+A dashboard with simple telemetry data display is at <a href="https://swiftdashboard.apl.uw.edu">https://swiftdashboard.apl.uw.edu</a>. <br>
+Select SWIFTs and microSWIFTs can also be viewed in the <a href="https://software.apl.uw.edu/proto/BackyardBuoys/app.php">Backyard Buoys app</a>. 
+<br>
+Telemetry data can also be accessed directly in Matlab using <a href="https://github.com/SASlabgroup/SWIFT-codes/blob/master/GeneralTools/pullSWIFTtelemetry.m">pullSWIFTtelemetry.m</a> 
+or in Python <a href="https://github.com/SASlabgroup/microSWIFTtelemetry"> with this package</a> (presently microSWIFTs only). 
+
+<br>
+<br>
+-----------
+<br>
+Manual telemetry queries for <b>simple position and time data</b> are URLs generated from this form 
+<form name="input" action="http://swiftserver.apl.washington.edu/kml?action=kml" method="get">
+<input type="hidden" name="action" value="kml"> <br>
+ID: <input type="text" name="buoy_name" size="18"> (examples: SWIFT 09, microSWIFT 007)<br>
+start time : <input type="text" name="start">
+end time : <input type="text" name="end">( format: 2014-05-09T00:00:00)<br>
+data type: <input type="text" name="format" size="5"> (kml is Google Earth, json is simple text)<br>
+<input type="submit" value="Submit">
+</form>
+Leave end time blank to pull all data until present time (UTC)
+<br>
+<! Alternative (direct link example):
+<!<input type="text" size="175" name="prog_site" id="prog_site" value="http://swiftserver.apl.washington.edu/kml?action=kml&buoy_name=SWIFT%2015&start=2014-05-09T00:00:00&end=2014-05-09T17:00:00&format=kml" />
+<!<a href="#" onclick="this.href=document.getElementById('prog_site').value" target="_blank">
+<!Submit</a>
+
+<br>
+-----------
+<br>
+
+Manual telemetry queries for <b>full binary 'sbd' data from all sensor payloads</b> are URLs generated from this form 
+<br> 
+<form name="input" action="http://swiftserver.apl.washington.edu/services/buoy?" method="get">
+<input type="hidden" name="action" value="get_data"> <br>
+ID: <input type="text" name="buoy_name" size="10"> (examples: SWIFT 09, microSWIFT 007)<br>
+start time: <input type="text" name="start"> end time: <input type="text" name="end"> (format: 2014-05-09T00:00:00) <br>
+<input type="hidden" name="format" value="zip">
+<input type="submit" value="Submit">
+</form>
+Leave end time blank to pull all data until present time (UTC)
+<br>
+<br>
+
+
+<hr>
+<br>
+<b>Debug links</b> 
+<br>
+<br>
+List of all buoy names and IMEI modem numbers  <a href="https://swiftserver.apl.uw.edu/services/active_buoys"> active in the last 30 days</a>.  <br>
+<br>
+Query for specific IMEI modem number (instead of buoy name) in the last 30 days 
+<form name="input" action="https://swiftserver.apl.uw.edu/services/recent_data?" method="get">
+<input type="hidden" name="action" value="get_data"> 
+IMEI: <input type="text" name="buoy_id" size="20"> (example: 300434067057070)<br>
+<input type="submit" value="Submit">
+</form>
+<br>
+
+<hr>
+
+<br>
+<font size="6">
+Archival data
+</font>
+<br>
+<br>
+Description of variables is in the <a href="./readme.txt">readme</a> file.
+<br>
+<br>
+A master archive of microSWIFT data is at <a href="https://doi.org/10.5061/dryad.jdfn2z3j1"> https://doi.org/10.5061/dryad.jdfn2z3j1 </a>
+<br>
+<br>
+A master archive of SWIFT data is intended... <i>someday</i>. 
+<br>
+<br>
+Project-specific archives: 
+<br>
+Coastal Fronts (2022): <a href="https://hdl.handle.net/1773/52881"> https://hdl.handle.net/1773/52881 </a>
+Salinity and Stratification at the Sea Ice Edge (2022): <a href="https://doi.org/10.5067/SASSIE-SWFT2"> https://doi.org/10.5067/SASSIE-SWFT2 </a>
+<br>
+Northern Seas Rapid Surface Evolution (2021): <a href="http://hdl.handle.net/1773/51039"> http://hdl.handle.net/1773/51039</a>
+<br>
+Seafloor cable calibration in the Arctic (2021): <a href="https://doi.org/10.18739/A2B853K37"> https://doi.org/10.18739/A2B853K37 </a>
+<br>
+During Nearshore Events Experiment (2021): <a href="https://doi.org/10.5061/dryad.hx3ffbgk0"> https://doi.org/10.5061/dryad.hx3ffbgk0 </a>
+<br>
+Atlantic Tradewind Ocean-Atmosphere Mesoscale Interaction Campaign (2020): <a href="https://doi.org/10.25921/s5d7-tc07"> https://doi.org/10.25921/s5d7-tc07 </a>
+<br>
+Bubble plumes at Station Papa (2019): <a href="https://doi.org/10.5061/dryad.d7wm37q6z"> https://doi.org/10.5061/dryad.d7wm37q6z </a>
+<br>
+Sea-surface reconstruction and wave-resolved projections (2019): <a href="http://hdl.handle.net/1773/46928"> http://hdl.handle.net/1773/46928 </a>
+<br>
+Antarctic Marginal Ice Zone (2019): <a href="https://doi.org/10.5281/zenodo.7845764">https://doi.org/10.5281/zenodo.7845764 </a>
+<br>
+Wave-driven ice edge observations (2018): <a href="http://hdl.handle.net/1773/46602"> http://hdl.handle.net/1773/46602 </a>
+<br>
+Langmuir Circulation experiment (2017): <a href="https://doi.org/10.5061/dryad.cvdncjt7s"> https://doi.org/10.5061/dryad.cvdncjt7s </a>
+<br>
+Inner Shelf experiment (2017): <a href="https://doi.org/10.6075/J0GF0TNQ"> https://doi.org/10.6075/J0GF0TNQ </a>
+<br>
+Arctic SeaState experiment (2015): <a href="https://doi.org/10.7265/qt2b-y743"> https://doi.org/10.7265/qt2b-y743 </a>
+<br>
+Marginal Ice Zone experiment (2014): <a href="https://doi.org/10.7265/j769-hn64"> https://doi.org/10.7265/j769-hn64  </a> 
+
+<br>
+<br>
+
+Legacy (older) projects with SWIFT data are informally archived in directories <a href="http://faculty.washington.edu/jmt3rd/SWIFTdata/">here</a><br>
+
+
+</html>

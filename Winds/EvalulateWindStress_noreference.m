@@ -12,13 +12,15 @@
 
 %% QC limits 
 
+applyQC = true; % binary flag
+
 % alignment: u is aligned and negative when head-to-wind, so a big negative number means head to wind
 % this is by far the most important screen; it removes about 70% for the Southern Ocean 2017 dataset
 maxuvratio = 10;  % usually -0.6, which is +/- 60 deg from head-to-wind, something like 10 would let everything thru
 
 % spectra: this is the ratio of horizontal TKE to vertical in the inertial sub-range
 % this is almost always greater than one.  
-maxanisotropy = 1.5; % usually 2, something like 5 would let everything thru
+maxanisotropy = 5; % usually 2, something like 5 would let everything thru
 
 % fit quality: this is the relative error in fitting to f^-5/3 slopes
 % typical values are 0.5, lower values are better... sort of
@@ -26,7 +28,10 @@ maxquality = 0.6;  % usually 0.6, something like 1 would let everything thru
 
 
 %% Apply Quality control
+
 bad = false(length(SWIFT),1);
+
+if applyQC
 
 uvratio = [SWIFT.windmeanu] ./ abs( [SWIFT.windmeanv] );
 
@@ -38,7 +43,9 @@ for wg = 1:length(SWIFT),
     end
 end
 
-%SWIFT(bad) = [];
+SWIFT(bad) = [];
+
+end
 
 %% estimate true wind spd and direction from the sonic relative direction
 for wg = 1:length(SWIFT),
@@ -99,7 +106,7 @@ U10rmserror = rms( [SWIFT(good).U10] - [SWIFT(good).referenceU10] - U10bias)
 %% bin-averaged spectra
 
 dw = 2;
-windbins = [0:dw:18];
+windbins = [2:dw:18];
 
 f = SWIFT(1).windspectra.freq;
 spectra = zeros( length(windbins),length(f) );
@@ -128,24 +135,25 @@ xlabel('Frequency [Hz]')
 for wi=1:length(windbins),
     text(1.01*max(f), min(meanspectra(wi,:)), [num2str(windbins(wi)+dw/2) ' m/s'],'fontweight','demi','fontsize',12)
 end
-hold on, loglog([1.5 3],3*[1.5 3].^(-5/3),'k--','linewidth',1.5)
-text(2.2,2.2,'f^{-5/3}','fontweight','demi','fontsize',14)
+hold on, loglog([2 4],3*[2 4].^(-5/3),'k--','linewidth',1.5)
+text(2.5,2.,'f^{-5/3}','fontweight','demi','fontsize',14)
 
 %% recalc ustar from spectra
 
-fmin = 1.5; % Hz
-fmax = 3; % Hz
+fmin = 2; % Hz
+fmax = 5; % Hz
 K = 0.55 ; % Kolmogorov const, factor by 4/3 for vertical or cross-flow component
 kv = 0.4 ; % von Karman const  
-z = 0.77; % meters above sea level, 0.77 for Gill on SWIFT, 0.95 for RM Young on SWIFT
+z = 0.95; % meters above sea level, 0.77 for Gill on WG, 0.95 for RM Young on SWIFT
 
 for wg = 1:length(SWIFT),
     if ~bad(wg),
         inertialrange = find( SWIFT(wg).windspectra.freq > fmin & SWIFT(wg).windspectra.freq < fmax);
         inertiallevel = nanmean( SWIFT(wg).windspectra.energy(inertialrange) .* (SWIFT(wg).windspectra.freq(inertialrange)).^(5/3) ) ;
         epsilon =  ( inertiallevel ./ ( ( SWIFT(wg).windspd ./ (2*pi) ).^(2/3)  .* K ) ).^(3/2);
+        %epsilon =  ( inertiallevel ./ ( ( SWIFT(wg).windspd ).^(2/3)  .* K ) ).^(3/2);
         SWIFT(wg).windustar = (kv * epsilon * z ).^(1/3);  % assumes neutral
-        SWIFT(wg).windustar = SWIFT(wg).windustar;
+        SWIFT(wg).windustar = .5 * SWIFT(wg).windustar;
     else
         SWIFT(wg).windustar = NaN;
     end

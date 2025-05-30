@@ -139,4 +139,4 @@ fclose (fid);
 
 save([filename(1:end-4) '.mat'])
 
-batteryVoltage = mean(battery)
+%batteryVoltage = mean(battery)

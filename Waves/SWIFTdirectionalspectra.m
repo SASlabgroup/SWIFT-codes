@@ -58,7 +58,7 @@ for ai = 1:length(SWIFT),
     SWIFT(ai).wavespectra.b2( SWIFT(ai).wavespectra.b2==9999 | isnan(SWIFT(ai).wavespectra.b2) ) = 0;
 
     
-    if SWIFT(ai).sigwaveheight > 0 & SWIFT(ai).sigwaveheight < 10 & all(~isnan(SWIFT(ai).wavespectra.a1)),
+    if SWIFT(ai).sigwaveheight > 0 & SWIFT(ai).sigwaveheight < 20 & all(~isnan(SWIFT(ai).wavespectra.a1)),
         E = E + SWIFT(ai).wavespectra.energy;
         a1 = a1 + SWIFT(ai).wavespectra.a1.*SWIFT(ai).wavespectra.energy;
         a2 = a2 + SWIFT(ai).wavespectra.a2.*SWIFT(ai).wavespectra.energy;
