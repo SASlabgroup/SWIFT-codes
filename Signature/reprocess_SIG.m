@@ -315,7 +315,8 @@ for iburst = 1:nburst
            end
 
     %%%%%%%% Process Echo data %%%%%%%%%%%
-   if ~isempty(echo)
+   if exist('echo','var')
+       if ~isempty(echo)
 
        if ~isempty(SWIFT)
         S =mean([SWIFT.salinity],'omitnan');
@@ -332,7 +333,8 @@ for iburst = 1:nburst
             print(figname,'-dpng')
             close gcf
         end
-       
+
+       end
    end
     
     %%%%%%%% Save detailed signature data in SIG structure %%%%%%%%
@@ -348,8 +350,10 @@ for iburst = 1:nburst
     % Broadband data
     SIG(isig).profile = profile;
     % Echogram data
-    if ~isempty(echo)
-    SIG(isig).echogram = echogram;
+    if exist('echo','var')
+        if ~isempty(echo)
+        SIG(isig).echogram = echogram;
+        end
     end
     % Motion
     SIG(isig).motion.pitch = mean(avg.Pitch,'omitnan');
@@ -390,9 +394,11 @@ for iburst = 1:nburst
             SWIFT(sindex).signature.profile.wvar = profile.wvar;
             SWIFT(sindex).signature.profile.z = profile.z;
             % Echogram data
-            if ~isempty(echo)
-                SWIFT(sindex).signature.echo = echogram.echoc;
-                SWIFT(sindex).signature.echoz = echogram.r + opt.xz;
+            if exist('echo','var')
+                if ~isempty(echo)
+                    SWIFT(sindex).signature.echo = echogram.echoc;
+                    SWIFT(sindex).signature.echoz = echogram.r + opt.xz;
+                end
             end
             % Altimeter
             SWIFT(sindex).signature.altimeter = maxz;
@@ -417,9 +423,11 @@ for iburst = 1:nburst
             SWIFT(sindex).signature.profile.wvar = NaN(size(profile.u));
             SWIFT(sindex).signature.profile.z = profile.z;
             % Echogram data
-            if ~isempty(echo)
-                SWIFT(sindex).signature.echo = NaN(size(echogram.echoc));
-                SWIFT(sindex).signature.echoz = echogram.r + opt.xz;
+            if exist('echo','var')
+                if ~isempty(echo)
+                    SWIFT(sindex).signature.echo = NaN(size(echogram.echoc));
+                    SWIFT(sindex).signature.echoz = echogram.r + opt.xz;
+                end
             end
             % Flag
             badsig(sindex) = true;

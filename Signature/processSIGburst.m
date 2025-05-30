@@ -56,7 +56,7 @@ end
 
 % 3) Estimate dissipation rate from velocity structure functions
 wnf = w;
-ibad = ispike | repmat(badping,nbin,1);
+ibad = repmat(badping,nbin,1); % | ispike
 rmin = dz;
 rmax = 4*dz;
 nzfit = 1;
