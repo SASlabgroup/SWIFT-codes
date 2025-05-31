@@ -99,7 +99,7 @@ for i=1:length(full_names)
                     eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=SWIFT(t).signature.profile.',z_names{iz},'(:)'))
                 end
                 for iz=1:length(zHR_names)
-                    eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(t,:)=SWIFT(t).signature.HRprofile.',zHR_names{iz},'(:)'))
+                    eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(:,t)=SWIFT(t).signature.HRprofile.',zHR_names{iz},'(:)'))
                 end
             end
         elseif strcmp(full_names{i},'time')
@@ -313,7 +313,7 @@ for i=1:length(names)
         end
         for j=1:length(zHR_names)
             if strcmp(zHR_names{j},'z')
-                netcdf.putVar(ncid,zHR_id, S.signature.HRprofile.zHR(1,:));
+                netcdf.putVar(ncid,zHR_id, S.signature.HRprofile.zHR(:,1));
             else
                 eval(strcat('netcdf.putVar(ncid,',zHR_names{j},'HR_id, [S.signature.HRprofile.',zHR_names{j},'HR]'')'));
             end
