@@ -2,7 +2,7 @@ Surface Wave Instrument Float with Tracking (SWIFT) data
 
 Processed SWIFT data are ensemble-averages over "bursts" of raw data.
 A burst is typically 512-seconds (8.5 minutes) long. 
-Bursts are obtained at intervals of 720 seconds (12 minutes).  
+Bursts are typically obtained at intervals of 720 seconds (12 minutes).  
 Raw data are processed (QCd and burst-averaged) and then combined in a single structure in MATLAB ('SWIFT').
 The 'SWIFT' structure is an array of individual structures which contain the burst-averaged data products from each instrument, for each burst.
 Any given SWIFT data structure will only contain fields corresponding to the instruments that were on that particular SWIFT.    
@@ -17,16 +17,17 @@ Level 0 (L0): Raw data contained in burst files. There is no corresponding SWIFT
 	Data are contained within a mission directory folder (e.g. 'SWIFT24_24Oct2024'), with subfolders for each instrument payload.
 	The instrument subfolders are named either by serial com port # (e.g. 'COM-3'), or instrument short-name (e.g. 'SIG' for Signature1000).  
 	Within each instrument subfolder, burst files are further sorted into subfolders based on date (e.g. '20241104' for Nov 04, 2024).
-	Burst files are named with the mission name, instrument short-name, burst time to the hour, and burst number within the number (e.g. 'SWIFT24_SIG_24Nov2025.dat').
+	Burst files are named with the mission name, instrument short-name, burst time to the hour, and burst number within the hour 
+	(e.g. 'SWIFT24_SIG_24Nov2025_14_05.dat').
 
 Level 1 (L1): On-board processed data, contains data products such as wave spectra, turbulent dissipation rate, bulk wind speeds, etc. 
 	These data are made available in real time via Iridium telemetry, and can be queried after a deployment as well. 
 	Quality control is limited. 
 
-Level 2 (L2): Limited QC of the on-board processed data, primarily to identify and remove bursts obtained when the SWIFT was out of the water. 
+Level 2 (L2): Basic QC of the on-board processed data to identify and remove bursts obtained when the SWIFT was out of the water. 
 
-Level 3 (L3): Some or all instruments have been reprocessed using the raw burst data offloaded after the SWIFT has been recovered. 
-	This product has significantly more quality control than the L3 product. 
+Level 3 (L3): Some or all instruments are reprocessed using the raw burst data offloaded after the SWIFT has been recovered. 
+	This product has significantly more quality control than the L2 product. 
 
 Level 4 (L4): Ad hoc, experiment specific quality control applied to a SWIFT structure. This is the highest quality-controlled SWIFT version.
 
