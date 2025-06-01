@@ -68,8 +68,8 @@ for iburst = 1:length(bfiles)
         end
 
         % Check for NaN data
-        if ~any(~isnan(airtemp)) && ~any(~isnan(windspd))
-            disp('Bad data (all NaN). Skipping...')
+        if mean(airtemp,'omitnan') == 0 && mean(windspd,'omitnan') == 0
+            disp('Bad data (all zero). Skipping...')
             continue
         end
 
@@ -97,45 +97,31 @@ for iburst = 1:length(bfiles)
         ispike = windspd > median(windspd)+3*std(windspd,'omitnan');
         if sum(~ispike) > 3
             windspddsp = interp1(find(~ispike),windspd(~ispike),1:length(windspd));
-        else
-            windspddsp = NaN(size(windspd));
+        else 
+            windspddsp = NaN(size(windspd)); 
         end
         ispike = winddirT > median(winddirT)+3*std(winddirT,'omitnan');
         if sum(~ispike) > 3
             winddirTdsp = interp1(find(~ispike),winddirT(~ispike),1:length(winddirT));
-        else
-            winddirTdsp = NaN(size(winddirT));
+        else 
+            winddirTdsp = NaN(size(winddirTdsp));
         end
         ispike = windspdR > median(windspdR)+3*std(windspdR,'omitnan');
         if sum(~ispike) > 3
             windspdRdsp = interp1(find(~ispike),windspdR(~ispike),1:length(windspdR));
-        else
-            windspdRdsp = NaN(size(windspdR));
         end
         ispike = winddirR > median(winddirR)+3*std(winddirR,'omitnan');
         if sum(~ispike) > 3
             winddirRdsp = interp1(find(~ispike),winddirR(~ispike),1:length(winddirR));
-        else
-            winddirRdsp = NaN(size(winddirR));
         end
         ispike = airtemp > median(airtemp)+3*std(airtemp,'omitnan');
         if sum(~ispike) > 3
             airtempdsp = interp1(find(~ispike),airtemp(~ispike),1:length(airtemp));
-        else
-            airtempdsp = NaN(size(airtemp));
         end
         ispike = airpres > median(airpres)+3*std(airpres,'omitnan');
-        if sum(~ispike) > 3
-            airpresdsp = interp1(find(~ispike),airpres(~ispike),1:length(airpres));
-        else 
-            airpresdsp = NaN(size(airpres));
-        end
+        if sum(~ispike) > 3; airpresdsp = interp1(find(~ispike),airpres(~ispike),1:length(airpres));end
         ispike = relhumidity > median(relhumidity)+3*std(relhumidity,'omitnan');
-        if sum(~ispike) > 3
-            relhumiditydsp = interp1(find(~ispike),relhumidity(~ispike),1:length(relhumidity));
-        else
-            relhumiditydsp = NaN(size(relhumidity));
-        end
+        if sum(~ispike) > 3; relhumiditydsp = interp1(find(~ispike),relhumidity(~ispike),1:length(relhumidity));end
 
         % Compute tilt
         tilt = acosd(cosd(pitch).*cosd(roll));
