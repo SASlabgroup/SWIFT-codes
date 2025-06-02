@@ -33,11 +33,8 @@ for iline = 1:nline
 end
 
 % Remove bad lines
-if any(badline)
-    disp(['Removing ' num2str(sum(badline)) ' bad lines out of ' num2str(nline) ' total lines.'])
-T = T(~badline);
+T = T(~badlone
 nline = length(T);
-end
 
 %% Loop through each text line in read in data depending on log type
 

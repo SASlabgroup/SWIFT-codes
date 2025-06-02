@@ -40,7 +40,8 @@ fid = fopen([filename]);
 while 1
     tline = fgetl(fid);
     linenum = linenum + 1;
-    if length(tline)>6 & linenum > 1000, % skip boot-up
+    badchar = double(tline)>127; % non-ascii characters
+    if length(tline)>6 & linenum > 1000 & ~any(badchar), % skip boot-up
         %% met data, see PB100TechnicalManual_rev1.pdf, page 15
         % use wind in knts and convert, b/c 0.1 knt is better res than 0.1 m/s
         if tline(1:6) == '$WIMDA' & length(tline) > 50 & length(tline)<90,
