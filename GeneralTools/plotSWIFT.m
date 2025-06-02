@@ -13,7 +13,7 @@ function [] = plotSWIFT(SWIFT)
 % M. Smith, 09/2018 update CT plotting to utilize CTdepth when available
 % J. Thomson, 09/2018 include spectrogram in wave spectral figure  and
 %               include met height legend in temp plot
-% L. Crews 05/2025 plot info from vertical and horizontal acceleration histograms
+% L. Crews 05/2025 plot info from vertical and horizontal acceleration histograms 
 %
 % plotSWIFT creates the following figures if applicable data is available:
 %   figure 1: Wind and wave plot
@@ -28,6 +28,7 @@ function [] = plotSWIFT(SWIFT)
 %   figure 10: radiometers
 %   figure 11: drift spd and direction
 %   figure 12: acceleration histogram info (slow, turned off by default - set plot_wavehistogram = true)
+%   figure 13: shortwave radiation and atmos pressure
 
 if ispc
     slash = '\';
@@ -61,7 +62,7 @@ set(0,'defaultaxesfontsize',14,'defaultaxesfontweight','demi');
 cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw) );
 
 % Plot info from wave histograms? Slow due to interpolating to common bins
-plot_wavehistogram = false;
+plot_wavehistogram = true;
 
 %% Figure 1: Wind and wave plot
 % Available for all SWIFT, although v4s do not have winds
@@ -678,7 +679,7 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
     for direc_num = 1:numel(direcs)
         direc = char(direcs(direc_num));
      
-        figure; set(gcf, 'color', 'w')
+        figure(12), clf; set(gcf, 'color', 'w')
     
         % Find min and max values of entire dataset for common bin edges
         minacc = inf; maxacc = -inf;
@@ -710,7 +711,7 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
              
             bins = SWIFT(j).wavehistogram.([direc, 'accbins']);
             counts = SWIFT(j).wavehistogram.([direc, 'acc']);
-            interp_counts(j, :) = interp1(bins, counts, interp_bin_centers, 'linear');
+            interp_counts(j, :) = interp1(bins, counts, interp_bin_centers, 'linear') ./ sum(counts); % normalized
         
             %Calculate and save needeed info for skewness andd kurtosis plots
             data = repelem(bins, counts); % Reconstruct pseudo-data 
@@ -726,13 +727,14 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
         end
     %%
         %Pcolor of all histograms over time - additional formatting for all subplots done at the end
-        subplot(1, 3, 1)
-        pcolor(interp_bin_centers, times, interp_counts); shading flat
-        xlabel([direc, ' acc [g]'], 'FontSize', 12)
+        subplot(3, 1, 1); hold on; box on
+        pcolor(times, interp_bin_centers, interp_counts'); shading flat
+        ylabel([direc, ' acc [g]'], 'FontSize', 12)
         cb = colorbar;
-        ylabel(cb, 'observations [counts]', 'FontSize', 12)
-        clim([minacc_count maxacc_count]) 
-        xlim([minacc, maxacc])
+        %clabel(cb, 'observations [counts]', 'FontSize', 12)
+        cb.Label.String = 'N';
+        %clim([minacc_count maxacc_count]) 
+        ylim([minacc, maxacc])
         
         %% Plot skew and kurtosis
     
@@ -740,22 +742,56 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
         smooth_skews = movmean(skews, 1, 'SamplePoints', times);
         smooth_kurtos = movmean(kurtos, 1, 'SamplePoints', times);
     
-        subplot(1, 3, 2); hold on; 
-        plot(smooth_skews, times, 'color', 'k', 'linewidth', 1);  
-        xlabel('skewness', 'FontSize', 12)
+        subplot(3, 1, 2); hold on; 
+        plot(times, smooth_skews,  'color', 'k', 'linewidth', 1);  
+        ylabel('skewness', 'FontSize', 12)
+        cb2 = colorbar; set(cb2,'Visible','off')
         
-        subplot(1, 3, 3); hold on; 
-        plot(smooth_kurtos, times, 'color', 'k', 'linewidth', 1); 
-        xlabel('kurtosis', 'FontSize', 12)
+        subplot(3, 1, 3); hold on; 
+        plot(times, smooth_kurtos, 'color', 'k', 'linewidth', 1); 
+        ylabel('kurtosis', 'FontSize', 12)
+        cb3 = colorbar; set(cb3,'Visible','off')
     
         %Plot formatting
         for splot = 1:3
-            subplot(1, 3, splot)
-            ylim([SWIFT(1).time, SWIFT(end).time])
-            datetick('y', 'keeplimits')
+            subplot(3, 1, splot)
+            xlim([SWIFT(1).time, SWIFT(end).time])
+            datetick('x', 'keeplimits')
             set(gca, 'FontSize', 12)
             box on; grid on
         end
     end %End of loop for acceleration direction (horizontal or vertical)
     
+    print('-dpng',['SWIFT' wd '_acchist.png']) 
+
 end 
+
+%% figure 13: shortwave radiation
+if isfield(SWIFT,'solarrad') && isfield(SWIFT,'airpres') && isfield(SWIFT,'airtemp') && isfield(SWIFT,'windspd') % check field exists
+    
+    figure(13), clf
+    
+    subplot(4,1,1)
+    plot([SWIFT.time],[SWIFT.solarrad],'linewidth',2)
+    datetick
+    ylabel('Solar rad. [W/m^2]')
+
+    subplot(4,1,2)
+    plot([SWIFT.time],[SWIFT.airtemp],'linewidth',2)
+    datetick
+    ylabel('Air temp [C]')
+
+    subplot(4,1,3)
+    plot([SWIFT.time],[SWIFT.airpres],'linewidth',2)
+    datetick
+    ylabel('Air pres [mb]')
+
+    subplot(4,1,4)
+    plot([SWIFT.time],[SWIFT.windspd],'linewidth',2)
+    datetick
+    ylabel('Wind spd [m/s]')
+
+    print('-dpng',['SWIFT' wd '_solarrad_met.png']) 
+
+end
+
