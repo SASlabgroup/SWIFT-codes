@@ -19,7 +19,7 @@ function [ lat lon sog cog depth time altitude ] = readNMEA(filename);
 %% params
 
 bootlines = 0;
-preferedsentence = 'GGA'; % GGA or RMC or GLL
+preferedsentence = 'RMC'; % GGA or RMC or GLL
 
 
 %% initialize
@@ -144,6 +144,11 @@ while 1
             depthft(dbtlength) = dbtdata{1+1};
             depth(dbtlength) = dbtdata{3+1}; % meters
             dbtlinenum(dbtlength) = linenum;
+        elseif tline(1:6) == '$SDDPT' & length(tline) > 6,
+            dbtdata = textscan(tline,'%s%n%n%[^\n]','Delimiter',','); % feet, meter, fathoms
+            dbtlength = dbtlength + 1;
+            depth(dbtlength) = dbtdata{1+1}; % units?
+            dbtlinenum(dbtlength) = linenum;
         else
         end
     else
@@ -151,7 +156,6 @@ while 1
     if tline==-1, break, end
 end
 fclose(fid);
-
 
 
 
@@ -196,8 +200,8 @@ end
 if ~isempty(depth) & ~isempty(time),
     
     depthtime = interp1( timelinenum, time, dbtlinenum);
-    depthlat = interp1( positionlinenum, lat, dbtlinenum);
-    depthlon = interp1( positionlinenum, lon, dbtlinenum);
+    depthlat = interp1( positionlinenumber, lat, dbtlinenum);
+    depthlon = interp1( positionlinenumber, lon, dbtlinenum);
     
     time = depthtime;
     lat = depthlat;
