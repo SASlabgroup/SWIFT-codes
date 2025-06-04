@@ -33,7 +33,7 @@ for fi = 1:length(flist)
 
     removed(fi) = original - length(SWIFT);
 
-    save(flist(fi).name,'SWIFT')
+    save(flist(fi).name,'SWIFT*')
 
 end
 
