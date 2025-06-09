@@ -77,7 +77,7 @@ if isfield(SWIFT,'downlooking')
     z_names = fieldnames(SWIFT(1).downlooking);
 end
 if isfield(SWIFT,'signature')
-    sig_names = fieldnames(SWIFT(1).signature)
+    sig_names = fieldnames(SWIFT(1).signature);
     if isfield(SWIFT(1).signature,'HRprofile')
         zHR_dim = netcdf.defDim(ncid,'zHR', length(SWIFT(1).signature.HRprofile.z));
         zHR_names = fieldnames(SWIFT(1).signature.HRprofile);
@@ -96,10 +96,10 @@ for i=1:length(full_names)
         if strcmp(full_names{i},'signature')
             for t=1:length(SWIFT)
                 for iz=1:length(z_names)
-                    eval(strcat('S.signature.profile.',z_names{iz},'(t,:)=SWIFT(t).signature.profile.',z_names{iz},'(:)'))
+                    S.signature.profile.(z_names{iz})(:,t) = SWIFT(t).signature.profile.(z_names{iz})(:);
                 end
                 for iz=1:length(zHR_names)
-                    eval(strcat('S.signature.HRprofile.',zHR_names{iz},'HR(:,t)=SWIFT(t).signature.HRprofile.',zHR_names{iz},'(:)'))
+                    S.signature.HRprofile.([zHR_names{iz} 'HR'])(:,t) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
                 end
             end
         elseif strcmp(full_names{i},'time')
@@ -107,9 +107,9 @@ for i=1:length(full_names)
         elseif strcmp(full_names{i},'ID')
             S.ID = ones(length(SWIFT),1) * swiftnum;
         else
-            eval(strcat('S.',full_names{i},'=[SWIFT.',full_names{i},']')); % errors here if check factor in some but not all
+            S.(full_names{i}) = [SWIFT.(full_names{i})]; % errors here if check factor in some but not all
         end
-        names{j} = full_names{i}
+        names{j} = full_names{i};
         j = j+1;
    % end
 end
@@ -121,109 +121,109 @@ for i=1:length(names)
     if strcmp(names{i},'wavespectra')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
-                eval(strcat(spec_names{j},'_id = netcdf.defVar(ncid,''',spec_names{j},''',''NC_DOUBLE'',[f_dim])'));
+                spec_var_ids.(spec_names{j}) = netcdf.defVar(ncid, spec_names{j}, 'NC_DOUBLE', f_dim);
             else
-                eval(strcat(spec_names{j},'_id = netcdf.defVar(ncid,''',spec_names{j},''',''NC_DOUBLE'',[t_dim f_dim])'));
+                spec_var_ids.(spec_names{j}) = netcdf.defVar(ncid, spec_names{j}, 'NC_DOUBLE', [t_dim f_dim]);
             end
         end
     elseif strcmp(names{i},'uplooking') || strcmp(names{i},'downlooking')
         for j=1:length(z_names)
             if strcmp(z_names{j},'z')
-                eval(strcat(z_names{j},'_id = netcdf.defVar(ncid,''',z_names{j},''',''NC_DOUBLE'',[z_dim])'));
+                z_var_ids.(z_names{j}) = netcdf.defVar(ncid, z_names{j}, 'NC_DOUBLE', z_dim);
                 %             elseif strcmp(z_names{j},'tkedissipationrate')
-                %                 eval(strcat(z_names{j},'_id = netcdf.defVar(ncid,''',z_names{j},''',''NC_DOUBLE'',[t_dim])'));
+                %                 z_var_ids.(z_names{j}) = netcdf.defVar(ncid, z_names{j}, 'NC_DOUBLE', t_dim);
             else
-                eval(strcat(z_names{j},'_id = netcdf.defVar(ncid,''',z_names{j},''',''NC_DOUBLE'',[t_dim z_dim])'));
+                z_var_ids.(z_names{j}) = netcdf.defVar(ncid, z_names{j}, 'NC_DOUBLE', [t_dim z_dim]);
             end
         end
     elseif strcmp(names{i},'signature')
         for j=1:length(z_names)
             if strcmp(z_names{j},'altimeter')
-                eval(strcat(z_names{j},'_id = netcdf.defVar(ncid,''',z_names{j},''',''NC_DOUBLE'',[t_dim])'));
+                z_var_ids.(z_names{j}) = netcdf.defVar(ncid, z_names{j}, 'NC_DOUBLE', t_dim);
             elseif strcmp(z_names{j},'z')
-                eval(strcat(z_names{j},'_id = netcdf.defVar(ncid,''',z_names{j},''',''NC_DOUBLE'',[z_dim])'));
+                z_var_ids.(z_names{j}) = netcdf.defVar(ncid, z_names{j}, 'NC_DOUBLE', z_dim);
             else
-                eval(strcat(z_names{j},'_id = netcdf.defVar(ncid,''',z_names{j},''',''NC_DOUBLE'',[t_dim z_dim])'));
+                z_var_ids.(z_names{j}) = netcdf.defVar(ncid, z_names{j}, 'NC_DOUBLE', [t_dim z_dim]);
             end
         end
         for j=1:length(zHR_names)
             if strcmp(zHR_names{j},'z')
-                zHR_id = netcdf.defVar(ncid,'zHR','NC_DOUBLE',[zHR_dim]);
+                zHR_id = netcdf.defVar(ncid,'zHR','NC_DOUBLE', zHR_dim);
             else
-                eval(strcat(zHR_names{j},'HR_id = netcdf.defVar(ncid,''',zHR_names{j},'HR'',''NC_DOUBLE'',[t_dim zHR_dim])'));
+                zHR_var_ids.([zHR_names{j} 'HR']) = netcdf.defVar(ncid, [zHR_names{j} 'HR'], 'NC_DOUBLE', [t_dim zHR_dim]);
             end
         end
         %edit variable names to CF convention names - do this for all vars
         %with different names than the SWIFT defaults
    elseif strcmp(names{i},'ID')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''trajectory'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'trajectory', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'lon')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''lon'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'lon', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'lat')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''lat'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'lat', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'watertemp')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''sea_water_temperature'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'sea_water_temperature', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'watertemp_d2')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''sea_water_temperature_at_depth'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'sea_water_temperature_at_depth', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'airtemp')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''air_temperature'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'air_temperature', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'salinity')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''sea_water_salinity'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'sea_water_salinity', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'salinity_d2')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''sea_water_salinity_at_depth'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'sea_water_salinity_at_depth', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'qa')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''specific_humidity'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'specific_humidity', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'peakwavedirT')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''peak_wave_direction'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'peak_wave_direction', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'peakwaveperiod')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''peak_wave_period'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'peak_wave_period', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'centroidwaveperiod')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''mean_wave_period'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'mean_wave_period', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'sigwaveheight')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''significant_wave_height'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'significant_wave_height', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'mss')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''wave_mean_square_slope'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'wave_mean_square_slope', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'ustar')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''friction_velocity_in_air_from_wave_spectra'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'friction_velocity_in_air_from_wave_spectra', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'airtempstddev')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''air_temperature_stddev'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'air_temperature_stddev', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'windspd')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''wind_speed'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'wind_speed', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'windspdstddev')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''wind_speed_stddev'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'wind_speed_stddev', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'winddirT')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''wind_direction'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'wind_direction', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'winddirTstddev')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''wind_direction_stddev'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'wind_direction_stddev', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'driftspd')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''drift_speed'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'drift_speed', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'driftdirT')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''drift_direction'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'drift_direction', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'relhumidity')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''relative_humidity'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'relative_humidity', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'qsea')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''sea_surface_saturation_specific_humidity'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'sea_surface_saturation_specific_humidity', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'qair')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''specific_humidity'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'specific_humidity', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'relhumiditystddev')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''relative_humidity_stddev'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'relative_humidity_stddev', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'airpres')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''air_pressure'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'air_pressure', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'airpresstddev')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''air_pressure_stddev'',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'air_pressure_stddev', 'NC_DOUBLE', t_dim);
 %     elseif strcmp(names{i},'flag_values_watertemp')
-%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_watertemp'',''NC_DOUBLE'',[t_dim])'));
+%         var_ids.(names{i}) = netcdf.defVar(ncid, 'flag_values_watertemp', 'NC_DOUBLE', t_dim);
 %     elseif strcmp(names{i},'flag_values_airtemp')
-%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_airtemp'',''NC_DOUBLE'',[t_dim])'));
+%         var_ids.(names{i}) = netcdf.defVar(ncid, 'flag_values_airtemp', 'NC_DOUBLE', t_dim);
 %     elseif strcmp(names{i},'flag_values_humidity')
-%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_humidity'',''NC_DOUBLE'',[t_dim])'));
+%         var_ids.(names{i}) = netcdf.defVar(ncid, 'flag_values_humidity', 'NC_DOUBLE', t_dim);
 %     elseif strcmp(names{i},'flag_values_windpsd')
-%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_windspd'',''NC_DOUBLE'',[t_dim])'));
+%         var_ids.(names{i}) = netcdf.defVar(ncid, 'flag_values_windspd', 'NC_DOUBLE', t_dim);
 %     elseif strcmp(names{i},'flag_values_salinity')
-%         eval(strcat(names{i},'_id = netcdf.defVar(ncid,''flag_values_salinity'',''NC_DOUBLE'',[t_dim])'));
+%         var_ids.(names{i}) = netcdf.defVar(ncid, 'flag_values_salinity', 'NC_DOUBLE', t_dim);
 
     elseif ~strcmp(names{i},'ID')
-        eval(strcat(names{i},'_id = netcdf.defVar(ncid,''',names{i},''',''NC_DOUBLE'',[t_dim])'));
+        var_ids.(names{i}) = netcdf.defVar(ncid, names{i}, 'NC_DOUBLE', t_dim);
 
     end
 end
@@ -282,45 +282,46 @@ for i=1:length(names)
     if strcmp(names{i},'wavespectra')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
-                netcdf.putVar(ncid,freq_id, S.wavespectra(1).freq);
+                netcdf.putVar(ncid, spec_var_ids.freq, S.wavespectra(1).freq);
             else
-                eval(strcat('netcdf.putVar(ncid,',spec_names{j},'_id, [S.wavespectra.',spec_names{j},']'')'));
+                netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), [S.wavespectra.(spec_names{j})]);
             end
         end
     elseif strcmp(names{i},'uplooking')
         for j=1:length(z_names)
             if strcmp(z_names{j},'z')
-                netcdf.putVar(ncid,z_id, S.uplooking(1).z);
+                netcdf.putVar(ncid, z_var_ids.z, S.uplooking(1).z);
             else
-                eval(strcat('netcdf.putVar(ncid,',z_names{j},'_id, [S.uplooking.',z_names{j},'])'));
+                netcdf.putVar(ncid, z_var_ids.(z_names{j}), [S.uplooking.(z_names{j})]);
             end
+
         end
     elseif strcmp(names{i},'downlooking')
         for j=1:length(z_names)
             if strcmp(z_names{j},'z')
-                netcdf.putVar(ncid,z_id, S.downlooking(1).z);
+                netcdf.putVar(ncid, z_var_ids.z, S.downlooking(1).z);
             else
-                eval(strcat('netcdf.putVar(ncid,',z_names{j},'_id, [S.downlooking.',z_names{j},']'')'));
+                netcdf.putVar(ncid, z_var_ids.(z_names{j}), [S.downlooking.(z_names{j})]);
             end
         end
     elseif strcmp(names{i},'signature')
         for j=1:length(z_names)
             if strcmp(z_names{j},'z')
-                netcdf.putVar(ncid,z_id, S.signature.profile.z(1,:));
+                netcdf.putVar(ncid, z_var_ids.z, S.signature.profile.z(:,1));
             else
-                eval(strcat('netcdf.putVar(ncid,',z_names{j},'_id, [S.signature.profile.',z_names{j},']'')'));
+                netcdf.putVar(ncid, z_var_ids.(z_names{j}), [S.signature.profile.(z_names{j})]);
             end
         end
         for j=1:length(zHR_names)
             if strcmp(zHR_names{j},'z')
-                netcdf.putVar(ncid,zHR_id, S.signature.HRprofile.zHR(:,1));
+                netcdf.putVar(ncid, zHR_id, S.signature.HRprofile.zHR(:,1));
             else
-                eval(strcat('netcdf.putVar(ncid,',zHR_names{j},'HR_id, [S.signature.HRprofile.',zHR_names{j},'HR]'')'));
+                netcdf.putVar(ncid, zHR_var_ids.([zHR_names{j} 'HR']), [S.signature.HRprofile.([zHR_names{j} 'HR'])]);
             end
         end
     else
 
-        eval(strcat('netcdf.putVar(ncid,',names{i},'_id, S.',names{i},')'));
+        netcdf.putVar(ncid, var_ids.(names{i}), S.(names{i}));
 
     end
 end
