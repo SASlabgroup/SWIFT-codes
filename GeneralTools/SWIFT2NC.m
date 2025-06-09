@@ -148,7 +148,7 @@ for i=1:length(names)
         end
         for j=1:length(zHR_names)
             if strcmp(zHR_names{j},'z')
-                zHR_id = netcdf.defVar(ncid,'zHR','NC_DOUBLE', zHR_dim);
+                zHR_var_ids.([zHR_names{j} 'HR']) = netcdf.defVar(ncid, [zHR_names{j} 'HR'], 'NC_DOUBLE', zHR_dim);
             else
                 zHR_var_ids.([zHR_names{j} 'HR']) = netcdf.defVar(ncid, [zHR_names{j} 'HR'], 'NC_DOUBLE', [t_dim zHR_dim]);
             end
@@ -282,7 +282,7 @@ for i=1:length(names)
     if strcmp(names{i},'wavespectra')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
-                netcdf.putVar(ncid, spec_var_ids.freq, S.wavespectra(1).freq);
+                netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), S.wavespectra(1).freq);
             else
                 netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), [S.wavespectra.(spec_names{j})]);
             end
@@ -290,7 +290,7 @@ for i=1:length(names)
     elseif strcmp(names{i},'uplooking')
         for j=1:length(z_names)
             if strcmp(z_names{j},'z')
-                netcdf.putVar(ncid, z_var_ids.z, S.uplooking(1).z);
+                netcdf.putVar(ncid, z_var_ids.(z_names{j}), S.uplooking(1).z);
             else
                 netcdf.putVar(ncid, z_var_ids.(z_names{j}), [S.uplooking.(z_names{j})]);
             end
@@ -299,7 +299,7 @@ for i=1:length(names)
     elseif strcmp(names{i},'downlooking')
         for j=1:length(z_names)
             if strcmp(z_names{j},'z')
-                netcdf.putVar(ncid, z_var_ids.z, S.downlooking(1).z);
+                netcdf.putVar(ncid, z_var_ids.(z_names{j}), S.downlooking(1).z);
             else
                 netcdf.putVar(ncid, z_var_ids.(z_names{j}), [S.downlooking.(z_names{j})]);
             end
@@ -307,14 +307,14 @@ for i=1:length(names)
     elseif strcmp(names{i},'signature')
         for j=1:length(z_names)
             if strcmp(z_names{j},'z')
-                netcdf.putVar(ncid, z_var_ids.z, S.signature.profile.z(:,1));
+                netcdf.putVar(ncid, z_var_ids.(z_names{j}), S.signature.profile.z(:,1));
             else
                 netcdf.putVar(ncid, z_var_ids.(z_names{j}), [S.signature.profile.(z_names{j})]);
             end
         end
         for j=1:length(zHR_names)
             if strcmp(zHR_names{j},'z')
-                netcdf.putVar(ncid, zHR_id, S.signature.HRprofile.zHR(:,1));
+                netcdf.putVar(ncid, zHR_var_ids.([zHR_names{j} 'HR']),  S.signature.HRprofile.zHR(:,1));
             else
                 netcdf.putVar(ncid, zHR_var_ids.([zHR_names{j} 'HR']), [S.signature.HRprofile.([zHR_names{j} 'HR'])]);
             end
