@@ -1,4 +1,8 @@
 function [HRprofile,fh] = processSIGburst(burst,opt)
+% NOTE: Quality Control
+%   - remove worst pings to get good EOFs, then interpolate back in time
+%   - alternatively, could use *only* despiked data. This does not
+%       work well when data are very noisy/poor quality
 
 %    Check to make sure dimensions correct
 if length(size(burst.VelocityData)) > 2
@@ -17,52 +21,61 @@ w = -burst.VelocityData';
 [nbin,nping] = size(w);
 dz = burst.CellSize;
 bz = burst.Blanking;
-z = opt.xz + bz + dz*(1:nbin)';
+xz = opt.xz;
+z = xz + bz + dz*(1:nbin)';
 
-% Find Spikes (phase-shift threshold, Shcherbina 2018)
+% Despike (phase-shift threshold, Shcherbina 2018)
 L = bz+dz*nbin; % m, pulse distance
 F0 = 10^6; % Hz, pulse carrier frequency (1 MHz for Sig 1000)
 cs = mean(burst.SoundSpeed,'omitnan'); % m/s, sound speed
 Vr = cs.^2./(4*F0*L);% m/s
 nfilt = round(1/dz);% 1 m
-[winterp,ispike] = despikeSIG(w,nfilt,Vr/2,'interp');
+[wdespike,ispike] = despikeSIG(w,nfilt,Vr/2,'interp');
 
 %%%%%% Velocity Profile %%%%%%
-HRprofile.w = mean(winterp,2,'omitnan');
-HRprofile.wvar = var(winterp,[],2,'omitnan');
+HRprofile.w = mean(wdespike,2,'omitnan');
+HRprofile.wvar = var(wdespike,[],2,'omitnan');
 HRprofile.z = z;
 
 %%%%%% Dissipation Estimates %%%%%%
 
-% 1) Spatial High-pass
-nsm = round(2/dz); % 1 m
-wphp = winterp - smooth_mat(winterp',hann(nsm))';
-
-% 2) EOF High-pass using interpolated data 
-badping = sum(ispike)./nbin > 0.5;% | std(wphp,[],'omitnan') > 0.01; 
-%   - remove worst pings to get good EOFs, then interpolate back in time
-%   - alternatively, could use *only* despiked data. This does not
-%       work well when data are very noisy/poor quality
-eofamp = NaN(size(w'));
-[eofs,eofamp(~badping,:),eofvar,~] = eof(winterp(:,~badping)');
-if sum(~badping) > 2
-    for ieof = 1:nbin
-        eofamp(:,ieof) = interp1(find(~badping),eofamp(~badping,ieof),1:nping);
-    end
-    wpeof = eofs(:,opt.nsumeof+1:end)*(eofamp(:,opt.nsumeof+1:end)');
+% 0) NaN bad bins (spike percentage of data in a bin > 70 %)'; remove bad pings ( > 50% in a ping)
+pspike = 100*(sum(ispike,2,'omitnan')./nping);
+badbin = pspike > opt.pspikemaxbin;
+wcrop = wdespike;
+if opt.cropbin
+wcrop(badbin,:) = NaN;
+badping = 100*sum(ispike(~badbin,:))./sum(~badbin) > opt.pspikemaxping;% | std(wphp,[],'omitnan') > 0.01; 
 else
-    wpeof = NaN(size(w));
-end        
+    badping = 100*sum(ispike,'omitnan')./nbin > opt.pspikemaxping;
+end
+wcrop(:,badping) = NaN;
 
-% 3) Estimate dissipation rate from velocity structure functions
-wnf = w;
-ibad = repmat(badping,nbin,1); % | ispike
+% if opt.nanspike
+%     wcrop(ispike) = NaN;
+% end
+
+% 1) No filter
+wnf = wcrop;
+
+% 2) Spatial High-pass
+nsm = round(2/dz); % 1 m
+wphp = wcrop - smooth_mat(wcrop',hann(nsm))';
+
+% 3) EOF High-pass using interpolated data 
+[eofs,eofamp,eofvar,~] = eof(wcrop');
+wpeof = eofs(:,opt.nsumeof+1:end)*(eofamp(:,opt.nsumeof+1:end)');
+
+% 4) Estimate dissipation rate from velocity structure functions
 rmin = dz;
 rmax = 4*dz;
 nzfit = 1;
-wnf(ibad) = NaN;
-wpeof(ibad) = NaN;
-wphp(ibad) = NaN;
+
+if opt.nanspike
+    wnf(ispike) = NaN;
+    wpeof(ispike) = NaN;
+    wphp(ispike) = NaN;
+end
 
 warning('off','all')
 % No filter, no analytic wave fit (D ~ r^{-2/3})
@@ -93,7 +106,7 @@ HRprofile.QC.eofamp = eofamp';
 HRprofile.QC.wpeofmag = std(wpeof,[],2,'omitnan')';
 HRprofile.QC.hrcorr = mean(corr,2,'omitnan');
 HRprofile.QC.hramp = mean(amp,2,'omitnan');
-HRprofile.QC.pspike = (sum(ispike,2,'omitnan')./nping);  
+HRprofile.QC.pspike = pspike;  
 HRprofile.QC.pbadping = sum(badping)./nping;
 
 % Plot Burst 

@@ -85,6 +85,10 @@ function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst)
 %           other reprocessing scripts. Moved 'readraw' and 'plotburst' as
 %           external toggles/function inputs. The others are changed less
 %           frequently so they are 'internal'
+%       June 2025 (K. Zeiden)
+%           Update QC to enable removal of bad bins first, prevents entire
+%           pings being tossed if e.g. the bottom 10% of data is bad but
+%           the rest of the profile is fine. Both in HR and BB processing.
 
 % NOTE: Known issue -- sometimes the ADCP 'sputters' and for a few minutes
 % will record perfectly periodic ping-ping oscillations in correlation,
@@ -116,31 +120,31 @@ else %  Exit reprocessing if no L2 or L3 product exists
 end
 
 %% Toggles
+opt.xz = 0.2;
 
 %%% User Input Toggles
 opt.readraw = readraw;% read raw binary files
 opt.plotburst = plotburst; % generate plots for each burst
 
 %%% Internal Toggles
-opt.saveSIG = true; %save detailed sig data in separate SIG structure
+opt.saveSIG = true; % save detailed sig data in separate SIG structure
 opt.saveplots = true; % save generated plots
 
-% QC Options (broadband)
-opt.QCcorr = false;% (NOT recommended) standard, QC removes any data below 'mincorr'
-opt.QCbin = false;% QC entire bins with greater than pbadmax perecent bad correlation
-opt.QCping = false; % QC entire ping with greater than pbadmax percent bad correlation
+% Out of water correlation
+opt.outcorr = 35;
+
+% QC Options (BB)
+opt.QCbin = true;% QC entire bins with greater than pbadmax perecent bad correlation
 opt.QCfish = true;% detects fish from highly skewed amplitude distributions in a depth bin
 opt.QCalt = false; % trim data based on altimeter
+opt.mincorr = 50; % burst-avg correlation minimum
 
-% Config Parameters
-opt.xz = 0.2; % depth of transducer [m]
-
-% Calculation Parameters
-opt.mincorr = 40; % burst-avg correlation minimum
-opt.pbadmax = 80;
-opt.maxamp = 150; % burst-avg amplitude maximum
-opt.maxwvar = 0.2; % burst-avg HR velocity (percent) error maximum
-opt.nsumeof = 3;% Default 3? Number of lowest-mode EOFs to remove from turbulent velocity
+% QC Options (HR)
+opt.cropbin = true;% Remove bad bins.
+opt.pspikemaxbin = 50;% Remove bins with greater than pspikemaxbin% spikes
+opt.pspikemaxping = 50;% This is applied to remaining data after bad bins are removed
+opt.nanspike = false;% NaN out spikes. Otherwise they are interpolated through.
+opt.nsumeof = 3;
 
 %% Data type to be read in
 if opt.readraw
@@ -204,7 +208,7 @@ for iburst = 1:nburst
     end
 
     % Skip if any of the burst fields are 3D
-    if ndims(burst.VelocityData)>2 || ndims(burst.CorrelationData)>2 || ndims(burst.AmplitudeData)>2
+    if ~ismatrix(burst.VelocityData) || ~ismatrix(burst.CorrelationData) || ~ismatrix(burst.AmplitudeData)
         disp('Burst fields have more than 2 dimensions, skipping burst...')
         continue
     end
@@ -252,16 +256,8 @@ for iburst = 1:nburst
         smallfile = false;
     end
 
-    % Flag out of water based on bursts w/anomalously high amplitude
-    if mean(burst.AmplitudeData(:),'omitnan') > opt.maxamp
-        disp('   FLAG: High average amp...')
-        badamp = true;
-    else
-        badamp = false;
-    end
-
     % Flag out of water based on bursts w/low correlation
-    if mean(burst.CorrelationData(:),'omitnan') < opt.mincorr
+    if mean(burst.CorrelationData(:),'omitnan') < opt.outcorr
         disp('   FLAG: Low average corr...')
         badcorr = true;
     else
@@ -269,7 +265,7 @@ for iburst = 1:nburst
     end
 
     % Flag bad bursts
-    badburst = smallfile;% | badamp | badcorr
+    badburst = smallfile;% | badcorr | outofwater;
 
     %%%%%%% Process Broadband velocity data ('avg' structure) %%%%%%
 
@@ -286,11 +282,6 @@ for iburst = 1:nburst
             print(figname,'-dpng')
             close gcf
             
-            % figure(fh(2))
-            % set(gcf,'Name',[bname '_bband_profiles'])
-            % figname = [bfiles(iburst).folder slash get(gcf,'Name')];
-            % print(figname,'-dpng')
-            % close gcf
         end
        
 
@@ -366,7 +357,6 @@ for iburst = 1:nburst
     SIG(isig).badburst = badburst;
     SIG(isig).timematch = burstmatch;
     SIG(isig).outofwater = outofwater;
-    SIG(isig).flag.badamp = badamp;
     SIG(isig).flag.badcorr = badcorr;
     SIG(isig).flag.smallfile = smallfile;
 
@@ -393,6 +383,7 @@ for iburst = 1:nburst
             SWIFT(sindex).signature.profile.vvar = profile.vvar;
             SWIFT(sindex).signature.profile.wvar = profile.wvar;
             SWIFT(sindex).signature.profile.z = profile.z;
+            SWIFT(sindex).signature.profile.spd_alt = profile.spd_alt;
             % Echogram data
             if exist('echo','var')
                 if ~isempty(echo)
@@ -422,6 +413,7 @@ for iburst = 1:nburst
             SWIFT(sindex).signature.profile.vvar = NaN(size(profile.u));
             SWIFT(sindex).signature.profile.wvar = NaN(size(profile.u));
             SWIFT(sindex).signature.profile.z = profile.z;
+            SWIFT(sindex).signature.profile.spd_alt = NaN(size(profile.u));
             % Echogram data
             if exist('echo','var')
                 if ~isempty(echo)
@@ -463,6 +455,7 @@ if ~isempty(fieldnames(SWIFT))
             SWIFT(it).signature.profile.vvar = NaN(size(profile.u));
             SWIFT(it).signature.profile.wvar = NaN(size(profile.u));
             SWIFT(it).signature.profile.z = profile.z;
+            SWIFT(it).signature.profile.spd_alt = NaN(size(profile.u));
         end
     end
 end
