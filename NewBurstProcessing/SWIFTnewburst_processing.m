@@ -23,7 +23,7 @@ applyvelreference = true; % apply drift correction to signature velocity data
 rmwaves = true; % remove wave products (for short dt)
 depthprune = false; % option to remove bins below altimeter reading... set to false in deep water
 
-dt=120; %timestep to average over in seconds
+dt=60; %timestep to average over in seconds
 num=floor(512/dt); % number of new bursts per normal burst (512 s)
 
 maxsalinity = 35; % for QC
@@ -33,7 +33,7 @@ percentdry = .1; % maximum precent dry to allow when retaining a new burst, incr
 mincor = 0; % for QC when reprocessing turbulence data
 maxdriftspd = 2.5;
 
-parentdir = '/Users/jthomson/Desktop/NRLdrfit_Aug2022/';  % change to suit data
+parentdir = '/Users/jthomson/Desktop/WillapaLocal/';  % change to suit data
 cd(parentdir)
 
 SW_list=dir('SWIFT*'); % list of SWIFT directories to reprocess
