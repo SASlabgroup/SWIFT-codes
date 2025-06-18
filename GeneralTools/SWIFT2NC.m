@@ -76,15 +76,31 @@ if isfield(SWIFT,'downlooking')
     z_dim = netcdf.defDim(ncid,'z', length(SWIFT(1).downlooking.z));
     z_names = fieldnames(SWIFT(1).downlooking);
 end
-if isfield(SWIFT,'signature')
+if isfield(SWIFT,'signature')  
     sig_names = fieldnames(SWIFT(1).signature);
+    disp(~isempty(SWIFT(1).signature.HRprofile.z))
+    disp(SWIFT(1).signature.HRprofile.z)
+
     if isfield(SWIFT(1).signature,'HRprofile')
-        zHR_dim = netcdf.defDim(ncid,'zHR', length(SWIFT(1).signature.HRprofile.z));
-        zHR_names = fieldnames(SWIFT(1).signature.HRprofile);
+        if ~isempty(SWIFT(1).signature.HRprofile.z)
+            zHR_dim = netcdf.defDim(ncid,'zHR', length(SWIFT(1).signature.HRprofile.z));
+            zHR_names = fieldnames(SWIFT(1).signature.HRprofile);
+        else
+            zHR_names = [];
+        end
+    else
+        zHR_names = [];
     end
+
     if isfield(SWIFT(1).signature,'profile')
-        z_dim = netcdf.defDim(ncid,'z', length(SWIFT(1).signature.profile.z));
-        z_names = fieldnames(SWIFT(1).signature.profile);
+        if ~isempty(SWIFT(1).signature.profile.z)
+            z_dim = netcdf.defDim(ncid,'z', length(SWIFT(1).signature.profile.z));
+            z_names = fieldnames(SWIFT(1).signature.profile);
+        else
+            z_names = [];
+        end
+    else 
+        z_names = [];
     end
 end
 
@@ -1003,17 +1019,8 @@ for i=1:length(names)
             ncwriteatt(filename,'','units','')
             ncwriteatt(filename,'','long_name','')
         end
-
-
-
-
     end
 end
-
-
-
-
-
 end
 
 
