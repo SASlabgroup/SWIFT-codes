@@ -1,4 +1,4 @@
-function allswift = plotallSWIFT(expdir,level,allswift)
+function swift = allSWIFT(expdir,level,plotall)
 % plotallSWIFT: Overview plot of 'level' (e.g. 'L3') processed data from all missions in
 % an experiment directory. 'level' is a string.
 
@@ -17,42 +17,44 @@ if isempty(missions)
     return
 end
 
-if isempty(allswift)
+swift = struct;
 
-allswift = struct;
+for im = 1:length(missions)
 
-    for im = 1:length(missions)
-    
-        Lfile = dir([missions(im).folder slash missions(im).name slash '*' level '.mat']);
-    
-        if length(missions(im).name) ~= 17
-            disp(['Skippping ' missions(im).name])
-            continue
-        end
-    
-        ID = missions(im).name(6:7);
-        sdate = datestr(datenum(missions(im).name(9:17),'ddmmmyyyy'),'mmdd');
-    
-        sname = ['SN' ID '_' sdate];
-    
-        if isempty(Lfile)
-            disp(['No ' level ' product found in ' missions(im).name '. Skipping...'])
-        else
-            disp(['Loading ' missions(im).name ' ' level ' product...'])
-            load([Lfile.folder slash Lfile.name],'SWIFT');
-            % SWIFT = SWIFT_Stokes(SWIFT);
-            swift = catSWIFT(SWIFT);
-            allswift.(sname) = swift;
-        end
-    
+    Lfile = dir([missions(im).folder slash missions(im).name slash '*' level '.mat']);
+
+    if length(missions(im).name) ~= 17
+        disp(['Skippping ' missions(im).name])
+        continue
+    end
+
+    ID = missions(im).name(6:7);
+    sdate = datestr(datenum(missions(im).name(9:17),'ddmmmyyyy'),'mmdd');
+
+    sname = ['SN' ID '_' sdate];
+
+    if isempty(Lfile)
+        disp(['No ' level ' product found in ' missions(im).name '. Skipping...'])
+    else
+        disp(['Loading ' missions(im).name ' ' level ' product...'])
+        load([Lfile.folder slash Lfile.name],'SWIFT');
+        % SWIFT = SWIFT_Stokes(SWIFT);
+        oneswift = catSWIFT(SWIFT);
+        swift.(sname) = oneswift;
     end
 
 end
 
+
+
+
 %% Plotting params
+if ~plotall
+    return
+end
 MP = get(0,'monitorposition');
 mks = 2;
-swifts = fieldnames(allswift);
+swifts = fieldnames(swift);
 nswift = length(swifts);
 cswift = jet(nswift);
 
@@ -72,24 +74,24 @@ fh = figure('color','w','Name',[expdir  ' ' level ' MET Data']);
 set(fh,'outerposition',MP(1,:));
 for iswift = 1:nswift
     subplot(4,1,1);
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,2);
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).tair,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).tair,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,3);
-    if mean(allswift.(swifts{iswift}).press,'omitnan') < 10
+    if mean(swift.(swifts{iswift}).press,'omitnan') < 10
         sca = 1000;
     else 
         sca = 1;
     end
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).press.*sca,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).press.*sca,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,4);
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).humid,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).humid,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 end
@@ -120,19 +122,19 @@ fh = figure('color','w','Name',[expdir  ' ' level ' CT +  Drift Data']);
 set(fh,'outerposition',MP(1,:));
 for iswift = 1:nswift
     subplot(4,1,1);
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,2)
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).tsea,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).tsea,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,3);
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).sal,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).sal,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,4);
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).driftspd,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).driftspd,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 end
@@ -162,7 +164,7 @@ set(fh,'outerposition',MP(1,:));
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
     axes(h(1))
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 
@@ -170,7 +172,7 @@ for iswift = 1:nswift
     iSN = find(strcmp(SNs,SN));
 
     axes(h(iSN+1))
-    pcolor(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).wavefreq,log10(allswift.(swifts{iswift}).wavepower));
+    pcolor(swift.(swifts{iswift}).time,swift.(swifts{iswift}).wavefreq,log10(swift.(swifts{iswift}).wavepower));
     shading flat
     hold on
     title(['SWIFT' SN])
@@ -208,9 +210,9 @@ set(fh,'outerposition',MP(1,:));
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
 
-    if isfield(allswift.(swifts{iswift}),'relu')
+    if isfield(swift.(swifts{iswift}),'relu')
     axes(h(1))
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 
@@ -218,8 +220,8 @@ for iswift = 1:nswift
     iSN = find(strcmp(SNs,SN));
 
     axes(h(iSN+1))
-    if ~any(isnan(allswift.(swifts{iswift}).depth)) && any(~isnan(allswift.(swifts{iswift}).relu(:)))
-    pcolor(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).depth,allswift.(swifts{iswift}).relu);
+    if ~any(isnan(swift.(swifts{iswift}).depth)) && any(~isnan(swift.(swifts{iswift}).relu(:)))
+    pcolor(swift.(swifts{iswift}).time,swift.(swifts{iswift}).depth,swift.(swifts{iswift}).relu);
     end
     shading flat
     hold on
@@ -258,9 +260,9 @@ set(fh,'outerposition',MP(1,:));
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
 
-    if isfield(allswift.(swifts{iswift}),'spd_alt')
+    if isfield(swift.(swifts{iswift}),'spd_alt')
     axes(h(1))
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 
@@ -268,8 +270,8 @@ for iswift = 1:nswift
     iSN = find(strcmp(SNs,SN));
 
     axes(h(iSN+1))
-    if ~any(isnan(allswift.(swifts{iswift}).depth)) && any(~isnan(allswift.(swifts{iswift}).spd_alt(:)))
-    pcolor(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).depth,allswift.(swifts{iswift}).spd_alt);
+    if ~any(isnan(swift.(swifts{iswift}).depth)) && any(~isnan(swift.(swifts{iswift}).spd_alt(:)))
+    pcolor(swift.(swifts{iswift}).time,swift.(swifts{iswift}).depth,swift.(swifts{iswift}).spd_alt);
     end
     shading flat
     hold on
@@ -309,7 +311,7 @@ h = tight_subplot(nSN+1,1,0.025);
 
 for iswift = 1:nswift
     axes(h(1))
-    plot(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 
@@ -317,8 +319,8 @@ for iswift = 1:nswift
     iSN = find(strcmp(SNs,SN));
 
     axes(h(iSN+1))
-    if ~any(isnan(allswift.(swifts{iswift}).surfz)) && any(~isnan(allswift.(swifts{iswift}).surftke(:))) && ~any(allswift.(swifts{iswift}).surftke(:)<0)
-    pcolor(allswift.(swifts{iswift}).time,allswift.(swifts{iswift}).surfz,log10(allswift.(swifts{iswift}).surftke));
+    if ~any(isnan(swift.(swifts{iswift}).surfz)) && any(~isnan(swift.(swifts{iswift}).surftke(:))) && ~any(swift.(swifts{iswift}).surftke(:)<0)
+    pcolor(swift.(swifts{iswift}).time,swift.(swifts{iswift}).surfz,log10(swift.(swifts{iswift}).surftke));
     end
     shading flat
     hold on

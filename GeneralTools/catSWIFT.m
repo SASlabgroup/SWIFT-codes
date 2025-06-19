@@ -2,12 +2,11 @@
 function swift = catSWIFT(SWIFT)
 % Returns concatenated swift data in structure format
 
-%Time, lat, lon, battery
+% Time, lat, lon, battery
 swift.time = [SWIFT.time];
 nt = length(swift.time);
 swift.lon = 360 + [SWIFT.lon];
 swift.lat = [SWIFT.lat];
-swift.driftspd = [SWIFT.driftspd];
 if isfield(SWIFT,'battery')
 swift.battery = [SWIFT.battery];
 end
@@ -131,20 +130,21 @@ if isfield(SWIFT,'ambienttempmean')% This is the jacket temperature
 end
 
 % Drift velocity
-dx = NaN(1,nt);
-dy = NaN(1,nt);
-dt = NaN(1,nt);
-dx(1:end-1) = diff(swift.lon).*111.12*10^3; %m
-dx = dx.*cosd(swift.lat);
-dy(1:end-1) = diff(swift.lat).*111.12*10^3; %m
-dt(1:end-1) = diff(swift.time*24*60*60); %s
-driftu = dx./dt;
-driftv = dy./dt;
-driftu(abs(driftu)>0.5) = NaN;
-driftv(abs(driftv)>0.5) = NaN;
-swift.driftu = driftu;
-swift.driftv = driftv;
-swift.driftspd = [SWIFT.driftspd];
+time = [SWIFT.time];
+lat = [SWIFT.lat];
+lon = [SWIFT.lon];
+dt = diff(time);
+dlon = diff(lon); % deg
+u = deg2km(dlon,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( dt*24*3600 ); % m/s
+dlat = diff(lat); % deg/days
+v = deg2km(dlat) .* 1000 ./ ( dt*24*3600 ); % m/s
+ibad = abs(u) > 1 | abs(v) > 1 | isinf(u) | isinf(v);
+u(ibad) = NaN;
+v(ibad) = NaN;
+swift.driftu(2:nt) = u;
+swift.driftv(2:nt) = v;
+swift.driftspd(2:nt) = sqrt(u.^2 + v.^2); % m/s
+swift.driftspd0 = [SWIFT.driftspd];
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
@@ -385,16 +385,21 @@ if isfield(SWIFT,'signature')
         it = it + 1;
     end
     swift.surftke = NaN(nz,nt);
+    swift.surfw = NaN(nz,nt);
     for it = 1:nt
         if isfield(SWIFT(it).signature.HRprofile,'tkedissipationrate')
         tke = SWIFT(it).signature.HRprofile.tkedissipationrate;
+        w = SWIFT(it).signature.HRprofile.w;
             if ~isempty(tke)
                 swift.surftke(1:length(tke),it) = tke;
+                swift.surfw(1:length(tke),it) = w;
             else
                 swift.surftke(:,it) = NaN(nz,1);
+                swift.surfw(:,it) = NaN(nz,1);
             end
         else
             swift.surftke(:,it) = NaN(nz,1);
+            swift.surfw(:,it) = NaN(nz,1);
         end
     end
 elseif isfield(SWIFT,'uplooking')
@@ -420,17 +425,17 @@ end
 
 % Echograms
 if isfield(SWIFT,'signature')
-    if isfield(SWIFT(floor(end/2)).signature,'echogram')
+    if isfield(SWIFT(floor(end/2)).signature,'echo')
         it = 1; nz = 0;
         while nz == 0
-            swift.echoz = SWIFT(it).signature.echogram.z';
+            swift.echoz = SWIFT(it).signature.echoz';
             nz = length(swift.echoz);
             it = it + 1;
         end
         swift.echo = NaN(nz,nt);
         for it = 1:nt
-            if isfield(SWIFT(it).signature,'echogram')
-                echo = SWIFT(it).signature.echogram.echoc;
+            if isfield(SWIFT(it).signature,'echo')
+                echo = SWIFT(it).signature.echo;
                 swift.echo(1:length(echo),it) = echo;
             else 
                 swift.echo(:,it) = NaN(nz,1);

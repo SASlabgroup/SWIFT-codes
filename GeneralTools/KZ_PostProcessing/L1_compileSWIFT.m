@@ -216,14 +216,14 @@ if length(SWIFT) > 3
     lat = [SWIFT.lat];
     lon = [SWIFT.lon];
     dt = diff(time);
-    dlondt = diff(lon)./dt;
-    dxdt = deg2km(dlondt,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( 24*3600 ); % m/s
-    dlatdt = diff(lat)./dt; % deg per day
-    dydt = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
-    dxdt(isinf(dxdt)) = NaN;
-    dydt(isinf(dydt)) = NaN;
-    speed = sqrt(dxdt.^2 + dydt.^2); % m/s
-    direction = -180 ./ 3.14 .* atan2(dydt,dxdt); % cartesian direction [deg]
+    dlondt = diff(lon)./dt; % deg/days
+    u = deg2km(dlondt,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( 24*3600 ); % m/s
+    dlatdt = diff(lat)./dt; % deg/days
+    v = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
+    u(isinf(u)) = NaN;
+    v(isinf(v)) = NaN;
+    speed = sqrt(u.^2 + v.^2); % m/s
+    direction = -180 ./ 3.14 .* atan2d(v,u); % cartesian direction [deg]
     direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
     direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90 -> 0
 

@@ -33,8 +33,7 @@ fs0 = 48000;
 f0_kHz = decimate(0:1:fs0/2,100)'./ 1e3;
 nf = length(f0_kHz);
 
-% mfile = dir([missiondir slash 'Hydrophone' slash '*.mat']);
-mfile = [];
+mfile = dir([missiondir slash 'Hydrophone' slash '*.mat']);
 
 if isempty(mfile)
     
@@ -52,7 +51,7 @@ if isempty(mfile)
         hfold = hfiles(ihydro).folder;
         hname = hfiles(ihydro).name(1:end-4);
     
-       if exist([hfold slash hname '.mat'],'file')
+       if exist([hfold slash hname '.mat'],'file') && ismember('mS',who('-file',[hfold slash hname '.mat']))
            disp(['Loading ' hname '.mat'])
            load([hfold slash hname '.mat'],'mS','f_kHz','tsamp')
        else

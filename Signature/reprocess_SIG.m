@@ -133,10 +133,12 @@ opt.saveplots = true; % save generated plots
 % Out of water correlation
 opt.outcorr = 35;
 
+% QC Options Altimeter
+opt.QCalt = false; % trim data based on altimeter
+
 % QC Options (BB)
 opt.QCbin = true;% QC entire bins with greater than pbadmax perecent bad correlation
 opt.QCfish = true;% detects fish from highly skewed amplitude distributions in a depth bin
-opt.QCalt = false; % trim data based on altimeter
 opt.mincorr = 50; % burst-avg correlation minimum
 
 % QC Options (HR)
@@ -145,6 +147,7 @@ opt.pspikemaxbin = 50;% Remove bins with greater than pspikemaxbin% spikes
 opt.pspikemaxping = 50;% This is applied to remaining data after bad bins are removed
 opt.nanspike = false;% NaN out spikes. Otherwise they are interpolated through.
 opt.nsumeof = 3;
+
 
 %% Data type to be read in
 if opt.readraw
@@ -230,13 +233,6 @@ for iburst = 1:nburst
            disp('   WARNING: File name disagrees with recorded time...   ')
         end
     end
-
-    % Altimeter Distance
-    if isfield(avg,'AltimeterDistance')
-        maxz = median(avg.AltimeterDistance);
-    else
-        maxz = inf;
-    end
     
     %%%%%%% FLAGS %%%%%%
 
@@ -310,7 +306,7 @@ for iburst = 1:nburst
        if ~isempty(echo)
 
        if ~isempty(SWIFT)
-        S =mean([SWIFT.salinity],'omitnan');
+        S = mean([SWIFT.salinity],'omitnan');
        else
            S = 25;
        end
@@ -327,6 +323,35 @@ for iburst = 1:nburst
 
        end
    end
+
+   %%%%%%%%% Trim Profiles using Altimeter (if specified) %%%%%%%%%%%%%
+    if isfield(avg,'AltimeterDistance')
+        maxz = median(avg.AltimeterDistance);
+        if opt.QCalt
+
+            hrtrim = HRprofile.z > maxz;
+            HRprofile.w(hrtrim) = NaN;
+            HRprofile.wvar(hrtrim) = NaN;
+            HRprofile.eps(hrtrim) = NaN;
+            
+            % Trim Broadband
+            avgtrim = profile.z > maxz;
+            profile.u(avgtrim) = NaN;
+            profile.v(avgtrim) = NaN;
+            profile.w(avgtrim) = NaN;
+            profile.uvar(avgtrim) = NaN;
+            profile.vvar(avgtrim) = NaN;
+            profile.wvar(avgtrim) = NaN;
+            profile.spd_alt(avgtrim) = NaN;
+
+            % Trim Echogram
+            echotrim = echogram.z > maxz;
+            echogram.echoc(echotrim) = NaN;
+        
+        end
+    else
+        maxz = inf;
+    end
     
     %%%%%%%% Save detailed signature data in SIG structure %%%%%%%%
 
@@ -388,7 +413,7 @@ for iburst = 1:nburst
             if exist('echo','var')
                 if ~isempty(echo)
                     SWIFT(sindex).signature.echo = echogram.echoc;
-                    SWIFT(sindex).signature.echoz = echogram.r + opt.xz;
+                    SWIFT(sindex).signature.echoz = echogram.z;
                 end
             end
             % Altimeter
@@ -418,7 +443,7 @@ for iburst = 1:nburst
             if exist('echo','var')
                 if ~isempty(echo)
                     SWIFT(sindex).signature.echo = NaN(size(echogram.echoc));
-                    SWIFT(sindex).signature.echoz = echogram.r + opt.xz;
+                    SWIFT(sindex).signature.echoz = echogram.z;
                 end
             end
             % Flag
