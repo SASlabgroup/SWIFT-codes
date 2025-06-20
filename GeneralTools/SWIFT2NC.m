@@ -78,8 +78,8 @@ if isfield(SWIFT,'downlooking')
 end
 if isfield(SWIFT,'signature')  
     sig_names = fieldnames(SWIFT(1).signature);
-    disp(~isempty(SWIFT(1).signature.HRprofile.z))
-    disp(SWIFT(1).signature.HRprofile.z)
+    %disp(~isempty(SWIFT(1).signature.HRprofile.z))
+    %disp(SWIFT(1).signature.HRprofile.z)
 
     if isfield(SWIFT(1).signature,'HRprofile')
         if ~isempty(SWIFT(1).signature.HRprofile.z)
