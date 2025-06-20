@@ -134,7 +134,7 @@ opt.saveplots = true; % save generated plots
 opt.outcorr = 35;
 
 % QC Options Altimeter
-opt.QCalt = false; % trim data based on altimeter
+opt.QCalt = true; % trim data based on altimeter
 
 % QC Options (BB)
 opt.QCbin = true;% QC entire bins with greater than pbadmax perecent bad correlation
