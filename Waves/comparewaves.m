@@ -14,6 +14,7 @@ function [HsRsq Hsrmserror Hsbias Eratio f ] = comparewaves(SWIFT1, SWIFT2, tlim
 % Note also that plots of the time series and scatter are automatically generated
 %   with titles based on the working directory
 %
+% "SWIFT1" will plot in blue, and "SWIFT2" will plot in red
 %
 % J. Thomson, 3/2017
 %             10/2017 added optional output of energy ratio
