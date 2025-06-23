@@ -348,8 +348,12 @@ for iburst = 1:nburst
             profile.spd_alt(avgtrim) = NaN;
 
             % Trim Echogram
+            if exist('echo','var')
+               if ~isempty(echo)
             echotrim = echogram.z > maxz;
             echogram.echoc(echotrim) = NaN;
+               end
+            end
         
         end
     else
