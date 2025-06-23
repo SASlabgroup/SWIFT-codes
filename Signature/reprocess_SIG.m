@@ -137,19 +137,22 @@ opt.outcorr = 35;
 opt.QCalt = true; % trim data based on altimeter
 
 % QC Options (BB)
-opt.QCbin = true;% QC entire bins with greater than pbadmax perecent bad correlation
-opt.QCfish = true;% detects fish from highly skewed amplitude distributions in a depth bin
-opt.mincorr = 50; % burst-avg correlation minimum
+opt.avg.QCbin = true;% QC entire bins with greater than opt.avg.mincorr perecent bad correlation
+opt.avg.mincorr = 50; % burst-avg correlation minimum
+opt.avg.QCfish = true;% detects fish from highly skewed amplitude distributions in a depth bin
 
 % QC Options (HR)
-opt.cropbin = true;% Remove bad bins.
-opt.pspikemaxbin = 50;% Remove bins with greater than pspikemaxbin% spikes
-opt.pspikemaxping = 50;% This is applied to remaining data after bad bins are removed
-opt.nanspike = false;% NaN out spikes. Otherwise they are interpolated through.
-opt.nsumeof = 3;
+opt.HR.mincorr = 40;% To ignore correlation, set to 0;
+opt.HR.QCbin = true;% QC entire bins with greater than opt.HR.pbadmax_bin perecent bad data (spikes & correlation)
+opt.HR.pbadmax_bin = 50;
+opt.HR.QCping = true;% QC entire bins with greater than opt.HR.pbadmax_ping perecent bad data (spikes & correlation)
+opt.HR.pbadmax_ping = 50;
 
+opt.HR.NaNbad = false;% NaN out bad data. Otherwise they are interpolated through.
+opt.HR.nsumeof = 3;
 
 %% Data type to be read in
+
 if opt.readraw
     ftype = '.dat';
 else

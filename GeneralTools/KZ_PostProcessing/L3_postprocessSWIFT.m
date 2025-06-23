@@ -150,7 +150,7 @@ if rpSIG
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
         disp('Reprocessing Signature1000 data...')
         readraw = false;
-        plotburst = false; 
+        plotburst = true; 
         [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst);
     else
         disp('No SIG data...')

@@ -22,8 +22,8 @@ function [profile,fh] = processSIGavg(avg,opt)
     iQC = false(size(vel));
 
     % QC: flag corr minimum values
-    if opt.QCbin
-        ibadbin = squeeze(mean(corr,1,'omitnan')) < opt.mincorr;
+    if opt.avg.QCbin
+        ibadbin = squeeze(mean(corr,1,'omitnan')) < opt.avg.mincorr;
         ibadbin = repmat(ibadbin,1,1,nping);
         ibadbin = permute(ibadbin,[3 1 2]);
         iQC(ibadbin) = true;
@@ -31,7 +31,7 @@ function [profile,fh] = processSIGavg(avg,opt)
 
     % QC: flag fish w/ anomalously high amplitude: look for heavily skewed distributions
     ifish = false(size(amp));
-    if opt.QCfish
+    if opt.avg.QCfish
         for ibeam = 1:4
             for ibin = 1:nbin
                 [a,b] = hist(squeeze(amp(:,ibin,ibeam)));
@@ -71,7 +71,7 @@ function [profile,fh] = processSIGavg(avg,opt)
             if ibeam == 4;pos = get(gca,'Position');c(1) = colorbar;set(gca,'Position',pos);end
             subplot(5,4,ibeam+1*4)
             imagesc(squeeze(corr(:,:,ibeam))')
-            clim([opt.mincorr-5 100]);  cmocean('amp')
+            clim([opt.avg.mincorr-5 100]);  cmocean('amp')
             if ibeam == 1; ylabel('Bin #'); end
             if ibeam == 4;pos = get(gca,'Position');c(2) = colorbar;set(gca,'Position',pos);end
             subplot(5,4,ibeam+2*4)
@@ -117,7 +117,7 @@ function [profile,fh] = processSIGavg(avg,opt)
     % Compute alternate shear profile (compute spd before averaging, fix for bad HPR)
     [~,spd_alt,~] = altSIGenu(avg,mean(avg.Heading,'omitnan'));
     iNaN = isnan(mean(u(:,[1 2 4]),2,'omitnan'));
-    if opt.QCbin
+    if opt.avg.QCbin
         spd_alt(iNaN) = NaN;
     end
 

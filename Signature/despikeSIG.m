@@ -17,20 +17,12 @@ wclean = NaN(size(wraw));
 wfilt = medfilt1(wraw,nfilt,'omitnan','truncate');
 ispike = abs(wraw - wfilt) > dspikemax;
 
-% Fill with linear interpolation
-if strcmp(filltype,'none')
-    wclean = wraw;
-    wclean(ispike) = NaN;
-elseif strcmp(filltype,'interp')
-    for iping = 1:nping    
-        igood = find(~ispike(:,iping));
-        if length(igood) > 3
-        wclean(:,iping) = interp1(igood,wraw(igood,iping),1:nbin,'linear','extrap'); 
-        end
+% Fill spikes with linear interpolation
+for iping = 1:nping    
+    igood = find(~ispike(:,iping));
+    if length(igood) > 3
+    wclean(:,iping) = interp1(igood,wraw(igood,iping),1:nbin,'linear','extrap'); 
     end
-else
-    error('Fill type must be ''none'' or ''linear''')
 end
-
 
 end
