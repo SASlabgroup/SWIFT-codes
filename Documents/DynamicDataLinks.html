@@ -35,7 +35,7 @@ or in Python <a href="https://github.com/SASlabgroup/microSWIFTtelemetry"> with 
 Manual telemetry queries for <b>simple position and time data</b> are URLs generated from this form 
 <form name="input" action="http://swiftserver.apl.washington.edu/kml?action=kml" method="get">
 <input type="hidden" name="action" value="kml"> <br>
-ID: <input type="text" name="buoy_name" size="18"> (examples: SWIFT 09, microSWIFT 007)<br>
+ID: <input type="text" name="buoy_name" size="18"> (examples: SWIFT 09, microSWIFT 007) <input type="button" value="24 Hour KML" onclick="downloadLast24HoursKML()"><br>
 start time : <input type="text" name="start">
 end time : <input type="text" name="end">( format: 2014-05-09T00:00:00)<br>
 data type: <select name="format">
@@ -135,5 +135,31 @@ Marginal Ice Zone experiment (2014): <a href="https://doi.org/10.7265/j769-hn64"
 
 Legacy (older) projects with SWIFT data are informally archived in directories <a href="http://faculty.washington.edu/jmt3rd/SWIFTdata/">here</a><br>
 
+<script>
+function downloadLast24HoursKML() {
+    const buoyNameInput = document.getElementsByName('buoy_name')[0];
+    const buoyName = buoyNameInput.value.trim();
 
+    if (!buoyName) {
+        alert('Please enter a buoy ID');
+        return;
+    }
+
+    // Calculate 24 hours ago in UTC
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+
+    // Format for API (ISO string without milliseconds)
+    const startTime = twentyFourHoursAgo.toISOString().substring(0, 19);
+    const endTime = now.toISOString().substring(0, 19);
+
+    // Build URL for last 24 hours KML
+    const url = `http://swiftserver.apl.washington.edu/kml?action=kml&buoy_name=${encodeURIComponent(buoyName)}&start=${encodeURIComponent(startTime)}&end=${encodeURIComponent(endTime)}&format=kml`;
+
+    // Open URL in new window/tab for download
+    window.open(url, '_blank');
+}
+</script>
+
+</body>
 </html>
