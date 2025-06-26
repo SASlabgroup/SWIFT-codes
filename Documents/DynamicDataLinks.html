@@ -38,7 +38,10 @@ Manual telemetry queries for <b>simple position and time data</b> are URLs gener
 ID: <input type="text" name="buoy_name" size="18"> (examples: SWIFT 09, microSWIFT 007)<br>
 start time : <input type="text" name="start">
 end time : <input type="text" name="end">( format: 2014-05-09T00:00:00)<br>
-data type: <input type="text" name="format" size="5"> (kml is Google Earth, json is simple text)<br>
+data type: <select name="format">
+<option value="kml" selected>kml</option>
+<option value="json">json</option>
+</select> (kml is Google Earth, json is simple text)<br>
 <input type="submit" value="Submit">
 </form>
 Leave end time blank to pull all data until present time (UTC)
