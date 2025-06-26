@@ -10,6 +10,8 @@ function [flist, removed] = SWIFT_QC( minsalinity, minwave, maxdrift )
 
 flist = dir('*SWIFT*.mat');
 
+mintemp = -40;
+
 for fi = 1:length(flist)
 
     load(flist(fi).name)
@@ -29,6 +31,14 @@ for fi = 1:length(flist)
     if isfield(SWIFT,'driftspd')
         baddrift = [SWIFT.driftspd] > maxdrift; 
         SWIFT(baddrift) = [];
+    end
+
+    if isfield(SWIFT,'watertemp')
+        for si=1:length(SWIFT)
+            if SWIFT(si).watertemp < mintemp  
+                SWIFT(si).watertemp = NaN;
+            end
+        end 
     end
 
     removed(fi) = original - length(SWIFT);
