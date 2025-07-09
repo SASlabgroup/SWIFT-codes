@@ -307,7 +307,8 @@ else % if not enough points or sufficent sampling rate or data, give 9999
 end
 
 % quality control
-if Tp>20 
+if Tp > 20 
+     disp('Invalid Peak Direction. Returning 9999 for bulk metrics.')
      Hs = 9999;
      Tp = 9999; 
      Dp = 9999; 

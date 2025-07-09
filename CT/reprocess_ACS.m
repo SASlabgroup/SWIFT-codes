@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw)
+function [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw,plotburst)
 
 % reprocess SWIFT v3 ACS results to get raw
 % M. Smith 08/2016
@@ -30,6 +30,9 @@ end
 
 %% Loop through raw burst files and reprocess
 
+outofwater = false(1,length(SWIFT));
+SWIFTreplaced = false(1,length(SWIFT));
+
 bfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*ACS*.dat']);
 
 for iburst = 1:length(bfiles)
@@ -40,9 +43,9 @@ for iburst = 1:length(bfiles)
     if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
         try
         [~, Temperature, Salinity, ~, ~]  = readSWIFTv3_ACS([bfiles(iburst).folder slash bfiles(iburst).name]);
-        catch
-            disp(['Cannot read ' bfiles(iburst).name '. Skipping...'])
-        continue
+        catch ME
+            disp(['Cannot read ' bfiles(iburst).name '. Error: ' ME.message '. Skipping...'])
+            continue
         end
     else
          load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
@@ -54,28 +57,85 @@ for iburst = 1:length(bfiles)
     if isempty(sindex)
         disp('No matching SWIFT index. Skipping...')
         continue
+    end    
+
+    % Out of water
+    iout = Salinity < 1;
+    if sum(iout)/length(Salinity)>0.1
+        outofwater(sindex) = true;
+    end
+    cleanSalinity = Salinity;
+    cleanTemperature = Temperature;
+    cleanSalinity(iout) = NaN;
+    cleanTemperature(iout) = NaN;
+
+    % Dropouts
+    idrop = isoutlier(cleanSalinity,'movmedian',30);
+    if sum(~idrop) > 3
+    cleanSalinity = interp1(find(~idrop),cleanSalinity(~idrop),1:length(cleanSalinity));
     end
 
     % Mean values
-    watertemp = mean(Temperature,'omitnan');
-    watertempstddev = std(Temperature,[],'omitnan');
-    salinity = mean(Salinity,'omitnan');
-    salinitystddev = std(Salinity,[],'omitnan');
+    meanwatertemp = mean(Temperature,'omitnan');
+    meanwatertempclean = mean(cleanTemperature,'omitnan');
+    watertempstddev = std(cleanTemperature,[],'omitnan');
+    meansalinity = mean(Salinity,'omitnan');
+    meansalinityclean = mean(cleanSalinity,'omitnan');
+    salinitystddev = std(cleanSalinity,[],'omitnan');
 
     % Unrealistic Values
-    if watertemp > 40
-        watertemp = NaN;
+    if meanwatertempclean > 40
+        meanwatertempclean = NaN;
         watertempstddev = NaN;
-        salinity = NaN;
+        meansalinityclean = NaN;
         salinitystddev = NaN;
     end
 
     % Replace Values in SWIFT structure
-    SWIFT(sindex).watertemp = watertemp;
+    SWIFT(sindex).watertemp = meanwatertempclean;
     SWIFT(sindex).watertempstddev = watertempstddev;
     SWIFT(sindex).salinitystddev = salinitystddev;
-    SWIFT(sindex).salinity = salinity;
+    SWIFT(sindex).salinity = meansalinityclean;
+    SWIFTreplaced(sindex) = true;
 
+    % Plotdata
+    if plotburst
+        figure('color','w')
+        fullscreen
+        subplot(2,1,1)
+        plot(Temperature,'-kx')
+        hold on
+        plot(cleanTemperature,'-bx')
+        axis tight
+        plot(xlim,[1 1]*meanwatertemp,'-k','LineWidth',2)
+        plot(xlim,[1 1]*meanwatertempclean,'-b','LineWidth',2)
+        title('Temperature');
+        subplot(2,1,2)
+        plot(Salinity,'-kx')
+        hold on
+        plot(cleanSalinity,'-rx')
+        axis tight
+        plot(xlim,[1 1]*meansalinity,'-k','LineWidth',2)
+        plot(xlim,[1 1]*meansalinityclean,'-r','LineWidth',2)
+        scatter(find(idrop),Salinity(idrop),'k','filled')
+        title('Salinity');
+        print([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4)],'-dpng')
+        close gcf
+    end
+
+end
+
+%% NaN out bursts that weren't reprocessed 
+
+if any(~SWIFTreplaced)
+    for sindex = find(~SWIFTreplaced)
+
+    SWIFT(sindex).watertemp = NaN;
+    SWIFT(sindex).watertempstddev = NaN;
+    SWIFT(sindex).salinitystddev = NaN;
+    SWIFT(sindex).salinity = NaN;
+
+    end
 end
     
 %% Log reprocessing and flags, then save new L3 file or overwrite existing one
@@ -89,7 +149,7 @@ end
 sinfo.postproc(ip).type = 'ACS';
 sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
-sinfo.postproc(ip).flags = [];
+sinfo.postproc(ip).flags.outofwater = outofwater;
 sinfo.postproc(ip).params = [];
 
 save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')

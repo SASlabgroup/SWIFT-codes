@@ -134,7 +134,7 @@ opt.saveplots = true; % save generated plots
 opt.outcorr = 35;
 
 % QC Options Altimeter
-opt.QCalt = true; % trim data based on altimeter
+opt.QCalt = false; % trim data based on altimeter
 
 % QC Options (BB)
 opt.avg.QCbin = true;% QC entire bins with greater than opt.avg.mincorr perecent bad correlation
@@ -147,7 +147,6 @@ opt.HR.QCbin = true;% QC entire bins with greater than opt.HR.pbadmax_bin perece
 opt.HR.pbadmax_bin = 50;
 opt.HR.QCping = true;% QC entire bins with greater than opt.HR.pbadmax_ping perecent bad data (spikes & correlation)
 opt.HR.pbadmax_ping = 50;
-
 opt.HR.NaNbad = false;% NaN out bad data. Otherwise they are interpolated through.
 opt.HR.nsumeof = 3;
 
@@ -161,7 +160,7 @@ end
 
 %% Create SIG structure, list burst files
 
-burstreplaced = false(length(SWIFT),1);
+SWIFTreplaced = false(length(SWIFT),1);
 badsig = false(1,length(SWIFT));
 
 SIG = struct;
@@ -171,7 +170,7 @@ isig = 1;
 
 bfiles = dir([missiondir slash 'SIG' slash 'Raw' slash '*' slash '*' ftype]);
 if isempty(bfiles)
-    error(['   No ' ftype ' burst files found    '])
+    warning(['   No ' ftype ' burst files found    '])
 end
 bfiles = bfiles(~contains({bfiles.name},'smoothwHR'));
 
@@ -213,6 +212,14 @@ for iburst = 1:nburst
         continue
     end
 
+    % Skip burst if less than 60 seconds of data
+    fs = median(diff(burst.time))*24*60*60;
+    T = length(burst.time)*fs;
+    if T < 60
+        disp('Contains less than 60 seconds of data, skipping burst...')
+        continue
+    end
+
     % Skip if any of the burst fields are 3D
     if ~ismatrix(burst.VelocityData) || ~ismatrix(burst.CorrelationData) || ~ismatrix(burst.AmplitudeData)
         disp('Burst fields have more than 2 dimensions, skipping burst...')
@@ -230,7 +237,7 @@ for iburst = 1:nburst
         burstmatch = false;
     else
         burstmatch = true;
-        burstreplaced(sindex) = true;
+        SWIFTreplaced(sindex) = true;
         stime = SWIFT(sindex).time;
         if abs(stime-btime) > 1/(60*24) % within 1-min
            disp('   WARNING: File name disagrees with recorded time...   ')
@@ -315,6 +322,15 @@ for iburst = 1:nburst
        end
        [echogram,fh] = processSIGecho(echo,S,opt);
        echogram.z = opt.xz + echogram.r;
+
+       % Crop if too much data
+       if length(echogram.r) > 500
+           warning('Echogram has too many bins. Croppping...')
+           echogram.z = echogram.z(1:500);
+           echogram.echoc = echogram.echoc(1:500);
+           echogram.echo0 = echogram.echo0(1:500);
+           echogram.r = echogram.r(1:500);
+       end
 
         if opt.saveplots && ~isempty(fh)
             figure(fh)
@@ -469,25 +485,36 @@ end
 
 % NaN out SWIFT sig fields which were not matched to bursts
 if ~isempty(fieldnames(SWIFT))
-    inan = find(~burstreplaced);
+    inan = find(~SWIFTreplaced);
+    if ~exist('HRprofile','var')
+        xz = opt.xz;
+        bz = 0.1;
+        dz = 0.04;
+        HRprofile.z = xz + bz + dz*(1:128)';
+    end
+    if ~exist('profile','var')
+        bz = 0.1;
+        dz = 0.5;
+        profile.z = opt.xz + bz + dz*(1:40)';
+    end
     if ~isempty(inan)
         for it = inan'
             % HR data
             SWIFT(it).signature.HRprofile = [];
-            SWIFT(it).signature.HRprofile.w = NaN(size(HRprofile.w));
-            SWIFT(it).signature.HRprofile.wvar = NaN(size(HRprofile.w));
+            SWIFT(it).signature.HRprofile.w = NaN(size(HRprofile.z));
+            SWIFT(it).signature.HRprofile.wvar = NaN(size(HRprofile.z));
             SWIFT(it).signature.HRprofile.z = HRprofile.z;
-            SWIFT(it).signature.HRprofile.tkedissipationrate = NaN(size(HRprofile.w'));
+            SWIFT(it).signature.HRprofile.tkedissipationrate = NaN(size(HRprofile.z'));
             % Broadband data
             SWIFT(it).signature.profile = [];
-            SWIFT(it).signature.profile.w = NaN(size(profile.u));
-            SWIFT(it).signature.profile.east = NaN(size(profile.u));
-            SWIFT(it).signature.profile.north = NaN(size(profile.u));
-            SWIFT(it).signature.profile.uvar = NaN(size(profile.u));
-            SWIFT(it).signature.profile.vvar = NaN(size(profile.u));
-            SWIFT(it).signature.profile.wvar = NaN(size(profile.u));
+            SWIFT(it).signature.profile.w = NaN(size(profile.z));
+            SWIFT(it).signature.profile.east = NaN(size(profile.z));
+            SWIFT(it).signature.profile.north = NaN(size(profile.z));
+            SWIFT(it).signature.profile.uvar = NaN(size(profile.z));
+            SWIFT(it).signature.profile.vvar = NaN(size(profile.z));
+            SWIFT(it).signature.profile.wvar = NaN(size(profile.z));
             SWIFT(it).signature.profile.z = profile.z;
-            SWIFT(it).signature.profile.spd_alt = NaN(size(profile.u));
+            SWIFT(it).signature.profile.spd_alt = NaN(size(profile.z));
         end
     end
 end
@@ -513,7 +540,6 @@ if opt.saveplots
     print([figname '_SIG'],'-dpng')
     close gcf
 end
-
 
 %% Log reprocessing and flags, then save new L3 file or overwrite existing one
 params = opt;

@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = L1_compileSWIFT(missiondir,SBDfold,burstinterval,plotflag)
+function [SWIFT,sinfo] = L1_compileSWIFT(missiondir,SBDfold,burstinterval,plotswift)
 
 % Aggregate and read all SWIFT sbd data after concatenating the 
 %   offload from SD card. SBD files should be in the 
@@ -306,18 +306,26 @@ else
     save([missiondir slash sname '_L1.mat'],'SWIFT','sinfo')
 end
 
+%% Re-load L2 SWIFT
+
+L1file = dir([missiondir slash '*L1.mat']);
+load([L1file.folder slash L1file.name],'SWIFT','sinfo')
+
 %% Plot
 
-if plotflag
-    
-    L1file = dir([missiondir slash '*L1.mat']);
-    if strcmp(sinfo.type,'V3')
-    fh = plotSWIFTV3(SWIFT);
-    else
-        fh = plotSWIFTV4(SWIFT);
+if plotswift
+    try
+        if strcmp(sinfo.type,'V3')
+        fh = plotSWIFTV3(SWIFT);
+        else
+            fh = plotSWIFTV4(SWIFT);
+        end
+        set(fh,'Name',L1file.name(1:end-4))
+        print(fh,[L1file.folder slash L1file.name(1:end-4)],'-dpng')
+   catch ME
+        disp(['Plot failed: ' ME.message])
     end
-    set(fh,'Name',L1file.name(1:end-4))
-    print(fh,[L1file.folder slash L1file.name(1:end-4)],'-dpng')
+
     
 end
 

@@ -1,6 +1,7 @@
 
 function swift = catSWIFT(SWIFT)
 % Returns concatenated swift data in structure format
+    
 
 % Time, lat, lon, battery
 swift.time = [SWIFT.time];
@@ -389,7 +390,11 @@ if isfield(SWIFT,'signature')
     for it = 1:nt
         if isfield(SWIFT(it).signature.HRprofile,'tkedissipationrate')
         tke = SWIFT(it).signature.HRprofile.tkedissipationrate;
+        if isfield(SWIFT(it).signature.HRprofile,'w')
         w = SWIFT(it).signature.HRprofile.w;
+        else
+            w = NaN(size(tke));
+        end
             if ~isempty(tke)
                 swift.surftke(1:length(tke),it) = tke;
                 swift.surfw(1:length(tke),it) = w;
@@ -425,7 +430,7 @@ end
 
 % Echograms
 if isfield(SWIFT,'signature')
-    if isfield(SWIFT(floor(end/2)).signature,'echo')
+    if isfield(SWIFT(ceil(end/2)).signature,'echo')
         it = 1; nz = 0;
         while nz == 0
             swift.echoz = SWIFT(it).signature.echoz';
@@ -443,4 +448,13 @@ if isfield(SWIFT,'signature')
         end
     end
 end
-  
+
+% Altimeter
+if isfield(SWIFT,'signature')
+    swift.altz = NaN(1,nt);
+    for it = 1:nt
+        if isfield(SWIFT(it).signature,'altimeter')
+            swift.altz(it) = SWIFT(it).signature.altimeter;
+        end
+    end
+end

@@ -94,10 +94,13 @@ SWIFT(outofwater) = [];
 
 save([missiondir slash sname '_L2.mat'],'SWIFT','sinfo')
 
-%% Plot
+%% Re-load L2 SWIFT
 
+L2file = dir([missiondir slash '*L2.mat']);
+load([L2file.folder slash L2file.name],'SWIFT','sinfo')
+
+%% Plot
 if plotflag
-    L2file = dir([missiondir slash '*L2.mat']);
     try
         if strcmp(sinfo.type,'V3')
             fh = plotSWIFTV3(SWIFT);

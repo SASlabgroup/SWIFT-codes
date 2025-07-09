@@ -53,12 +53,28 @@ for iburst = 1:length(bfiles)
         else
             load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
             windspd = rawwindspd;
+            if exist('rawwinddir','var')
             winddirT = rawwinddir;
+            else
+                winddirT = NaN(size(windspd));
+            end
             airtemp = rawairtemp;
             airpres = rawairpres;
-            relhumidity = rawhumidity;
+            if exist('rawwindspdR','var')
             windspdR = rawwindspdR;
+            else
+                windspdR = NaN(size(windspd));
+            end
+            if exist('rawwinddirR','var')
             winddirR = rawwinddirR;
+            else
+                winddirR = NaN(size(windspd));
+            end
+            if exist('rawhumidity','var')
+                relhumidity = rawhumidity;
+            else
+                relhumidity = NaN(size(windspd));
+            end
         end
 
         % Check for zero-d data
@@ -150,7 +166,7 @@ for iburst = 1:length(bfiles)
             plot(windspdR,'-x','color',rgb('grey'))
             plot(windspddsp,'-rx')
             plot(windspdR,'-x','color',rgb('coral'))
-            axis tight;ylim([0 20]);title('Wind Speed');legend('True','Relative','T Despike','R Despiked')
+            axis tight;title('Wind Speed');legend('True','Relative','T Despike','R Despiked')
             subplot(5,1,2)
             plot(winddirT,'-kx')
             hold on

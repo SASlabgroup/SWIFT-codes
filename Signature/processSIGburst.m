@@ -1,8 +1,26 @@
-function [HRprofile,fh] = processSIGburst(burst,opt)
+function [HRprofile,fh] = processSIGburst(burst,varargin)
 % NOTE: Quality Control
 %   - remove worst pings to get good EOFs, then interpolate back in time
 %   - alternatively, could use *only* despiked data. This does not
 %       work well when data are very noisy/poor quality
+
+if nargin < 2
+    opt.xz = 0.2;
+    
+    %%% User Input Toggles
+    opt.plotburst = true; % generate plots for each burst
+    
+    % QC Options (HR)
+    opt.HR.mincorr = 40;% To ignore correlation, set to 0;
+    opt.HR.QCbin = true;% QC entire bins with greater than opt.HR.pbadmax_bin perecent bad data (spikes & correlation)
+    opt.HR.pbadmax_bin = 50;
+    opt.HR.QCping = true;% QC entire bins with greater than opt.HR.pbadmax_ping perecent bad data (spikes & correlation)
+    opt.HR.pbadmax_ping = 50;
+    opt.HR.NaNbad = false;% NaN out bad data. Otherwise they are interpolated through.
+    opt.HR.nsumeof = 3;
+else
+    opt = varargin{1};
+end
 
 %    Check to make sure dimensions correct
 if length(size(burst.VelocityData)) > 2

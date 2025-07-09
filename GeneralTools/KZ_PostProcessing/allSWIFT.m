@@ -21,26 +21,25 @@ swift = struct;
 
 for im = 1:length(missions)
 
+    % if length(missions(im).name) ~= 17
+    %     disp(['Skippping ' missions(im).name])
+    %     continue
+    % end
+
     Lfile = dir([missions(im).folder slash missions(im).name slash '*' level '.mat']);
-
-    if length(missions(im).name) ~= 17
-        disp(['Skippping ' missions(im).name])
-        continue
-    end
-
-    ID = missions(im).name(6:7);
-    sdate = datestr(datenum(missions(im).name(9:17),'ddmmmyyyy'),'mmdd');
-
-    sname = ['SN' ID '_' sdate];
 
     if isempty(Lfile)
         disp(['No ' level ' product found in ' missions(im).name '. Skipping...'])
     else
-        disp(['Loading ' missions(im).name ' ' level ' product...'])
-        load([Lfile.folder slash Lfile.name],'SWIFT');
-        % SWIFT = SWIFT_Stokes(SWIFT);
+        disp(['Loading ' missions(im).name ' ' level ' product(s)...'])
+        for ifile = 1:length(Lfile)
+        load([Lfile(ifile).folder slash Lfile(ifile).name],'SWIFT');
         oneswift = catSWIFT(SWIFT);
+            ID = SWIFT(1).ID;
+        sdate = datestr(SWIFT(end).time,'mmdd');
+        sname = ['SN' ID '_' sdate];
         swift.(sname) = oneswift;
+        end
     end
 
 end
@@ -53,6 +52,9 @@ if ~plotall
     return
 end
 MP = get(0,'monitorposition');
+if size(MP,1) > 1
+    MP = MP(2,:);
+end
 mks = 2;
 swifts = fieldnames(swift);
 nswift = length(swifts);
@@ -71,7 +73,7 @@ nSN = length(SNs);
 %% MET
 
 fh = figure('color','w','Name',[expdir  ' ' level ' MET Data']);
-set(fh,'outerposition',MP(1,:));
+set(fh,'outerposition',MP);
 for iswift = 1:nswift
     subplot(4,1,1);
     plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
@@ -119,7 +121,7 @@ ylim([0 30])
 end
 %% CT & Drift Speed
 fh = figure('color','w','Name',[expdir  ' ' level ' CT +  Drift Data']);
-set(fh,'outerposition',MP(1,:));
+set(fh,'outerposition',MP);
 for iswift = 1:nswift
     subplot(4,1,1);
     plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
@@ -134,6 +136,7 @@ for iswift = 1:nswift
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,4);
+    swifts{iswift}
     plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).driftspd,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
@@ -160,7 +163,7 @@ set(gca, 'Position', axP);
 end
 %% Waves
 fh = figure('color','w','Name',[expdir  ' ' level ' Wave Data']);
-set(fh,'outerposition',MP(1,:));
+set(fh,'outerposition',MP);
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
     axes(h(1))
@@ -206,7 +209,7 @@ end
 %% ADCP Velocities
 
 fh = figure('color','w','Name',[expdir  ' ' level ' Velocity Data']);
-set(fh,'outerposition',MP(1,:));
+set(fh,'outerposition',MP);
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
 
@@ -256,7 +259,7 @@ end
 %% Alternative Speed Velocities
 
 fh = figure('color','w','Name',[expdir  ' ' level ' Scalar Shear Data']);
-set(fh,'outerposition',MP(1,:));
+set(fh,'outerposition',MP);
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
 
@@ -306,7 +309,7 @@ end
 %% ADCP Dissipation Rate
 
 fh = figure('color','w','Name',[expdir  ' ' level ' Turbulence Data']);
-set(fh,'outerposition',MP(1,:));
+set(fh,'outerposition',MP);
 h = tight_subplot(nSN+1,1,0.025);
 
 for iswift = 1:nswift

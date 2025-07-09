@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = L3_postprocessSWIFT(missiondir,plotflag)
+function [SWIFT,sinfo] = L3_postprocessSWIFT(missiondir,varargin)
 
 % Master post-processing function, that calls sub-functions to reprocess
 % each different type of raw SWIFT data and create an L3 product.
@@ -19,22 +19,92 @@ end
 
 %% Default processing toggles
 
+if nargin > 1
+
+    % Read in Raw Data
+    readraw = false;
+
+    % Plotting
+    plotswift = false;
+    plotburst = false;
+
+    % MET
+    rpWXT = false; % MET
+    rpPB2 = false; % MET
+    rpY81 = false; % MET
+    
+    % Waves
+    rpIMU = false; % Waves
+    rpSBG = false; % Waves
+    
+    % CT
+    rpACS = false; % CT
+    
+    % ADCP
+    rpSIG = false; % TKE 
+    rpAQH = false; % TKE
+    rpAQD = false; % TKE   
+
+    % Look for post processing types
+    for ivar = 1:length(varargin)
+        command = varargin{ivar};
+        
+        switch command
+            case 'rpWXT'; rpWXT = true;                
+            case 'rpPB2'; rpPB2 = true;
+            case 'rpY81'; rpY81 = true;
+            case 'rpIMU'; rpIMU = true;
+            case 'rpSBG'; rpSBG = true;
+            case 'rpACS'; rpACS = true;
+            case 'rpSIG'; rpSIG = true;
+            case 'rpAQH'; rpAQH = true;
+            case 'rpAQD'; rpAQD = true;
+            case 'rpADCP'; rpSIG = true; rpAQH = true;rpAQD = true;
+            case 'rpMET'; rpWXT = true; rpPB2 = true; rpY81 = true;
+            case 'rpCT'; rpACS = true;
+            case 'rpWaves'; rpIMU = true; rpSBG = true;
+            case 'plotswift'; plotswift = true;
+            case 'plotburst';plotburst = true;
+            case 'readraw';readraw = true;% You have to specify readraw, or else it is false
+
+            otherwise
+                error('Unrecognized command: %s\n', command);
+
+        end
+    end
+
+% If no inputs, reprocess everything 
+else
+
+% Readraw
+readraw = true;
+
+% Plotting
+plotswift = true;
+plotburst = true;
+
 % MET
-rpWXT = false; % MET
-rpPB2 = false; % MET
-rpY81 = false; % MET
+rpWXT = true; % MET
+rpPB2 = true; % MET
+rpY81 = true; % MET
 
 % Waves
-rpIMU = false; % Waves
-rpSBG = false; % Waves
+rpIMU = true; % Waves
+rpSBG = true; % Waves
 
 % CT
-rpACS = false; % CT
+rpACS = true; % CT
 
 % ADCP
 rpSIG = true; % TKE 
-rpAQH = false; % TKE
-rpAQD = false; % TKE    
+rpAQH = true; % TKE
+rpAQD = true; % TKE    
+
+end
+
+if readraw
+    warning('Reading raw burst files in.')
+end
 
 %% Mission name
 
@@ -88,7 +158,6 @@ if rpSBG
         useGPS = false;
         interpf = false;
         tstart = 90;
-        plotburst = false;
         [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,interpf,tstart);
     else
         disp('No SBG data...')
@@ -100,7 +169,6 @@ end
 if rpWXT
     if ~isempty(dir([missiondir slash 'WXT' slash 'Raw' slash '*' slash '*_536_*.dat']))
         disp('Reprocessing Vaisala WXT data...')
-        readraw = false;
         usewind = true;
         [SWIFT,sinfo] = reprocess_WXT(missiondir,readraw,usewind);
     else
@@ -113,8 +181,6 @@ end
 if rpPB2
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_PB2_*.dat']))
         disp('Reprocessing Airmar Anemometer (PB2) data...')
-        readraw = false;
-        plotburst = false;
         [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw,plotburst);
     else
         disp('No PB2 data...')
@@ -137,8 +203,7 @@ end
 if rpACS 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_ACS_*.dat']))
         disp('Reprocessing ACS CT data...')
-        readraw = false;
-        [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw);
+        [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw,plotburst);
     else
         disp('No ACS data...')
     end
@@ -149,8 +214,6 @@ end
 if rpSIG 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_SIG_*.dat']))
         disp('Reprocessing Signature1000 data...')
-        readraw = false;
-        plotburst = true; 
         [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst);
     else
         disp('No SIG data...')
@@ -162,12 +225,6 @@ end
 if rpAQD 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.dat']))
         disp('Reprocessing Aquadopp (AQD) data...')
-        if isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQD_*.mat']))
-        readraw = true;
-        else
-            readraw = false;
-        end
-        readraw = false;
         [SWIFT,sinfo] = reprocess_AQD(missiondir,readraw);
     else
         disp('No AQD data...')
@@ -178,33 +235,34 @@ end
 if rpAQH 
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQH_*.dat']))
         disp('Reprocessing Aquadopp (AQH) data...')
-        if isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_AQH_*.mat']))
-        readraw = true;
-        else
-            readraw = false;
-        end
-        plotburst = false;
         [SWIFT,sinfo] = reprocess_AQH(missiondir,readraw,plotburst);
     else
         disp('No AQH data...')
     end
 end
 
+%% Re-load L3 SWIFT
 
-
-%% Plot
 L3file = dir([missiondir slash '*L3.mat']);
 load([L3file.folder slash L3file.name],'SWIFT','sinfo')
 
-if plotflag
-    if strcmp(sinfo.type,'V3')
-    fh = plotSWIFTV3(SWIFT);
-    else
-        fh = plotSWIFTV4(SWIFT);
+%% Plot
+
+if plotswift
+    try
+        if strcmp(sinfo.type,'V3')
+        fh = plotSWIFTV3(SWIFT);
+        else
+            fh = plotSWIFTV4(SWIFT);
+        end
+        set(fh,'Name',L3file.name(1:end-4))
+        print(fh,[L3file.folder slash L3file.name(1:end-4)],'-dpng')
+    catch ME
+        disp(['Plot failed: ' ME.message])
     end
-    set(fh,'Name',L3file.name(1:end-4))
-    print(fh,[L3file.folder slash L3file.name(1:end-4)],'-dpng')
 end
+
+
 
 %% Close diary
 

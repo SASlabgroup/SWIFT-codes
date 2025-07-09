@@ -168,6 +168,10 @@ for iburst = 1:length(bfiles)
         f = SWIFT(sindex).wavespectra.freq;  % original frequency bands
         [newHs,newTp,newDp,newE,newf,newa1,newb1,newa2,newb2,newcheck] = SBGwaves(u,v,z,fs);
 
+        if ~any(~isnan(newE))
+            warning('NaN Spectra from SBGwaves')
+        end
+
         % Alternative results using GPS velocites
         [altHs,altTp,altDp,altE,altf,alta1,altb1,alta2,altb2] = GPSwaves(u,v,[],fs);    
 
@@ -214,18 +218,20 @@ for iburst = 1:length(bfiles)
 
         % Replace new wave spectral variables in original SWIFT structure
         SWIFT(sindex).sigwaveheight = newHs;
-        SWIFT(sindex).sigwaveheight_alt = altHs;
         SWIFT(sindex).peakwaveperiod = newTp;
-        SWIFT(sindex).peakwaveperiod_alt = altTp;
         SWIFT(sindex).peakwavedirT = newDp;
         SWIFT(sindex).wavespectra.energy = E;
-        SWIFT(sindex).wavespectra.energy_alt = altE;
         SWIFT(sindex).wavespectra.freq = f;
         SWIFT(sindex).wavespectra.a1 = a1;
         SWIFT(sindex).wavespectra.b1 = b1;
         SWIFT(sindex).wavespectra.a2 = a2;
         SWIFT(sindex).wavespectra.b2 = b2;
         SWIFT(sindex).wavespectra.check = check;
+        if useGPS
+           SWIFT(sindex).wavespectra.energy_alt = altE;
+           SWIFT(sindex).peakwaveperiod_alt = altTp;
+           SWIFT(sindex).sigwaveheight_alt = altHs;
+        end
         SWIFTreplaced(sindex) = true;
 
         % Save raw displacements (5 Hz) if specified
@@ -253,12 +259,11 @@ for iburst = 1:length(bfiles)
         end
 
         if newHs == 9999
-            disp('wave processing gave 9999')
+            disp('wave processing gave 9999 for Hs')
             SWIFT(sindex).sigwaveheight = NaN;
             SWIFT(sindex).peakwaveperiod = NaN;
             SWIFT(sindex).peakwaveperiod = NaN;
             SWIFT(sindex).peakwavedirT = NaN;
-            SWIFTreplaced(sindex) = false;
             badwaves(sindex) = true;
         end
 
@@ -283,21 +288,24 @@ end
 if any(~SWIFTreplaced)
     for sindex = find(~SWIFTreplaced)
 
-        if ~exist('f','var')
+        % if ~exist('f','var')
             f = SWIFT(sindex).wavespectra.freq;
-        end
+        % end
             SWIFT(sindex).sigwaveheight = NaN;
             SWIFT(sindex).peakwaveperiod = NaN;
             SWIFT(sindex).peakwavedirT = NaN;
             SWIFT(sindex).wavespectra.energy = NaN(size(f));
-            SWIFT(sindex).wavespectra.energy_alt = NaN(size(f));
             SWIFT(sindex).wavespectra.freq = f;
             SWIFT(sindex).wavespectra.a1 = NaN(size(f));
             SWIFT(sindex).wavespectra.b1 = NaN(size(f));
             SWIFT(sindex).wavespectra.a2 = NaN(size(f));
             SWIFT(sindex).wavespectra.b2 = NaN(size(f));
             SWIFT(sindex).wavespectra.check = NaN(size(f));
-    
+            if useGPS
+                SWIFT(sindex).wavespectra.energy_alt = NaN(size(f));
+                SWIFT(sindex).sigwaveheight_alt = NaN;
+                SWIFT(sindex).peakwaveperiod_alt = NaN;
+            end
     end
 end
 
