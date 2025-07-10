@@ -112,10 +112,18 @@ for i=1:length(full_names)
         if strcmp(full_names{i},'signature')
             for t=1:length(SWIFT)
                 for iz=1:length(z_names)
-                    S.signature.profile.(z_names{iz})(t,:) = SWIFT(t).signature.profile.(z_names{iz})(:);
+                    if ~isempty(SWIFT(t).signature.profile.(z_names{iz}))
+                        S.signature.profile.(z_names{iz})(t,:) = SWIFT(t).signature.profile.(z_names{iz})(:);
+                    else
+                        S.signature.profile.(z_names{iz})(t,:) = NaN(size(S.signature.profile.(z_names{iz})(1,:)));
+                    end
                 end
                 for iz=1:length(zHR_names)
-                    S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                    if ~isempty(SWIFT(t).signature.HRprofile.(zHR_names{iz}))
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                    else
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(size(S.signature.HRprofile.([zHR_names{iz} 'HR'])(1,:)));
+                    end
                 end
             end
         elseif strcmp(full_names{i},'time')
