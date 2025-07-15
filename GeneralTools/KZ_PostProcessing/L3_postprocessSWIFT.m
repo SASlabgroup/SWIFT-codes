@@ -66,6 +66,8 @@ if nargin > 1
             case 'plotswift'; plotswift = true;
             case 'plotburst';plotburst = true;
             case 'readraw';readraw = true;% You have to specify readraw, or else it is false
+            case 'rpall'; rpWXT = true; rpPB2 = true; rpY81 = true; rpIMU = true;...
+                    rpSBG = true; rpACS = true; rpSIG = true; rpAQH = true; rpAQD = true;
 
             otherwise
                 error('Unrecognized command: %s\n', command);
@@ -73,7 +75,7 @@ if nargin > 1
         end
     end
 
-% If no inputs, reprocess everything 
+% If no inputs, reprocess everything, read raw, plot bursts...
 else
 
 % Readraw
@@ -105,6 +107,7 @@ end
 if readraw
     warning('Reading raw burst files in.')
 end
+
 
 %% Mission name
 

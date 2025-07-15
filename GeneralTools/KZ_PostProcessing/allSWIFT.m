@@ -19,12 +19,10 @@ end
 
 swift = struct;
 
-for im = 1:length(missions)
+t0 = now;
+tf = 0;
 
-    % if length(missions(im).name) ~= 17
-    %     disp(['Skippping ' missions(im).name])
-    %     continue
-    % end
+for im = 1:length(missions)
 
     Lfile = dir([missions(im).folder slash missions(im).name slash '*' level '.mat']);
 
@@ -36,16 +34,22 @@ for im = 1:length(missions)
         load([Lfile(ifile).folder slash Lfile(ifile).name],'SWIFT');
         oneswift = catSWIFT(SWIFT);
             ID = SWIFT(1).ID;
-        sdate = datestr(SWIFT(end).time,'mmdd');
+        stime = oneswift.time;
+        sdate = [datestr(min(stime),'mmdd') '_' datestr(max(stime),'mmdd')];
         sname = ['SN' ID '_' sdate];
         swift.(sname) = oneswift;
+
+            if min(stime) < t0
+                t0 = min(stime);
+            end
+            if max(stime) > tf
+                tf = max(stime);
+            end
+
         end
     end
 
 end
-
-
-
 
 %% Plotting params
 if ~plotall
@@ -69,6 +73,8 @@ nSN = length(SNs);
 
 % if nargin > 0
 % end
+
+tlim = [t0 tf];
 
 %% MET
 
@@ -116,9 +122,10 @@ subplot(4,1,1)
 axP = get(gca,'Position');
 legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(gca, 'Position', axP);
-axis tight
 ylim([0 30])
+xlim(tlim)
 end
+
 %% CT & Drift Speed
 fh = figure('color','w','Name',[expdir  ' ' level ' CT +  Drift Data']);
 set(fh,'outerposition',MP);
@@ -160,6 +167,7 @@ linkaxes(h,'x');
 axP = get(gca,'Position');
 legend(swifts','Interpreter','none','FontSize',8,'Location','EastOutside')
 set(gca, 'Position', axP);
+xlim(tlim)
 end
 %% Waves
 fh = figure('color','w','Name',[expdir  ' ' level ' Wave Data']);
@@ -184,6 +192,7 @@ end
 linkaxes(h,'x');
 axes(h(1))
 axis tight
+xlim(tlim)
 ylim([0 20])
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Wave Spectra'])
@@ -236,6 +245,7 @@ linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
+xlim(tlim)
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Zonal Velocity'])
 set(h(1:end-1),'XTickLabel',[])
@@ -288,6 +298,7 @@ linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
+xlim(tlim)
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Scalar Speed'])
 set(h(1:end-1),'XTickLabel',[])
@@ -334,6 +345,7 @@ linkaxes(h,'x');
 axes(h(1))
 axis tight
 ylim([0 20])
+xlim(tlim)
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Dissipation Rate'])
 set(h(1:end-1),'XTickLabel',[])
