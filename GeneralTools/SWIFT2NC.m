@@ -16,6 +16,7 @@ function SWIFT2NC(SWIFT_in,filename)
 SWIFT = SWIFT_in;
 
 swiftnum = str2num(strrep(strrep(SWIFT(1).ID, 'SWIFT', ''), ' ', '') );
+
 if length(SWIFT(1).ID) == 3
     micro = true;
 else
@@ -55,6 +56,22 @@ if isfield(SWIFT,'salinity') && length(SWIFT(1).salinity)>1
         SWIFT(si).salinity = nanmean(SWIFT(si).salinity);
         SWIFT(si).watertemp = nanmean(SWIFT(si).watertemp);
     end
+end
+
+if isfield(SWIFT,'sbdfile')
+    SWIFT=rmfield(SWIFT,'sbdfile');
+end
+
+if isfield(SWIFT,'battery')
+    SWIFT=rmfield(SWIFT,'battery');
+end
+
+if isfield(SWIFT,'watertemp2')
+    SWIFT=rmfield(SWIFT,'watertemp2');
+end
+
+if isfield(SWIFT,'burstID')
+    SWIFT=rmfield(SWIFT,'burstID');
 end
 
 %% loading variables
@@ -112,10 +129,18 @@ for i=1:length(full_names)
         if strcmp(full_names{i},'signature')
             for t=1:length(SWIFT)
                 for iz=1:length(z_names)
-                    S.signature.profile.(z_names{iz})(t,:) = SWIFT(t).signature.profile.(z_names{iz})(:);
+                    if ~isempty(SWIFT(t).signature.profile.(z_names{iz}))
+                        S.signature.profile.(z_names{iz})(t,:) = SWIFT(t).signature.profile.(z_names{iz})(:);
+                    else
+                        S.signature.profile.(z_names{iz})(t,:) = NaN(size(S.signature.profile.(z_names{iz})(1,:)));
+                    end
                 end
                 for iz=1:length(zHR_names)
-                    S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                    if ~isempty(SWIFT(t).signature.HRprofile.(zHR_names{iz}))
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                    else
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(size(S.signature.HRprofile.([zHR_names{iz} 'HR'])(1,:)));
+                    end
                 end
             end
         elseif strcmp(full_names{i},'time')

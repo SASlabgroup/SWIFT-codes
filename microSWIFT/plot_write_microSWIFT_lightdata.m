@@ -26,6 +26,10 @@ for j = 1:length(files)
 
     if exist('SWIFTlightdata', 'var')
 
+        [sorted sind] = sort([SWIFTlightdata.time]);
+        SWIFTlightdata = SWIFTlightdata(sind);
+
+
         disp(['microSWIFT ', num2str(swift_number), ...
             ' min light: ' , num2str(min([SWIFTlightdata.lightmin]))...
             ', max light: ' , num2str(max([SWIFTlightdata.lightmax]))])

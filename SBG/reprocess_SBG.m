@@ -54,7 +54,9 @@ bfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SBG*.dat']);
 
 for iburst = 1:length(bfiles)
 
-   disp(['Burst ' num2str(iburst) ' : ' bfiles(iburst).name(1:end-4)])
+    bname = bfiles(iburst).name(1:end-4);
+
+   disp(['Burst ' num2str(iburst) ' : ' bname])
 
    % Read or load raw IMU data
     if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']))
@@ -73,53 +75,73 @@ for iburst = 1:length(bfiles)
         continue
     end
 
-    % % Make sure data is same length
-    % if length(sbgData.UtcTime.sec) ~= length(sbgData.ShipMotion.heave)
-    %     disp('Bad data sizes. Skipping...')
-    %     continue
-    % end
+    % IMU Motion
+    z = sbgData.ShipMotion.heave(:)';
+    x = sbgData.ShipMotion.surge(:)';
+    y = sbgData.ShipMotion.sway(:)';
+    ztime = sbgData.ShipMotion.time_stamp(:)'*10^(-6);% Convert to seconds
+    imin = min([length(x) length(y) length(z) length(ztime)]);
+    x = x(1:imin);y = y(1:imin);z = z(1:imin);ztime = ztime(1:imin);
+    [~,iu] = unique(ztime);x = x(iu);y = y(iu);z = z(iu);ztime = ztime(iu);
 
-    % Data to use
-    z = sbgData.ShipMotion.heave;
-    x = sbgData.ShipMotion.surge;
-    y = sbgData.ShipMotion.sway;
-    lat = sbgData.GpsPos.lat;
-    lon = sbgData.GpsPos.long;
-    u = sbgData.GpsVel.vel_e;
-    v = sbgData.GpsVel.vel_n;
+    % GPS position
+    lat = sbgData.GpsPos.lat(:)';
+    lon = sbgData.GpsPos.long(:)';
+    ltime = sbgData.GpsPos.time_stamp(:)'*10^(-6);
+    imin = min([length(lon) length(lat) length(ltime)]);
+    lat = lat(1:imin); lon = lon(1:imin); ltime = ltime(1:imin);
+    [~,iu] = unique(ltime);lon = lon(iu);lat = lat(iu);ltime = ltime(iu);
+
+    % GPS motion
+    u = sbgData.GpsVel.vel_e(:)';
+    v = sbgData.GpsVel.vel_n(:)';
+    gpstime = sbgData.GpsVel.time_stamp(:)'*10^(-6);
+    imin = min([length(u) length(v) length(gpstime)]);
+    u = u(1:imin); v = v(1:imin); gpstime = gpstime(1:imin);
+    [~,iu] = unique(gpstime);
+    u = u(iu);v = v(iu);gpstime = gpstime(iu);
+
+    % Interpolate to common time, using GPS time
+    igood = ~isnan(lat) & ~isnan(lon) & ltime ~= 0;
+    lat = interp1(ltime(igood),lat(igood),gpstime);
+    lon = interp1(ltime(igood),lon(igood),gpstime);
+    igood = ~isnan(x) & ~isnan(y) & ~isnan(z) & ztime ~= 0;
+    z = interp1(ztime(igood),z(igood),gpstime);
+    x = interp1(ztime(igood),x(igood),gpstime);
+    y = interp1(ztime(igood),y(igood),gpstime);
 
     if plotburst
-            tproc = 475;
+
             figure('color','w')
             MP = get(0,'monitorposition');
             set(gcf,'outerposition',MP(1,:));
             subplot(3,1,1)
-            plot(z,'-kx')
+            plot(gpstime,z,'-kx')
             hold on;
-            plot(filloutliers(z,'linear'),'-rx')
-            xlabel('NSamp');xlim([0 2750])
+            plot(gpstime,filloutliers(z,'linear'),'-rx')
             ylabel('\eta [m]');ylim([-2 2])
-            plot((length(z)-tproc*5+1)*[1 1],ylim,'--k','LineWidth',2)
             plot(tstart*[1 1],ylim,':k','LineWidth',2)
-            title(bfiles(iburst).name,'interpreter','none')
-            legend('Raw','Despiked','Variable Window','Fixed Start')
+            legend('Raw','Despiked','Start')
+            % title(bname,'interpreter','none')
         
             subplot(3,1,2)
-            plot(u,'-kx')
+            plot(gpstime,u,'-kx')
             hold on;
-            plot(filloutliers(u,'linear'),'-rx')
-            xlabel('NSamp');xlim([0 2750])
+            plot(gpstime,filloutliers(u,'linear'),'-rx')
             ylabel('u [ms^{-2}]');ylim([-2 2])
-            plot((length(z)-tproc*5+1)*[1 1],ylim,'--b','LineWidth',2)
-            plot(tstart*[1 1],ylim,':b','LineWidth',2)
+            plot(tstart*[1 1],ylim,':k','LineWidth',2)
         
             subplot(3,1,3)
-            plot(v,'-kx')
+            plot(gpstime,v,'-kx')
             hold on;axis tight
-            plot(filloutliers(v,'linear'),'-rx')
-            xlabel('NSamp');xlim([0 2750])
+            plot(gpstime,filloutliers(v,'linear'),'-rx')
+            xlabel('Time [s]');
             ylabel('v [ms^{-2}]');ylim([-2 2])
-            plot((length(z)-tproc*5+1)*[1 1],ylim,'--b','LineWidth',2)
+            plot(tstart*[1 1],ylim,':k','LineWidth',2)
+
+            h = findall(gcf,'Type','Axes');
+            linkaxes(h,'x');
+            xlim([0 550])
         
             print([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4)],'-dpng')
             close gcf
@@ -131,7 +153,7 @@ for iburst = 1:length(bfiles)
             continue
     end
 
-    % Remove start-up time and despike data
+    % Crop and despike data
     z = filloutliers(z(tstart*5:end),'linear');
     x = filloutliers(x(tstart*5:end),'linear');
     y = filloutliers(y(tstart*5:end),'linear');
