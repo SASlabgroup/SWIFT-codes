@@ -38,6 +38,7 @@ tilt = sqrt(pitch.^2 + roll.^2);
 trueangle = tilt + beam_angle;
 
 % Correct depths: add pressure-derived depth and adjust for effective angle
-truez = (nomz + bobz) .* cosd(trueangle);
+% truez = (nomz + bobz) .* cosd(trueangle);
+truez = bobz + nomz*cosd(trueangle);
 
 end

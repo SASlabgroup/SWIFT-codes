@@ -141,7 +141,7 @@ function plot_lightchannel_timeseries(SWIFTlightdata_timeseries)
     ylabel('Light Intensity');
     grid on; box on
     set(gca, 'XTick', [floor(min(t)):(2/24):ceil(max(t))], 'fontsize', 14)
-    datetick('x','dd mmm hh:MM','keeplimits', 'keepticks')
+    datetick%('x','dd mmm hh:MM','keeplimits', 'keepticks')
     xlim([min(t), max(t)])
     ylim([-200, max(Y(:)) + 1000])
     colormap(cmap);

@@ -16,6 +16,7 @@ function SWIFT2NC(SWIFT_in,filename)
 SWIFT = SWIFT_in;
 
 swiftnum = str2num(strrep(strrep(SWIFT(1).ID, 'SWIFT', ''), ' ', '') );
+
 if length(SWIFT(1).ID) == 3
     micro = true;
 else
@@ -55,6 +56,22 @@ if isfield(SWIFT,'salinity') && length(SWIFT(1).salinity)>1
         SWIFT(si).salinity = nanmean(SWIFT(si).salinity);
         SWIFT(si).watertemp = nanmean(SWIFT(si).watertemp);
     end
+end
+
+if isfield(SWIFT,'sbdfile')
+    SWIFT=rmfield(SWIFT,'sbdfile');
+end
+
+if isfield(SWIFT,'battery')
+    SWIFT=rmfield(SWIFT,'battery');
+end
+
+if isfield(SWIFT,'watertemp2')
+    SWIFT=rmfield(SWIFT,'watertemp2');
+end
+
+if isfield(SWIFT,'burstID')
+    SWIFT=rmfield(SWIFT,'burstID');
 end
 
 %% loading variables
