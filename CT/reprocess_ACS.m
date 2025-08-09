@@ -69,10 +69,16 @@ for iburst = 1:length(bfiles)
     cleanSalinity(iout) = NaN;
     cleanTemperature(iout) = NaN;
 
-    % Dropouts
-    idrop = isoutlier(cleanSalinity,'movmedian',30);
-    if sum(~idrop) > 3
-    cleanSalinity = interp1(find(~idrop),cleanSalinity(~idrop),1:length(cleanSalinity));
+    % Salinity spikes/dropouts
+    ispikesal = isoutlier(cleanSalinity,'movmedian',30);
+    if sum(~ispikesal) > 3
+    cleanSalinity = interp1(find(~ispikesal),cleanSalinity(~ispikesal),1:length(cleanSalinity));
+    end
+
+     % Temperature spikes
+    ispiketemp = isoutlier(cleanTemperature,'movmedian',30);
+    if sum(~ispiketemp) > 3
+    cleanTemperature = interp1(find(~ispiketemp),cleanTemperature(~ispiketemp),1:length(cleanTemperature));
     end
 
     % Mean values
@@ -84,12 +90,12 @@ for iburst = 1:length(bfiles)
     salinitystddev = std(cleanSalinity,[],'omitnan');
 
     % Unrealistic Values
-    if meanwatertempclean > 40
-        meanwatertempclean = NaN;
-        watertempstddev = NaN;
-        meansalinityclean = NaN;
-        salinitystddev = NaN;
-    end
+    % if meanwatertempclean > 40
+    %     meanwatertempclean = NaN;
+    %     watertempstddev = NaN;
+    %     meansalinityclean = NaN;
+    %     salinitystddev = NaN;
+    % end
 
     % Replace Values in SWIFT structure
     SWIFT(sindex).watertemp = meanwatertempclean;
@@ -109,6 +115,7 @@ for iburst = 1:length(bfiles)
         axis tight
         plot(xlim,[1 1]*meanwatertemp,'-k','LineWidth',2)
         plot(xlim,[1 1]*meanwatertempclean,'-b','LineWidth',2)
+        scatter(find(ispiketemp),Temperature(ispiketemp),'k','filled')
         title('Temperature');
         subplot(2,1,2)
         plot(Salinity,'-kx')
@@ -117,7 +124,7 @@ for iburst = 1:length(bfiles)
         axis tight
         plot(xlim,[1 1]*meansalinity,'-k','LineWidth',2)
         plot(xlim,[1 1]*meansalinityclean,'-r','LineWidth',2)
-        scatter(find(idrop),Salinity(idrop),'k','filled')
+        scatter(find(ispikesal),Salinity(ispikesal),'k','filled')
         title('Salinity');
         print([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4)],'-dpng')
         close gcf

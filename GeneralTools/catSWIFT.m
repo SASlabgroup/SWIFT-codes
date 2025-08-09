@@ -390,14 +390,20 @@ if isfield(SWIFT,'signature')
     for it = 1:nt
         if isfield(SWIFT(it).signature.HRprofile,'tkedissipationrate')
         tke = SWIFT(it).signature.HRprofile.tkedissipationrate;
-        if isfield(SWIFT(it).signature.HRprofile,'w')
-        w = SWIFT(it).signature.HRprofile.w;
+        if length(tke) > nz
+            warning(['Burst ' num2str(it) ' HR profile wrong size. Skipping.'])
+            tke = NaN(nz,1);
+            w = NaN(nz,1);
         else
-            w = NaN(size(tke));
+            if isfield(SWIFT(it).signature.HRprofile,'w')
+            w = SWIFT(it).signature.HRprofile.w;
+            else
+                w = NaN(size(tke));
+            end
         end
             if ~isempty(tke)
-                swift.surftke(1:length(tke),it) = tke;
-                swift.surfw(1:length(tke),it) = w;
+                swift.surftke(:,it) = tke;
+                swift.surfw(:,it) = w;
             else
                 swift.surftke(:,it) = NaN(nz,1);
                 swift.surfw(:,it) = NaN(nz,1);

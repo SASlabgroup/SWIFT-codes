@@ -252,7 +252,7 @@ Dp = dir(fpindex); % dominant (peak) direction, use peak f
 %% screen for bad direction estimate, or no heave data    
 
 inds = fpindex + [-1:1]; % pick neighboring bands
-if all(inds>0), 
+if all(inds>0) && all(inds<= length(dir))
     
   dirnoise = std( dir(inds) );
 
@@ -263,7 +263,7 @@ if all(inds>0),
   end
   
 else
-    Dp =9999;
+    Dp = 9999;
 end
 
 

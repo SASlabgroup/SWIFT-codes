@@ -156,6 +156,7 @@ for iburst = 1:nburst
         disp(missingpayloads)
     end
 
+     disp(['Burst ID: ' burstID])
      disp('=================================')
     
 % End burst loop

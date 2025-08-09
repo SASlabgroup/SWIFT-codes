@@ -75,6 +75,12 @@ for iburst = 1:length(bfiles)
         continue
     end
 
+    % If not enough data to work with, skip burst
+    if length(sbgData.ShipMotion.heave)-tstart*5 < 256*fs
+            disp('Not enough data. Skipping...')
+            continue
+    end
+
     % IMU Motion
     z = sbgData.ShipMotion.heave(:)';
     x = sbgData.ShipMotion.surge(:)';
@@ -122,7 +128,7 @@ for iburst = 1:length(bfiles)
             ylabel('\eta [m]');ylim([-2 2])
             plot(tstart*[1 1],ylim,':k','LineWidth',2)
             legend('Raw','Despiked','Start')
-            % title(bname,'interpreter','none')
+            title(bname,'interpreter','none')
         
             subplot(3,1,2)
             plot(gpstime,u,'-kx')
@@ -147,12 +153,6 @@ for iburst = 1:length(bfiles)
             close gcf
     end
 
-    % If not enough data to work with, skip burst
-    if length(z)-tstart*5 < 256*fs
-            disp('Not enough data. Skipping...')
-            continue
-    end
-
     % Crop and despike data
     z = filloutliers(z(tstart*5:end),'linear');
     x = filloutliers(x(tstart*5:end),'linear');
@@ -162,40 +162,22 @@ for iburst = 1:length(bfiles)
     u = filloutliers(u(tstart*5:end),'linear');
     v = filloutliers(v(tstart*5:end),'linear');
 
-    % Force same size
-    ndiff = length(z)-length(u);
-    if ndiff > 0
-        u = [u zeros(1,ndiff)];
-        v = [v zeros(1,ndiff)];
-    elseif ndiff < 0
-        u = u(1:length(z));
-        v = v(1:length(z));
-    end
-    ndiff = length(z) - length(lon);
-    if ndiff > 0
-        lon = [lon zeros(1,ndiff)];
-        lat = [lat zeros(1,ndiff)];
-    elseif ndiff < 0 
-        lon = lon(1:length(z));
-        lat = lat(1:length(z));
+    % Remove NaNs?
+    ibad = isnan(z + x + y + u + v + lat + lon);
+    z(ibad) = []; x(ibad) = []; y(ibad)=[]; u(ibad)=[]; 
+    v(ibad)=[]; lat(ibad)=[]; lon(ibad)=[];
+
+    % Recalculate wave spectra to get proper directional moments 
+    %   (bug fix in 11/2017)
+    f = SWIFT(sindex).wavespectra.freq;  % original frequency bands
+    [newHs,newTp,newDp,newE,newf,newa1,newb1,newa2,newb2,newcheck] = SBGwaves(u,v,z,fs);
+
+    if ~any(~isnan(newE))
+        warning('NaN Spectra from SBGwaves')
     end
 
-        % Remove NaNs?
-        ibad = isnan(z + x + y + u + v + lat + lon);
-        z(ibad) = []; x(ibad) = []; y(ibad)=[]; u(ibad)=[]; 
-        v(ibad)=[]; lat(ibad)=[]; lon(ibad)=[];
-
-        % Recalculate wave spectra to get proper directional moments 
-        %   (bug fix in 11/2017)
-        f = SWIFT(sindex).wavespectra.freq;  % original frequency bands
-        [newHs,newTp,newDp,newE,newf,newa1,newb1,newa2,newb2,newcheck] = SBGwaves(u,v,z,fs);
-
-        if ~any(~isnan(newE))
-            warning('NaN Spectra from SBGwaves')
-        end
-
-        % Alternative results using GPS velocites
-        [altHs,altTp,altDp,altE,altf,alta1,altb1,alta2,altb2] = GPSwaves(u,v,[],fs);    
+    % Alternative results using GPS velocites
+    [altHs,altTp,altDp,altE,altf,alta1,altb1,alta2,altb2] = GPSwaves(u,v,[],fs);    
 
 
         % Interpolate results to L1 frequency bands

@@ -10,7 +10,10 @@ else
     slash = '/';
 end
 
-missions = dir([expdir slash 'SWIFT*']);
+missions = dir([expdir slash 'SWIFT*']);% Normal
+% % Special to get both drifting + moored
+% missions = dir([expdir slash '*' slash 'SWIFT*']);
+missions = missions([missions.isdir]);
 
 if isempty(missions)
     disp(['No missions found in ' expdir])
@@ -19,8 +22,12 @@ end
 
 swift = struct;
 
-t0 = now;
-tf = 0;
+mintime = now;
+maxtime = 0;
+minlon = 360;
+maxlon = 0;
+minlat = 90;
+maxlat = -90;
 
 for im = 1:length(missions)
 
@@ -31,19 +38,40 @@ for im = 1:length(missions)
     else
         disp(['Loading ' missions(im).name ' ' level ' product(s)...'])
         for ifile = 1:length(Lfile)
-        load([Lfile(ifile).folder slash Lfile(ifile).name],'SWIFT');
+        load([Lfile(ifile).folder slash Lfile(ifile).name],'SWIFT','sinfo');
         oneswift = catSWIFT(SWIFT);
             ID = SWIFT(1).ID;
         stime = oneswift.time;
+        slon = oneswift.lon;
+        slat = oneswift.lat;
+        iacs = find(strcmp({sinfo.postproc.type},'ACS'));
+        outflag = sinfo.postproc(iacs(end)).flags.outofwater;
+        if ~strcmp(datestr(min(stime),'mmdd'),datestr(max(stime),'mmdd'))
         sdate = [datestr(min(stime),'mmdd') '_' datestr(max(stime),'mmdd')];
+        else
+            sdate = datestr(min(stime),'mmdd');
+        end
         sname = ['SN' ID '_' sdate];
         swift.(sname) = oneswift;
+        swift.(sname).outofwater = outflag;
 
-            if min(stime) < t0
-                t0 = min(stime);
+            if min(stime) < mintime
+                mintime = min(stime);
             end
-            if max(stime) > tf
-                tf = max(stime);
+            if max(stime) > maxtime
+                maxtime = max(stime);
+            end
+             if min(slon) < minlon
+                minlon = min(slon);
+            end
+            if max(slon) > maxlon
+                maxlon = max(slon);
+            end
+            if min(slat) < minlat
+                minlat = min(slat);
+            end
+            if max(slat) > maxlat
+                maxlat = max(slat);
             end
 
         end
@@ -71,10 +99,30 @@ end
 SNs = unique(SNs);
 nSN = length(SNs);
 
-% if nargin > 0
-% end
+tlim = [mintime maxtime];
+[bathy,blon,blat] = readtopo([minlat maxlat minlon maxlon]);
 
-tlim = [t0 tf];
+%% Location
+bmax = abs(min(bathy(:)));
+
+figure('color','w')
+contourf(blat,blon,bathy,linspace(-bmax,0,50),'LineStyle','none');
+hold on
+contourf(blat,blon,bathy,[0 0],'k','LineWidth',2)
+clim([-bmax 0]);
+colormap([cmocean('grey'); rgb('olive')])
+c = colorbar;c.Label.String = 'H [m]';
+xlabel('Longitude');ylabel('Latitude');
+hold on
+clear s
+for iswift = 1:nswift
+    slon = swift.(swifts{iswift}).lon;
+    slat = swift.(swifts{iswift}).lat;
+
+    s(iswift) = scatter(slon,slat,10,'filled','MarkerFaceColor',cswift(iswift,:));
+end
+legend(s,swifts','Interpreter','none','FontSize',8,'Location','SouthWest')
+title('SWIFT Locations')
 
 %% MET
 
@@ -143,7 +191,6 @@ for iswift = 1:nswift
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
     subplot(4,1,4);
-    swifts{iswift}
     plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).driftspd,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
@@ -215,14 +262,14 @@ if isempty(h) || length(h) == 1
 end
 
 
-%% ADCP Velocities
+%% Vertical Velocity
 
 fh = figure('color','w','Name',[expdir  ' ' level ' Velocity Data']);
 set(fh,'outerposition',MP);
 h = tight_subplot(nSN+1,1,0.025);
 for iswift = 1:nswift
 
-    if isfield(swift.(swifts{iswift}),'relu')
+    if isfield(swift.(swifts{iswift}),'surfw')
     axes(h(1))
     plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
@@ -232,14 +279,14 @@ for iswift = 1:nswift
     iSN = find(strcmp(SNs,SN));
 
     axes(h(iSN+1))
-    if ~any(isnan(swift.(swifts{iswift}).depth)) && any(~isnan(swift.(swifts{iswift}).relu(:)))
-    pcolor(swift.(swifts{iswift}).time,swift.(swifts{iswift}).depth,swift.(swifts{iswift}).relu);
+    if ~any(isnan(swift.(swifts{iswift}).depth)) && any(~isnan(swift.(swifts{iswift}).surfw(:)))
+    pcolor(swift.(swifts{iswift}).time,swift.(swifts{iswift}).surfz,swift.(swifts{iswift}).surfw);
     end
     shading flat
     hold on
     title(['SWIFT' SN])
     end
-    
+
 end
 linkaxes(h,'x');
 axes(h(1))
@@ -247,10 +294,10 @@ axis tight
 ylim([0 20])
 xlim(tlim)
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
-title([level ' Zonal Velocity'])
+title([level ' Vertical Velocity'])
 set(h(1:end-1),'XTickLabel',[])
 axes(h(end)); datetick('x','KeepLimits','KeepTicks')
-set(h(2:end),'YLim',[0 21],'YDir','Reverse','CLim',[-0.2 0.2])
+set(h(2:end),'YLim',[0 5],'YDir','Reverse','CLim',[-0.1 0.1])
 colormap(cmocean('balance'))
 
 % Delete if empty

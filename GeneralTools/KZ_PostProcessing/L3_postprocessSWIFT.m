@@ -65,7 +65,7 @@ if nargin > 1
             case 'rpWaves'; rpIMU = true; rpSBG = true;
             case 'plotswift'; plotswift = true;
             case 'plotburst';plotburst = true;
-            case 'readraw';readraw = true;% You have to specify readraw, or else it is false
+            case 'readraw';readraw = true;
             case 'rpall'; rpWXT = true; rpPB2 = true; rpY81 = true; rpIMU = true;...
                     rpSBG = true; rpACS = true; rpSIG = true; rpAQH = true; rpAQD = true;
 

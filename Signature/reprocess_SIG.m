@@ -325,7 +325,7 @@ for iburst = 1:nburst
 
        % Crop if too much data
        if length(echogram.r) > 500
-           warning('Echogram has too many bins. Croppping...')
+           warning('Echogram has more bins than expected. Croppping...')
            echogram.z = echogram.z(1:500);
            echogram.echoc = echogram.echoc(1:500);
            echogram.echo0 = echogram.echo0(1:500);
@@ -469,6 +469,11 @@ for iburst = 1:nburst
                     SWIFT(sindex).signature.echoz = echogram.z;
                 end
             end
+            % Altimeter
+            SWIFT(sindex).signature.altimeter = inf;
+            % Temperaure
+            SWIFT(sindex).watertemp2 = NaN;
+
             % Flag
             badsig(sindex) = true;
 
@@ -497,8 +502,14 @@ if ~isempty(fieldnames(SWIFT))
         dz = 0.5;
         profile.z = opt.xz + bz + dz*(1:40)';
     end
+    if ~exist('echo','var')
+        bz = 0.1;
+        dz = 0.04;
+        echogram.z = opt.xz + bz + dz*(1:500)';
+    end
     if ~isempty(inan)
         for it = inan'
+            SWIFT(it).signature.altimeter = NaN;
             % HR data
             SWIFT(it).signature.HRprofile = [];
             SWIFT(it).signature.HRprofile.w = NaN(size(HRprofile.z));
@@ -515,6 +526,9 @@ if ~isempty(fieldnames(SWIFT))
             SWIFT(it).signature.profile.wvar = NaN(size(profile.z));
             SWIFT(it).signature.profile.z = profile.z;
             SWIFT(it).signature.profile.spd_alt = NaN(size(profile.z));
+            % Echogram
+            SWIFT(it).signature.echoz = echogram.z;
+            SWIFT(it).signature.echo = NaN(size(echogram.z));
         end
     end
 end
