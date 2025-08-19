@@ -92,7 +92,6 @@ if isfield(SWIFT,'airpresstddev')
     swift.pressstd = [SWIFT.airpresstddev];
 else
     swift.pressstd = NaN(1,nt);
-
 end
 
 % Rain
@@ -131,21 +130,24 @@ if isfield(SWIFT,'ambienttempmean')% This is the jacket temperature
 end
 
 % Drift velocity
-time = [SWIFT.time];
-lat = [SWIFT.lat];
-lon = [SWIFT.lon];
-dt = diff(time);
-dlon = diff(lon); % deg
-u = deg2km(dlon,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( dt*24*3600 ); % m/s
-dlat = diff(lat); % deg/days
-v = deg2km(dlat) .* 1000 ./ ( dt*24*3600 ); % m/s
-ibad = abs(u) > 1 | abs(v) > 1 | isinf(u) | isinf(v);
-u(ibad) = NaN;
-v(ibad) = NaN;
-swift.driftu(2:nt) = u;
-swift.driftv(2:nt) = v;
-swift.driftspd(2:nt) = sqrt(u.^2 + v.^2); % m/s
-swift.driftspd0 = [SWIFT.driftspd];
+% time = [SWIFT.time];
+% lat = [SWIFT.lat];
+% lon = [SWIFT.lon];
+% dt = diff(time);
+% dlon = diff(lon); % deg
+% u = deg2km(dlon,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( dt*24*3600 ); % m/s
+% dlat = diff(lat); % deg/days
+% v = deg2km(dlat) .* 1000 ./ ( dt*24*3600 ); % m/s
+% ibad = abs(u) > 1 | abs(v) > 1 | isinf(u) | isinf(v);
+% u(ibad) = NaN;
+% v(ibad) = NaN;
+% swift.driftu(2:nt) = u;
+% swift.driftv(2:nt) = v;
+% swift.driftspd(2:nt) = sqrt(u.^2 + v.^2); % m/s
+swift.driftspd = [SWIFT.driftspd];
+swift.driftdir = [SWIFT.driftdirT];
+swift.driftu = cosd(swift.driftdir).*swift.driftspd;
+swift.driftv = sind(swift.driftdir).*swift.driftspd;
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
@@ -245,14 +247,18 @@ swift.subv = swift.relv + swift.driftv;
 for it = 1:nt
     wavepower = SWIFT(it).wavespectra.energy;
     wavefreq = SWIFT(it).wavespectra.freq;
+    if isfield(SWIFT(it).wavespectra,'check')
     wavea1 = SWIFT(it).wavespectra.a1;
     waveb1 = SWIFT(it).wavespectra.b1;
     wavea2 = SWIFT(it).wavespectra.a2;
     waveb2 = SWIFT(it).wavespectra.b2;
-    if isfield(SWIFT(it).wavespectra,'check')
     wavecheck = SWIFT(it).wavespectra.check;
     else
-        wavecheck = NaN(size(waveb2));
+        wavecheck = NaN(size(wavepower));
+        wavea1 = NaN(size(wavepower));
+        waveb1 = NaN(size(wavepower));
+        wavea2 = NaN(size(wavepower));
+        waveb2 = NaN(size(wavepower));
     end
     if length(wavepower) ~= length(wavefreq)
         wavepower = NaN(size(wavefreq));
@@ -315,20 +321,22 @@ swift.wavefreq = wavefreq;
 
 % Wave Bulk Variables
 swift.wavesigH = [SWIFT.sigwaveheight];
-swift.wavepeakT = [SWIFT.peakwaveperiod];
-swift.wavepeakdir = [SWIFT.peakwavedirT];
-
-% Calculate new Stokes drift (Us = omega*k*(Hs/4)^2)
-om = 2*pi./swift.wavepeakT;
-k = om.^2./9.81;
-swift.waveustokes = (swift.wavesigH./4).^2.*om.*k;
-
-% Re-calculate peak wave period (via centroid method)
-wavepower = swift.wavepower;
-wavefreq = swift.wavefreq;
-wavevar = sum(wavepower,1,'omitnan');
-waveweight = sum(wavepower.*repmat(wavefreq,1,size(wavepower,2)),1,'omitnan');
-swift.wavepeakT = 1./(waveweight./wavevar);
+if isfield(SWIFT,'peakwaveperiod')
+    swift.wavepeakT = [SWIFT.peakwaveperiod];
+    swift.wavepeakdir = [SWIFT.peakwavedirT];
+    
+    % Calculate new Stokes drift (Us = omega*k*(Hs/4)^2)
+    om = 2*pi./swift.wavepeakT;
+    k = om.^2./9.81;
+    swift.waveustokes = (swift.wavesigH./4).^2.*om.*k;
+    
+    % Re-calculate peak wave period (via centroid method)
+    wavepower = swift.wavepower;
+    wavefreq = swift.wavefreq;
+    wavevar = sum(wavepower,1,'omitnan');
+    waveweight = sum(wavepower.*repmat(wavefreq,1,size(wavepower,2)),1,'omitnan');
+    swift.wavepeakT = 1./(waveweight./wavevar);
+end
 
  % Wind Spectra
  if isfield(SWIFT,'windustar')

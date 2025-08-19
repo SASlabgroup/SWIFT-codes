@@ -9,7 +9,7 @@ function [SWIFT,sinfo] = L3_postprocessSWIFT(missiondir,varargin)
 % Airmar temp, NaN out if below/above -20/50 deg C
 % Wind speed, NaN out above 30 m/s
 
-% K. Zeiden 07/2024, based on existing sensor-specific processing codes w 
+% K. Zeiden 07/2024, based on existing sensor-specific processing codes
 
 if ispc
     slash = '\';
@@ -39,6 +39,9 @@ if nargin > 1
     
     % CT
     rpACS = false; % CT
+
+    % ACO
+    rpACO = false;% Dissolved O2
     
     % ADCP
     rpSIG = false; % TKE 
@@ -56,18 +59,20 @@ if nargin > 1
             case 'rpIMU'; rpIMU = true;
             case 'rpSBG'; rpSBG = true;
             case 'rpACS'; rpACS = true;
+            case 'rpACO'; rpACO = true;
             case 'rpSIG'; rpSIG = true;
             case 'rpAQH'; rpAQH = true;
             case 'rpAQD'; rpAQD = true;
             case 'rpADCP'; rpSIG = true; rpAQH = true;rpAQD = true;
             case 'rpMET'; rpWXT = true; rpPB2 = true; rpY81 = true;
             case 'rpCT'; rpACS = true;
+            case 'rpDO'; rpACO = true;
             case 'rpWaves'; rpIMU = true; rpSBG = true;
             case 'plotswift'; plotswift = true;
             case 'plotburst';plotburst = true;
             case 'readraw';readraw = true;
             case 'rpall'; rpWXT = true; rpPB2 = true; rpY81 = true; rpIMU = true;...
-                    rpSBG = true; rpACS = true; rpSIG = true; rpAQH = true; rpAQD = true;
+                    rpSBG = true; rpACS = true; rpACO = true; rpSIG = true; rpAQH = true; rpAQD = true;
 
             otherwise
                 error('Unrecognized command: %s\n', command);
@@ -96,6 +101,9 @@ rpSBG = true; % Waves
 
 % CT
 rpACS = true; % CT
+
+% ACO
+rpACO = true;
 
 % ADCP
 rpSIG = true; % TKE 
@@ -209,6 +217,17 @@ if rpACS
         [SWIFT,sinfo] = reprocess_ACS(missiondir,readraw,plotburst);
     else
         disp('No ACS data...')
+    end
+end
+
+%% Reprocess ACO
+
+if rpACO
+    if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_ACO_*.dat']))
+        disp('Reprocessing ACO O2 Conc data...')
+        [SWIFT,sinfo] = reprocess_ACO(missiondir,readraw,plotburst);
+    else
+        disp('No ACO data...')
     end
 end
 

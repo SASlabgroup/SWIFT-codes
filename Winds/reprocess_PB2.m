@@ -40,12 +40,21 @@ disp(['Found ' num2str(length(bfiles)) ' burst files...'])
 for iburst = 1:length(bfiles)
 
    disp(['Burst ' num2str(iburst) ' : ' bfiles(iburst).name(1:end-4)])
-        
+      
+
+        % Find burst index in the existing SWIFT structure
+        burstID = bfiles(iburst).name(13:end-4);
+        sindex = find(strcmp(burstID,{SWIFT.burstID}'));
+        if isempty(sindex)
+            disp('No matching SWIFT index. Skipping...')
+            continue
+        end
+
         if bfiles(iburst).bytes   == 0
             disp('Burst file is empty. Skippping ...')
             continue
         end
-            
+
         % Read mat file or load raw data
         if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
             [~,windspd,winddirT,airtemp,airpres,~,~,~,~,pitch,roll,relhumidity,windspdR,winddirR] = ...
@@ -99,14 +108,6 @@ for iburst = 1:length(bfiles)
         % Check airpressure units (if O(10), is in inches of mercury)
         if mean(airpres,'omitnan') < 500
             airpres = airpres.*33.8639;% Convert to mb
-        end
-
-        % Find burst index in the existing SWIFT structure
-        burstID = bfiles(iburst).name(13:end-4);
-        sindex = find(strcmp(burstID,{SWIFT.burstID}'));
-        if isempty(sindex)
-            disp('No matching SWIFT index. Skipping...')
-            continue
         end
 
         % Despike
