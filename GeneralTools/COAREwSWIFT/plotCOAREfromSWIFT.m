@@ -211,12 +211,16 @@ if length(fluxes.tau) == length([SWIFT.time]),
    
     subplot 313
         yline(0, 'k--'); hold on;
+
+        if ~ismember('dT_warm_to_skin', fluxes.Properties.VariableNames)
+            fluxes.dT_warm_to_skin = zeros(size(fluxes.dT_skin));
+        end
         if Tskinflag == true;
             plot([SWIFT.time], [SWIFT.watertemp] - [SWIFT.Tskin],'kx',...
-            [SWIFT.time], fluxes.dT_skin,'m*')
+            [SWIFT.time], fluxes.dT_skin - fluxes.dT_warm_to_skin,'m*')
             legend('','Observed','COARE', 'Location','west')
         else
-            plot([SWIFT.time], fluxes.dT_skin,'m*')
+            plot([SWIFT.time], fluxes.dT_skin - fluxes.dT_warm_to_skin,'m*')
             legend('','COARE', 'Location','west')
         end
         

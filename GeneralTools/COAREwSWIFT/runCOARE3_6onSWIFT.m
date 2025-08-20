@@ -28,8 +28,11 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % Changed to .fig outputs
 % Used diurnal warming COARE script
 
-
-savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\exp_cs';
+% Please toggle savepath
+savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
+% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO\exp_cs';
+% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\';
+% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\exp_cs';
 cd(savepath); fprintf('Savepath: %s', savepath);
 %% Time in Julian Day
 time = [SWIFT.time];
@@ -49,7 +52,7 @@ else
     zu = 1; % meter
 end
 
-zrf_u = 0; %reference height
+zrf_u = 0; %reference height 
 
 % Plot input
 figure
@@ -83,7 +86,7 @@ savefig([cd '\' sprintf('%s_COAREinputairtemp',SWIFT(1).ID)])
 if isfield(SWIFT,'relhumidity') && any(~isnan([SWIFT.relhumidity])),
     rh = [SWIFT.relhumidity];
 else
-    rh = 95.*ones(1,length(SWIFT)); % cannot be NaN, must have a value
+    rh = 75.*ones(1,length(SWIFT)); % cannot be NaN, must have a value
 end
 zq = zu; % rh height is same as wind height
 zrf_q = zrf_u; %same reference
@@ -294,6 +297,8 @@ fluxes = coare36vnWarm_et(jd',u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',
 validcolumns = find( nansum( fluxes, 1 ) ~= 0  & ~isnan(nansum( fluxes, 1 )) );
 
 % for "3.6 Warm"
+disp('COARE 3.6 w/ warm')
+
 ustar = fluxes(:,1); % wind friction velocity
 tau = fluxes(:,2);%   tau = wind stress (N/m^2)
 hsb = fluxes(:,3);%   hsb = sensible heat flux into (out of?) ocean (W/m^2)
@@ -318,21 +323,17 @@ fluxes = array2table(fluxes, ...
     });
 
 % % for 3.6 experimental cs
+% disp('COARE 3.6 exp cs')
 % 
-% % A=[usr tau hsb hlb hbb hsbb hlwebb tsr qsr zo  zot zoq Cd Ch Ce  L  zeta dT_skinx dq_skinx dz_skin Urf Trf Qrf RHrf UrfN TrfN QrfN  lw_net sw_net Le rhoa UN U10 U10N Cdn_10 Chn_10 Cen_10 hrain Qs Evap T10 T10N Q10 Q10N  RH10 P10 rhoa10 gust wc_frac Edis dter2' tkt2'];
-% %   1   2   3   4   5   6    7      8   9  10  11  12  13 14 15  16  17    18       19        20    21  22  23   24   25  26   27     28      29  30  31  32 33   34    35     36     37     38  39  40   41  42   43  44    45   46   47    48    49     50    51     52
+% % A=[usr tau hsb hlb hbb hsbb hlwebb tsr qsr zo  zot zoq Cd Ch Ce  L  zeta dT_skinx dq_skinx dz_skin Urf Trf Qrf RHrf UrfN TrfN QrfN  lw_net sw_net Le rhoa UN U10 U10N Cdn_10 Chn_10 Cen_10 hrain Qs Evap T10 T10N Q10 Q10N  RH10 P10 rhoa10 gust wc_frac Edis dter2' tkt2' dter3];
+% %   1   2   3   4   5   6    7      8   9  10  11  12  13 14 15  16  17    18       19        20    21  22  23   24   25  26   27     28      29  30  31  32 33   34    35     36     37     38  39  40   41  42   43  44    45   46   47    48    49     50    51     52     53
 % 
 % fluxes = array2table(fluxes, ...
-%      'VariableNames',{ ...
-%     'usr' 'tau' 'hsb' 'hlb' 'hbb'...
-%     'hsbb' 'hlwebb' 'tsr' 'qsr' 'zo' 'zot'...
-%     'zoq' 'Cd' 'Ch' 'Ce' 'L' 'zeta' 'dT_skin'...
-%     'dq_skin' 'dz_skin' 'Urf' 'Trf' 'Qrf' 'RHrf' 'UrfN'...
-%     'TrfN' 'QrfN' 'lw_net' 'sw_net' 'Le' 'rhoa' 'UN' 'U10'...
-%     'U10N' 'Cdn_10' 'Chn_10' 'Cen_10' 'hrain' 'Qs' 'Evap' 'T10'...
-%     'T10N' 'Q10' 'Q10N' 'RH10' 'P10' 'rhoa10' 'gust'...
-%     'wc_frac' 'Edis' 'dter2' 'tkt2'
-%     });
+%      'VariableNames',{'usr','tau','hsb','hlb','hbb','hsbb','hlwebb','tsr','qsr','zo','zot','zoq',...
+%      'Cd','Ch','Ce','L','zeta','dT_skin','dq_skin','dz_skin','Urf','Trf','Qrf',...
+%      'RHrf','UrfN','TrfN','QrfN','lw_net','sw_net','Le','rhoa','UN','U10','U10N',...
+%      'Cdn_10','Chn_10','Cen_10','hrain','Qs','Evap','T10','T10N','Q10','Q10N',...
+%      'RH10','P10','rhoa10','gust','wc_frac','Edis','dter2','tkt2','xlamx','dter3'});
 
 % KEY for flux indexing
 %1    usr = friction velocity that includes gustiness (m/s), u*
