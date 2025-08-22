@@ -244,20 +244,9 @@ while 1
         ConductivityMean(CTcounter + 1) = fread(fid,1,'float'); %
         SWIFT.watertemp(CTcounter + 1) = fread(fid,1,'float'); %
         SWIFT.salinity(CTcounter + 1) = fread(fid,1,'float'); %
+        CTport(CTcounter + 1) = port;
+        SWIFT.CTdepth(CTcounter + 1) = NaN; % place holder
         CTcounter = CTcounter + 1;
-        
-        if port==7
-           SWIFT.CTdepth(CTcounter) =.18;
-        elseif port==8 && SWIFTversion == 3
-            SWIFT.CTdepth(CTcounter) = .66;
-        elseif port==8 && SWIFTversion == 4
-            SWIFT.CTdepth(CTcounter) = .2;
-        elseif port==9
-            SWIFT.CTdepth(CTcounter) = 1.22;
-        else
-            SWIFT.CTdepth(CTcounter) = 0.66;
-        end
-        
         
     elseif type == 5 & size > 0,  % Ecopuck fluorometer
         disp('reading ECOpuck fluorometer results')
@@ -601,7 +590,24 @@ if isfield(SWIFT,'windspectra'),
 else
 end
 
-%% sort CTdepth field 
+%% assign CTdepth and sort field 
+
+if isfield(SWIFT,'CTdepth')
+    for CTcount = 1:CTcounter
+        if CTport(CTcount)==7
+            SWIFT.CTdepth(CTcount) =.18;
+        elseif CTport(CTcount)==8 && SWIFTversion == 3
+            SWIFT.CTdepth(CTcount) = .66;
+        elseif CTport(CTcount)==8 && SWIFTversion == 4
+            SWIFT.CTdepth(CTcount) = .2;
+        elseif CTport(CTcount)==9
+            SWIFT.CTdepth(CTcount) = 1.22;
+        else
+            SWIFT.CTdepth(CTcount) = 0.66;
+        end
+    end
+end
+
 if isfield(SWIFT,'CTdepth')
     if length(SWIFT.CTdepth) > 1
         for si=1:length(SWIFT)
