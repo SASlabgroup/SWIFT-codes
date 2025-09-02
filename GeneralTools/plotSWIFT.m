@@ -62,7 +62,7 @@ set(0,'defaultaxesfontsize',14,'defaultaxesfontweight','demi');
 cleanupObj = onCleanup(@()set(0,'defaultaxesfontsize',fs,'defaultaxesfontweight',fw) );
 
 % Plot info from wave histograms? Slow due to interpolating to common bins
-plot_wavehistogram = true;
+plot_wavehistogram = false;
 
 %% Figure 1: Wind and wave plot
 % Available for all SWIFT, although v4s do not have winds
