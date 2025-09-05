@@ -62,6 +62,41 @@ if isfield(SWIFT,'watertempstddev')
 else
     swift.tseastd = NaN(1,nt);
 end
+if isfield(SWIFT,'watertemp2')
+    swift.tsea2 = NaN(1,nt);
+    for it = 1:nt
+        swift.tsea2(it) = max(SWIFT(it).watertemp2);
+    end
+else
+    swift.tsea2 = NaN(1,nt);
+end
+if isfield(SWIFT,'watertemp2stddev')
+    swift.tsea2std = NaN(1,nt);
+    for it = 1:nt
+        swift.tsea2std(it) = max(SWIFT(it).watertemp2stddev);
+    end
+else
+    swift.tsea2std = NaN(1,nt);
+end
+
+if isfield(SWIFT,'watertemp3')
+    swift.tsea3 = NaN(1,nt);
+    for it = 1:nt
+        swift.tsea3(it) = max(SWIFT(it).watertemp3);
+    end
+else
+    swift.tsea3 = NaN(1,nt);
+end
+if isfield(SWIFT,'watertemp3stddev')
+    swift.tsea3std = NaN(1,nt);
+    for it = 1:nt
+        swift.tsea3std(it) = max(SWIFT(it).watertemp3stddev);
+    end
+else
+    swift.tsea3std = NaN(1,nt);
+end
+
+
 if isfield(SWIFT,'airtemp')
 swift.tair = [SWIFT.airtemp];
 else
@@ -111,6 +146,28 @@ if isfield(SWIFT,'relhumiditystddev')
     swift.humidstd = [SWIFT.relhumiditystddev];
 else
      swift.humidstd = NaN(1,nt);
+end
+
+% O2
+if isfield(SWIFT,'O2conc')
+    swift.O2conc = [SWIFT.O2conc];
+else
+    swift.O2conc = NaN(1,nt);
+end
+if isfield(SWIFT,'O2concstddev')
+    swift.O2concstd = [SWIFT.O2concstddev];
+else
+    swift.O2concstd = NaN(1,nt);
+end
+if isfield(SWIFT,'O2sat')
+    swift.O2sat = [SWIFT.O2sat];
+else
+    swift.O2sat = NaN(1,nt);
+end
+if isfield(SWIFT,'O2satstddev')
+    swift.O2satstddev = [SWIFT.O2satstddev];
+else
+    swift.O2satstddev = NaN(1,nt);
 end
 
 % Radiometer

@@ -46,7 +46,12 @@ Xf = Xf(:);
 %Interpolate through NaN (necessary for matlab 'conv')
 ireal = ~isnan(Xf);
 inan = isnan(Xf);
+if sum(ireal) > 3
 Xf(inan) = interp1(find(ireal),Xf(ireal),find(inan),'pchip'); 
+else
+    Xsm = NaN(size(Xf));
+    return
+end
 
 %Apply convolution and normalize (so each window is 1 total)
 Xsm = conv(Xf,win,'same');

@@ -57,6 +57,10 @@ for iburst = 1:length(bfiles)
     % Replace Values in SWIFT structure
     SWIFT(sindex).O2conc = mean(O2.O2Concentration,'omitnan');
     SWIFT(sindex).O2concstddev = std(O2.O2Concentration,[],'omitnan');
+    SWIFT(sindex).watertemp3 = mean(O2.Temp,'omitnan');
+    SWIFT(sindex).watertemp3stddev = std(O2.Temp,[],'omitnan');
+    SWIFT(sindex).O2sat = mean(O2.AirSat,'omitnan');
+    SWIFT(sindex).O2satstddev = std(O2.AirSat,[],'omitnan');
     SWIFTreplaced(sindex) = true;
 
     % Plotdata
