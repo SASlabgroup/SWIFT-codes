@@ -37,14 +37,25 @@ for im = 1:length(missions)
         disp(['No ' level ' product found in ' missions(im).name '. Skipping...'])
     else
         disp(['Loading ' missions(im).name ' ' level ' product(s)...'])
+ 
         for ifile = 1:length(Lfile)
         load([Lfile(ifile).folder slash Lfile(ifile).name],'SWIFT','sinfo');
+
+                if isempty(SWIFT)
+            disp([level ' product for  ' missions(im).name ' is empty. Skipping...'])
+            continue
+                end
+                
         oneswift = catSWIFT(SWIFT);
+        if isfield(SWIFT,'ID')
             ID = SWIFT(1).ID;
+        else
+            ID = missions(im).name(6:7);
+        end
         stime = oneswift.time;
         slon = oneswift.lon;
         slat = oneswift.lat;
-        iacs = find(strcmp({sinfo.postproc.type},'ACS'));
+        iacs = find(strcmp({sinfo.postproc.type},'ACS') | strcmp({sinfo.postproc.type},'ACShr'));
         outflag = sinfo.postproc(iacs(end)).flags.outofwater;
         if ~strcmp(datestr(min(stime),'mmdd'),datestr(max(stime),'mmdd'))
         sdate = [datestr(min(stime),'mmdd') '_' datestr(max(stime),'mmdd')];
