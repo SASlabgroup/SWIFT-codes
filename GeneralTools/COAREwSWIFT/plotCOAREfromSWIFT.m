@@ -18,7 +18,7 @@ end;
 
 figure, clf
 subplot(3,1,1);
-plot([SWIFT.time],[SWIFT.airtemp],'kx',[SWIFT.time],[SWIFT.watertemp],'md');
+plot([SWIFT.time],[SWIFT.airtemp],'kx',vertcat(SWIFT.time),vertcat(SWIFT.watertemp),'md');
 legend('air temp','water temp')
 if Tskinflag ==true
     hold on
