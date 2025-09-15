@@ -29,10 +29,11 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % Used diurnal warming COARE script
 
 % Please toggle savepath
-savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
+% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
 % savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO\exp_cs';
 % savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\';
 % savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\exp_cs';
+savepath = 'C:\Users\MichaelJames\Dropbox\mjames\ICE-PPR\DATA\SWIFT20\COAREIO';
 cd(savepath); fprintf('Savepath: %s', savepath);
 %% Time in Julian Day
 time = [SWIFT.time];
@@ -176,13 +177,13 @@ savefig([cd '\' sprintf('%s_COAREinputsalinity',SWIFT(1).ID)])
 if isfield(SWIFT,'SWrad') && any(~isnan([SWIFT.SWrad])),
     sw_dn = [SWIFT.SWrad];
 else
-    sw_dn = NaN;
+    sw_dn = nan(1,length(SWIFT));
 end
 
 if isfield(SWIFT,'LWrad') && any(~isnan([SWIFT.LWrad])),
     lw_dn = [SWIFT.LWrad];
 else
-    lw_dn = NaN;
+    lw_dn = nan(1,length(SWIFT));
 end
 
 % Plot input
@@ -283,9 +284,9 @@ savefig([cd '\' sprintf('%s_COAREinputwaveheight',SWIFT(1).ID)])
 % single value or fill each individual. Warning... this will fill arrays
 % with the dummy values and produce results where no input data are valid
 % ii=find(isnan(P)); P(ii)=1013;    % pressure
-% ii=find(isnan(sw_dn)); sw_dn(ii)=200;   % incident shortwave radiation
+ii=find(isnan(sw_dn)); sw_dn(ii)=200;  [SWIFT.SWrad] = deal(200); % incident shortwave radiation
 % ii=find(isnan(lat)); lat(ii)=45;  % latitude
-% ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); % incident longwave radiation
+ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); num2cell(lw_dn);[SWIFT.LWrad] = deal(ans{:});% incident longwave radiation
 ii=find(isnan(zi)); zi(ii)=600;   % PBL height
 % ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
 
@@ -396,10 +397,10 @@ fluxes = array2table(fluxes, ...
 % FLUXES Calculated within COARE 3.6, option for lat/lon and time/zenith angle specific albedo
 % according to Payne 1972 or constant
 
-fluxes.sw_up = [SWIFT.SWrad]' - fluxes.sw_net; % positive heating ocean
+fluxes.sw_up = sw_dn - fluxes.sw_net; % positive heating ocean
 
 % choose one below (based on interpretation of column 25)
-fluxes.lw_up = [SWIFT.LWrad]' - fluxes.lw_net; %positive heating ocean
+fluxes.lw_up = lw_dn - fluxes.lw_net; %positive heating ocean
 
 % calc net rad
 fluxes.netrad = fluxes.sw_net + fluxes.lw_net;
