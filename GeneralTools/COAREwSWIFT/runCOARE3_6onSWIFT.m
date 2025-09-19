@@ -284,7 +284,7 @@ savefig([cd '\' sprintf('%s_COAREinputwaveheight',SWIFT(1).ID)])
 % single value or fill each individual. Warning... this will fill arrays
 % with the dummy values and produce results where no input data are valid
 % ii=find(isnan(P)); P(ii)=1013;    % pressure
-ii=find(isnan(sw_dn)); sw_dn(ii)=200;  [SWIFT.SWrad] = deal(200); % incident shortwave radiation
+% ii=find(isnan(sw_dn)); sw_dn(ii)=200;  [SWIFT.SWrad] = deal(200); % incident shortwave radiation
 % ii=find(isnan(lat)); lat(ii)=45;  % latitude
 ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); num2cell(lw_dn);[SWIFT.LWrad] = deal(ans{:});% incident longwave radiation
 ii=find(isnan(zi)); zi(ii)=600;   % PBL height
