@@ -23,7 +23,7 @@ end
 L1file = dir([missiondir slash '*L1.mat']);
 
 if isempty(L1file)
-    disp(['No L1 product found for ' sname '.'])
+    disp('No L1 product found.')
     return
 else
     load([L1file.folder slash L1file.name],'SWIFT','sinfo');
@@ -87,7 +87,7 @@ for iburst = 1:length(SWIFT)
     %% Signature 1000
 
     if isempty(sigfile)
-       disp(['No SIG  mat file found for ' burstID '. Skipping.'])
+        disp(['Burst ' burstID ': no SIG file. Skipping.'])
         continue        
     else
         sig = load([sigfile.folder slash sigfile.name]);
@@ -95,7 +95,7 @@ for iburst = 1:length(SWIFT)
 
     % Make sure long enough
     if range(sig.burst.time) < 8.5/(24*60)
-        disp(['Burst ' burstID 'too short. Skipping.'])
+        disp(['Burst ' burstID ': too short. Skipping.'])
         continue
     end
 
@@ -495,7 +495,7 @@ if ~isempty(sigfile)
         sinfo.postproc = struct;
         ip = 1;
     end
-    sinfo.postproc(ip).type = 'SIGhr';
+    sinfo.postproc(ip).type = 'SIG';
     sinfo.postproc(ip).usr = getenv('username');
     sinfo.postproc(ip).time = string(datetime('now'));
     sinfo.postproc(ip).flags = [];
@@ -509,7 +509,7 @@ if ~isempty(acsfile)
         sinfo.postproc = struct;
         ip = 1;
     end
-    sinfo.postproc(ip).type = 'ACShr';
+    sinfo.postproc(ip).type = 'ACS';
     sinfo.postproc(ip).usr = getenv('username');
     sinfo.postproc(ip).time = string(datetime('now'));
     sinfo.postproc(ip).flags.outofwater = outofwater;
@@ -523,7 +523,7 @@ if ~isempty(acofile)
         sinfo.postproc = struct;
         ip = 1;
     end
-    sinfo.postproc(ip).type = 'ACOhr';
+    sinfo.postproc(ip).type = 'ACO';
     sinfo.postproc(ip).usr = getenv('username');
     sinfo.postproc(ip).time = string(datetime('now'));
     sinfo.postproc(ip).flags= [];
@@ -537,7 +537,7 @@ if ~isempty(pb2file)
        sinfo.postproc = struct;
        ip = 1;
     end
-    sinfo.postproc(ip).type = 'PB2hr';
+    sinfo.postproc(ip).type = 'PB2';
     sinfo.postproc(ip).usr = getenv('username');
     sinfo.postproc(ip).time = string(datetime('now'));
     sinfo.postproc(ip).params = [];
@@ -551,7 +551,7 @@ if ~isempty(sbgfile)
         sinfo.postproc = struct;
         ip = 1;
     end
-    sinfo.postproc(ip).type = 'SBGhr';
+    sinfo.postproc(ip).type = 'SBG';
     sinfo.postproc(ip).usr = getenv('username');
     sinfo.postproc(ip).time = string(datetime('now'));
 end
