@@ -40,29 +40,20 @@ for im = 1:length(missions)
  
         for ifile = 1:length(Lfile)
         load([Lfile(ifile).folder slash Lfile(ifile).name],'SWIFT','sinfo');
-<<<<<<< Updated upstream
 
-                if isempty(SWIFT)
-            disp([level ' product for  ' missions(im).name ' is empty. Skipping...'])
-            continue
-                end
-                
-=======
-        if length(SWIFT) == 0
-            disp(['SWIFT structure empty. Skipping...'])
-            continue
-        end
->>>>>>> Stashed changes
+            if isempty(SWIFT)
+                disp([level ' product for  ' missions(im).name ' is empty. Skipping...'])
+                 continue
+            end
+         
         oneswift = catSWIFT(SWIFT);
+
         if isfield(SWIFT,'ID')
             ID = SWIFT(1).ID;
         else
-<<<<<<< Updated upstream
-            ID = missions(im).name(6:7);
-=======
             ID = Lfile(ifile).name(6:7);
->>>>>>> Stashed changes
         end
+
         stime = oneswift.time;
         slon = oneswift.lon;
         slat = oneswift.lat;
