@@ -18,7 +18,8 @@
 %                   and give messages for burst screening
 %             9/2019   force timestamp from filename always, rather than Airmar
 %             7/2022    allow microSWIFT timestamps (not from filename)
-%             4/2025    merge microSWIFT light sensor sbds with waves sbds
+%             4/2025    save microSWIFT light sensor sbds alongside wave sbds (still need to merge)
+%             9/2025    save microSWIFT OpenOBS sensor sbds alongside wave sbds (still need to merge)
 clear all
 
 plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
@@ -26,7 +27,7 @@ fixspectra = false; % binary flag to redact low freq wave spectra, note this als
 fixpositions = false; % binary flag to use "filloutliers" to fix spurious positions.   Use with care. 
 
 disp('-------------------------------------')
-disp('Check QC settings... currently using:')
+disp('Checking QC settings... you are currently using:')
 
 minwaveheight = 0 % minimum wave height in data screening
 
@@ -38,6 +39,8 @@ maxwindspd = 30 % m/s for malfunctioning Airmars
 
 minairtemp = -20 % min airtemp
 disp('-------------------------------------')
+disp('run SWIFT_QC.m in same directory to apply stricter limits')
+disp('-------------------------------------')
 
 wd = pwd;
 wdi = find(wd == '/',1,'last');
@@ -47,11 +50,13 @@ flist = dir('*.sbd');
 %flist = dir('*.dat');
 
 lightsensorcounter = 0; % count light sensor reports
+OpenOBSsensorcounter = 0; % count OpenOBS sensor reports
 
 for ai = 1:length(flist)
     
     badburst(ai) = false;  % intialize bad burst flag
     lightsensor(ai) = false; % intialize light data
+    obssensor(ai) = false; % intialize obs data
     
     [ oneSWIFT voltage ]= readSWIFT_SBD( flist(ai).name , 0);
 
@@ -70,6 +75,13 @@ for ai = 1:length(flist)
         SWIFTlightdata(lightsensorcounter + [1:6]) = oneSWIFT;  clear oneSWIFT
         lightsensor(ai) = true;
         lightsensorcounter = lightsensorcounter + 6;
+        oneSWIFT.lat = []; oneSWIFT.lon = []; oneSWIFT.time = NaN; % force removal of this index from primary structure
+    end
+
+    if isfield(oneSWIFT,'OBSbackscatter')
+        SWIFTobsdata(OpenOBSsensorcounter + [1:3]) = oneSWIFT;  clear oneSWIFT
+        obssensor(ai) = true;
+        OpenOBSsensorcounter = OpenOBSsensorcounter + 3;
         oneSWIFT.lat = []; oneSWIFT.lon = []; oneSWIFT.time = NaN; % force removal of this index from primary structure
     end
 
@@ -147,11 +159,11 @@ for ai = 1:length(flist)
     lat(ai) = oneSWIFT.lat;
     lon(ai) = oneSWIFT.lon;
     
-        onenames = string(fieldnames(oneSWIFT));
+    onenames = string(fieldnames(oneSWIFT));
     lengthofnames(ai) = length(onenames);
     
     % if first sbd, set the structure fields as the standard
-    if ai == 1 && voltage~=9999 && ~lightsensor(ai)
+    if ai == 1 && voltage~=9999 && ~lightsensor(ai) && ~obssensor(ai)
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(SWIFT));
 
@@ -389,5 +401,23 @@ if plotflag
         print('-dpng',[wd '_battery.png'])
     else
     end
-    
+
+    % light sensor plot
+    if any(lightsensor)
+        run('plot_write_microSWIFT_lightdata.m')
+    end
+
+    % OpenOBS sensor plot
+    if any(obssensor)
+        figure, 
+        subplot(2,1,1)
+        plot([SWIFTobsdata.time],[SWIFTobsdata.OBSbackscatter])
+        datetick, ylabel('OpenOBS backscatter')
+        title(['microSWIFT' SWIFTobsdata(1).ID])
+        subplot(2,1,2)
+        plot([SWIFTobsdata.time],[SWIFTobsdata.OBSambient])
+        datetick, ylabel('OpenOBS ambient')
+        print('-dpng',['microSWIFT' SWIFTobsdata(1).ID 'OpenOBSdata.png'])
+    end
+
 end % close plot statement

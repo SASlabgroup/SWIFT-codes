@@ -68,6 +68,7 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %                       empty and filling w/NaN
 %   J. Thomson, 3/2025 add microSWIFT light sensor (payload type 54)
 %   J. Thomson, 3/2025 add Lufft WS700 sensor (payload types 100-104)
+%   J. Thomson, 9/2025 add microSWIFT OpenOBS sensor (payload type 53)
 
 recip = true; % binary flag to change wave direction to FROM
 errorfile = false; % initialize
@@ -490,6 +491,24 @@ while 1
         %if SWIFT.time < ( filetime - tooearly) 
         %    SWIFT.time = filetime;
         %end
+    
+    elseif type == 53 & size == 282
+        disp('reading microSWIFT Open OBS (payload 53)')
+        OpenOBSserialnumber = fread(fid,1,'*uint16');
+        for sw = 1:3 % usually three sampling windows in each OpenOBS sensor message
+            startlat = fread(fid,1,'int32') * 1e-7;
+            startlon = fread(fid,1,'int32') * 1e-7;
+            endlat = fread(fid,1,'int32') * 1e-7;
+            endlon = fread(fid,1,'int32') * 1e-7;
+            starttime = fread(fid,1,'uint32');
+            endtime = fread(fid,1,'uint32');
+            SWIFT(sw).lat = endlat;
+            SWIFT(sw).lon = endlon;
+            SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            SWIFT(sw).OBSbackscatter = fread(fid,17,'*uint16');
+            SWIFT(sw).OBSambient = fread(fid,17,'*uint16');
+        end
+
     elseif type == 54 & size == 303 % microSWIFT light sensor, size usually 303
         disp('reading microSWIFT light sensor (payload 54)')
         for sw = 1:6 % usually six sampling windows with each light sensor message
