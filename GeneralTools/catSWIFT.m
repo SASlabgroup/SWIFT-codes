@@ -65,7 +65,11 @@ end
 if isfield(SWIFT,'watertemp2')
     swift.tsea2 = NaN(1,nt);
     for it = 1:nt
+        if ~isempty(SWIFT(it).watertemp2)
         swift.tsea2(it) = max(SWIFT(it).watertemp2);
+        else
+            swift.tsea2(it) = NaN;
+        end
     end
 else
     swift.tsea2 = NaN(1,nt);
