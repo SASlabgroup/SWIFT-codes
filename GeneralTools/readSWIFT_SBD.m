@@ -507,6 +507,7 @@ while 1
             SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
             SWIFT(sw).OBSbackscatter = fread(fid,17,'*uint16');
             SWIFT(sw).OBSambient = fread(fid,17,'*uint16');
+            SWIFT(sw).OBSserialnum =  OpenOBSserialnumber; 
         end
 
     elseif type == 54 & size == 303 % microSWIFT light sensor, size usually 303

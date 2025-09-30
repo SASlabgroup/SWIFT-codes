@@ -186,7 +186,7 @@ for ai = 1:length(flist)
         disp(allnames)
         
         % if fewer paylaods, skip that burst
-    elseif ai > 1 && length(onenames) < length(allnames) && ~lightsensor(ai)
+    elseif ai > 1 && length(onenames) < length(allnames) && ~lightsensor(ai) && ~obssensor(ai)
         disp('=================================')
         disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
         SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
