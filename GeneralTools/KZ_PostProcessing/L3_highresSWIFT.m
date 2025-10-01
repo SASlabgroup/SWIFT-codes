@@ -78,24 +78,38 @@ for iburst = 1:length(SWIFT)
         oneSWIFT(it).burstID = [burstID '_' num2str(it)];
     end
 
-    sigfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SIG*' burstID '.mat']);
-    acsfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*ACS*' burstID '.mat']);
-    pb2file = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*PB2*' burstID '.mat']);
-    sbgfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SBG*' burstID '.mat']);
-    acofile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*ACO*' burstID '.mat']);
+    sigfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SIG*' burstID '*.mat']);
+    acsfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*ACS*' burstID '*.mat']);
+    pb2file = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*PB2*' burstID '*.mat']);
+    sbgfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SBG*' burstID '*.mat']);
+    acofile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*ACO*' burstID '*.mat']);
 
     %% Signature 1000
 
+   disp(['Processing burst ' burstID ':'])
+
     if isempty(sigfile)
-        disp(['Burst ' burstID ': no SIG file. Skipping.'])
+        disp('- No SIG file. Skipping.')
         continue        
     else
         sig = load([sigfile.folder slash sigfile.name]);
     end
 
+    % Make sure correct data structures
+    if ~isfield(sig,'burst')
+        disp('- Wrong SIG data format. Skipping.')
+        continue
+    end
+
+    % Make sure Signature dimensions are correct
+    if length(size(sig.burst.VelocityData)) > 2 || length(size(sig.burst.AmplitudeData)) > 2 || length(size(sig.burst.CorrelationData)) > 2
+        disp('   SIG HR data dimensions bad. Skipping.')
+        continue
+    end
+
     % Make sure long enough
-    if range(sig.burst.time) < 8.5/(24*60)
-        disp(['Burst ' burstID ': too short. Skipping.'])
+    if range(sig.burst.time) < 4/(24*60)
+        disp('- SIG burst too short. Skipping.')
         continue
     end
 
@@ -184,7 +198,7 @@ for iburst = 1:length(SWIFT)
 
     %% ACS 
     if isempty(acsfile)
-       disp(['No ACS file found for ' burstID])
+       disp('- No ACS file.')
         acs.time = sig.burst.time;
         acs.Temperature = NaN(size(acs.time));
         acs.Salinity = NaN(size(acs.time));
@@ -246,7 +260,7 @@ for iburst = 1:length(SWIFT)
     %% ACO
 
     if isempty(acofile)
-       disp(['No ACO file found for ' burstID])
+       disp('- No ACO file.')
         aco.time = sig.burst.time;
         aco.O2Concentration = NaN(size(sig.burst.time));
         aco.Temp = NaN(size(sig.burst.time));
@@ -275,7 +289,7 @@ for iburst = 1:length(SWIFT)
 
     %% Airmar
     if isempty(pb2file)
-        disp(['No PB2 file found for ' burstID])
+        disp('- No PB2 file.')
         pb2.time = sig.burst.time;
         pb2.rawwindspd = NaN(size(pb2.time));
         pb2.rawwinddir = NaN(size(pb2.time));
@@ -680,7 +694,6 @@ cmocean('thermal');clim([60 120])
 ylabel('Z [m]')
 title('Echogram');
 set(gca,'Fontsize',8)
-
 
 rmemptysub
 h = h([1:5 7]);
