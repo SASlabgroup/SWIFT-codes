@@ -66,23 +66,28 @@ em = 0.97515589; % 45 degree
 for i = 1:length(SWIFT)
     % For uplooking and downlooking
     if length(SWIFT(i).ambienttempmean) >1 
-        % Apply self-emmision correction term from lab calibration 
-        % difference of uplooking case temp and calculated Tskin dependent
-        amb(i) = SWIFT(i).ambienttempmean(2);
-        inf(i) = SWIFT(i).infraredtempmean(2);
-        Tdiff = amb(i) - inf(i); %AMB temp - Tbb
-        Terror = Terrorcoeff(1)*(Tdiff) +Terrorcoeff(2); %apply to curve
-        Terrorcat(i) = Terror; Tdiffcat(i) = Tdiff; %disp for debu
-        selfcorrectedup(i) = SWIFT(i).infraredtempmean(2) - Terror;
-    
-    
-        % Issues applying self correct before due to working in radiance space
-        % Applied to uplooking prior to sky correct.
-    
+        % Commented out for uplooking
+        % 
+        % % Apply self-emmision correction term from lab calibration 
+        % % difference of uplooking case temp and calculated Tskin dependent
+        % amb(i) = SWIFT(i).ambienttempmean(2);
+        % inf(i) = SWIFT(i).infraredtempmean(2);
+        % Tdiff = amb(i) - inf(i); %AMB temp - Tbb
+        % Terror = Terrorcoeff(1)*(Tdiff) +Terrorcoeff(2); %apply to curve
+        % Terrorcat(i) = Terror; Tdiffcat(i) = Tdiff; %disp for debu
+        % selfcorrectedup(i) = SWIFT(i).infraredtempmean(2) - Terror;
         % Calculate RAD from uplooking Tbb 
-        upRADfromTEM = k.RAD_from_Tbb(1) + (k.RAD_from_Tbb(2)*[selfcorrectedup(i)]) ...
-            + (k.RAD_from_Tbb(3)*[selfcorrectedup(i)].^2) + (k.RAD_from_Tbb(4)*[selfcorrectedup(i)].^3) ...
-            + (k.RAD_from_Tbb(5)*[selfcorrectedup(i)].^4);
+        % upRADfromTEM = k.RAD_from_Tbb(1) + (k.RAD_from_Tbb(2)*[selfcorrectedup(i)]) ...
+        %     + (k.RAD_from_Tbb(3)*[selfcorrectedup(i)].^2) + (k.RAD_from_Tbb(4)*[selfcorrectedup(i)].^3) ...
+        %     + (k.RAD_from_Tbb(5)*[selfcorrectedup(i)].^4);
+        % 
+
+        %% Uplooking Correction
+        % Calculate RAD from uplooking Tbb 
+        upRADfromTEM = k.RAD_from_Tbb(1) + (k.RAD_from_Tbb(2)*[SWIFT(i).infraredtempmean(2)]) ...
+            + (k.RAD_from_Tbb(3)*[SWIFT(i).infraredtempmean(2)].^2) + (k.RAD_from_Tbb(4)*[SWIFT(i).infraredtempmean(2)].^3) ...
+            + (k.RAD_from_Tbb(5)*[SWIFT(i).infraredtempmean(2)].^4);
+
         
         % Calculate RAD for skin
         RAD_skin = (1/em) * (SWIFT(i).radiancemean(1)- (1-em)*upRADfromTEM);
@@ -92,51 +97,26 @@ for i = 1:length(SWIFT)
             + (k.Tbb_from_RAD(3)*RAD_skin.^2) + (k.Tbb_from_RAD(4)*RAD_skin.^3) ...
             + (k.Tbb_from_RAD(5)*RAD_skin.^4);
     
-        % Take just the sky correct COMMENT OUT ONCE self correct is managed
-        SWIFT(i).Tskin = skinTEMfromRAD(i);
     
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % No correct here below
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-        % Calculate RAD from uplooking Tbb 
-        upRADfromTEM_nc = k.RAD_from_Tbb(1) + (k.RAD_from_Tbb(2)*[SWIFT(i).infraredtempmean(2)]) ...
-            + (k.RAD_from_Tbb(3)*[SWIFT(i).infraredtempmean(2)].^2) + (k.RAD_from_Tbb(4)*[SWIFT(i).infraredtempmean(2)].^3) ...
-            + (k.RAD_from_Tbb(5)*[SWIFT(i).infraredtempmean(2)].^4);
-    
-        % Calculate RAD for skin
-        RAD_skin_nc = (1/em) * (SWIFT(i).radiancemean(1)- (1-em)*upRADfromTEM_nc);
-    
-        % Calculate Tskin from skin radiance
-        skinTEMfromRAD_nc(i) = k.Tbb_from_RAD(1) + (k.Tbb_from_RAD(2)*RAD_skin_nc) ...
-            + (k.Tbb_from_RAD(3)*RAD_skin_nc.^2) + (k.Tbb_from_RAD(4)*RAD_skin_nc.^3) ...
-            + (k.Tbb_from_RAD(5)*RAD_skin_nc.^4);
-    
-        % Self correct after
+        %% Emmissivity correction
         % Apply self-emmision correction term from lab calibration 
         % difference of downlookinglooking case temp and calculated Tskin dependent
-        amb(i) = SWIFT(i).ambienttempmean(1);
-        inf(i) = SWIFT(i).infraredtempmean(1);
-        Tdiff = amb(i) - inf(i); %AMB temp - Tbb
-        Terror = Terrorcoeff(1)*(Tdiff) +Terrorcoeff(2); %apply to curve
-        Terrorcat(i) = Terror; Tdiffcat(i) = Tdiff; %disp for debu
+        Tdiff = SWIFT(i).ambienttempmean(1) - skinTEMfromRAD(i);
+        Tskin = skinTEMfromRAD(i) - Terrorcoeff(1)*(Tdiff) - Terrorcoeff(2);
 
-        selfcorrectafter(i) = skinTEMfromRAD(i) - Terror;
-        Tskin_noselfcorrect = skinTEMfromRAD_nc;
+        SWIFT(i).Tskin = Tskin;
+        % Does not emmissivity correct
+        Tskin_noselfcorrect = skinTEMfromRAD;
     else
         warning('Only 1 radiometer, no sky correction')
-        
-        % Self Correction
-        amb(i) = SWIFT(i).ambienttempmean(1);
-        inf(i) = SWIFT(i).infraredtempmean(1);
-        Tdiff = amb(i) - inf(i); %AMB temp - Tbb
-        Terror = Terrorcoeff(1)*(Tdiff) +Terrorcoeff(2); %apply to curve
-        Terrorcat(i) = Terror; Tdiffcat(i) = Tdiff; %disp for debu
 
-        SWIFT(i).Tskin = inf(i) - Terror;
-        Tskin_noselfcorrect = inf;
+        Tdiff = SWIFT(i).ambienttempmean(1) - SWIFT(i).infraredtempmean(1);
+        Tskin = SWIFT(i).infraredtempmean(1) - Terrorcoeff(1)*(Tdiff) - Terrorcoeff(2);
+
+        SWIFT(i).Tskin = Tskin;
         
-        
+        % Does not emmissivity correct
+        Tskin_noselfcorrect(i) = SWIFT(i).infraredtempmean(1);
     end
 
 
