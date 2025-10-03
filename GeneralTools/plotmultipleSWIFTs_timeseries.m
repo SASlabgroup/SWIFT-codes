@@ -49,9 +49,10 @@ for fi=1:length(flist)
     datetick
     ylabel('Salinity [PSS]')
 
-    ID(fi,:) = SWIFT(1).ID;
+    ID(fi) = str2num(SWIFT(1).ID);
 
 end
 
-legend(ID)
+legend(num2str(ID'))
+
 
