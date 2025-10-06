@@ -88,7 +88,7 @@ readraw = true;
 
 % Plotting
 plotswift = true;
-plotburst = true;
+plotburst = false;
 
 % MET
 rpWXT = true; % MET

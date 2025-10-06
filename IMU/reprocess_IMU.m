@@ -80,8 +80,8 @@ for iburst = 1:length(bfiles)
     end
 
     % If data is missing, skip burst
-    if isempty(GPS) %|| isempty(AHRS) || length(AHRS.Accel) < 12000
-        disp('No data. Skipping...')
+    if isempty(GPS) || length(GPS.NED_Vel.Velocity_NED)<2047 %isempty(AHRS) || length(AHRS.Accel) < 12000
+        disp('Not enough data. Skipping...')
         continue
     end
         
