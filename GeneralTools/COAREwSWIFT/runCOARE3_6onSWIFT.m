@@ -81,6 +81,7 @@ end
 if isfield(SWIFT,'metheight') && any(~isnan([SWIFT.metheight])),
     zu = SWIFT(1).metheight; % constant
 else
+    warning('No metheight, setting default to 1 m')
     zu = 1; % meter
 end
 
@@ -121,6 +122,7 @@ if isfield(SWIFT,'relhumidity') && any(~isnan([SWIFT.relhumidity])),
     rh = [SWIFT.relhumidity];
 else
     rh = 75.*ones(1,length(SWIFT)); % cannot be NaN, must have a value
+    warning('No humidity, filling default value of 75%')
 end
 zq = zu; % rh height is same as wind height
 zrf_q = zrf_u; %same reference
@@ -140,6 +142,7 @@ if isfield(SWIFT,'airpres') && any(~isnan([SWIFT.airpres])),
     P = [SWIFT.airpres];
 else
     P = NaN;
+    warning('No pressure data')
 end
 
 % Plot input
@@ -179,6 +182,7 @@ if isfield(SWIFT,'CTdepth') && any(~isnan([SWIFT.CTdepth])),
         ts_depth = ts_depth(1);
     end;
 else 
+    warning('No CT depth data')
     ts_depth = NaN;
 end
 
@@ -214,12 +218,14 @@ sectionname = 'raddownwell';
 if isfield(SWIFT,'SWrad') && any(~isnan([SWIFT.SWrad])),
     sw_dn = [SWIFT.SWrad];
 else
+    warning('No SW radiation data')
     sw_dn = nan(1,length(SWIFT));
 end
 
 if isfield(SWIFT,'LWrad') && any(~isnan([SWIFT.LWrad])),
     lw_dn = [SWIFT.LWrad];
 else
+    warning('No LW radiation data')
     lw_dn = nan(1,length(SWIFT));
 end
 
@@ -260,6 +266,7 @@ sectionname = 'rain';
 if isfield(SWIFT,'rainint') && any(~isnan([SWIFT.rainint])),
     rain = [SWIFT.rainint];
 else
+    warning('No Rain, setting values to 0')
     rain = zeros(length(SWIFT),1); % cannot be NaN, must have a value
 end
 
@@ -277,6 +284,7 @@ if isfield(SWIFT,'peakwaveperiod') && any(~isnan([SWIFT.peakwaveperiod])),
     Tp = [SWIFT.peakwaveperiod];
     cp = 9.8 * Tp ./ (2 * pi);  % assume deep water dispersion relation
 else
+    warning('No Peak Frequency')
     cp = NaN;
 end
 cp(cp ==0) = nan; % Fill nan for blank
@@ -284,6 +292,7 @@ cp(cp ==0) = nan; % Fill nan for blank
 if isfield(SWIFT,'sigwaveheight') && any(~isnan([SWIFT.sigwaveheight])),
     sigH = [SWIFT.sigwaveheight];
 else
+    warning('No Significant Wave Height')
     sigH = NaN;
 end
 sigH(sigH ==0) = nan; % Fill nan for blank
