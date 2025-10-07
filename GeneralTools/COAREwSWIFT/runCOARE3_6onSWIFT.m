@@ -237,15 +237,15 @@ title('COARE input');
 savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 %% latitude and lon
 sectionname = 'latlon';
-% lat = nanmean([SWIFT.lat]); % single value, not vector
-% lon = nanmean([SWIFT.lon]); % single value, not vector
 lat = [SWIFT.lat]; % vector
 lon = [SWIFT.lon]; % vector
 
 %fill in NaN with nanmean (toggle with comment)
-lat(isnan(lat)) = nanmean(lat);
-lon(isnan(lon)) = nanmean(lon);
-
+if any(isnan(lat)) | any(isnan(lon))
+    lat(isnan(lat)) = nanmean(lat);
+    lon(isnan(lon)) = nanmean(lon);
+    warning('lon/lon missing pairs substituted with mean values from the distribution')
+end
 
 
 geoplot(lat, lon);
@@ -279,9 +279,6 @@ if isfield(SWIFT,'peakwaveperiod') && any(~isnan([SWIFT.peakwaveperiod])),
 else
     cp = NaN;
 end
-% %fill in waveperiod NaNmean (toggle with commment)
-% cp(cp ==0) = nanmean(cp);
-% cp(isnan(cp)) = nanmean(cp);
 cp(cp ==0) = nan; % Fill nan for blank
 
 if isfield(SWIFT,'sigwaveheight') && any(~isnan([SWIFT.sigwaveheight])),
@@ -289,16 +286,7 @@ if isfield(SWIFT,'sigwaveheight') && any(~isnan([SWIFT.sigwaveheight])),
 else
     sigH = NaN;
 end
-% %fill in waveperiod NaNmean (toggle with commment)
-% sigH(sigH ==0) = nanmean(sigH); % Setting blank "0" wh to NaN
-% sigH(isnan(sigH)) = nanmean(sigH);
 sigH(sigH ==0) = nan; % Fill nan for blank
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Comment OUT unless you
-% want no waves
-% sigH = repmat(nan,[1 573]);
-% cp = repmat(nan,[1 573]);
-% Tp = repmat(nan,[1 573]);
 
 
 figure; 
@@ -323,6 +311,7 @@ savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 % Option to set local variables to default values if input is NaN... can do
 % single value or fill each individual. Warning... this will fill arrays
 % with the dummy values and produce results where no input data are valid
+
 % ii=find(isnan(P)); P(ii)=1013;    % pressure
 % ii=find(isnan(sw_dn)); sw_dn(ii)=200;  [SWIFT.SWrad] = deal(200); % incident shortwave radiation
 % ii=find(isnan(lat)); lat(ii)=45;  % latitude
@@ -332,9 +321,7 @@ ii=find(isnan(zi)); zi(ii)=600;   % PBL height
 
 %% run COARE
 % Running Warm Layer inclusive script (other script commented out)
-% fluxes = coare36vn_zrf_et(u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',jd',zi,rain',Ss',cp',sigH',zrf_u,zrf_t,zrf_q);
 fluxes = coare36vnWarm_et(jd',u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',zi,rain',ts_depth',Ss',cp',sigH',zrf_u,zrf_t,zrf_q);
-% fluxes = coare36vn_zrf_et_cs(u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',jd',zi,rain',Ss',cp',sigH',zrf_u,zrf_t,zrf_q);
 validcolumns = find( nansum( fluxes, 1 ) ~= 0  & ~isnan(nansum( fluxes, 1 )) );
 
 % for "3.6 Warm"
@@ -362,19 +349,6 @@ fluxes = array2table(fluxes, ...
     'T10N' 'Q10' 'Q10N'  'RH10' 'P10' 'rhoa10' 'gust' 'wc_frac' 'Edis'...
     'dT_warm'  'dz_warm'  'dT_warm_to_skin'  'du_warm'
     });
-
-% % for 3.6 experimental cs
-% disp('COARE 3.6 exp cs')
-% 
-% % A=[usr tau hsb hlb hbb hsbb hlwebb tsr qsr zo  zot zoq Cd Ch Ce  L  zeta dT_skinx dq_skinx dz_skin Urf Trf Qrf RHrf UrfN TrfN QrfN  lw_net sw_net Le rhoa UN U10 U10N Cdn_10 Chn_10 Cen_10 hrain Qs Evap T10 T10N Q10 Q10N  RH10 P10 rhoa10 gust wc_frac Edis dter2' tkt2' dter3];
-% %   1   2   3   4   5   6    7      8   9  10  11  12  13 14 15  16  17    18       19        20    21  22  23   24   25  26   27     28      29  30  31  32 33   34    35     36     37     38  39  40   41  42   43  44    45   46   47    48    49     50    51     52     53
-% 
-% fluxes = array2table(fluxes, ...
-%      'VariableNames',{'usr','tau','hsb','hlb','hbb','hsbb','hlwebb','tsr','qsr','zo','zot','zoq',...
-%      'Cd','Ch','Ce','L','zeta','dT_skin','dq_skin','dz_skin','Urf','Trf','Qrf',...
-%      'RHrf','UrfN','TrfN','QrfN','lw_net','sw_net','Le','rhoa','UN','U10','U10N',...
-%      'Cdn_10','Chn_10','Cen_10','hrain','Qs','Evap','T10','T10N','Q10','Q10N',...
-%      'RH10','P10','rhoa10','gust','wc_frac','Edis','dter2','tkt2','xlamx','dter3'});
 
 % KEY for flux indexing
 %1    usr = friction velocity that includes gustiness (m/s), u*
@@ -451,128 +425,3 @@ Qnet = fluxes.Qnet;
 save(fullfile(cd, sprintf('%s_COAREfluxes',name)),'-v7.3');
 
 plotCOAREfromSWIFT(SWIFT, fluxes); 
-% Much more simplified; split into a separate call to plotting script
-% Legacy code below
-
-
-
-
-% rtime = max(time) - min(time);
-% 
-% figure, clf
-% ax(1) = subplot(3,1,1);
-% plot(time,t,'kx',time,ts,'md');
-% legend('air temp','water temp')
-% ylabel('[C]')
-% datetick, set(gca,'XLim',[min(time) max(time)+0.3*rtime])
-% if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
-% ax(2) = subplot(3,1,2);
-% plot(time,hsb,'bx',time,hlh,'r+',time,hbb,'g.',time,hsbb,'c.');
-% legend('Q_{sen}','Q_{latent}','Q_{buoy}','Q_{sbuoy}')
-% if isfield(SWIFT,'Qsen'), 
-%     hold on
-%     plot(time,[SWIFT.Qsen],'kd')
-%     plot([min(time) max(time)],[ 0 0],'k:')
-%     legend('Q_{sen}','Q_{latent}','Q_{buoy}','Q_{sbuoy}','Q_{wT}')
-% else
-% end
-% hold on
-% datetick
-% ylabel('[W/m^2]')
-% ax(3) = subplot(3,1,3);
-% plot(time,u,'kx',time,U10,'b+');
-% datetick
-% legend('measured wind','U_{10}')
-% ylabel('[m/s]')
-% linkaxes(ax,'x')
-% if isfield(SWIFT,'ID'),
-%     print('-dpng',[SWIFT(1).ID '_COAREfluxes.png'])
-% else
-%     print('-dpng',['COAREfluxes.png'])
-% end
-% 
-% 
-% figure, clf
-% ax(1) = subplot(3,1,1);
-% yyaxis left
-% plot(time,sw_dn,'x');ylabel('SW down [W/m^2]')
-% yyaxis right
-% plot(time,lw_dn,'rx');ylabel('LW down [W/m^2]')
-% datetick, set(gca,'XLim',[min(time) max(time)+0.3*rtime])
-% if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
-% ax(2) = subplot(3,1,2);
-% yyaxis left
-% plot(time,SWradup,'x'); ylabel('SW up [W/m^2]')
-% yyaxis right
-% plot(time,LWradup,'rx');ylabel('LW up [W/m^2]')
-% datetick
-% ax(3) = subplot(3,1,3);
-% plot(time,netrad,'go',time,Qnet,'ks'); hold on
-% plot([min(time) max(time)],[ 0 0],'k:')
-% legend('Net rad','Net all')
-% datetick
-% ylabel('[W/m^2]')
-% linkaxes(ax,'x')
-% if isfield(SWIFT,'ID'),
-%     print('-dpng',[SWIFT(1).ID '_radfluxes.png'])
-% else
-%     print('-dpng',['radfluxes.png'])
-% end
-% 
-% 
-% if isfield(SWIFT,'windustar') && length(ustar) == length([SWIFT.windustar]),
-%     figure, clf
-%     plot(u,ustar,'kx',u,[SWIFT.windustar],'ro'), 
-%     legend('COARE','inertial')
-%     if isfield(SWIFT,'windustar_directcovar') && length(ustar) == length([SWIFT.windustar_directcovar]),
-%         hold on
-%         plot(u,[SWIFT.windustar_directcovar],'b.')
-%         legend('COARE','inertial','direct covar')
-%     else
-%     end
-% 
-%     axis square, grid
-%     axis([ 0 15 0 1])
-%     xlabel('Measured wind spd [m/s]')
-%     ylabel('u_* [m/s]')
-%     if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
-% 
-%     if isfield(SWIFT,'ID'),
-%         print('-dpng',[SWIFT(1).ID '_ustar.png'])
-%     else
-%         print('-dpng',['ustar.png'])
-%     end
-% 
-% else
-% end
-% 
-% if isfield(SWIFT,'windustar') && length(tau) == length([SWIFT.time]),
-%     figure, clf
-%     inertialtau = fluxes.rhoa.*[SWIFT.windustar]'.^2;
-%     plot(time,tau,'kx',time,inertialtau,'ro'); datetick;
-%     legend('COARE','inertial')
-%     if isfield(SWIFT,'windustar_directcovar') && length(ustar) == length([SWIFT.windustar_directcovar]),
-%         hold on
-%         directcovartau = fluxes.rhoa.*[SWIFT.windustar_directcovar]'.^2;
-%         plot(time,[SWIFT.windustar_directcovar],'b.')
-%         legend('COARE','inertial','direct covar')
-%     else
-%     end
-% 
-%     grid minor;
-%     xlabel('[UTC]')
-%     ylabel('\tau [N/m^2]')
-% 
-%     if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
-% 
-%     if isfield(SWIFT,'ID'),
-%         print('-dpng',[SWIFT(1).ID '_tau.png'])
-%     else
-%         print('-dpng',['_tau.png'])
-%     end
-% 
-% else
-% end
-
-
-
