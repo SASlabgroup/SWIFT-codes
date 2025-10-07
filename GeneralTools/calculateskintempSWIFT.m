@@ -1,4 +1,4 @@
-function [SWIFT, Tskin_noselfcorrect, selfcorrectafter] = calculateskintempSWIFT(SWIFT)
+function [SWIFT, T0, T1, T2] = calculateskintempSWIFT(SWIFT, plotflag)
 %calculateskintempSWIFT Takes uplooking and downlooking point radiometer
 %data and calculates skin temp. 
 %   [SWIFT.SWrad,SWIFT.LWrad] = calculateskintempSWIFT(SWIFT) 
@@ -17,6 +17,10 @@ function [SWIFT, Tskin_noselfcorrect, selfcorrectafter] = calculateskintempSWIFT
 %
 % Assuming first SWIFT entry is "downlooking" and second SWIFT entry is
 % "uplooking"
+
+if nargin <2
+    plotflag = 0;
+end
 
 % Cbb/Cbb-1 and Epsilon entry
 
@@ -120,9 +124,60 @@ for i = 1:length(SWIFT)
     end
 
 
+T0 = arrayfun(@(x) x.infraredtempmean(1), SWIFT, 'UniformOutput', true); % unprocessed brightness
+T1 = Tskin_noselfcorrect; % sky correction
+T2 = [SWIFT.Tskin]; % self emmission correction
+
+AMB = arrayfun(@(x) x.infraredtempmean(1), SWIFT, 'UniformOutput', true); % case temperature
+Tsky = arrayfun(@(x) x.infraredtempmean(2), SWIFT, 'UniformOutput', true); % unprocessed sky brightness
 
 end;
 
+if plotflag
+    c = lines;
 
+    figure('Position', [50 50 900 900]);
+
+    subplot 311
+    plot([SWIFT.time],T0,'Color', c(1,:), 'DisplayName','T0 (IRT)');
+    hold on
+    plot([SWIFT.time],T1,'Color', c(2,:), 'DisplayName','T1 (Sky Correct)');
+    plot([SWIFT.time],T2,'Color', c(3,:), 'DisplayName','T2 (S. Emis. Correct)');
+
+    legend('location', 'best')
+    set(allchild(gca), 'LineWidth',2)
+    datetick('x', 6)
+    axis padded
+    ylabel('[deg C]');
+    title('Surface Temperature Corrections')
+
+    subplot 312
+    plot([SWIFT.time],AMB,'Color', c(4,:), 'DisplayName','T_A_M_B_ _D_N (Self Emission)');
+    hold on
+    plot([SWIFT.time],Tsky,'Color', c(5,:), 'DisplayName','T0 _U_P (IRT Sky)');
+    legend('location', 'best')
+    set(allchild(gca), 'LineWidth',2)
+    datetick('x', 6)
+    axis padded
+    title('Corrective Temperatures')
+
+    subplot 313
+    plot([SWIFT.time],[SWIFT.watertemp],'Color', c(6,:), 'DisplayName','-0.66 m T');
+    hold on
+    plot([SWIFT.time],[SWIFT.airtemp],'Color', c(7,:), 'DisplayName','0.71 m T');
+    legend('location', 'best')
+    set(allchild(gca), 'LineWidth',2)
+    datetick('x', 6)
+    axis padded
+    xlabel('UTC (AKDT+8hr)')
+    title('Contextual Temperatures')    
+
+    axesHandles = findobj(allchild(gcf), 'Type', 'Axes');
+    linkaxes(axesHandles, 'x');
+    set(findall(0,'-property','FontSize'),'FontSize',13)
+
+    sgtitle(sprintf('SWIFT %s %s', SWIFT(i).ID, char(datetime(SWIFT(1).time, "ConvertFrom", 'datenum',"Format","MM/uuuu"))));
+
+end;
 
 end

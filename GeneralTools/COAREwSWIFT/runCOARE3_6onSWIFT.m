@@ -29,11 +29,11 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % Used diurnal warming COARE script
 
 % Please toggle savepath
-% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
+savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
 % savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO\exp_cs';
 % savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\';
 % savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\exp_cs';
-savepath = 'C:\Users\MichaelJames\Dropbox\mjames\ICE-PPR\DATA\SWIFT20\COAREIO';
+% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\ICE-PPR\DATA\SWIFT20\COAREIO';
 cd(savepath); fprintf('Savepath: %s', savepath);
 %% Time in Julian Day
 time = [SWIFT.time];
@@ -286,7 +286,7 @@ savefig([cd '\' sprintf('%s_COAREinputwaveheight',SWIFT(1).ID)])
 % ii=find(isnan(P)); P(ii)=1013;    % pressure
 % ii=find(isnan(sw_dn)); sw_dn(ii)=200;  [SWIFT.SWrad] = deal(200); % incident shortwave radiation
 % ii=find(isnan(lat)); lat(ii)=45;  % latitude
-ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); num2cell(lw_dn);[SWIFT.LWrad] = deal(ans{:});% incident longwave radiation
+% ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); num2cell(lw_dn);[SWIFT.LWrad] = deal(ans{:});% incident longwave radiation
 ii=find(isnan(zi)); zi(ii)=600;   % PBL height
 % ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
 
