@@ -34,7 +34,7 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( filepath );
 % Option for selection in explorer
 if string(filepath) == "explorer";
     [filename, pathname] = uigetfile('*.*', 'Select a file');
-    filepath = fullfile(filename, pathname); clear filename pathname
+    filepath = fullfile( pathname,filename); clear filename pathname
 end
 
 
@@ -52,8 +52,8 @@ disp('loading file...')
 load(filepath);
 
 % Check file is SWIFT struct
-if ~exist("SWIFT");
-    error('Not a SWIFT file');
+if ~exist("SWIFT",'var');
+    error('File input does not have a SWIFT structure');
 end
 
 if ~exist('COARE_IO', 'dir')
@@ -64,19 +64,13 @@ end
 cd COARE_IO
 
 
-
-% Please toggle savepath
-savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
-% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO\exp_cs';
-% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\';
-% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\April2025\COARE_comparision\exp_cs';
-% savepath = 'C:\Users\MichaelJames\Dropbox\mjames\ICE-PPR\DATA\SWIFT20\COAREIO';
-cd(savepath); fprintf('Savepath: %s', savepath);
 %% Time in Julian Day
 time = [SWIFT.time];
 jd = time;
 
 %% wind speed and height
+sectionname = 'wind';
+
 if isfield(SWIFT,'windspd') && any(~isnan([SWIFT.windspd])),
     u = [SWIFT.windspd]; % vector; since SWIFT drifts, this is rel to water current
 else
@@ -102,6 +96,7 @@ ylabel('Wind [m/s]')
 savefig([cd '\' sprintf('%s_COAREinputwind',SWIFT(1).ID)])
 
 %% air temp and height
+sectionname = 'airtemp';
 if isfield(SWIFT,'airtemp') && any(~isnan([SWIFT.airtemp])),
     t = [SWIFT.airtemp];
 else
@@ -118,9 +113,10 @@ title('COARE input');
 datetick
 ylabel('Air temp [deg C]')
 
-savefig([cd '\' sprintf('%s_COAREinputairtemp',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% relative humidity and height
+sectionname = 'humidity';
 if isfield(SWIFT,'relhumidity') && any(~isnan([SWIFT.relhumidity])),
     rh = [SWIFT.relhumidity];
 else
@@ -136,9 +132,10 @@ title('COARE input');
 datetick
 ylabel('Humidity [%]')
 
-savefig([cd '\' sprintf('%s_COAREinputhumidity',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% air pressure
+sectionname = 'airpressure';
 if isfield(SWIFT,'airpres') && any(~isnan([SWIFT.airpres])),
     P = [SWIFT.airpres];
 else
@@ -152,9 +149,10 @@ title('COARE input');
 datetick
 ylabel('Air pressure [mbar]')
 
-savefig([cd '\' sprintf('%s_COAREinputairpressure',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% water temp
+sectionname = 'watertemp';
 if isfield(SWIFT,'watertemp') && any(~isnan([SWIFT.watertemp])),
     if length(SWIFT(1).watertemp) == 1,
         disp('one water temp depth')
@@ -192,9 +190,10 @@ title('COARE input');
 datetick
 ylabel('Water temp [deg C]')
 
-savefig([cd '\' sprintf('%s_COAREinputwatertemp',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% Water Salinity
+sectionname = 'salinity';
 if isfield(SWIFT,'salinity') && any(~isnan([SWIFT.salinity])),
     Ss = [SWIFT.salinity];
 else
@@ -208,9 +207,10 @@ title('COARE input');
 datetick
 ylabel('Salinity [PSU]')
 
-savefig([cd '\' sprintf('%s_COAREinputsalinity',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% downwelling radiation
+sectionname = 'raddownwell';
 if isfield(SWIFT,'SWrad') && any(~isnan([SWIFT.SWrad])),
     sw_dn = [SWIFT.SWrad];
 else
@@ -234,8 +234,9 @@ plot(time,sw_dn,'o')
 ylabel('SW Radiation Downwelling [W/m^2]');
 title('COARE input');
 
-savefig([cd '\' sprintf('%s_COAREinputraddwnwell',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 %% latitude and lon
+sectionname = 'latlon';
 % lat = nanmean([SWIFT.lat]); % single value, not vector
 % lon = nanmean([SWIFT.lon]); % single value, not vector
 lat = [SWIFT.lat]; % vector
@@ -249,12 +250,13 @@ lon(isnan(lon)) = nanmean(lon);
 
 geoplot(lat, lon);
 title('COARE input');
-savefig([cd '\' sprintf('%s_COAREinputlatlon',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% atmospheric PBL height
 zi = NaN;
 
 %% rain rate
+sectionname = 'rain';
 if isfield(SWIFT,'rainint') && any(~isnan([SWIFT.rainint])),
     rain = [SWIFT.rainint];
 else
@@ -267,9 +269,10 @@ title('COARE input');
 datetick
 ylabel('Rain Rate')
 
-savefig([cd '\' sprintf('%s_COAREinputrain',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% waves
+sectionname = 'waves';
 if isfield(SWIFT,'peakwaveperiod') && any(~isnan([SWIFT.peakwaveperiod])),
     Tp = [SWIFT.peakwaveperiod];
     cp = 9.8 * Tp ./ (2 * pi);  % assume deep water dispersion relation
@@ -313,7 +316,7 @@ plot(time, cp,'x'); grid on;
 datetick
 ylabel("Wave Speed (m/s)")
 
-savefig([cd '\' sprintf('%s_COAREinputwaveheight',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% Default val fill (Moved from the COARE algorithm to here for better reference)
 
