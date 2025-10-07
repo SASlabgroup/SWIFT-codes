@@ -1,4 +1,4 @@
-function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
+function [fluxes Qnet] = runCOARE3_6onSWIFT( filepath );
 % function to run the COARE flux algoritm on a SWIFT data structure
 % using whatever fields are available
 % (and making assumptions about the rest)
@@ -9,7 +9,7 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % 
 % Obtain NEW COARE 3.6 from git@github.com:NOAA-PSL/COARE-algorithm.git
 %
-% output is an array of fluxes (see COARE routines for columns)
+% output is a table of fluxes (see COARE routines for columns)
 %   and a Qnet estimate, if radiation available
 %
 % J. Thomson, 9/2018
@@ -17,7 +17,7 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % TO DO: adjust windspd for wind relative to current (vector difference the drift spd)
 %
 % M. James 9/2024
-% Added in reference to new COARE algorithm; Key for output, included new
+% Added in reference to new COARE 3.6 algorithm; Key for output, included new
 % required inputs; reference and comment toggle between "Warm" and base
 % scripts
 % Added in drift to correct wind spd
@@ -27,6 +27,43 @@ function [fluxes Qnet] = runCOARE3_6onSWIFT( SWIFT );
 % M. James 5/2025
 % Changed to .fig outputs
 % Used diurnal warming COARE script
+% 
+% M. James 10/2025
+% Changed to file input/output format with consistent naming to input file
+
+% Option for selection in explorer
+if string(filepath) == "explorer";
+    [filename, pathname] = uigetfile('*.*', 'Select a file');
+    filepath = fullfile(filename, pathname); clear filename pathname
+end
+
+
+f = dir(filepath);
+
+% Load in SWIFT structure
+load(filepath);
+name = f.name(1:end-4); % Name
+pd = f.folder; % Parent
+
+cd(pd)
+disp('Moving to parent folder of file')
+
+disp('loading file...')
+load(filepath);
+
+% Check file is SWIFT struct
+if ~exist("SWIFT");
+    error('Not a SWIFT file');
+end
+
+if ~exist('COARE_IO', 'dir')
+    mkdir('COARE_IO'); disp('Making COARE_IO directory, changing dir...')
+else
+    disp('COARE_IO directory exists, changing dir...')
+end
+cd COARE_IO
+
+
 
 % Please toggle savepath
 savepath = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO';
