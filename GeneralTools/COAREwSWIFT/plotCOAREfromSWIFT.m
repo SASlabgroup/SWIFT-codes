@@ -1,4 +1,4 @@
-function [] = plotCOAREfromSWIFT(SWIFT, fluxes)
+function [] = plotCOAREfromSWIFT(SWIFT, fluxes, name)
 %plotCOAREfromSWIFT Runs through full panel plot of SWIFT variables and
 %COARE outputs from fluxes table. 
 %   plotCOAREfromSWIFT(SWIFT, fluxes)
@@ -8,6 +8,9 @@ function [] = plotCOAREfromSWIFT(SWIFT, fluxes)
 %   
 %   Tskin - will add in observed Tskin if included as part of the SWIFT
 %   structure
+% 
+%   10/2025 M James - pass through of filename to plotting function, name
+%   consistent with input plots. 
 
 Tskinflag = false; 
 if isfield(SWIFT,'Tskin') && any(~isnan([SWIFT.Tskin])),
@@ -16,6 +19,8 @@ end;
 
 %% General COARE outputs
 
+%% Sensible/Latent
+sectionname = "SensibleLatent";
 figure, clf
 subplot(3,1,1);
 plot([SWIFT.time],[SWIFT.airtemp],'kx',vertcat(SWIFT.time),vertcat(SWIFT.watertemp),'md');
@@ -28,7 +33,7 @@ if Tskinflag ==true
 end
 ylabel('[C]')
 datetick
-if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
+sgtitle(name,'Interpreter','none')
 
 subplot(3,1,2);
 plot([SWIFT.time],fluxes.hsb,'bx',[SWIFT.time],fluxes.hlb,'r+',[SWIFT.time],fluxes.hbb,'g.',[SWIFT.time],fluxes.hsbb,'c.');
@@ -49,13 +54,10 @@ datetick
 legend('measured wind','U_{10}')
 ylabel('[m/s]')
 linkaxes(findobj(gcf,'Type', 'Axes'),'x')
-if isfield(SWIFT,'ID'),
-    savefig([SWIFT(1).ID '_COAREfluxes'])
-else
-    savefig(['COAREfluxes'])
-end
 
-
+savefig(fullfile(cd, sprintf('%s_%s_output',name, sectionname)));
+%% Radiated
+sectionname = "Radiated";
 figure, clf
 ax(1) = subplot(3,1,1);
 yyaxis left
@@ -63,7 +65,7 @@ plot([SWIFT.time],[SWIFT.SWrad],'x');ylabel('SW down [W/m^2]')
 yyaxis right
 plot([SWIFT.time],[SWIFT.LWrad],'rx');ylabel('LW down [W/m^2]')
 datetick
-if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
+sgtitle(name,'Interpreter','none')
 ax(2) = subplot(3,1,2);
 yyaxis left
 plot([SWIFT.time],fluxes.sw_up,'x'); ylabel('SW up [W/m^2]')
@@ -77,11 +79,11 @@ legend('Net rad','Net all')
 datetick
 ylabel('[W/m^2]')
 linkaxes(ax,'x')
-if isfield(SWIFT,'ID'),
-    savefig([SWIFT(1).ID '_radfluxes'])
-else
-    savefig(['radfluxes'])
-end
+
+savefig(fullfile(cd, sprintf('%s_%s_output',name, sectionname)));
+
+%% Ustar Prediction
+sectionname = "Ustar";
 
 if isfield(SWIFT,'windustar') && length(fluxes.usr) == length([SWIFT.windustar]),
     figure, clf
@@ -98,13 +100,9 @@ if isfield(SWIFT,'windustar') && length(fluxes.usr) == length([SWIFT.windustar])
     axis([ 0 15 0 1])
     xlabel('Measured wind spd [m/s]')
     ylabel('u_* [m/s]')
-    if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
+    sgtitle(name,'Interpreter','none')
 
-    if isfield(SWIFT,'ID'),
-        savefig([SWIFT(1).ID '_ustar'])
-    else
-        savefig(['ustar'])
-    end
+    savefig(fullfile(cd, sprintf('%s_%s_output',name, sectionname)));
     
     
     figure, clf
@@ -125,19 +123,16 @@ if isfield(SWIFT,'windustar') && length(fluxes.usr) == length([SWIFT.windustar])
     end
 
     axis square, grid on
-    xlabel('% diff COARE - observed / observed')
+    xlabel('% diff COARE - observed / observed u*')
     ylabel('Probability of Value <= Given Value')
-    if isfield(SWIFT,'ID'), title(sprintf('COARE Comparision of U_* SWIFT %s',SWIFT(1).ID)), else, end
+    sgtitle(name,'Interpreter','none')
 
-    if isfield(SWIFT,'ID'),
-        savefig([SWIFT(1).ID '_ustarCDF'])
-    else
-        savefig(['ustarCDF'])
-    end
+    savefig(fullfile(cd, sprintf('%s_%s_CDF_output',name, sectionname)));
 else
 end
     
-
+%% Tau
+sectionname = "Tau";
 
 if isfield(SWIFT,'windustar') && length(fluxes.tau) == length([SWIFT.time]),
     figure, clf
@@ -156,17 +151,14 @@ if isfield(SWIFT,'windustar') && length(fluxes.tau) == length([SWIFT.time]),
     xlabel('[UTC]')
     ylabel('\tau [N/m^2]')
 
-    if isfield(SWIFT,'ID'), title(SWIFT(1).ID), else, end
+    sgtitle(name,'Interpreter','none');
 
-    if isfield(SWIFT,'ID'),
-        savefig([SWIFT(1).ID '_tau'])
-    else
-        savefig(['_tau'])
-    end
-
+    savefig(fullfile(cd, sprintf('%s_%s_output',name, sectionname)));
 else
 end
 
+%% Summary
+sectionname = "Summary";
 if length(fluxes.tau) == length([SWIFT.time]),
     figure('Position', [488.0000  101.0000  688.2000  648.8000]), clf
     subplot 311
@@ -187,7 +179,7 @@ if length(fluxes.tau) == length([SWIFT.time]),
         datetick
         xlabel('[UTC]')
         ylabel('\tau [N/m^2]')
-        if isfield(SWIFT,'ID'), title(sprintf('COARE Prediction Summary SWIFT %s',SWIFT(1).ID)), else, end
+        sgtitle(name,'Interpreter','none')
         % reset xlim back a day
         xlim = get(gca,'XLim');
         set(gca,'XLim',[xlim(1)-1 xlim(2)])
@@ -234,12 +226,7 @@ if length(fluxes.tau) == length([SWIFT.time]),
     linkaxes(findobj(gcf,'Type','Axes'),'x')
 
 
-    if isfield(SWIFT,'ID'),
-        savefig([SWIFT(1).ID '_COAREpredictionsummary'])
-    else
-        savefig(['_COAREpredictionsummary'])
-    end
-
+    savefig(fullfile(cd, sprintf('%s_%s_output',name, sectionname)));
 end
 
 

@@ -56,7 +56,7 @@ if ~exist("SWIFT",'var');
     error('File input does not have a SWIFT structure');
 end
 
-if ~exist('COARE_IO', 'dir')
+if ~exist(fullfile(pwd, 'COARE_IO'), 'dir')
     mkdir('COARE_IO'); disp('Making COARE_IO directory, changing dir...')
 else
     disp('COARE_IO directory exists, changing dir...')
@@ -411,10 +411,10 @@ fluxes = array2table(fluxes, ...
 % FLUXES Calculated within COARE 3.6, option for lat/lon and time/zenith angle specific albedo
 % according to Payne 1972 or constant
 
-fluxes.sw_up = sw_dn - fluxes.sw_net; % positive heating ocean
+fluxes.sw_up = sw_dn' - fluxes.sw_net; % positive heating ocean
 
 % choose one below (based on interpretation of column 25)
-fluxes.lw_up = lw_dn - fluxes.lw_net; %positive heating ocean
+fluxes.lw_up = lw_dn' - fluxes.lw_net; %positive heating ocean
 
 % calc net rad
 fluxes.netrad = fluxes.sw_net + fluxes.lw_net;
@@ -424,4 +424,4 @@ Qnet = fluxes.Qnet;
 %% plot key values as time series
 save(fullfile(cd, sprintf('%s_COAREfluxes',name)),'-v7.3');
 
-plotCOAREfromSWIFT(SWIFT, fluxes); 
+plotCOAREfromSWIFT(SWIFT, fluxes, name); 
