@@ -107,9 +107,6 @@ if isfield(SWIFT,'downlooking')
 end
 if isfield(SWIFT,'signature')  
     sig_names = fieldnames(SWIFT(1).signature);
-    %disp(~isempty(SWIFT(1).signature.HRprofile.z))
-    %disp(SWIFT(1).signature.HRprofile.z)
-
     if isfield(SWIFT(1).signature,'HRprofile')
         if ~isempty(SWIFT(1).signature.HRprofile.z)
             zHR_dim = netcdf.defDim(ncid,'zHR', length(SWIFT(1).signature.HRprofile.z));
@@ -394,9 +391,10 @@ for i=1:length(names)
             end
         end
     else
-
+        if strcmp(names{i}, 'sigwaveheight_alt') | strcmp(names{i}, 'peakwaveperiod_alt')
+            continue
+        end
         netcdf.putVar(ncid, var_ids.(names{i}), S.(names{i}));
-
     end
 end
 
