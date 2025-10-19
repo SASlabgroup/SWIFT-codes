@@ -147,7 +147,13 @@ for i=1:length(full_names)
                 end
                 for iz=1:length(zHR_names)
                     if ~isempty(SWIFT(t).signature.HRprofile.(zHR_names{iz}))
-                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                        data = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                        if t > 1
+                             expected_size = size(S.signature.HRprofile.([zHR_names{iz} 'HR']), 2);
+                             data(end+1:expected_size) = NaN;
+                             data = data(1:expected_size);
+                        end
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = data;
                     else
                         S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(size(S.signature.HRprofile.([zHR_names{iz} 'HR'])(1,:)));
                     end
