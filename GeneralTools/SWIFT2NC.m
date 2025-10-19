@@ -320,12 +320,32 @@ netcdf.endDef(ncid);
 %% filling them with values
 
 for i=1:length(names)
-    if strcmp(names{i},'wavespectra')
+    if strcmp(names{i},'wavespectra') & exist('spec_names', 'var')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
                 netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), S.wavespectra(1).freq);
             else
-                netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), [S.wavespectra.(spec_names{j})]);
+                % Get the size of the first element
+                first_size = size(S.wavespectra(1).(spec_names{j}));
+                
+                % Pre-allocate cell array to store each field
+                temp_data = cell(1, length(S.wavespectra));
+                
+                % Loop through each element
+                for k=1:length(S.wavespectra)
+                    current_size = size(S.wavespectra(k).(spec_names{j}));
+                    
+                    % Check if size matches
+                    if isequal(current_size, first_size)
+                        temp_data{k} = S.wavespectra(k).(spec_names{j});
+                    else
+                        % Replace with NaNs of the correct size
+                        temp_data{k} = nan(first_size);
+                    end
+                end
+                
+                % Concatenate horizontally
+                netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), [temp_data{:}]);
             end
         end
     elseif strcmp(names{i},'uplooking')
