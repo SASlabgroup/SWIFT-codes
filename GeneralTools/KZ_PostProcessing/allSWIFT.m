@@ -11,8 +11,8 @@ else
 end
 
 missions = dir([expdir slash 'SWIFT*']);% Normal
-% % Special to get both drifting + moored
-% missions = dir([expdir slash '*' slash 'SWIFT*']);
+% Special to get both drifting + moored
+missions = [missions; dir([expdir slash '*' slash 'SWIFT*'])];
 missions = missions([missions.isdir]);
 
 if isempty(missions)
@@ -118,7 +118,9 @@ tlim = [mintime maxtime];
 %% Location
 bmax = abs(min(bathy(:)));
 
-figure('color','w')
+fh = figure('color','w','Name',[expdir  ' ' level ' Position Data']);
+set(fh,'outerposition',MP);
+subplot(4,1,1:3)
 contourf(blat,blon,bathy,linspace(-bmax,0,50),'LineStyle','none');
 hold on
 contourf(blat,blon,bathy,[0 0],'k','LineWidth',2)
@@ -134,8 +136,17 @@ for iswift = 1:nswift
 
     s(iswift) = scatter(slon,slat,10,'filled','MarkerFaceColor',cswift(iswift,:));
 end
+geoaspect
 legend(s,swifts','Interpreter','none','FontSize',8,'Location','SouthWest')
 title('SWIFT Locations')
+
+subplot(4,1,4)
+for iswift = 1:nswift
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).driftspd,'-o','color',rgb('grey'),...
+        'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
+    hold on
+end
+title([level ' Drift Speeds']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits');
 
 %% MET
 
@@ -187,31 +198,36 @@ ylim([0 30])
 xlim(tlim)
 end
 
-%% CT & Drift Speed
-fh = figure('color','w','Name',[expdir  ' ' level ' CT +  Drift Data']);
+%% CT
+fh = figure('color','w','Name',[expdir  ' ' level ' CT Data']);
 set(fh,'outerposition',MP);
 for iswift = 1:nswift
-    subplot(4,1,1);
-    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
-        'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
-    hold on
-    subplot(4,1,2)
+
+    subplot(4,1,1)
     plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).tsea,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
+
+        subplot(4,1,2)
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).tseastd,'-o','color',rgb('grey'),...
+        'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
+    hold on
+
     subplot(4,1,3);
     plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).sal,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
-    subplot(4,1,4);
-    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).driftspd,'-o','color',rgb('grey'),...
+
+        subplot(4,1,4);
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).salstd,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
+
 end
-subplot(4,1,1);title([level ' Wind Speed']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits');ylim([0 30])
-subplot(4,1,2);title([level ' Sea Temperature']);ylabel('T [C^{\circ}]');axis tight;datetick('x','KeepLimits');ylim([-2 25])
-subplot(4,1,3);title([level ' Salinity']);ylabel('S [psu]');axis tight;datetick('x','KeepLimits');ylim([34 38])
-subplot(4,1,4);title([level ' Drift Speed']);ylabel('U [ms^{-1}]');axis tight;datetick('x','KeepLimits');ylim([0 1])
+subplot(4,1,1);title([level ' Sea Temperature']);ylabel('T [C^{\circ}]');axis tight;datetick('x','KeepLimits');
+subplot(4,1,3);title([level ' Salinity']);ylabel('S [psu]');axis tight;datetick('x','KeepLimits');
+subplot(4,1,2);title([level ' Sea Temperature Variance']);ylabel('T [C^{\circ}]');axis tight;datetick('x','KeepLimits');
+subplot(4,1,4);title([level ' Salinity Variance']);ylabel('S [psu]');axis tight;datetick('x','KeepLimits');
 
 h = findall(fh,'Type','axes');
 for ih = 1:length(h)
@@ -232,17 +248,33 @@ end
 %% Waves
 fh = figure('color','w','Name',[expdir  ' ' level ' Wave Data']);
 set(fh,'outerposition',MP);
-h = tight_subplot(nSN+1,1,0.025);
+h = tight_subplot(nSN+3,1,0.025);
 for iswift = 1:nswift
     axes(h(1))
-    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).wavesigH,'-o','color',rgb('grey'),...
+        'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
+    hold on
+
+    axes(h(2))
+    if isfield(swift.(swifts{iswift}),'wavecentT')
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).wavecentT,'-o','color',rgb('grey'),...
+        'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
+    hold on
+    else
+            plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).wavepeakT,'-o','color',rgb('grey'),...
+        'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
+    hold on
+    end
+
+    axes(h(3))
+    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).wavepeakdir,'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 
     SN = swifts{iswift}(3:4);
     iSN = find(strcmp(SNs,SN));
 
-    axes(h(iSN+1))
+    axes(h(iSN+3))
     pcolor(swift.(swifts{iswift}).time,swift.(swifts{iswift}).wavefreq,log10(swift.(swifts{iswift}).wavepower));
     shading flat
     hold on
@@ -250,15 +282,33 @@ for iswift = 1:nswift
     
 end
 linkaxes(h,'x');
+
 axes(h(1))
 axis tight
 xlim(tlim)
-ylim([0 20])
+clear t
+t(1) = textlab('Significant Wave Height','topleft');
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Wave Spectra'])
+
+axes(h(2))
+axis tight
+xlim(tlim)
+if isfield(swift.(swifts{iswift}),'wavecentT')
+    t(2) = textlab('Centroid Wave Period','topleft');
+else
+t(2) = textlab('Peak Wave Period','topleft');
+end
+
+axes(h(3))
+axis tight
+xlim(tlim)
+t(3) = textlab('Peak Wave Direction','topleft');
+set(t,'FontWeight','bold','FontSize',12)
+
 set(h(1:end-1),'XTickLabel',[])
 axes(h(end)); datetick('x','KeepLimits','KeepTicks')
-set(h(2:end),'YLim',[0 1],'YDir','Reverse','CLim',[-5 1])
+set(h(4:end),'YLim',[0 1],'YDir','Reverse','CLim',[-5 1])
 colormap(cmocean('thermal'))
 
 % Delete if empty
@@ -284,7 +334,7 @@ for iswift = 1:nswift
 
     if isfield(swift.(swifts{iswift}),'surfw')
     axes(h(1))
-    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,mean(swift.(swifts{iswift}).surfw,'omitnan'),'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 
@@ -304,8 +354,10 @@ end
 linkaxes(h,'x');
 axes(h(1))
 axis tight
-ylim([0 20])
 xlim(tlim)
+clear t
+t(1) = textlab('Mean Downelling','topleft');
+set(t,'FontSize',12,'FontWeight','bold')
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Vertical Velocity'])
 set(h(1:end-1),'XTickLabel',[])
@@ -335,7 +387,7 @@ for iswift = 1:nswift
 
     if isfield(swift.(swifts{iswift}),'spd_alt')
     axes(h(1))
-    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,mean(swift.(swifts{iswift}).spd_alt,'omitnan'),'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 
@@ -357,8 +409,10 @@ end
 linkaxes(h,'x');
 axes(h(1))
 axis tight
-ylim([0 20])
 xlim(tlim)
+clear t
+t(1) = textlab('Mean Relative Speed','topleft');
+set(t,'FontSize',12,'FontWeight','bold')
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Scalar Speed'])
 set(h(1:end-1),'XTickLabel',[])
@@ -385,7 +439,7 @@ h = tight_subplot(nSN+1,1,0.025);
 
 for iswift = 1:nswift
     axes(h(1))
-    plot(swift.(swifts{iswift}).time,swift.(swifts{iswift}).windu,'-o','color',rgb('grey'),...
+    plot(swift.(swifts{iswift}).time,mean(log10(swift.(swifts{iswift}).surftke),'omitnan'),'-o','color',rgb('grey'),...
         'MarkerEdgeColor',cswift(iswift,:),'MarkerFaceColor',cswift(iswift,:),'MarkerSize',mks)
     hold on
 
@@ -404,8 +458,10 @@ end
 linkaxes(h,'x');
 axes(h(1))
 axis tight
-ylim([0 20])
 xlim(tlim)
+clear t
+t(1) = textlab('Mean TKE Dissipation Rate','topleft');
+set(t,'FontSize',12,'FontWeight','bold')
 legend(swifts','Interpreter','none','FontSize',8,'Location','Northeast')
 title([level ' Dissipation Rate'])
 set(h(1:end-1),'XTickLabel',[])

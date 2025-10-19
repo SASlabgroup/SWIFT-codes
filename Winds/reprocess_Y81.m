@@ -44,7 +44,7 @@ for iburst = 1:length(bfiles)
         if bfiles(iburst).bytes > 1e5
         [u,v,w,temp,~] = readSWIFT_Y81([bfiles(iburst).folder slash bfiles(iburst).name]);
         else
-            disp('File size too small, skipping ...')
+            disp('File size too small, NaN out ...')
             u = NaN(1000,1);
             v = u;w = u;temp = u;
         end
@@ -62,10 +62,7 @@ for iburst = 1:length(bfiles)
         if isempty(sindex)
             disp('No matching SWIFT index. Skipping...')
             continue
-        end
-
-        % Replace wind speed, NaN out wind direction and replace ustar
-        if ~isempty(tdiff) && tdiff < 12/(24*60)
+        else
             SWIFT(sindex).windspd = windspd;
             SWIFT(sindex).winddirR = winddirR;
             if ustar ~= 9999
@@ -73,8 +70,6 @@ for iburst = 1:length(bfiles)
                 SWIFT(sindex).windspectra.freq = windfreq(:);
                 SWIFT(sindex).windspectra.energy = windpower(:);
             end
-        else
-            disp(['No time match, dt = ' num2str(tdiff*24*60) ' min. Skipping...'])
         end
 
 end

@@ -392,11 +392,15 @@ if isfield(SWIFT,'peakwaveperiod')
     swift.waveustokes = (swift.wavesigH./4).^2.*om.*k;
     
     % Re-calculate peak wave period (via centroid method)
+    if isfield(SWIFT,'centwaveperiod')
+        swift.wavecentT = [SWIFT.centwaveperiod];
+    else
     wavepower = swift.wavepower;
     wavefreq = swift.wavefreq;
     wavevar = sum(wavepower,1,'omitnan');
     waveweight = sum(wavepower.*repmat(wavefreq,1,size(wavepower,2)),1,'omitnan');
-    swift.wavepeakT = 1./(waveweight./wavevar);
+    swift.wavecentT = 1./(waveweight./wavevar);
+    end
 end
 
  % Wind Spectra

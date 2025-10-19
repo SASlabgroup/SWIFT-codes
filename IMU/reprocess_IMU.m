@@ -34,7 +34,7 @@ l3file = dir([missiondir slash '*SWIFT*L3.mat']);
 if ~isempty(l3file) % First check to see if there is an existing L3 file to load
     sfile = l3file;
     load([sfile.folder slash sfile.name],'SWIFT','sinfo');
-elseif isempty(l3file) && ~isempty(l2file)% If not, load L1 file
+elseif isempty(l3file) && ~isempty(l2file)% If not, load L2 file
     sfile = l2file;
     load([sfile.folder slash sfile.name],'SWIFT','sinfo');
 else %  Exit reprocessing if no L2 or L3 product exists
