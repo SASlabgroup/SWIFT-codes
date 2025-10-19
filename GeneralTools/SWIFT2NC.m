@@ -82,8 +82,20 @@ t_dim=netcdf.defDim(ncid,'time', length(SWIFT));
 full_names=fieldnames(SWIFT);
 
 if isfield(SWIFT,'wavespectra') %&& min(SWIFT(1).wavespectra.freq)>0
-    f_dim = netcdf.defDim(ncid,'freq', length(SWIFT(1).wavespectra.freq));
-    spec_names=fieldnames(SWIFT(1).wavespectra);
+    % Find the first non-NaN wavespectra to use as reference
+    ref_idx = 1;
+    for k=1:length(SWIFT)
+        if isfield(SWIFT(k), 'wavespectra') && ~isempty(SWIFT(k).wavespectra)
+            % Check if freq field exists and is not all NaN
+            if isfield(SWIFT(k).wavespectra, 'freq') && ~all(isnan(SWIFT(k).wavespectra.freq(:)))
+                ref_idx = k;
+                break;
+            end
+        end
+    end
+
+    f_dim = netcdf.defDim(ncid,'freq', length(SWIFT(ref_idx).wavespectra.freq));
+    spec_names=fieldnames(SWIFT(ref_idx).wavespectra);
 end
 if isfield(SWIFT,'uplooking')
     z_dim = netcdf.defDim(ncid,'z', length(SWIFT(1).uplooking.z));
@@ -320,12 +332,33 @@ netcdf.endDef(ncid);
 %% filling them with values
 
 for i=1:length(names)
-    if strcmp(names{i},'wavespectra')
+    if strcmp(names{i},'wavespectra') & exist('spec_names', 'var')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
-                netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), S.wavespectra(1).freq);
+                netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), S.wavespectra(ref_idx).freq);
             else
-                netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), [S.wavespectra.(spec_names{j})]);
+                % Find the first element with non-NaN data to use as reference size
+                ref_size = size(S.wavespectra(ref_idx).(spec_names{j}));
+                
+                % Pre-allocate cell array to store each field
+                temp_data = cell(1, length(S.wavespectra));
+                
+                % Loop through each element
+                for k=1:length(S.wavespectra)
+                    current_data = S.wavespectra(k).(spec_names{j});
+                    current_size = size(current_data);
+                    
+                    % Check if size matches
+                    if isequal(current_size, ref_size)
+                        temp_data{k} = current_data;
+                    else
+                        % Replace with NaNs of the correct size
+                        temp_data{k} = nan(ref_size);
+                    end
+                end
+                
+                % Concatenate horizontally
+                netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), vertcat(temp_data{:}).');
             end
         end
     elseif strcmp(names{i},'uplooking')
