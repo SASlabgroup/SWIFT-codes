@@ -114,6 +114,8 @@ for iburst = 1:length(bfiles)
     fs_gps = 1000./median(diff(GPS.UTC.mSec)); % should be 4 Hz
     f_original = SWIFT(sindex).wavespectra.freq;  % original frequency bands from onboard processing
     if any(isnan(f_original)) || any(f_original==0)
+        % NOTE(@mleclair) This is where the inconsistencies come in. Maybe
+        % this should be where we fix it?
         f_original = linspace(0.0098, 0.4902, 42)'; % apply standard 42 freq bands if missing
     end
         
