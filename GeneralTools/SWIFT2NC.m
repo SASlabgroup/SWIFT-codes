@@ -159,7 +159,7 @@ end
 %% creating netcdf variables
 
 for i=1:length(names)
-    if strcmp(names{i},'wavespectra')
+    if strcmp(names{i},'wavespectra') & exist('spec_names', 'var')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
                 spec_var_ids.(spec_names{j}) = netcdf.defVar(ncid, spec_names{j}, 'NC_DOUBLE', f_dim);
