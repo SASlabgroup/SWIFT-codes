@@ -53,6 +53,8 @@ for fi=1:length(flist)
 
 end
 
+%% legend
+axes(ax(2))
 legend(num2str(ID'))
 linkaxes(ax,'x')
 
