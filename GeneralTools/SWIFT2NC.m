@@ -232,7 +232,7 @@ for i=1:length(names)
         var_ids.(names{i})  = netcdf.defVar(ncid, 'OBS_ambient', 'NC_INT', [obs_dim, t_dim]);
     elseif strcmp(names{i},'OBS_calibratedNTU')
         var_ids.(names{i}) = netcdf.defVar(ncid, 'OBS_calibratedNTU', 'NC_INT', [obs_dim, t_dim]);
-    elseif strcmp(names{i},'wavespectra')
+    elseif strcmp(names{i},'wavespectra') & exist('spec_names', 'var')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
                 spec_var_ids.(spec_names{j}) = netcdf.defVar(ncid, spec_names{j}, 'NC_DOUBLE', f_dim);
