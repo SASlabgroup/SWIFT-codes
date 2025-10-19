@@ -81,7 +81,7 @@ ncid=netcdf.create(filename,'CLOBBER');
 t_dim=netcdf.defDim(ncid,'time', length(SWIFT));
 full_names=fieldnames(SWIFT);
 
-if isfield(SWIFT,'wavespectra') && min(SWIFT(1).wavespectra.freq)>0
+if isfield(SWIFT,'wavespectra') %&& min(SWIFT(1).wavespectra.freq)>0
     f_dim = netcdf.defDim(ncid,'freq', length(SWIFT(1).wavespectra.freq));
     spec_names=fieldnames(SWIFT(1).wavespectra);
 end
