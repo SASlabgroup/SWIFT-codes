@@ -144,9 +144,15 @@ figure(3), clf
 %subplot(2,1,2)
 %pcolor(f,theta,log10(Etheta')), shading flat;
 if iscolumn(f),
-    polarPcolor(f',theta(1:180),log10(Etheta(:,1:180)'));
+    % Explicitly wrap theta to 360 to close the circle
+    theta_plot = [theta(1:180), 360];
+    Etheta_plot = [Etheta(:,1:180), Etheta(:,1)];
+    polarPcolor(f', theta_plot, log10(Etheta_plot'));
 elseif isrow(f), 
-    polarPcolor(f,theta(1:180),log10(Etheta(:,1:180)'));
+    % Explicitly wrap theta to 360 to close the circle
+    theta_plot = [theta(1:180), 360];
+    Etheta_plot = [Etheta(:,1:180), Etheta(:,1)];
+    polarPcolor(f, theta_plot, log10(Etheta_plot'));
 else
     disp('Problem with the size of frequency vector')
 end
