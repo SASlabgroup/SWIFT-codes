@@ -2,6 +2,18 @@
 <head><title>SWIFT data request 
 </title>
 <link rel="icon" type="image/png" href="SWIFTlogo_icon.png">
+<style>
+    .form-row {
+        margin: 8px 0;
+    }
+    .datetime-input-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin: 8px 0;
+        flex-wrap: wrap;
+    }
+</style>
 </head>
 
 <body BGCOLOR=white>
@@ -34,15 +46,29 @@ or in Python <a href="https://github.com/SASlabgroup/microSWIFTtelemetry"> with 
 -----------
 <br>
 Manual telemetry queries for <b>simple position and time data</b> are URLs generated from this form 
-<form name="input" action="http://swiftserver.apl.washington.edu/kml?action=kml" method="get">
+<form name="input" action="http://swiftserver.apl.washington.edu/kml?action=kml" method="get" onsubmit="return formatDates(event, 'kml')">
 <input type="hidden" name="action" value="kml"> <br>
-ID: <input type="text" name="buoy_name" size="18"> (examples: SWIFT 09, microSWIFT 007) <input type="button" value="24 Hour KML" onclick="downloadLast24HoursKML()"><br>
-start time : <input type="text" name="start">
-end time : <input type="text" name="end">( format: 2014-05-09T00:00:00)<br>
+<div class="form-row">
+ID: <input type="text" name="buoy_name" id="buoy_name_kml" size="18"> (examples: SWIFT 09, microSWIFT 007)
+</div>
+<div class="datetime-input-group">
+    start datetime: <input type="text" id="start_datetime_kml" size="25" placeholder="YYYY-MM-DDTHH:MM:SS">
+    or use: <input type="date" id="start_date_kml"> 
+    <input type="time" id="start_time_kml" value="00:00:00" step="1"> (UTC, 24-hour format)
+    <input type="hidden" name="start" id="start_kml_formatted">
+</div>
+<div class="datetime-input-group">
+    end datetime: <input type="text" id="end_datetime_kml" size="25" placeholder="YYYY-MM-DDTHH:MM:SS">
+    or use: <input type="date" id="end_date_kml"> 
+    <input type="time" id="end_time_kml" value="00:00:00" step="1"> (UTC, 24-hour format)
+    <input type="hidden" name="end" id="end_kml_formatted">
+</div>
+<div class="form-row">
 data type: <select name="format">
 <option value="kml" selected>kml</option>
 <option value="json">json</option>
-</select> (kml is Google Earth, json is simple text)<br>
+</select> (kml is Google Earth, json is simple text)
+</div>
 <input type="submit" value="Submit">
 </form>
 Leave end time blank to pull all data until present time (UTC)
@@ -58,10 +84,23 @@ Leave end time blank to pull all data until present time (UTC)
 
 Manual telemetry queries for <b>full binary 'sbd' data from all sensor payloads</b> are URLs generated from this form 
 <br> 
-<form name="input" action="http://swiftserver.apl.washington.edu/services/buoy?" method="get">
+<form name="input" action="http://swiftserver.apl.washington.edu/services/buoy?" method="get" onsubmit="return formatDates(event, 'sbd')">
 <input type="hidden" name="action" value="get_data"> <br>
-ID: <input type="text" name="buoy_name" size="10"> (examples: SWIFT 09, microSWIFT 007)<br>
-start time: <input type="text" name="start"> end time: <input type="text" name="end"> (format: 2014-05-09T00:00:00) <br>
+<div class="form-row">
+ID: <input type="text" name="buoy_name" size="10"> (examples: SWIFT 09, microSWIFT 007)
+</div>
+<div class="datetime-input-group">
+    start datetime: <input type="text" id="start_datetime_sbd" size="25" placeholder="YYYY-MM-DDTHH:MM:SS">
+    or use: <input type="date" id="start_date_sbd">
+    <input type="time" id="start_time_sbd" value="00:00:00" step="1"> (UTC, 24-hour format)
+    <input type="hidden" name="start" id="start_sbd_formatted">
+</div>
+<div class="datetime-input-group">
+    end datetime: <input type="text" id="end_datetime_sbd" size="25" placeholder="YYYY-MM-DDTHH:MM:SS">
+    or use: <input type="date" id="end_date_sbd">
+    <input type="time" id="end_time_sbd" value="00:00:00" step="1"> (UTC, 24-hour format)
+    <input type="hidden" name="end" id="end_sbd_formatted">
+</div>
 <input type="hidden" name="format" value="zip">
 <input type="submit" value="Submit">
 </form>
@@ -138,29 +177,109 @@ Marginal Ice Zone experiment (2014): <a href="https://doi.org/10.7265/j769-hn64"
 Legacy (older) projects with SWIFT data are informally archived in directories <a href="http://faculty.washington.edu/jmt3rd/SWIFTdata/">here</a><br>
 
 <script>
-function downloadLast24HoursKML() {
-    const buoyNameInput = document.getElementsByName('buoy_name')[0];
-    const buoyName = buoyNameInput.value.trim();
-
-    if (!buoyName) {
-        alert('Please enter a buoy ID');
-        return;
-    }
-
-    // Calculate 24 hours ago in UTC
+// Set default dates and times on page load
+window.addEventListener('DOMContentLoaded', function() {
     const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    const yesterday = new Date(now);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    
+    // Format dates as YYYY-MM-DD
+    const yesterdayDate = yesterday.toISOString().substring(0, 10);
+    const todayDate = now.toISOString().substring(0, 10);
+    
+    // Format current time as HH:MM:SS
+    const nowTime = now.toISOString().substring(11, 19);
+    
+    // Set defaults for KML form
+    document.getElementById('start_date_kml').value = yesterdayDate;
+    document.getElementById('start_time_kml').value = nowTime;
+    document.getElementById('end_date_kml').value = todayDate;
+    document.getElementById('end_time_kml').value = nowTime;
+    
+    // Set defaults for SBD form
+    document.getElementById('start_date_sbd').value = yesterdayDate;
+    document.getElementById('start_time_sbd').value = '00:00:00';
+    document.getElementById('end_date_sbd').value = todayDate;
+    document.getElementById('end_time_sbd').value = nowTime;
+    
+    // Add sync functionality for datetime text inputs
+    syncDateTimeInputs('kml');
+    syncDateTimeInputs('sbd');
+});
 
-    // Format for API (ISO string without milliseconds)
-    const startTime = twentyFourHoursAgo.toISOString().substring(0, 19);
-    const endTime = now.toISOString().substring(0, 19);
-
-    // Build URL for last 24 hours KML
-    const url = `http://swiftserver.apl.washington.edu/kml?action=kml&buoy_name=${encodeURIComponent(buoyName)}&start=${encodeURIComponent(startTime)}&end=${encodeURIComponent(endTime)}&format=kml`;
-
-    // Open URL in new window/tab for download
-    window.open(url, '_blank');
+function syncDateTimeInputs(formType) {
+    const datetimeInput = document.getElementById(`start_datetime_${formType}`);
+    const dateInput = document.getElementById(`start_date_${formType}`);
+    const timeInput = document.getElementById(`start_time_${formType}`);
+    const endDatetimeInput = document.getElementById(`end_datetime_${formType}`);
+    const endDateInput = document.getElementById(`end_date_${formType}`);
+    const endTimeInput = document.getElementById(`end_time_${formType}`);
+    
+    // Sync start datetime text input to date/time inputs
+    datetimeInput.addEventListener('input', function() {
+        const value = this.value;
+        if (value.includes('T')) {
+            const [date, time] = value.split('T');
+            dateInput.value = date;
+            timeInput.value = time;
+        }
+    });
+    
+    // Sync date/time inputs to datetime text input
+    dateInput.addEventListener('input', updateStartDatetime);
+    timeInput.addEventListener('input', updateStartDatetime);
+    
+    function updateStartDatetime() {
+        if (dateInput.value && timeInput.value) {
+            datetimeInput.value = dateInput.value + 'T' + timeInput.value;
+        }
+    }
+    
+    // Sync end datetime text input to date/time inputs
+    endDatetimeInput.addEventListener('input', function() {
+        const value = this.value;
+        if (value.includes('T')) {
+            const [date, time] = value.split('T');
+            endDateInput.value = date;
+            endTimeInput.value = time;
+        }
+    });
+    
+    // Sync date/time inputs to end datetime text input
+    endDateInput.addEventListener('input', updateEndDatetime);
+    endTimeInput.addEventListener('input', updateEndDatetime);
+    
+    function updateEndDatetime() {
+        if (endDateInput.value && endTimeInput.value) {
+            endDatetimeInput.value = endDateInput.value + 'T' + endTimeInput.value;
+        }
+    }
 }
+
+function formatDates(event, formType) {
+    const startDatetime = document.getElementById(`start_datetime_${formType}`).value;
+    const startDate = document.getElementById(`start_date_${formType}`).value;
+    const startTime = document.getElementById(`start_time_${formType}`).value;
+    const endDatetime = document.getElementById(`end_datetime_${formType}`).value;
+    const endDate = document.getElementById(`end_date_${formType}`).value;
+    const endTime = document.getElementById(`end_time_${formType}`).value;
+    
+    // Prefer datetime text input if filled, otherwise use date/time inputs
+    if (startDatetime) {
+        document.getElementById(`start_${formType}_formatted`).value = startDatetime;
+    } else if (startDate) {
+        document.getElementById(`start_${formType}_formatted`).value = startDate + 'T' + startTime;
+    }
+    
+    if (endDatetime) {
+        document.getElementById(`end_${formType}_formatted`).value = endDatetime;
+    } else if (endDate) {
+        document.getElementById(`end_${formType}_formatted`).value = endDate + 'T' + endTime;
+    }
+    
+    return true;
+}
+
 </script>
 
 </body>
