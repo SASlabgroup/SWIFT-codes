@@ -2,6 +2,18 @@
 <head><title>SWIFT data request 
 </title>
 <link rel="icon" type="image/png" href="SWIFTlogo_icon.png">
+<style>
+    .form-row {
+        margin: 8px 0;
+    }
+    .datetime-input-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin: 8px 0;
+        flex-wrap: wrap;
+    }
+</style>
 </head>
 
 <body BGCOLOR=white>
@@ -20,56 +32,81 @@ The main page for the Surface Wave Instrument Float with Tracking is <a href="ht
 Telemetry data
 </font>
 <br>
-Telemetry formats and automation are documented at <a href="https://github.com/SASlabgroup/SWIFT-codes/blob/master/Documents/SWIFT_telemetry_access.pdf">SWIFT_telemetry_access.pdf</a><br>
+Telemetry formats and automation are documented at <a href="https://github.com/SASlabgroup/SWIFT-codes/blob/master/Documents/SWIFT_telemetry_access.pdf">SWIFT_telemetry_access.pdf</a>
+<br>
 A live map with any buoys reporting within the last 3 hours is at <a href="http://swiftserver.apl.washington.edu/map/">swiftserver.apl.uw.edu/map</a>, and this <a href="http://swiftserver.apl.washington.edu/services/buoy?action=get_data&buoy_name=all&start=recent&format=kml">kml file</a> has the same information for viewing in  any GIS software.
 <br>
-A dashboard with simple telemetry data display is at <a href="https://swiftdashboard.apl.uw.edu">https://swiftdashboard.apl.uw.edu</a>. <br>
-Select SWIFTs and microSWIFTs can also be viewed in the <a href="https://software.apl.uw.edu/proto/BackyardBuoys/app.php">Backyard Buoys app</a>. 
+A dashboard with simple telemetry data display is at <a href="https://swiftdashboard.apl.uw.edu">https://swiftdashboard.apl.uw.edu</a>.
+<br>
+Select SWIFTs and microSWIFTs can also be viewed in the <a href="https://software.apl.uw.edu/proto/BackyardBuoys/app.php">Backyard Buoys app</a>.
 <br>
 Telemetry data can also be accessed directly in Matlab using <a href="https://github.com/SASlabgroup/SWIFT-codes/blob/master/GeneralTools/pullSWIFTtelemetry.m">pullSWIFTtelemetry.m</a> 
 or in Python <a href="https://github.com/SASlabgroup/microSWIFTtelemetry"> with this package</a> (presently microSWIFTs only). 
-
-<br>
-<br>
------------
-<br>
+<br><br>
+<!-- ################################################################################################################################# -->
+<hr>
 Manual telemetry queries for <b>simple position and time data</b> are URLs generated from this form 
-<form name="input" action="http://swiftserver.apl.washington.edu/kml?action=kml" method="get">
+<form name="input" action="http://swiftserver.apl.washington.edu/kml?action=kml" method="get" onsubmit="return formatDates(event, 'kml')">
 <input type="hidden" name="action" value="kml"> <br>
-ID: <input type="text" name="buoy_name" size="18"> (examples: SWIFT 09, microSWIFT 007) <input type="button" value="24 Hour KML" onclick="downloadLast24HoursKML()"><br>
-start time : <input type="text" name="start">
-end time : <input type="text" name="end">( format: 2014-05-09T00:00:00)<br>
+<div class="form-row">
+ID: <input type="text" name="buoy_name" id="buoy_name_kml" size="18"> (examples: SWIFT 09, microSWIFT 007)
+</div>
+<div class="datetime-input-group">
+    start datetime: <input type="text" id="start_datetime_kml" size="25" placeholder="YYYY-MM-DDTHH:MM:SS"> (UTC, 24-hour format)
+    or use: <input type="date" id="start_date_kml"> 
+    <input type="time" id="start_time_kml" value="00:00:00" step="1"> 
+    <input type="hidden" name="start" id="start_kml_formatted">
+</div>
+<div class="datetime-input-group">
+    end datetime: <input type="text" id="end_datetime_kml" size="25" placeholder="YYYY-MM-DDTHH:MM:SS"> (UTC, 24-hour format)
+    or use: <input type="date" id="end_date_kml"> 
+    <input type="time" id="end_time_kml" value="00:00:00" step="1"> 
+    <input type="hidden" name="end" id="end_kml_formatted">
+</div>
+<div class='live-link-group'>
+    <input type="checkbox", id="live_link_kml", checked> <label for="live-link">Live Link, pull all data until present time (UTC)</label>
+</div>
+<div class="form-row">
 data type: <select name="format">
 <option value="kml" selected>kml</option>
 <option value="json">json</option>
-</select> (kml is Google Earth, json is simple text)<br>
+</select> (kml is Google Earth, json is simple text)
+</div>
 <input type="submit" value="Submit">
 </form>
-Leave end time blank to pull all data until present time (UTC)
-<br>
-<! Alternative (direct link example):
+<!-- <! Alternative (direct link example):
 <!<input type="text" size="175" name="prog_site" id="prog_site" value="http://swiftserver.apl.washington.edu/kml?action=kml&buoy_name=SWIFT%2015&start=2014-05-09T00:00:00&end=2014-05-09T17:00:00&format=kml" />
 <!<a href="#" onclick="this.href=document.getElementById('prog_site').value" target="_blank">
-<!Submit</a>
-
-<br>
------------
-<br>
-
+<!Submit</a> -->
+<hr>
+<!-- ################################################################################################################################# -->
 Manual telemetry queries for <b>full binary 'sbd' data from all sensor payloads</b> are URLs generated from this form 
 <br> 
-<form name="input" action="http://swiftserver.apl.washington.edu/services/buoy?" method="get">
+<form name="input" action="http://swiftserver.apl.washington.edu/services/buoy?" method="get" onsubmit="return formatDates(event, 'sbd')">
 <input type="hidden" name="action" value="get_data"> <br>
-ID: <input type="text" name="buoy_name" size="10"> (examples: SWIFT 09, microSWIFT 007)<br>
-start time: <input type="text" name="start"> end time: <input type="text" name="end"> (format: 2014-05-09T00:00:00) <br>
+<div class="form-row">
+ID: <input type="text" name="buoy_name" size="10"> (examples: SWIFT 09, microSWIFT 007)
+</div>
+<div class="datetime-input-group">
+    start datetime: <input type="text" id="start_datetime_sbd" size="25" placeholder="YYYY-MM-DDTHH:MM:SS">
+    or use: <input type="date" id="start_date_sbd">
+    <input type="time" id="start_time_sbd" value="00:00:00" step="1"> (UTC, 24-hour format)
+    <input type="hidden" name="start" id="start_sbd_formatted">
+</div>
+<div class="datetime-input-group">
+    end datetime: <input type="text" id="end_datetime_sbd" size="25" placeholder="YYYY-MM-DDTHH:MM:SS">
+    or use: <input type="date" id="end_date_sbd">
+    <input type="time" id="end_time_sbd" value="00:00:00" step="1"> (UTC, 24-hour format)
+    <input type="hidden" name="end" id="end_sbd_formatted">
+</div>
+<div class='live-link-group'>
+    <input type="checkbox", id="live_link_sbd", checked> <label for="live-link">Live Link, pull all data until present time (UTC)</label>
+</div>
 <input type="hidden" name="format" value="zip">
 <input type="submit" value="Submit">
 </form>
-Leave end time blank to pull all data until present time (UTC)
 <br>
-<br>
-
-
+<!-- ################################################################################################################################# -->
 <hr>
 <br>
 <b>Debug links</b> 
@@ -138,30 +175,172 @@ Marginal Ice Zone experiment (2014): <a href="https://doi.org/10.7265/j769-hn64"
 Legacy (older) projects with SWIFT data are informally archived in directories <a href="http://faculty.washington.edu/jmt3rd/SWIFTdata/">here</a><br>
 
 <script>
-function downloadLast24HoursKML() {
-    const buoyNameInput = document.getElementsByName('buoy_name')[0];
-    const buoyName = buoyNameInput.value.trim();
+// When the page loads, set default start/end dates and times, then initialize syncing
+window.addEventListener('DOMContentLoaded', () => {
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
-    if (!buoyName) {
-        alert('Please enter a buoy ID');
-        return;
+    const formatDate = d => d.toISOString().slice(0, 10); // YYYY-MM-DD
+    const formatTime = d => d.toISOString().slice(11, 19); // HH:MM:SS
+
+    const yesterdayDate = formatDate(yesterday);
+    const todayDate = formatDate(now);
+    const nowTime = formatTime(now);
+
+    // Set KML form defaults
+    setDefaults('kml', yesterdayDate, todayDate, nowTime, nowTime);
+
+    // Set SBD form defaults
+    setDefaults('sbd', yesterdayDate, todayDate, nowTime, nowTime);
+
+    // Activate synchronization for both forms
+    ['kml', 'sbd'].forEach(syncDateTimeInputs);
+});
+
+// Helper to set default values for a form
+function setDefaults(formType, startDate, endDate, startTime, endTime) {
+    document.getElementById(`start_date_${formType}`).value = startDate;
+    document.getElementById(`start_time_${formType}`).value = startTime;
+    document.getElementById(`end_date_${formType}`).value = endDate;
+    document.getElementById(`end_time_${formType}`).value = endTime;
+    document.getElementById(`start_datetime_${formType}`).value = `${startDate}T${startTime}`;
+}
+
+// Main function to keep start/end fields, date/time pickers, and Live Link in sync
+function syncDateTimeInputs(formType) {
+    const startDT = document.getElementById(`start_datetime_${formType}`);
+    const startDate = document.getElementById(`start_date_${formType}`);
+    const startTime = document.getElementById(`start_time_${formType}`);
+    const endDT = document.getElementById(`end_datetime_${formType}`);
+    const endDate = document.getElementById(`end_date_${formType}`);
+    const endTime = document.getElementById(`end_time_${formType}`);
+    const live = document.getElementById(`live_link_${formType}`);
+
+    // --------- START FIELD SYNC ---------
+    // Text field → pickers
+    startDT.addEventListener('input', () => {
+        const [d, t] = startDT.value.split('T') ?? [];
+        if (d) startDate.value = d;
+        if (t) startTime.value = t;
+    });
+
+    // Pickers → text field
+    [startDate, startTime].forEach(el =>
+        el.addEventListener('input', () => {
+            if (startDate.value && !startTime.value) startTime.value = "00:00:00";
+            startDT.value = startDate.value && startTime.value ? `${startDate.value}T${startTime.value}` : '';
+        })
+    );
+
+    // --------- END FIELD SYNC ---------
+    function updateEndFromPickers() {
+        // Fill missing time if date exists
+        if (endDate.value && !endTime.value) endTime.value = "00:00:00";
+
+        // Both date and time selected → update datetime field and uncheck Live Link
+        if (endDate.value && endTime.value) {
+            endDT.value = `${endDate.value}T${endTime.value}`;
+            live.checked = false;
+        }
+        // Both cleared → re-enable Live Link
+        else if (!endDate.value && !endTime.value) {
+            endDT.value = '';
+            live.checked = true;
+        }
+        updateLiveState();
     }
 
-    // Calculate 24 hours ago in UTC
-    const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    // Update whenever pickers change
+    ['input', 'change'].forEach(evt => {
+        endDate.addEventListener(evt, updateEndFromPickers);
+        endTime.addEventListener(evt, updateEndFromPickers);
+    });
 
-    // Format for API (ISO string without milliseconds)
-    const startTime = twentyFourHoursAgo.toISOString().substring(0, 19);
-    const endTime = now.toISOString().substring(0, 19);
+    // --------- END DATETIME TEXT FIELD SYNC ---------
+    // Text → pickers, uncheck Live Link if proper value
+    endDT.addEventListener('input', () => {
+        const val = endDT.value.trim();
+        if (val.includes('T')) {
+            const [d, t] = val.split('T');
+            endDate.value = d;
+            endTime.value = t;
+            live.checked = false;
+        } else {
+            // allow typing, do not auto-check live yet
+            endDate.value = '';
+            endTime.value = '';
+        }
+        updateLiveState();
+    });
 
-    // Build URL for last 24 hours KML
-    const url = `http://swiftserver.apl.washington.edu/kml?action=kml&buoy_name=${encodeURIComponent(buoyName)}&start=${encodeURIComponent(startTime)}&end=${encodeURIComponent(endTime)}&format=kml`;
+    // Re-check Live Link only when field loses focus and is empty
+    endDT.addEventListener('blur', () => {
+        if (!endDT.value.trim()) {
+            live.checked = true;
+            updateLiveState();
+        }
+    });
 
-    // Open URL in new window/tab for download
-    window.open(url, '_blank');
+    // Focusing any end picker → uncheck Live Link and rebuild end datetime
+    [endDate, endTime].forEach(el =>
+        el.addEventListener('focus', () => {
+            if (live.checked && (endDate.value || endTime.value)) live.checked = false;
+            updateEndFromPickers();
+        })
+    );
+
+    // Focusing datetime text field → uncheck Live Link
+    endDT.addEventListener('focus', () => {
+        if (live.checked) live.checked = false;
+    });
+
+    // --------- LIVE LINK VISUAL UPDATE ---------
+    live.addEventListener('change', updateLiveState);
+
+    function updateLiveState() {
+        const isLive = live.checked;
+        [endDT, endDate, endTime].forEach(el => {
+            el.classList.toggle('grayed', isLive); // gray out if Live Link
+            if (isLive) el.value = ''; // clear visually
+        });
+    }
+
+    updateLiveState();
+}
+
+// Called on form submit to fill hidden start/end fields for the URL
+function formatDates(event, formType) {
+    const startDT = document.getElementById(`start_datetime_${formType}`).value;
+    const startDate = document.getElementById(`start_date_${formType}`).value;
+    const startTime = document.getElementById(`start_time_${formType}`).value;
+    const endDT = document.getElementById(`end_datetime_${formType}`).value;
+    const endDate = document.getElementById(`end_date_${formType}`).value;
+    const endTime = document.getElementById(`end_time_${formType}`).value;
+    const live = document.getElementById(`live_link_${formType}`).checked;
+
+    // Fill start hidden field (this is the variable where we store what we send the server)
+    const startField = document.getElementById(`start_${formType}_formatted`);
+    startField.value = startDT || (startDate && startTime ? `${startDate}T${startTime}` : '');
+
+    // Fill end hidden field (this is the variable where we store what we send the server)
+    const endField = document.getElementById(`end_${formType}_formatted`);
+    if (live) endField.value = '';
+    else if (endDT) endField.value = endDT;
+    else if (endDate && endTime) endField.value = `${endDate}T${endTime}`;
+    else endField.value = '';
+
+    return true;
 }
 </script>
 
+
+<style>
+/* Grayed but still active */
+.grayed {
+    background-color: #f0f0f0 !important;
+    color: #888 !important;
+}
+</style>
 </body>
 </html>
