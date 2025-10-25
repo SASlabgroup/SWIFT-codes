@@ -15,6 +15,8 @@ function [] = plotSWIFT(SWIFT)
 %               include met height legend in temp plot
 % L. Crews 05/2025 plot info from vertical and horizontal acceleration histograms 
 %
+% J. Thomson, 10/2025 microSWIFT light and OBS data
+%
 % plotSWIFT creates the following figures if applicable data is available:
 %   figure 1: Wind and wave plot
 %   figure 2: Temperature (air and water) and salinity plot
@@ -29,6 +31,8 @@ function [] = plotSWIFT(SWIFT)
 %   figure 11: drift spd and direction
 %   figure 12: acceleration histogram info (slow, turned off by default - set plot_wavehistogram = true)
 %   figure 13: shortwave radiation and atmos pressure
+%   figure 14: microSWIFT light data
+%   figure 15: microSWIFT OBS data
 
 if ispc
     slash = '\';
@@ -795,3 +799,67 @@ if isfield(SWIFT,'solarrad') && isfield(SWIFT,'airpres') && isfield(SWIFT,'airte
 
 end
 
+%%   figure 14: microSWIFT light data
+
+if isfield(SWIFT,'lightchannels_uncalibrated') 
+
+    figure(14), clf
+
+    for si=1:length(SWIFT)
+        light(si,:) = SWIFT(si).lightchannels_uncalibrated;
+    end
+
+    subplot(2,1,1)
+    plot([SWIFT.time], light), 
+    datetick
+    ylabel('uncalibrated light')
+    legend('Clear','f1','f2','f3','f4','f5','f6','f7','f8','Dark','Near IR');
+
+    subplot(2,1,2)
+    plot([SWIFT.time],[SWIFT.lightmax_uncalibrated], [SWIFT.time],[SWIFT.lightmax_uncalibrated])
+    datetick
+    ylabel('uncalibrated light')
+    legend('max','min');
+
+end
+
+
+%%   figure 15: microSWIFT OBS data
+
+if isfield(SWIFT,'OBS_uncalibrated') 
+
+    figure(14), clf
+
+    for si=1:length(SWIFT)
+        OBS_uncal(si,:) = SWIFT(si).OBS_uncalibrated;
+        OBS_ambient(si,:) = SWIFT(si).OBS_ambient;
+        OBS_sn(si,:) = SWIFT(si).OBS_serialnum;
+    end
+
+    subplot(3,1,1)
+    plot([SWIFT.time], OBS_uncal,'k.'), hold on
+    plot([SWIFT.time], mean(OBS_uncal'),'ks','linewidth',2,'markersize',14), 
+    datetick
+    ylabel('uncalibrated OBS')
+    title(['OBS serial numer ' num2str(nanmean(OBS_sn(~isnan(OBS_sn))))])
+
+    subplot(3,1,3)
+    plot([SWIFT.time], OBS_ambient,'k.'), hold on
+    plot([SWIFT.time], mean(OBS_ambient'),'ks','linewidth',2,'markersize',14), 
+    datetick
+    ylabel('ambient OBS')
+
+    if isfield(SWIFT,'OBS_calibratedNTU')
+
+
+    for si=1:length(SWIFT)
+        OBS_calNTU(si,:) = SWIFT(si).OBS_calibratedNTU;
+    end
+
+    subplot(3,1,2)
+    plot([SWIFT.time], OBS_calNTU,'k.'), hold on
+    plot([SWIFT.time], mean(OBS_calNTU'),'ks','linewidth',2,'markersize',14), 
+    datetick
+    ylabel('calibrated OBS [NTU]')
+
+end
