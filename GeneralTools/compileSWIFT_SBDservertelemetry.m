@@ -20,6 +20,8 @@
 %             7/2022    allow microSWIFT timestamps (not from filename)
 %             4/2025    save microSWIFT light sensor sbds alongside wave sbds (still need to merge)
 %             9/2025    save microSWIFT OpenOBS sensor sbds alongside wave sbds (still need to merge)
+%             10/2025   merge light sensor and OpenOBS data into main data
+%             structure
 clear all
 
 plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
@@ -371,6 +373,40 @@ if isfield(SWIFT,'salinity') && all([SWIFT.salinity]==0)
     end
 end
 
+%% merge microSWIFT light and OBS data with main data structure
+
+if any(lightsensor)
+
+    for si=1:length(SWIFT)
+        [tdiff bestmatch] = min( abs ( [SWIFT(si).time] - [SWIFTlightdata.time] ) );
+        if tdiff < 1/24 % find closest data within a one hour cutoff
+            SWIFT(si).lightchannels_uncalibrated = SWIFTlightdata(bestmatch).lightchannels;
+            SWIFT(si).lightmax_uncalibrated = SWIFTlightdata(bestmatch).lightmax;
+            SWIFT(si).lightmin_uncalibrated = SWIFTlightdata(bestmatch).lightmin;
+        else
+            SWIFT(si).lightchannels_uncalibrated =  NaN(11,1);
+            SWIFT(si).lightmax_uncalibrated = NaN;
+            SWIFT(si).lightmin_uncalibrated = NaN;
+        end
+    end
+end
+
+if any(obssensor)
+
+    for si=1:length(SWIFT)
+        [tdiff bestmatch] = min( abs ( [SWIFT(si).time] - [SWIFTobsdata.time] ) );
+        if tdiff < 1/24 % find closest data within a one hour cutoff
+            SWIFT(si).OBS_uncalibrated = SWIFTobsdata(bestmatch).OBSbackscatter;
+            SWIFT(si).OBS_ambient = SWIFTobsdata(bestmatch).OBSambient;
+            SWIFT(si).OBS_serialnum = SWIFTobsdata(bestmatch).OBSserialnum; 
+        else
+            SWIFT(si).OBS_uncalibrated = NaN(17,1);
+            SWIFT(si).OBS_ambient = NaN(17,1);
+            SWIFT(si).OBS_serialnum = NaN; 
+        end
+    end
+end
+
 %% save
 %save([ flist(ai).name(6:13) '.mat'], 'SWIFT')
 %save([ wd '.mat'], 'SWIFT')
@@ -393,7 +429,7 @@ if plotflag
     wd = wd((wdi+1):length(wd));
     
     % battery plot
-    if any(~isnan(battery)),
+    if any(~isnan(battery))
         figure(7), clf,
         plot([SWIFT.time],battery,'kx','linewidth',3)
         datetick, grid
@@ -402,22 +438,22 @@ if plotflag
     else
     end
 
-    % light sensor plot
-    if any(lightsensor)
-        run('plot_write_microSWIFT_lightdata.m')
-    end
+%     % light sensor plot (commented-- putting in plotSWIFT.m)
+%     if any(lightsensor)
+%         run('plot_write_microSWIFT_lightdata.m')
+%     end
 
-    % OpenOBS sensor plot
-    if any(obssensor)
-        figure, 
-        subplot(2,1,1)
-        plot([SWIFTobsdata.time],[SWIFTobsdata.OBSbackscatter])
-        datetick, ylabel('OpenOBS backscatter')
-        title(['microSWIFT' SWIFTobsdata(1).ID])
-        subplot(2,1,2)
-        plot([SWIFTobsdata.time],[SWIFTobsdata.OBSambient])
-        datetick, ylabel('OpenOBS ambient')
-        print('-dpng',['microSWIFT' SWIFTobsdata(1).ID 'OpenOBSdata.png'])
-    end
+%     % OpenOBS sensor plot (commented-- putting in plotSWIFT.m)
+%     if any(obssensor)
+%         figure, 
+%         subplot(2,1,1)
+%         plot([SWIFTobsdata.time],[SWIFTobsdata.OBSbackscatter])
+%         datetick, ylabel('OpenOBS backscatter')
+%         title(['microSWIFT' SWIFTobsdata(1).ID])
+%         subplot(2,1,2)
+%         plot([SWIFTobsdata.time],[SWIFTobsdata.OBSambient])
+%         datetick, ylabel('OpenOBS ambient')
+%         print('-dpng',['microSWIFT' SWIFTobsdata(1).ID 'OpenOBSdata.png'])
+%     end
 
 end % close plot statement

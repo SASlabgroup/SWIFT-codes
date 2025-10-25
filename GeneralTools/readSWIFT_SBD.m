@@ -572,12 +572,12 @@ fclose(fid);
 %% apply backup positions from Airmar PB200, if needed
 
 if ~isfield(SWIFT,'lat'), % if no IMU, use this one
-    disp('Using Airmar positions')
+    disp('No primary GPS position.  Attempting to use Airmar GPS position')
     SWIFT.lat = PBlat;
     SWIFT.lon = PBlon;
 end
 if isfield(SWIFT,'lat') & ( SWIFT(1).lat == 0 | isempty(SWIFT(1).lat) ), % if IMU did not give position, use this one
-    disp('Using Airmar positions')
+    disp('No primary GPS position.  Attempting to use Airmar GPS position')
     SWIFT.lat = PBlat;
     SWIFT.lon = PBlon;
 else
