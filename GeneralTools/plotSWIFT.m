@@ -13,7 +13,7 @@ function [] = plotSWIFT(SWIFT)
 % M. Smith, 09/2018 update CT plotting to utilize CTdepth when available
 % J. Thomson, 09/2018 include spectrogram in wave spectral figure  and
 %               include met height legend in temp plot
-% L. Crews 05/2025 plot info from vertical and horizontal acceleration histograms 
+% L. Crews 05/2025 plot info from vertical and horizontal acceleration histograms
 %
 % J. Thomson, 10/2025 microSWIFT light and OBS data
 %
@@ -41,9 +41,9 @@ else
 end
 
 
-%% Initialize 
+%% Initialize
 % Check that SWIFT contains information
-if isempty(SWIFT) 
+if isempty(SWIFT)
     return;
 end
 
@@ -56,7 +56,7 @@ else
     wd = wd((wdi+1):length(wd));
 end
 
-% Save existing fontsize and fontweight, then set them globally 
+% Save existing fontsize and fontweight, then set them globally
 % (so changes are applied to all figures called within the function)
 fs = get(0,'defaultaxesfontsize');      % previous fontsize default
 fw = get(0,'defaultaxesfontweight');    % previous fontweight default
@@ -95,7 +95,7 @@ if isfield(SWIFT,'peakwaveperiod')
     datetick;
     ylabel('Wave T_p [s]')
     set(gca,'Ylim',[0 20]), grid
-end %if 
+end %if
 
 if isfield(SWIFT,'peakwavedirT')
     ax(4) = subplot(n,1,4);
@@ -124,7 +124,7 @@ print('-dpng',['SWIFT' wd  '_windandwaves.png'])
 
 %% Figure 2: Temperature and salinity plot
 % Available for all SWIFTs
-% Note: SWIFTs come in varieties containing 1--3 CT sensors. This code 
+% Note: SWIFTs come in varieties containing 1--3 CT sensors. This code
 %       should adaptively account for for any of those options, however if
 %       there is a mix-and-match across timestamps the code may not produce
 %       expected results.
@@ -136,7 +136,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     try
         Tarray = reshape( [SWIFT.watertemp],[],length(SWIFT) )';
         Sarray = reshape( [SWIFT.salinity],[],length(SWIFT) )';
-    catch % if the number of elements doesn't divide evenly, reshape will throw error 
+    catch % if the number of elements doesn't divide evenly, reshape will throw error
         warning('Mismatch in sizes for both watertemp and salinity across different timestamps in fig. 2.  Using only final CT sensor data for each timestamp')
         Tarray = arrayfun(@(x)x.watertemp(end),SWIFT)';
         Sarray = arrayfun(@(x)x.salinity(end),SWIFT)';
@@ -144,10 +144,10 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
 
     % number of CT sensors:
     numCT = size(Tarray,2);
-    
-  
+
+
     % Create arrays for assigning makers and legend labels based on numCT:
-    namearray =  {'Marker';'Color';'Linestyle'}; 
+    namearray =  {'Marker';'Color';'Linestyle'};
     if isfield(SWIFT,'CTdepth')
         for cti = 1:numCT
             legendlabs{cti,1} = [num2str(SWIFT(end).CTdepth(cti),3) ' m'];
@@ -162,11 +162,11 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
         disp('CTdepth field not found: using default SWIFT depths')
         legendlabs = {'0.5 m'};
     end
-    
+
     if numCT == 3
         valuearray = {'x','b','none';
-          '+','c','none';
-          '.','k','none'};
+            '+','c','none';
+            '.','k','none'};
     elseif numCT == 1
         valuearray = {'x','b','none'};
     elseif numCT == 2
@@ -201,7 +201,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     tax(2) = subplot(312);
     h = plot([SWIFT.time],Tarray,'linewidth',2);
     datetick;
-    set(h,namearray,valuearray) 
+    set(h,namearray,valuearray)
     if exist('legendlabs'); legend(legendlabs,'Location','NortheastOutside'); end%if
     ylabel('watertemp [C]'), grid on
     %set(gca,'Ylim',[-2 30])
@@ -212,7 +212,7 @@ if isfield(SWIFT,'watertemp') && isfield(SWIFT,'salinity')
     tax(3) = subplot(313);
     h = plot([SWIFT.time],Sarray,'linewidth',2);
     datetick;
-    set(h,namearray,valuearray) 
+    set(h,namearray,valuearray)
     if exist('legendlabs'); legend(legendlabs,'Location','NortheastOutside'); end%if
     ylabel('salinity [PSU]'), grid on
     %set(gca,'Ylim',[0 36])
@@ -229,10 +229,10 @@ end
 
 %% Figure 3: Wave Spectra Plot
 % Available for all SWIFTs, using either Microstrain or SBG inertial motion units with GPS
- t=[];
+t=[];
 if isfield(SWIFT,'wavespectra')
     figure(3), clf;
-    
+
     % line spectra
     subplot(2,1,1)
     % Loop through timestamps
@@ -241,7 +241,7 @@ if isfield(SWIFT,'wavespectra')
         % color:
         cmap = colormap;
         if isfield(SWIFT,'windspd') && ~isnan(SWIFT(ai).windspd) &&... % check field exists and contains data
-            SWIFT(ai).windspd > 0 && SWIFT(ai).windspd < 50            % check data is physical
+                SWIFT(ai).windspd > 0 && SWIFT(ai).windspd < 50            % check data is physical
             ci = ceil( SWIFT(ai).windspd ./ max([SWIFT.windspd]) * length(cmap) );
             thiscolor = cmap(ci,:);
         else
@@ -257,7 +257,7 @@ if isfield(SWIFT,'wavespectra')
         else
         end %if
     end %for
-    
+
     xlabel('freq [Hz]');
     ylabel('Energy [m^2/Hz]');
     axis([5e-2 7e-1 1e-3 inf])
@@ -268,21 +268,21 @@ if isfield(SWIFT,'wavespectra')
     else
 
     end
-    
+
     % spectrogram
     subplot(2,1,2)
     if length(t)>1,
-    pcolor(nanmean(f,1),t,log10(E)), shading flat
-    axis([5e-2 7e-1 min(t) max(t)])
-    xlabel('freq [Hz]');
-    datetick('y')
-    ylabel('Time -->')
-    Ecolorbar = colorbar('Location','East');
-    Ecolorbar.Label.String = 'Log_{10}(E)';
-    colormap(gca,'spring')    
-    else 
+        pcolor(nanmean(f,1),t,log10(E)), shading flat
+        axis([5e-2 7e-1 min(t) max(t)])
+        xlabel('freq [Hz]');
+        datetick('y')
+        ylabel('Time -->')
+        Ecolorbar = colorbar('Location','East');
+        Ecolorbar.Label.String = 'Log_{10}(E)';
+        colormap(gca,'spring')
+    else
     end
-    
+
     print('-dpng',[ 'SWIFT' wd '_wavespectra.png'])
 else
 end %if
@@ -305,19 +305,19 @@ end %if
 % into their own structure array
 turb(1:length(SWIFT)) = struct; % pre-allocate structure
 for ai = 1:length(SWIFT)
-    if isfield(SWIFT(ai),'uplooking') &&... 
+    if isfield(SWIFT(ai),'uplooking') &&...
             isfield(SWIFT(ai).uplooking,'tkedissipationrate') &&... % does the field exist?
-        nansum([SWIFT(ai).uplooking.tkedissipationrate]) ~= 0  % does it contain data?
-            turb(ai).time = SWIFT(ai).time;
-            turb(ai).z = SWIFT(ai).uplooking.z(:)';
-            turb(ai).epsilon = SWIFT(ai).uplooking.tkedissipationrate(:)';
+            nansum([SWIFT(ai).uplooking.tkedissipationrate]) ~= 0  % does it contain data?
+        turb(ai).time = SWIFT(ai).time;
+        turb(ai).z = SWIFT(ai).uplooking.z(:)';
+        turb(ai).epsilon = SWIFT(ai).uplooking.tkedissipationrate(:)';
     elseif isfield(SWIFT(ai),'signature') &&... % does the field exist?
             isfield(SWIFT(ai).signature,'HRprofile') &&... % does the field exist?
             isfield(SWIFT(ai).signature.HRprofile,'tkedissipationrate') &&... % does the field exist?
-           nansum([SWIFT(ai).signature.HRprofile.tkedissipationrate]) ~= 0   % does it contain data?
-            turb(ai).time = SWIFT(ai).time;
-            turb(ai).z = SWIFT(ai).signature.HRprofile.z(:)';
-            turb(ai).epsilon = SWIFT(ai).signature.HRprofile.tkedissipationrate(:)';
+            nansum([SWIFT(ai).signature.HRprofile.tkedissipationrate]) ~= 0   % does it contain data?
+        turb(ai).time = SWIFT(ai).time;
+        turb(ai).z = SWIFT(ai).signature.HRprofile.z(:)';
+        turb(ai).epsilon = SWIFT(ai).signature.HRprofile.tkedissipationrate(:)';
     else % no data
         turb(ai).time = [];
         turb(ai).z = ([]);
@@ -332,7 +332,7 @@ if nansum([turb.epsilon]) ~= 0 % check if there is something to plot
     zmax = max( [turb.z] );
     try
         % If the size of all turbulence profiles is the same, we can create
-        % arrays of those profiles and plot them.  
+        % arrays of those profiles and plot them.
         z_array =   reshape([turb.z],[],length([turb.time]));
         eps_array = reshape([turb.epsilon],[],length([turb.time]));
 
@@ -371,7 +371,7 @@ end %if
 % Velocity profiles can be stored in one of two fields:
 % 1. SWIFT.downlooking.velocityprofile
 % 2. SWIFT.signature.profile
-% Each of these 
+% Each of these
 %
 % Note that if there is a mis-match between timestamps the code may not
 % produce the expected results.
@@ -384,22 +384,22 @@ end %if
 prof(1:length(SWIFT)) = struct; % pre-allocate structure
 for ai = 1:length(SWIFT)
     if isfield(SWIFT(ai),'downlooking') &&... % does the field exist?
-       isfield(SWIFT(ai).downlooking,'velocityprofile') &&... % does the field exist?
-       nansum([SWIFT(ai).downlooking.velocityprofile]) ~= 0   % does it contain data?
-            prof(ai).time = SWIFT(ai).time;
-            prof(ai).z = SWIFT(ai).downlooking.z;
-            prof(ai).spd = SWIFT(ai).downlooking.velocityprofile;
-            prof(ai).east_vel = [];
-            prof(ai).north_vel = []; 
+            isfield(SWIFT(ai).downlooking,'velocityprofile') &&... % does the field exist?
+            nansum([SWIFT(ai).downlooking.velocityprofile]) ~= 0   % does it contain data?
+        prof(ai).time = SWIFT(ai).time;
+        prof(ai).z = SWIFT(ai).downlooking.z;
+        prof(ai).spd = SWIFT(ai).downlooking.velocityprofile;
+        prof(ai).east_vel = [];
+        prof(ai).north_vel = [];
     elseif isfield(SWIFT(ai),'signature') &&...
-           isfield(SWIFT(ai).signature.profile,'east') &&...   % does the field exist?
-           (nansum([SWIFT(ai).signature.profile.east]) ~= 0  ||...
+            isfield(SWIFT(ai).signature.profile,'east') &&...   % does the field exist?
+            (nansum([SWIFT(ai).signature.profile.east]) ~= 0  ||...
             nansum([SWIFT(ai).signature.profile.north]) ~= 0 )  % does it contain data (in either vector)?
-            prof(ai).time = SWIFT(ai).time;
-            prof(ai).z = SWIFT(ai).signature.profile.z;
-            prof(ai).east_vel = SWIFT(ai).signature.profile.east;
-            prof(ai).north_vel = SWIFT(ai).signature.profile.north; 
-            prof(ai).spd = sqrt( prof(ai).east_vel.^2 +  prof(ai).north_vel.^2) ;
+        prof(ai).time = SWIFT(ai).time;
+        prof(ai).z = SWIFT(ai).signature.profile.z;
+        prof(ai).east_vel = SWIFT(ai).signature.profile.east;
+        prof(ai).north_vel = SWIFT(ai).signature.profile.north;
+        prof(ai).spd = sqrt( prof(ai).east_vel.^2 +  prof(ai).north_vel.^2) ;
     else % no data
         prof(ai).time = [];
         prof(ai).z = [];
@@ -407,7 +407,7 @@ for ai = 1:length(SWIFT)
         prof(ai).north_vel = [];
         prof(ai).spd = [];
     end %if
-end %for 
+end %for
 % -------------------------------------------------------------------------
 vlims = [-2 2];
 % Plotting: ---------------------------------------------------------------
@@ -424,7 +424,7 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         ylabel('z [m]');
         xlabel('East [m/s]');
         set(gca,'XLim',vlims)
-        
+
         % Plot north velocity profiles
         axes('position',[0.1 0.1 0.2 0.35]);
         plot(north_array,z_array,'k','linewidth',2);
@@ -432,37 +432,37 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         ylabel('z [m]');
         xlabel('North [m/s]');
         set(gca,'XLim',vlims)
-        
+
         if size(east_array,2) > 1
-        % Plot east velocity Hovmueller-type plot
-        axes('position',[0.35 0.55 0.6 0.35])
-        pcolor([prof.time],z_array,east_array);
-        shading flat;
-        set(gca,'ydir','reverse');
-        datetick; 
-        colorbar;
-        title('East [m/s]')
-        cmocean('balance')
-        caxis(vlims)
-        
-        % Plot north velocity Hovmueller-type plot
-        axes('position',[0.35 0.1 0.6 0.35])
-        pcolor([prof.time],z_array,north_array);
-        shading flat;
-        set(gca,'ydir','reverse');
-        datetick; 
-        colorbar;
-        title('North [m/s]')
-        cmocean('balance')
-        caxis(vlims)
+            % Plot east velocity Hovmueller-type plot
+            axes('position',[0.35 0.55 0.6 0.35])
+            pcolor([prof.time],z_array,east_array);
+            shading flat;
+            set(gca,'ydir','reverse');
+            datetick;
+            colorbar;
+            title('East [m/s]')
+            cmocean('balance')
+            caxis(vlims)
+
+            % Plot north velocity Hovmueller-type plot
+            axes('position',[0.35 0.1 0.6 0.35])
+            pcolor([prof.time],z_array,north_array);
+            shading flat;
+            set(gca,'ydir','reverse');
+            datetick;
+            colorbar;
+            title('North [m/s]')
+            cmocean('balance')
+            caxis(vlims)
 
         end %if
-        
+
     catch
         % If there is a size mis-match, the reshape function will throw an
         % error.  Then we should just plot the extant profiles:
         warning('Possible size mismatch between velocity profiles at different timestamps in fig. 5');
-        
+
         % Plot east velocity profiles
         axes('position',[0.1 0.55 0.2 0.35]);
         hold on;
@@ -470,53 +470,53 @@ if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % S
         set(gca,'YDir','reverse');
         ylabel('z [m]');
         xlabel('East [m/s]');
-        
+
         % Plot north velocity profiles
         axes('position',[0.1 0.1 0.2 0.35]);
         arrayfun(@(S) plot(S.north_vel,S.z,'k','linewidth',2), prof);
         set(gca,'YDir','reverse');
         ylabel('z [m]');
-        xlabel('North [m/s]');       
-        
+        xlabel('North [m/s]');
+
     end %try/catch
-    
-    print('-dpng', ['SWIFT' wd '_Avgvelocityprofiles.png']);      
+
+    print('-dpng', ['SWIFT' wd '_Avgvelocityprofiles.png']);
 elseif nansum([prof.spd]) ~= 0 % no separate profiles, but speeds exist
     figure(5); clf;
-    
+
     try
         z_array = reshape([prof.z],[],length([prof.time]));
         spd_array = reshape([prof.spd],[],length([prof.time]));
-        
+
         % Plot speed profiles
         axes('position',[0.1 0.1 0.18 0.35]);
         plot(spd_array,z_array,'k','linewidth',2);
         set(gca,'YDir','reverse');
         ylabel('z [m]');
         xlabel('Magnitude [m/s]');
-        
-        
+
+
         % Plot speed Hovmueller-type plot
         axes('position',[0.35 0.1 0.6 0.35])
         pcolor([prof.time],z_array,spd_array);
         shading flat;
         set(gca,'ydir','reverse');
-        datetick; 
+        datetick;
         colorbar;
         title('Magnitude [m/s]')
     catch
         % If there is a size mis-match, the reshape function will throw an
         % error.  Then we should just plot the extant profiles:
         warning('Possible size mismatch between velocity profiles at different timestamps in fig. 5');
-        
+
         axes('position',[0.1 0.1 0.2 0.35]);
         arrayfun(@(S) plot(S.spd,S.z,'k','linewidth',2), prof);
         set(gca,'YDir','reverse');
         ylabel('z [m]');
-        xlabel('Magnitude [m/s]');      
+        xlabel('Magnitude [m/s]');
     end %try/catch
-    
-    print('-dpng', ['SWIFT' wd '_Avgvelocityprofiles.png']);  
+
+    print('-dpng', ['SWIFT' wd '_Avgvelocityprofiles.png']);
 end %if
 
 
@@ -550,52 +550,52 @@ end %if
 % Available for SWIFT v3s with Vaisala 536 met stations
 
 if isfield(SWIFT,'rainaccum') && any(~isnan([SWIFT.rainaccum])) && any(~isempty([SWIFT.rainaccum]))
-    
+
     figure(8); clf;
-    
+
     rax(1) = subplot(n,1,1);
     plot( [SWIFT.time],[SWIFT.relhumidity],'kx','linewidth',2)
     datetick;
     ylabel('Rel. humid. [%]')
     set(gca,'Ylim',[0 100])
-    
+
     rax(2) = subplot(n,1,2);
     plot( [SWIFT.time],[SWIFT.rainaccum],'kx','linewidth',2)
     datetick;
     ylabel('Rain accum. [mm]')
-    
+
     rax(3) = subplot(n,1,3);
     plot( [SWIFT.time],[SWIFT.rainint],'kx','linewidth',2)
     datetick;
     ylabel('Rain int. [mm/hr]')
     set(gca,'Ylim',[0 inf])
-    
+
     linkaxes(rax,'x');
     set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)]);
     print('-dpng',['SWIFT' wd '_rain.png'])
-    
-end %if 
+
+end %if
 
 %% Figure 8: Wind Spectra
 % Available for v3 SWIFTs with RM Young 3-axis sonic anemometers
 
 if isfield(SWIFT,'windspectra') &&... % check field exists
-    any(~isnan([SWIFT.windustar])) && any(~isempty([SWIFT.windustar]))  % if SWIFT.windustar exists then spectra will exist 
+        any(~isnan([SWIFT.windustar])) && any(~isempty([SWIFT.windustar]))  % if SWIFT.windustar exists then spectra will exist
     figure(8); clf;
-    
+
     % Loop through timestamps
     for ai = 1:length(SWIFT)
-        
+
         if length(SWIFT(ai).windspectra.freq) == length(SWIFT(ai).windspectra.energy) % check size
 
             % Plot spectra on log-log scale
             loglog(SWIFT(ai).windspectra.freq,SWIFT(ai).windspectra.energy,...
-                   'k','linewidth',1);
+                'k','linewidth',1);
             hold on;
         else
         end %if
     end %for
-    
+
     xlabel('freq [Hz]')
     ylabel('Energy [m^2/Hz]')
     title('Wind Spectra')
@@ -604,7 +604,7 @@ if isfield(SWIFT,'windspectra') &&... % check field exists
 else
 end
 
-%% Figure 9: oxygen and fluoresence 
+%% Figure 9: oxygen and fluoresence
 
 if isfield(SWIFT,'O2conc') && any(~isnan([SWIFT.O2conc])) && any(~isempty([SWIFT.O2conc])),
     figure(9), hold off
@@ -614,7 +614,7 @@ if isfield(SWIFT,'O2conc') && any(~isnan([SWIFT.O2conc])) && any(~isempty([SWIFT
     ylabel('O_2 conc [uM/Kg]')
     print('-dpng',['SWIFT' wd '_oxygen_FDOM.png'])
 end
-    
+
 if isfield(SWIFT,'FDOM') && any(~isnan([SWIFT.FDOM])) && any(~isempty([SWIFT.FDOM])),
     figure(9), hold off
     subplot(2,1,2),
@@ -636,9 +636,9 @@ if isfield(SWIFT, 'radiometertemp1mean') && any(~isnan([SWIFT.radiometertemp1mea
         RadR2 = reshape([SWIFT.radiometerrad2],nrad,length(SWIFT));
     else
         RadR1 = NaN;
-        RadR2 = NaN;  
+        RadR2 = NaN;
     end
-    
+
     figure(10), hold off
     subplot(2,1,1)
     plot([SWIFT.time],RadT1)
@@ -672,7 +672,7 @@ if isfield(SWIFT,'driftspd') && any(~isnan([SWIFT.driftspd]))
     datetick
     ylabel('Drift dir [deg T]')
     set(gca,'YLim',[0 360])
-    print('-dpng',['SWIFT' wd '_driftspd_driftdir.png']) 
+    print('-dpng',['SWIFT' wd '_driftspd_driftdir.png'])
 
 end
 
@@ -682,15 +682,15 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
     direcs = {'hor', 'vert'}; %Iterate and make plots for horizontal and vertical accelerations
     for direc_num = 1:numel(direcs)
         direc = char(direcs(direc_num));
-     
+
         figure(12), clf; set(gcf, 'color', 'w')
-    
+
         % Find min and max values of entire dataset for common bin edges
         minacc = inf; maxacc = -inf;
         minacc_count = inf; maxacc_count = -inf;
         nbins = 32; %Consistent with existing bin number
 
-        for j = 1:numel(SWIFT)            
+        for j = 1:numel(SWIFT)
             bins = SWIFT(j).wavehistogram.([direc, 'accbins']);
             counts = SWIFT(j).wavehistogram.([direc, 'acc']);
 
@@ -701,35 +701,35 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
             maxacc_count = max(maxacc_count, max(counts));
         end
 
-        %Common bins to grid all data to 
+        %Common bins to grid all data to
         interp_bin_centers = linspace(minacc, maxacc, nbins);
-       
+
         interp_counts = nan(numel(SWIFT), nbins);  %Initialize
-    
+
         % Data for plots of skew and kurtosis over time
         skews = nan(numel(SWIFT), 1);
         kurtos = nan(numel(SWIFT), 1);
         times = nan(numel(SWIFT), 1);
-    
+
         for j = 1:numel(SWIFT)
-             
+
             bins = SWIFT(j).wavehistogram.([direc, 'accbins']);
             counts = SWIFT(j).wavehistogram.([direc, 'acc']);
             interp_counts(j, :) = interp1(bins, counts, interp_bin_centers, 'linear') ./ sum(counts); % normalized
-        
+
             %Calculate and save needeed info for skewness andd kurtosis plots
-            data = repelem(bins, counts); % Reconstruct pseudo-data 
+            data = repelem(bins, counts); % Reconstruct pseudo-data
             skews(j) = skewness(data);
-            kurtos(j) = kurtosis(data); 
-            times(j) = SWIFT(j).time;  % For vertical axis; 
-    
+            kurtos(j) = kurtosis(data);
+            times(j) = SWIFT(j).time;  % For vertical axis;
+
             %Optionally plot to see that data reconstruction worked
             % figure; clf; hold on
             % histogram(data)
             % plot(bins, counts);
-    
+
         end
-    %%
+        %%
         %Pcolor of all histograms over time - additional formatting for all subplots done at the end
         subplot(3, 1, 1); hold on; box on
         pcolor(times, interp_bin_centers, interp_counts'); shading flat
@@ -737,25 +737,25 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
         cb = colorbar;
         %clabel(cb, 'observations [counts]', 'FontSize', 12)
         cb.Label.String = 'N';
-        %clim([minacc_count maxacc_count]) 
+        %clim([minacc_count maxacc_count])
         ylim([minacc, maxacc])
-        
+
         %% Plot skew and kurtosis
-    
+
         %Smooth with 1-day moving window
         smooth_skews = movmean(skews, 1, 'SamplePoints', times);
         smooth_kurtos = movmean(kurtos, 1, 'SamplePoints', times);
-    
-        subplot(3, 1, 2); hold on; 
-        plot(times, smooth_skews,  'color', 'k', 'linewidth', 1);  
+
+        subplot(3, 1, 2); hold on;
+        plot(times, smooth_skews,  'color', 'k', 'linewidth', 1);
         ylabel('skewness', 'FontSize', 12)
         cb2 = colorbar; set(cb2,'Visible','off')
-        
-        subplot(3, 1, 3); hold on; 
-        plot(times, smooth_kurtos, 'color', 'k', 'linewidth', 1); 
+
+        subplot(3, 1, 3); hold on;
+        plot(times, smooth_kurtos, 'color', 'k', 'linewidth', 1);
         ylabel('kurtosis', 'FontSize', 12)
         cb3 = colorbar; set(cb3,'Visible','off')
-    
+
         %Plot formatting
         for splot = 1:3
             subplot(3, 1, splot)
@@ -765,16 +765,16 @@ if plot_wavehistogram && isfield(SWIFT, 'wavehistogram')
             box on; grid on
         end
     end %End of loop for acceleration direction (horizontal or vertical)
-    
-    print('-dpng',['SWIFT' wd '_acchist.png']) 
 
-end 
+    print('-dpng',['SWIFT' wd '_acchist.png'])
+
+end
 
 %% figure 13: shortwave radiation
 if isfield(SWIFT,'solarrad') && isfield(SWIFT,'airpres') && isfield(SWIFT,'airtemp') && isfield(SWIFT,'windspd') % check field exists
-    
+
     figure(13), clf
-    
+
     subplot(4,1,1)
     plot([SWIFT.time],[SWIFT.solarrad],'linewidth',2)
     datetick
@@ -795,13 +795,13 @@ if isfield(SWIFT,'solarrad') && isfield(SWIFT,'airpres') && isfield(SWIFT,'airte
     datetick
     ylabel('Wind spd [m/s]')
 
-    print('-dpng',['SWIFT' wd '_solarrad_met.png']) 
+    print('-dpng',['SWIFT' wd '_solarrad_met.png'])
 
 end
 
 %%   figure 14: microSWIFT light data
 
-if isfield(SWIFT,'lightchannels_uncalibrated') 
+if isfield(SWIFT,'lightchannels_uncalibrated')
 
     figure(14), clf
 
@@ -810,7 +810,7 @@ if isfield(SWIFT,'lightchannels_uncalibrated')
     end
 
     subplot(2,1,1)
-    plot([SWIFT.time], light), 
+    plot([SWIFT.time], light),
     datetick
     ylabel('uncalibrated light')
     legend('Clear','f1','f2','f3','f4','f5','f6','f7','f8','Dark','Near IR');
@@ -821,12 +821,15 @@ if isfield(SWIFT,'lightchannels_uncalibrated')
     ylabel('uncalibrated light')
     legend('max','min');
 
+    print('-dpng',['SWIFT' wd '_lightsensor.png'])
+
+
 end
 
 
 %%   figure 15: microSWIFT OBS data
 
-if isfield(SWIFT,'OBS_uncalibrated') 
+if isfield(SWIFT,'OBS_uncalibrated')
 
     figure(14), clf
 
@@ -838,28 +841,31 @@ if isfield(SWIFT,'OBS_uncalibrated')
 
     subplot(3,1,1)
     plot([SWIFT.time], OBS_uncal,'k.'), hold on
-    plot([SWIFT.time], mean(OBS_uncal'),'ks','linewidth',2,'markersize',14), 
+    plot([SWIFT.time], mean(OBS_uncal'),'ks','linewidth',2,'markersize',14),
     datetick
     ylabel('uncalibrated OBS')
     title(['OBS serial numer ' num2str(nanmean(OBS_sn(~isnan(OBS_sn))))])
 
     subplot(3,1,3)
     plot([SWIFT.time], OBS_ambient,'k.'), hold on
-    plot([SWIFT.time], mean(OBS_ambient'),'ks','linewidth',2,'markersize',14), 
+    plot([SWIFT.time], mean(OBS_ambient'),'ks','linewidth',2,'markersize',14),
     datetick
     ylabel('ambient OBS')
 
     if isfield(SWIFT,'OBS_calibratedNTU')
 
+        for si=1:length(SWIFT)
+            OBS_calNTU(si,:) = SWIFT(si).OBS_calibratedNTU;
+        end
 
-    for si=1:length(SWIFT)
-        OBS_calNTU(si,:) = SWIFT(si).OBS_calibratedNTU;
+        subplot(3,1,2)
+        plot([SWIFT.time], OBS_calNTU,'k.'), hold on
+        plot([SWIFT.time], mean(OBS_calNTU'),'ks','linewidth',2,'markersize',14),
+        datetick
+        ylabel('calibrated OBS [NTU]')
+
     end
 
-    subplot(3,1,2)
-    plot([SWIFT.time], OBS_calNTU,'k.'), hold on
-    plot([SWIFT.time], mean(OBS_calNTU'),'ks','linewidth',2,'markersize',14), 
-    datetick
-    ylabel('calibrated OBS [NTU]')
+    print('-dpng',['SWIFT' wd '_OBSsensor.png'])
 
 end
