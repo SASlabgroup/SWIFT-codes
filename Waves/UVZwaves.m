@@ -42,7 +42,7 @@ maxf = .5;       % frequency cutoff for telemetry Hz
 %% begin processing, if data sufficient
 pts = length(z);       % record length in data points
 
-if pts >= 2*wsecs & fs>=.5,  % minimum length and quality for processing
+if pts >= 2.5*wsecs & fs>=.5,  % minimum length and quality for processing
 
     
 %% high-pass RC filter, detrend first
@@ -204,7 +204,7 @@ spread2 = sqrt( abs( 0.5 - 0.5 .* ( a2.*cos(2.*dir2) + b2.*cos(2.*dir2) )  ));
 %% bulk parameters
 E = Ezz;
 
-fwaves = f>0.050 & f<1; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
+fwaves = f>0.050 & f<0.5; % frequency cutoff for wave stats, 0.4 is specific to SWIFT hull
 
 %E( ~fwaves ) = 0;
 
