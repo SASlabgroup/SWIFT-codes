@@ -288,7 +288,9 @@ end
 if ~micro
     disp('Create information structure ''sinfo''')
     sinfo.ID = SWIFT(1).ID;
-    sinfo.CTdepth = SWIFT(1).CTdepth;
+    if isfield(SWIFT,'CTdepth')
+        sinfo.CTdepth = SWIFT(1).CTdepth;
+    end
     if isfield(SWIFT,'metheight')
     sinfo.metheight = SWIFT(1).metheight;
     end
