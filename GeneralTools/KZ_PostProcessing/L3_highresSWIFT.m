@@ -2,13 +2,15 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt)
 
 % Calculates higher res burst-averages using L1 SWIFT product. 
 % K. Zeiden Aug 2025
-
+%
+% [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt)
+%
 %% Develop first with SWIFT26 on June 26, Waldron Island Main Experiment
-
+%
 % missiondir = 'S:\SanJuanIslands\WaldronIsland_CoastalFronts2022\Main_Jun2022\SWIFTs\L0\SWIFT26_02Jul2022';
 % missiondir = cd;
 % burstdt = floor(8.5*60/10)/(60*60*24); % datenum units (days)
-
+%
 %%
 
 if ispc

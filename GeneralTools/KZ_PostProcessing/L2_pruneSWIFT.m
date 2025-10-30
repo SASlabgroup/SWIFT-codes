@@ -3,10 +3,12 @@ function [SWIFT,sinfo] = L2_pruneSWIFT(missiondir,plotflag,minwaveheight,minsali
 % Find out-of-water bursts and prune them from the SWIFT structure using
 %   minimum wave height, minimum salinity and maximum drift speed
 %   thresholds. 
-
+%
+%   [SWIFT,sinfo] = L2_pruneSWIFT(missiondir,plotflag,minwaveheight,minsalinity,maxdriftspd)
+%
 % Note: Does not pull from any raw burst files, just what is in the L1 SWIFT
 % structure.
-
+%
 % K. Zeiden 10/10/2024, based on SWIFT_QC.m by J. Thomson.
 
 if ispc

@@ -5,14 +5,17 @@ function [SWIFT,sinfo] = L1_compileSWIFT(missiondir,SBDfold,burstinterval,plotsw
 %   subfolder specified by 'SBDfold' of any given SWIFT mission folder.
 %   No QC is performed. The intention is to create a pure L1 product which
 %   has all data recorded. Basic QC has been allocated to 'L2_pruneSWIFT.m'.
-
+%
+%   [SWIFT,sinfo] = L1_compileSWIFT(missiondir,SBDfold,burstinterval,plotswift)
+%
+%
 % Time: SWIFT - Take the time from the SBD filename, even when there is time from 
-    %     the airmar (because of parsing errors). For telemetry, this 
-    %     is the telemtry time (at the end of the burst). For offloaded data,
-    %     this the concat file name (from the start of the burst).
-    %   microSWIFT - Use the time embedded within the payload 50 or 51 or 52 of the
-    %     SBD file, which is the time at the end of the burst of raw data.
-
+%     the airmar (because of parsing errors). For telemetry, this 
+%     is the telemtry time (at the end of the burst). For offloaded data,
+%     this the concat file name (from the start of the burst).
+%   microSWIFT - Use the time embedded within the payload 50 or 51 or 52 of the
+%     SBD file, which is the time at the end of the burst of raw data.
+%
 % NOTE: L1 contains no QC, just pulls onboard data and creates initial
 %       SWIFT structure.
 
