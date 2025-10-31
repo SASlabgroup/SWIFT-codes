@@ -1,9 +1,11 @@
-function [ lat lon sog cog depth time altitude ] = readNMEA(filename);
+function [ lat lon sog cog depth time altitude ] = readNMEA(filename, varargin)
 % function to read NMEA data from SWIFTs and other platforms
 % return variables and automatically save mat file
 %
-% [ lat lon sog cog depth time altitude] = readNMEA(filename);
+%   [ lat lon sog cog depth time altitude] = readNMEA(filename, varargin);
 %
+%       where varargin is an option to specify spaces to skip at the
+%       beginning of each line (must be positive integer)
 %
 % J. Thomson,  4/2012
 %              9/2012 (fix wind dir north wrap bug, use u,v components)
@@ -11,15 +13,22 @@ function [ lat lon sog cog depth time altitude ] = readNMEA(filename);
 %               Jun 2015 converted to a function
 %               7/2020 adapted to generic use, without wind data (use PB200 for that)
 %               9/2020  include depth (DBT) sentence
-%               1/2021  read time from GGA when ZDA not present, but note that it is only time (not date)
-%               8/2021 include altitude from GGA               
+%               1/2021  read time from GGA or RMC when ZDA not present, but note that it is only time (not date)
+%               8/2021 include altitude from GGA 
+%               10/2025 enforce ZDA timestamp if present, and choose position source based on availability
+%
 %   
 % TO DO: still need to acount for S or E hemispheres
 
 %% params
 
 bootlines = 0;
-preferedsentence = 'RMC'; % GGA or RMC or GLL
+
+if length(varargin{:})==1
+    skipspaces = [1:varargin{1}];
+else
+    skipspaces = empty;
+end
 
 
 %% initialize
@@ -39,12 +48,14 @@ zdalength = 0;
 dbtlength = 0;
 rmclength = 0;
 
-fid = fopen([filename]);
+fid = fopen( filename );
 while 1
     tline = fgetl(fid);
     linenum = linenum + 1;
     if length(tline)>6 & linenum > bootlines,
-        
+       
+        tline(skipspaces) = [];
+
         %% VTG
         if tline(1:6) == '$GPVTG' & length(tline) > 25,
             veldata = textscan(tline,'%s%n%s%n%s%n%s%n%s%s','Delimiter',',');
@@ -157,15 +168,30 @@ while 1
 end
 fclose(fid);
 
+%% debug output 
+% vtglength
+% ggalength
+% glllength
+% zdalength
+% dbtlength
+% rmclength
 
+%% choose which positions to use based on what data is available
 
-%% choose which positions to use
+[m mi] = max([ggalength, glllength, rmclength ]);
+
+if mi == 1
+    preferedsentence = 'GGA' % GGA or RMC or GLL
+elseif mi == 2
+    preferedsentence = 'GLL' % GGA or RMC or GLL
+elseif mi == 3
+    preferedsentence = 'RMC' % GGA or RMC or GLL
+end
+
 
 if preferedsentence == 'RMC' & rmclength>0,
     lat = rmclat;
     lon = rmclon;
-    time = rmctime;
-    timelinenum = rmclinenum;
     positionlinenumber = rmclinenum;
     sog = rmcsog;
     cog = rmccog;
@@ -173,10 +199,8 @@ if preferedsentence == 'RMC' & rmclength>0,
 elseif preferedsentence == 'GGA' & ggalength>0,
     lat = ggalat;
     lon = ggalon;
-    time = ggatime;
-    timelinenum = ggalinenum;
     positionlinenumber = ggalinenum;
-    if vtglength>0,
+    if vtglength>0
         sog = vtgsog;
         cog = vtgcog;
     end
@@ -190,14 +214,23 @@ elseif preferedsentence == 'GLL' & glllength>0,
     end
 end
 
-%% interpolate to full timestamps (if avail from RMC)
-if preferedsentence ~= 'RMC' & rmclength>0,
-    newtime = interp1(rmclinenum,rmctime,timelinenum,'linear','extrap');
-    time = newtime;
+%% choose time source, with ZDA preferred
+
+if zdalength > 0.01 * linenum % if ZDA are at least 1% of the data
+    disp('Using ZDA sentences for time and date')
+elseif preferedsentence == 'RMC'
+    time = rmctime;
+    timelinenum = rmclinenum;
+    disp('Using RMC sentences for time (no date available)')
+elseif preferedsentence == 'GGA'
+    time = ggatime;
+    timelinenum = ggalinenum;
+    disp('Using GGA sentences for time (no date available)')
 end
 
-%% interpolate to depth readings
-if ~isempty(depth) & ~isempty(time),
+
+%% interpolate time and position data onto the depth readings
+if ~isempty(depth) & ~isempty(time)
     
     depthtime = interp1( timelinenum, time, dbtlinenum);
     depthlat = interp1( positionlinenumber, lat, dbtlinenum);
@@ -208,3 +241,39 @@ if ~isempty(depth) & ~isempty(time),
     lon = depthlon;
     
 end
+
+%% Export to CSV
+% Determine the maximum length to create properly sized arrays
+maxlen = max([length(lat), length(lon), length(sog), length(cog), length(depth), length(time), length(altitude)]);
+
+% Pad arrays to same length with NaN
+lat_padded = [lat(:); nan(maxlen - length(lat), 1)];
+lon_padded = [lon(:); nan(maxlen - length(lon), 1)];
+sog_padded = [sog(:); nan(maxlen - length(sog), 1)];
+cog_padded = [cog(:); nan(maxlen - length(cog), 1)];
+depth_padded = [depth(:); nan(maxlen - length(depth), 1)];
+time_padded = [time(:); nan(maxlen - length(time), 1)];
+altitude_padded = [altitude(:); nan(maxlen - length(altitude), 1)];
+
+% Convert time to datestring
+timestring_padded = cell(maxlen, 1);
+for i = 1:length(time_padded)
+    if ~isnan(time_padded(i))
+        timestring_padded{i} = datestr(time_padded(i), 'yyyymmddTHH:MM:SS');
+    else
+        timestring_padded{i} = '';
+    end
+end
+
+% Create table
+T = table(timestring_padded, lat_padded, lon_padded, sog_padded, cog_padded, depth_padded, altitude_padded, ...
+    'VariableNames', {'DateTime', 'Latitude_deg', 'Longitude_deg', 'SOG_ms', 'COG_deg', 'Depth_m', 'Altitude_m'});
+
+% Generate output filename
+[filepath, name, ext] = fileparts(filename);
+csvfilename = fullfile(filepath, [name '_NMEA.csv']);
+
+% Write to CSV
+writetable(T, csvfilename);
+
+fprintf('Data read into workspace and exported to: %s\n', csvfilename);

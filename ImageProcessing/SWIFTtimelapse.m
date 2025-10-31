@@ -47,7 +47,7 @@ for di = 1:length(daydirs)
                     else % slow version, with timestamps
                         %image(pic)
                         image((permute(pic,[2 1 3]))) % rotated
-                        %image(flipud(permute(pic,[2 1 3]))) % rotated and flippedfor v3s
+                        image(flipud(permute(pic,[2 1 3]))) % rotated and flippedfor v3s
                         axis equal, axis tight
                         text(10,10,[filelist(fi).name],'interpreter','none','fontsize',14,'fontweight','demi','color','g')
                         currFrame = getframe(gcf);
