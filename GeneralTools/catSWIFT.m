@@ -207,8 +207,8 @@ end
 % swift.driftspd(2:nt) = sqrt(u.^2 + v.^2); % m/s
 swift.driftspd = [SWIFT.driftspd];
 swift.driftdir = [SWIFT.driftdirT];
-swift.driftu = cosd(swift.driftdir).*swift.driftspd;
-swift.driftv = sind(swift.driftdir).*swift.driftspd;
+swift.driftu = sind(swift.driftdir).*swift.driftspd;
+swift.driftv = cosd(swift.driftdir).*swift.driftspd;
 
 % Relative Velocity
 if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)

@@ -219,21 +219,22 @@ if length(SWIFT) > 3
     time = [SWIFT.time];
     lat = [SWIFT.lat];
     lon = [SWIFT.lon];
-    dt = diff(time);
-    dlondt = diff(lon)./dt; % deg/days
+    dlondt = gradient(lon,time);  % deg/days
     u = deg2km(dlondt,6371*cosd(mean(lat,'omitnan'))) .* 1000 ./ ( 24*3600 ); % m/s
-    dlatdt = diff(lat)./dt; % deg/days
+    dlatdt = gradient(lat,time);  % deg/days
     v = deg2km(dlatdt) .* 1000 ./ ( 24*3600 ); % m/s
     u(isinf(u)) = NaN;
     v(isinf(v)) = NaN;
     speed = sqrt(u.^2 + v.^2); % m/s
-    direction = -180 ./ 3.14 .* atan2d(v,u); % cartesian direction [deg]
-    direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
-    direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90 -> 0
+    direction = atan2d(u,v); 
+    direction( direction<0) = direction( direction<0 ) + 360;
+    %direction = atan2d(v,u); % cartesian direction [deg]
+    %direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
+    %direction( direction<0) = direction( direction<0 ) + 360; % make quadrant II 270->360 instead of -90 -> 0
 
     for si = 1:length(SWIFT)
         % Do not include drift speeds associated with large time gaps
-        if si == 1 || dt(si-1) > 2*burstinterval/(60*24)
+        if si == 1 %|| gradient(time) > 4*burstinterval/(60*24)
             SWIFT(si).driftspd = NaN;
             SWIFT(si).driftdirT = NaN;
         else

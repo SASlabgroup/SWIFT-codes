@@ -288,9 +288,11 @@ if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
     dxdt(isinf(dxdt)) = NaN;
     dydt(isinf(dydt)) = NaN;
     speed = sqrt(dxdt.^2 + dydt.^2); % m/s
-    direction = -180 ./ 3.14 .* atan2(dydt,dxdt); % cartesian direction [deg]
-    direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
-    direction( direction<0) = direction( direction<0 ) + 360; %make quadrant II 270->360 instead of -90->0
+    direction = atan2d(dxdt,dydt); 
+    direction( direction<0) = direction( direction<0 ) + 360
+    %direction = -atan2(dydt,dxdt); % cartesian direction [deg]
+    %direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
+    %direction( direction<0) = direction( direction<0 ) + 360; %make quadrant II 270->360 instead of -90->0
 
     for si = 1:length(SWIFT),
         if si == 1 | si == length(SWIFT),
@@ -341,7 +343,7 @@ if length([SWIFT.time]) > 1
     end
 end
 
-% quality control with wind speed limit
+%% quality control with wind speed limit
 if length([SWIFT.time]) > 1
     if isfield(SWIFT(1),'windspd')
         for si = 1:length(SWIFT),
@@ -354,8 +356,7 @@ if length([SWIFT.time]) > 1
     end
 end
 
-%% sort the microSWIFT onboard processing, using the battery voltage as a flag 
-% only applies to v1 microSWIFTs from 2022
+%% separate the microSWIFT v1 onboard processing, using the battery voltage as a flag 
 
 IMU = find(battery==0);
 GPS = find(battery==1);
