@@ -64,7 +64,7 @@ title('Battery Level')
 axes(h(5))
 ax = gca;ax.Position = ax.Position.*[1 1 1 2.1]+[-0.01 0.025 0 0];
 pcolor(swift.time,-swift.depth,swift.relu);shading flat
-c = slimcolorbar;
+c = colorbar;
 c.Label.String = 'U_r [ms^{-1}]';
 cmocean('balance')
 clim([-0.25 0.25])
@@ -74,7 +74,7 @@ title('Zonal Velocity (Relative)')
 axes(h(11))
 ax = gca;ax.Position = ax.Position.*[1 1 1 2.1]+[-0.01 0.03 0 0];
 pcolor(swift.time,-swift.depth,swift.relv);shading flat
-c = slimcolorbar;
+c = colorbar;
 c.Label.String = 'V_r [ms^{-1}]';
 cmocean('balance')
 clim([-0.25 0.25])
@@ -92,7 +92,7 @@ pcolor(swift.time,-swift.surfz,log10(swift.surftke));shading flat
     end
 end
 colormap(gca,'jet')
-c = slimcolorbar;
+c = colorbar;
 c.Label.String = '\epsilon [m^2s^{-3}]';
 c.Location = 'NorthOutside';
 ylabel('Z [m]')
@@ -106,7 +106,7 @@ scatter(swift.lon,swift.lat,[],swift.time,'filled');
 set(gca,'YAxisLocation','right')
 hold on
 quiver(swift.lon,swift.lat,swift.driftu./lonscale,swift.driftv,'k')
-c = slimcolorbar;
+c = colorbar;
 c.Location = 'South';
 c.TickLabels = datestr(c.Ticks,'mmm-dd');
 ylabel('Lat [^{\circ}N]')
@@ -132,11 +132,11 @@ for it = 1:length(swift.time)
         plot(swift.wavefreq,swift.wavepower(:,it),'k','LineWidth',2)
     end
 end
-ylim(10.^([-5 0]))
+ylim(10.^([-5 2]))
 xlim([0.1 1])
 set(gca,'YScale','log','XScale','log')
 colormap(gca,cwind)
-c = slimcolorbar;
+c = colorbar;
 c.Label.String = 'U [ms^{-1}]';
 c.Ticks = 0:0.25:1;
 c.TickLabels = num2str((c.Ticks*16 + 2)');
@@ -150,7 +150,7 @@ ax = gca;ax.Position = ax.Position.*[1 1 1 2];
 pcolor(swift.time,swift.wavefreq,log10(swift.wavepower))
 shading flat
 set(gca,'YScale','log')
-c = slimcolorbar;
+c = colorbar;
 c.Label.String = 'P [m^2Hz^{-1}]';
 set(gca,'YDir','Reverse')
 clim([-5 0])
@@ -175,6 +175,6 @@ datetick('x','KeepLimits')
 xlabel('Time')
 
 set(h,'FontSize',12)
-rmemptysub
+%rmemptysub  % THIS BREAKS FOR JIM
 
 end

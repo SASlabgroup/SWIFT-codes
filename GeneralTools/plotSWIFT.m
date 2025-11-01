@@ -248,11 +248,19 @@ if isfield(SWIFT,'wavespectra')
             thiscolor = [0 0 0];
         end %if
         % Plot spectra on log-log scale
-        if length(SWIFT(ai).wavespectra.freq) == length(SWIFT(ai).wavespectra.energy)
+        if length(SWIFT(ai).wavespectra.freq) >= 42 && length(SWIFT(ai).wavespectra.energy) >= 42
             semilogy(SWIFT(ai).wavespectra.freq,SWIFT(ai).wavespectra.energy,'linewidth',2,'color',thiscolor);
             hold on
-            E(ai,:) = SWIFT(ai).wavespectra.energy;
-            f(ai,:) = SWIFT(ai).wavespectra.freq;
+            if ai == 1 
+               E(ai,:) = SWIFT(ai).wavespectra.energy;
+               f(ai,:) = SWIFT(ai).wavespectra.freq;
+            elseif ai>1 && length(SWIFT(ai).wavespectra.energy) == size(E,2) 
+               E(ai,:) = SWIFT(ai).wavespectra.energy;
+               f(ai,:) = SWIFT(ai).wavespectra.freq;
+            else
+               E(ai,:) = NaN;
+               f(ai,:) = NaN;
+            end
             t(ai) = SWIFT(ai).time;
         else
         end %if

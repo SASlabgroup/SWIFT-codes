@@ -160,7 +160,7 @@ for iburst = 1:length(bfiles)
         % Plotdata
         if plotburst
             figure('color','w')
-            fullscreen
+            %fullscreen % THIS BREAKS FOR JIM
             subplot(5,1,1)
             plot(windspd,'-kx')
             hold on
@@ -194,8 +194,8 @@ for iburst = 1:length(bfiles)
 
         % Mean + Std Dev values
         windspdstddev = std(windspddsp,[],'omitnan'); %#ok<*NANSTD> % std dev of wind spd (m/s) 
-        windspdskew = skewness(windspddsp,[],'omitnan');
-        windspdkurt = kurtosis(windspddsp,[],'omitnan');
+        %windspdskew = skewness(windspddsp,[],'omitnan'); % THIS BREAKS FOR JIM
+        %windspdkurt = kurtosis(windspddsp,[],'omitnan'); % THIS BREAKS FOR JIM
         windspd = nanmean(windspddsp); %#ok<*NANMEAN> % mean wind speed (m/s)
         % If wind is NaN, use relative wind speed if not NaN
         if isnan(windspd) && ~isnan(nanmean(windspdRdsp))
@@ -224,8 +224,8 @@ for iburst = 1:length(bfiles)
         % Save in SWIFT structure
         SWIFT(sindex).windspd = windspd;
         SWIFT(sindex).windspdstddev = windspdstddev; 
-        SWIFT(sindex).windspdskew = windspdskew;
-        SWIFT(sindex).windspdkurt = windspdkurt;
+%        SWIFT(sindex).windspdskew = windspdskew;
+%        SWIFT(sindex).windspdkurt = windspdkurt;
         SWIFT(sindex).winddirT = winddirT;
         SWIFT(sindex).winddirTstddev =  winddirTstddev;
         SWIFT(sindex).winddirR = winddirR; 
