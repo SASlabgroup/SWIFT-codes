@@ -289,7 +289,7 @@ if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
     dydt(isinf(dydt)) = NaN;
     speed = sqrt(dxdt.^2 + dydt.^2); % m/s
     direction = atan2d(dxdt,dydt); 
-    direction( direction<0) = direction( direction<0 ) + 360
+    direction( direction<0) = direction( direction<0 ) + 360;
     %direction = -atan2(dydt,dxdt); % cartesian direction [deg]
     %direction = direction + 90;  % rotate from eastward = 0 to northward  = 0
     %direction( direction<0) = direction( direction<0 ) + 360; %make quadrant II 270->360 instead of -90->0
