@@ -155,7 +155,7 @@ if rpIMU
         calctype = 'GPS';
         filtertype = 'RC';
         saveraw = false; % this is the raw wave displacements, not the raw motion data
-        interpf = false;
+        interpf = true; % this interpolates spectra to original 42 bands.  It should be true unless you really want high freqs
         [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw,interpf);
     else 
         disp('No IMU data...')
@@ -169,7 +169,7 @@ if rpSBG
         disp('Reprocessing SBG data...')
         saveraw = false;
         useGPS = false;
-        interpf = false;
+        interpf = true; % this interpolates spectra to original 42 bands.  It should be true unless you really want high freqs
         tstart = 90;
         [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,interpf,tstart);
     else
