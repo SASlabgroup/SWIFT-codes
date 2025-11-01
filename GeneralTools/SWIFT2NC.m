@@ -93,7 +93,22 @@ if isfield(SWIFT,'wavespectra') %&& min(SWIFT(1).wavespectra.freq)>0
             end
         end
     end
-
+    % Check if anything deviates from this size. Indiciative of a
+    % interpolation/missing data issue in reprocess_IMU/reprocess_GPS
+    ref_size = size(SWIFT(ref_idx).wavespectra.freq);
+    for k=1:length(SWIFT)
+        if isfield(SWIFT(k), 'wavespectra') && ~isempty(SWIFT(k).wavespectra)
+            % Check if freq field exists and is not all NaN
+            if isfield(SWIFT(k).wavespectra, 'freq')
+                current_size = size(SWIFT(k).wavespectra.freq);
+                if ~isequal(ref_size, current_size)
+                    warning('Wavespectra size mismatch at index %d: expected [%s], got [%s].\nCheck reprocess_IMU, reprocess_GPS for frequency interpolation', ...
+                        k, num2str(ref_size), num2str(current_size));
+                    break;
+                end
+            end
+        end
+    end
     f_dim = netcdf.defDim(ncid,'freq', length(SWIFT(ref_idx).wavespectra.freq));
     spec_names=fieldnames(SWIFT(ref_idx).wavespectra);
 end
@@ -337,7 +352,7 @@ for i=1:length(names)
             if strcmp(spec_names{j},'freq')
                 netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), S.wavespectra(ref_idx).freq);
             else
-                % Find the first element with non-NaN data to use as reference size
+                % First element with non-NaN data to get the reference size
                 ref_size = size(S.wavespectra(ref_idx).(spec_names{j}));
                 
                 % Pre-allocate cell array to store each field
@@ -357,7 +372,8 @@ for i=1:length(names)
                     end
                 end
                 
-                % Concatenate horizontally
+                % Concatenate verticaly and then transpose. [] was not
+                % working
                 netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), vertcat(temp_data{:}).');
             end
         end
