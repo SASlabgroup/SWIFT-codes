@@ -265,14 +265,14 @@ while 1
         Pic = fread(fid,size);
         picfid = fopen([fname '.jpg'],'wb');
         count = fwrite(picfid,Pic);
-        image = imread([fname '.jpg']);
-        red = rot90( squeeze(image(:,:,1)), 1);
-        green = rot90( squeeze(image(:,:,2)), 1);
-        blue = rot90( squeeze(image(:,:,3)), 1);
-        rotatedimage(:,:,1) = red;
-        rotatedimage(:,:,2) = green;
-        rotatedimage(:,:,3) = blue;
-        imwrite(rotatedimage, [fname '.jpg'],'JPEG')
+%         image = imread([fname '.jpg']);
+%         red = rot90( squeeze(image(:,:,1)), 1);
+%         green = rot90( squeeze(image(:,:,2)), 1);
+%         blue = rot90( squeeze(image(:,:,3)), 1);
+%         rotatedimage(:,:,1) = red;
+%         rotatedimage(:,:,2) = green;
+%         rotatedimage(:,:,3) = blue;
+%         imwrite(rotatedimage, [fname '.jpg'],'JPEG')
         
         
     elseif type == 8 & size > 0, % Vaisala 536 met station

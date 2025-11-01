@@ -5,6 +5,8 @@ function [ AHRS GPS ] = readSWIFTv3_IMU( filename );
 % output is AHRS and GPS structures
 % automatically saves output as .mat file
 %
+%   [ AHRS GPS ] = readSWIFTv3_IMU( filename );
+%
 %   binary Packet structure described in:
 %   3DM-GX3-35-Data-Communications-Protocol.pdf
 % Binary Format Description
