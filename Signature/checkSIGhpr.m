@@ -58,7 +58,7 @@ HPR.stddt = NaN(1,nburst);
 
 if plothpr
     figure('color','w');
-    fullscreen(2)
+    %fullscreen(2)  % THIS BREAKS FOR JIM.  WHERE IS "fullscreen" CODE?
 end
 
 for iburst = 1:nburst
@@ -144,7 +144,7 @@ if plothpr
     ylim([-180 180])
     
     subplot(5,1,3);
-    plot(times,roll,'-mx','LineWidth',2)
+    plot(times,roll,'mx','LineWidth',2)
     hold on
     plot(xlim,HPR.meanroll(iburst)*[1 1],'--k','LineWidth',2)
     legend('Roll',['Mean = ' num2str(round(HPR.meanroll(iburst),1)) '^{\circ}'])
