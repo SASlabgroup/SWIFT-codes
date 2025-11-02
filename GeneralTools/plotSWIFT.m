@@ -229,7 +229,7 @@ end
 
 %% Figure 3: Wave Spectra Plot
 % Available for all SWIFTs, using either Microstrain or SBG inertial motion units with GPS
-t=[];
+t=[]; wcounter = 0;
 if isfield(SWIFT,'wavespectra')
     figure(3), clf;
 
@@ -251,10 +251,11 @@ if isfield(SWIFT,'wavespectra')
         if length(SWIFT(ai).wavespectra.freq) >= 42 && length(SWIFT(ai).wavespectra.energy) >= 42
             semilogy(SWIFT(ai).wavespectra.freq,SWIFT(ai).wavespectra.energy,'linewidth',2,'color',thiscolor);
             hold on
-            if ai == 1 
+            if wcounter == 0
                E(ai,:) = SWIFT(ai).wavespectra.energy;
                f(ai,:) = SWIFT(ai).wavespectra.freq;
-            elseif ai>1 && length(SWIFT(ai).wavespectra.energy) == size(E,2) 
+               wcounter = 1;
+            elseif wcounter == 1 && length(SWIFT(ai).wavespectra.energy) == size(E,2) 
                E(ai,:) = SWIFT(ai).wavespectra.energy;
                f(ai,:) = SWIFT(ai).wavespectra.freq;
             else

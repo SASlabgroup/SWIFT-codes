@@ -15,8 +15,8 @@ for pi = (headerlines+1):(length(positions)-1)
     pstring = positions{pi};
     commas = find(pstring == ',');
     time(pi-headerlines) = datenum(pstring(1:22));
-    lat(pi-headerlines) = str2num(pstring( (commas(1)+1):(commas(2)-1)  ));
-    lon(pi-headerlines) = str2num(pstring( (commas(2)+1):(commas(3)-1)  ));
+    lat(pi-headerlines) = str2num(pstring( (commas(1)+1):(commas(2)-1)  ))
+    lon(pi-headerlines) = str2num(pstring( (commas(2)+1):(commas(3)-1)  ))
 
 end
 
