@@ -116,7 +116,7 @@ while 1
     
     % disp('-----------------')
     type = fread(fid,1,'uint8');
-    port = fread(fid,1,'uint8');
+    port = fread(fid,1,'uint8');  % need to bit shift and mask to read as micro firmware (3 + 5)
     size = fread(fid,1,'uint16');
     
     if type == 0 & size > 0, % uplooking high-resolution aquadopp (AQH)
@@ -454,7 +454,7 @@ while 1
         
     elseif type == 52 & size >= 327, % microSWIFT, size should be 327 bytes for v2.1, or 331 bytes for v2.2
         disp('reading microSWIFT NEDwaves (payload 52)')
-        firmware = port; % microSWIFT specific
+        firmwareasunit8 = port % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
@@ -478,7 +478,7 @@ while 1
         epochTime                = fread(fid, 1,'float'); % epoch time
         asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
         SWIFT.time               = datenum(asDatetime); % time at end of burst
-        errorcodes = fread(fid,inf,'uchar');  % error codes at end of v2.2 micro messages
+        errorcodes = fread(fid,inf,'uchar')  % error codes at end of v2.2 micro messages
         % also get the time from the filename and see how they compare
         %year = fname(26:29);
         %month = fname(23:25);

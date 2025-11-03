@@ -51,7 +51,7 @@ title(['Last known ' datestr(time(end)) ' PDT: ' [num2str(lat(end)) ',' num2str(
 
 %% prediction
 
-targettime = datenum(2025,10,26,20,00,00);
+targettime = datenum(2025,11,2,21,00,00);
 datestr(targettime) 
 
 targetlon = dlondt(end) * (targettime - time(end)) + lon(end)
