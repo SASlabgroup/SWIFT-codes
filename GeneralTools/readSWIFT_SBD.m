@@ -478,7 +478,40 @@ while 1
         epochTime                = fread(fid, 1,'float'); % epoch time
         asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
         SWIFT.time               = datenum(asDatetime); % time at end of burst
-        errorcodes = fread(fid,inf,'uchar')  % error codes at end of v2.2 micro messages
+        errorcodes = fread(fid, inf, '*ubit1', 'ieee-le'); % error codes at end of v2.2 micro messages
+        errorflag = find(errorcodes==1) - 1; % indexing starts at zero
+        if errorflag==0, disp('!!!!!GNSS initialization failed')
+        elseif errorflag==1, disp('!!!!GNSS failed to apply configuration')
+        elseif errorflag==2, disp('!!!!!GNSS timed out trying to get a fix')
+        elseif errorflag==3, disp('!!!!!GNSS received too many incomplete messages')
+        elseif errorflag==4, disp('!!!!!GNSS sample window timed out')
+        elseif errorflag==5, disp('!!!!!GNSS frame sync failed')
+        elseif errorflag==6, disp('!!!!!CT sensor initialization failed')
+        elseif errorflag==7, disp('!!!!!CT sensor sampling error')
+        elseif errorflag==8, disp('!!!!!CT sample window timed out')
+        elseif errorflag==9, disp('!!!!!Temperature sensor initialization failed')
+        elseif errorflag==10, disp('!!!!!Temperature sensor sampling error')
+        elseif errorflag==11, disp('!!!!!Temperature sample window timed out')
+        elseif errorflag==12, disp('!!!!!Light sensor initialization failed')
+        elseif errorflag==13, disp('!!!!!Light sensor sampling error')
+        elseif errorflag==14, disp('!!!!!Light sensor sample window timed out')
+        elseif errorflag==15, disp('!!!!!Turbidity sensor initialization failed')
+        elseif errorflag==16, disp('!!!!!Turbidity sensor sampling error')
+        elseif errorflag==17, disp('!!!!!Turbidity sampling window timed out')
+        elseif errorflag==18, disp('!!!!!Iridium modem initialization failed')
+        elseif errorflag==19, disp('!!!!!Iridium UART comms error')
+        elseif errorflag==20, disp('!!!!!File system error')
+        elseif errorflag==21, disp('!!!!!RTC error')
+        elseif errorflag==22, disp('!!!!!NED Waves memory pool failed to initialize')
+        elseif errorflag==23, disp('!!!!!I2C bus comms error')
+        elseif errorflag==24, disp('!!!!!NED Waves memory overflow')
+        elseif errorflag==25, disp('!!!!!Floating point exception occured')
+        elseif errorflag==26 | 27 | 28, disp('!!!!!error not defined')
+        elseif errorflag==29, disp('!!!!!Watchdog reset detected')
+        elseif errorflag==20, disp('!!!!!Software reset detected')
+        elseif errorflag==31, disp('!!!!!Memory corruption detected')
+        else
+        end 
         % also get the time from the filename and see how they compare
         %year = fname(26:29);
         %month = fname(23:25);
@@ -571,13 +604,13 @@ fclose(fid);
 
 %% apply backup positions from Airmar PB200, if needed
 
-if ~isfield(SWIFT,'lat'), % if no IMU, use this one
-    disp('No primary GPS position.  Attempting to use Airmar GPS position')
+if ~isfield(SWIFT,'lat') % if no IMU, use this one
+    disp('No primary GPS position.')
     SWIFT.lat = PBlat;
     SWIFT.lon = PBlon;
 end
-if isfield(SWIFT,'lat') & ( SWIFT(1).lat == 0 | isempty(SWIFT(1).lat) ), % if IMU did not give position, use this one
-    disp('No primary GPS position.  Attempting to use Airmar GPS position')
+if isfield(SWIFT,'lat') & ( SWIFT(1).lat == 0 | isempty(SWIFT(1).lat) ) % if IMU did not give position, use this one
+    disp('No primary GPS position. ')
     SWIFT.lat = PBlat;
     SWIFT.lon = PBlon;
 else
