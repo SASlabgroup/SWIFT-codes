@@ -64,30 +64,32 @@ for iburst = 1:length(bfiles)
     if sum(iout)/length(Salinity)>0.1
         outofwater(sindex) = true;
     end
-    cleanSalinity = Salinity;
-    cleanTemperature = Temperature;
-    cleanSalinity(iout) = NaN;
-    cleanTemperature(iout) = NaN;
+    Salclean = Salinity;
+    Tempclean = Temperature;
+    Salclean(iout) = NaN;
+    Tempclean(iout) = NaN;
 
     % Salinity spikes/dropouts
-    ispikesal = isoutlier(cleanSalinity,'movmedian',30);
+    ispikesal = isoutlier(Salclean,'movmedian',30);
     if sum(~ispikesal) > 3
-    cleanSalinity = interp1(find(~ispikesal),cleanSalinity(~ispikesal),1:length(cleanSalinity));
+    Salclean = interp1(find(~ispikesal),Salclean(~ispikesal),1:length(Salclean));
     end
 
      % Temperature spikes
-    ispiketemp = isoutlier(cleanTemperature,'movmedian',30);
+    ispiketemp = isoutlier(Tempclean,'movmedian',30);
     if sum(~ispiketemp) > 3
-    cleanTemperature = interp1(find(~ispiketemp),cleanTemperature(~ispiketemp),1:length(cleanTemperature));
+    Tempclean = interp1(find(~ispiketemp),Tempclean(~ispiketemp),1:length(Tempclean));
     end
 
     % Mean values
-    meanwatertemp = mean(Temperature,'omitnan');
-    meanwatertempclean = mean(cleanTemperature,'omitnan');
-    watertempstddev = std(cleanTemperature,[],'omitnan');
-    meansalinity = mean(Salinity,'omitnan');
-    meansalinityclean = mean(cleanSalinity,'omitnan');
-    salinitystddev = std(cleanSalinity,[],'omitnan');
+    meantemp = mean(Temperature,'omitnan');
+    meantempclean = mean(Tempclean,'omitnan');
+    tempstddev = std(Temperature,[],'omitnan');
+    tempcleanstddev = std(Tempclean,[],'omitnan');
+    meansal = mean(Salinity,'omitnan');
+    meansalclean = mean(Salclean,'omitnan');
+    salstddev = std(Salinity,[],'omitnan');
+    salcleanstddev = std(Salclean,[],'omitnan');
 
     % Unrealistic Values
     % if meanwatertempclean > 40
@@ -98,34 +100,61 @@ for iburst = 1:length(bfiles)
     % end
 
     % Replace Values in SWIFT structure
-    SWIFT(sindex).watertemp = meanwatertempclean;
-    SWIFT(sindex).watertempstddev = watertempstddev;
-    SWIFT(sindex).salinitystddev = salinitystddev;
-    SWIFT(sindex).salinity = meansalinityclean;
+    SWIFT(sindex).watertemp = meantempclean;
+    SWIFT(sindex).watertempstddev = tempcleanstddev;
+    SWIFT(sindex).salinity = meansalclean;
+    SWIFT(sindex).salinitystddev = salcleanstddev;
     SWIFTreplaced(sindex) = true;
 
     % Plotdata
     if plotburst
         figure('color','w')
+<<<<<<< Updated upstream
         %fullscreen
         subplot(2,1,1)
         plot(Temperature,'-kx')
+=======
+        fullscreen
+        subplot(4,1,1)
+        plot(Temperature,'-x','color',rgb('cornflowerblue'))
+>>>>>>> Stashed changes
         hold on
-        plot(cleanTemperature,'-bx')
         axis tight
-        plot(xlim,[1 1]*meanwatertemp,'-k','LineWidth',2)
-        plot(xlim,[1 1]*meanwatertempclean,'-b','LineWidth',2)
-        scatter(find(ispiketemp),Temperature(ispiketemp),'k','filled')
-        title('Temperature');
-        subplot(2,1,2)
-        plot(Salinity,'-kx')
+        plot(xlim,[1 1]*meantemp,'-','color',rgb('cornflowerblue'))
+        plot(xlim,[1 1]*meantemp - tempstddev,'--','color',rgb('cornflowerblue'))
+        plot(xlim,[1 1]*meantemp + tempstddev,'--','color',rgb('cornflowerblue'))
+        s = scatter(find(ispiketemp),Temperature(ispiketemp),'k','LineWidth',1.5);
+        title('Raw Temperature');
+        legend(s,'Spikes')
+
+        subplot(4,1,2)
+        plot(Tempclean,'-bx')
         hold on
-        plot(cleanSalinity,'-rx')
         axis tight
-        plot(xlim,[1 1]*meansalinity,'-k','LineWidth',2)
-        plot(xlim,[1 1]*meansalinityclean,'-r','LineWidth',2)
-        scatter(find(ispikesal),Salinity(ispikesal),'k','filled')
-        title('Salinity');
+        plot(xlim,[1 1]*meantempclean,'b')
+        plot(xlim,[1 1]*meantempclean - tempcleanstddev,'--b')
+        plot(xlim,[1 1]*meantempclean + tempcleanstddev,'--b')
+        title('QC Temperature')
+
+        subplot(4,1,3)
+        plot(Salinity,'-x','color',rgb('coral'))
+        hold on
+        axis tight
+         plot(xlim,[1 1]*meansal,'-','color',rgb('coral'))
+        plot(xlim,[1 1]*meansal - salstddev,'--','color',rgb('coral'))
+        plot(xlim,[1 1]*meansal + salstddev,'--','color',rgb('coral'))
+        s = scatter(find(ispikesal),Salinity(ispikesal),'k','LineWidth',1.5);
+        title('Raw Salinity');
+
+        subplot(4,1,4)
+        plot(Salclean,'-rx')
+        hold on
+        axis tight
+        plot(xlim,[1 1]*meansalclean,'r')
+        plot(xlim,[1 1]*meansalclean - salcleanstddev,'--r')
+        plot(xlim,[1 1]*meansalclean + salcleanstddev,'--r')
+        title('QC Salinity')
+
         print([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4)],'-dpng')
         close gcf
     end

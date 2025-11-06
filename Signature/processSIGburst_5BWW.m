@@ -4,7 +4,34 @@ function [HRprofile,fh] = processSIGburst_5BWW(burst,varargin)
 % WireWalker.
 % K. Zeiden 10/2025
 
-if nargin < 2
+%% Development
+
+% Use burst around Jun 23, 21:00:00 UTC
+% load('S:\SEAFAC\June2024\SouthMooring\Sig1000\S100595A054_SEAFAC_WW\SIG\Raw\20240623\SWIFT20_SIG_23Jun2024_20_55.mat','burst');
+% 
+% % Isolate ascent profile
+% time = burst.time';
+% z = burst.Pressure';
+% dt = round(median(diff(time)*24*60*60),2);
+% wrise = gradient(z)./dt;
+% irise = smooth_vec(wrise,hann(10/dt)) <= -0.1 ;
+% irise = find(irise,1,'first'):find(irise,1,'last');
+% bfields = fieldnames(burst);
+% nping = length(time);
+% for ifield = 1:length(bfields)
+%     var = burst.(bfields{ifield});
+%     if any(size(var)==nping) && ismatrix(var)
+%         var = var(irise,:);
+%     elseif any(size(var) == nping) && ndims(var) == 3
+%         var = var(irise,:,:);
+%     end
+%     burst.(bfields{ifield}) = var;
+% end
+% 
+% clearvars -except burst
+
+%%
+% if nargin < 2
     opt.plotburst = false; % generate plots for each burst
     opt.HR.mincorr = 40;% To ignore correlation, set to 0;
     opt.HR.QCbin = true;% QC entire bins with greater than opt.HR.pbadmax_bin perecent bad data (spikes & correlation)
@@ -14,15 +41,16 @@ if nargin < 2
     opt.HR.NaNbad = true;% NaN out bad data. Otherwise they are interpolated through.
     opt.HR.nsumeof = 3;
     opt.HR.eoftype = '5beam';
-else
-    opt = varargin{1};
-end
+    opt.HR.binavgSF = true;
+% else
+%     opt = varargin{1};
+% end
 
 %% Data
 time = burst.time;
-z0 = burst.Pressure;
+depth = burst.Pressure;
 dt = round(median(diff(time)*24*60*60),2);
-wrise = gradient(z0)./dt;
+wrise = gradient(depth)./dt;
 
 % velocities
 wraw = burst.VelocityData;
@@ -30,11 +58,6 @@ for ibeam = 1:4
     wraw(:,:,ibeam) = wraw(:,:,ibeam)-wrise*cosd(25);
 end
 wraw(:,:,5) = wraw(:,:,5)-wrise;
-enuraw = burst.VelocityDataENU;
-xyzraw = burst.VelocityDataXYZ;
-enuraw(:,:,3) = enuraw(:,:,3)-wrise;
-xyzraw(:,:,3) = xyzraw(:,:,3)-wrise;
-errraw = burst.VelocityDataERR;
 
 % correlation + amplitude
 hramp = burst.AmplitudeData;
@@ -56,11 +79,11 @@ Vr = cs.^2./(4*F0*L);% m/s
 nfilt = round(1/dz);% 1 m
 
 % depth bins
-zbins = NaN(size(wraw));
+z = NaN(size(wraw));
 r = bz + dz*(1:nbin);
-zbins(:,:,5) = z0 - r;
+z(:,:,5) = depth - r;
 for ibeam = 1:4
- zbins(:,:,ibeam) = z0 - r*cosd(25);
+ z(:,:,ibeam) = depth - r*cosd(25);
 end
 
 %% Quality Control 
@@ -77,7 +100,7 @@ ipoor = hrcorr < opt.HR.mincorr;
 
 % Identify near-surface data
 zmin = 5;
-isurf = zbins < zmin;
+isurf = z < zmin;
 
 % All bad points
 ibad = isurf | ipoor | ispike;
@@ -120,7 +143,7 @@ for ibeam = 1:nbeam
         end
     end
 end
-[enuclean,~,errclean ] = beam2enu(winterp(:,:,1:4), heading, pitch, roll);
+[enuclean] = beam2enu(winterp(:,:,1:4), heading, pitch, roll);
 
 %% High-pass data using EOFs
 % Note: interpolates through NaN data first
@@ -170,67 +193,84 @@ end
 % Remove bad data
 wpeof(ibad) = NaN;% this is pretty critical, lots of spikes
 
-%% Dissipation Rate
+%% Dissipation Rate 
 Cv2 = 2.1;
-rmin = dz;
+dzbin = 0.5;
+zbin = (0:dzbin:50)';
 
-% Integrate over each ping
-rmax = nbin*dz;
-z = squeeze(mean(zbins,2,'omitnan'));
-slope = NaN(nping,nbeam);
-A = NaN(nping,nbeam);
-N = NaN(nping,nbeam);
-nfit = NaN(nping,nbeam);
+[nzbin,~] = size(zbin);
+slope = NaN(nzbin,nbeam);
+int = NaN(nzbin,nbeam);
+A = NaN(nzbin,nbeam);
+N = NaN(nzbin,nbeam);
+eps = NaN(nzbin,nbeam);
+ndat = NaN(nzbin,nbeam);
+nfit = NaN(nzbin,nbeam);
+
 warning('off','all')
+
+% Integrate over depth bins
 for ibeam = 1:nbeam
-    for iping = 1:nping
 
-        zi = squeeze(zbins(iping,:,ibeam));
-        wi = squeeze(wpeof(iping,:,ibeam));
+    zi = squeeze(z(:,:,ibeam));
+    wi = squeeze(wpeof(:,:,ibeam));
 
-        R = zi-zi';
-        R = round(R,2);
-        [Z1,Z2] = meshgrid(zi);
-        Z = (Z1+Z2)/2;
-        dW = wi-wi';
-        dW(abs(dW)>5*std(dW(:),[],'omitnan')) = NaN;
-        D = dW.^2;
+    for izbin = 1:nzbin
 
-        ifit = R <= rmax & R >= rmin & ~isnan(D);
+        zmin = zbin(izbin)-dzbin/2;
+        zmax = zbin(izbin)+dzbin/2;
 
-        nfit(iping,ibeam) = sum(ifit(:));
-        if nfit(iping,ibeam)  < 3 % Must contain more than 3 points
-            % disp('Not enough pts')
-            continue     
+        % Any data in depth bin?
+        ndat(izbin,ibeam) = sum( ~isnan(wi (zi > zmin & zi < zmax) ));
+        if ndat < 50
+            continue
         end
-        x0 = ones(nfit(iping,ibeam),1);
-        x1 = R(ifit);
-        x23 = R(ifit).^(2/3);
-        d = D(ifit);
+            
+        % Compute velocity differences, bin by range
+        [dW, R] = ADCPpairdiff(wi, zi, zmin, zmax);
+        if isempty(dW)
+           continue
+        end
+        if ibeam < 5;  R = R./cosd(25); end
 
-        % Best-fit power-law to the structure function
-        ilog = x1 > 0 & d > 0;% log(0) = -Inf
-        x1log = log10(x1(ilog));
-        dlog = log10(d(ilog));
-        xNlog = x0(ilog);
-        G = [x1log(:) xNlog(:)];
-        Gg = (G'*G)\G';
-        m = Gg*dlog(:);
-        slope(iping,ibeam) = m(1);  
+        % Bin by r and average D = <dW.^2>;
+        if opt.HR.binavgSF
+            r = (dz/2: dz : nbin*dz+dz/2)';
+            [~, ~, binidx] = histcounts(R,r);
+            dW = [dW; NaN];  
+            binidx = [binidx; length(r)];
+            n = accumarray(binidx,ones(size(dW)),[],@sum);
+            mu = accumarray(binidx,dW,[],@mean);
+            sig = accumarray(binidx,dW,[],@std);
+            outlier = (abs(dW) >= (mu(binidx) + 3*sig(binidx))) & n(binidx)>5;
+            D = accumarray(binidx(~outlier), dW(~outlier).^2,[], @mean);
+            ifit = ~isnan(D) & D>0 & n > 0;
+            D = D(ifit);
+            r = r(ifit);
+        else
+            mu = mean(dW,'omitnan');
+            sig = std(dW,[],'omitnan');
+            outlier = abs(dW) >= (mu+5*sig);
+            ifit = ~outlier;
+            D = dW(ifit).^2;
+            r = R(ifit);
+        end
 
-        % Fit structure function to D(z,r) = Ar^(2/3) + Nr^0
-        G = [x23(:) x0(:)];
-        Gg = (G'*G)\G';
-        m = Gg*d(:);
-
-        A(iping,ibeam) = m(2);
-        N(iping,ibeam) = m(2);
+        % Vectors to perform fit (at least 3 points)
+        Nfit = sum(ifit);
+        if Nfit  < 3
+            continue     
+        else
+            nfit(izbin,ibeam) = Nfit;
+        end
+         
+        % Perform fit
+        [eps(izbin,ibeam),A(izbin,ibeam),N(izbin,ibeam),slope(izbin,ibeam)] = SFfit(D,r);
 
     end
 end
 warning('on','all')
-A(A<0) = NaN;
-eps = (A./Cv2).^(3/2);
+
     
 %% Plot
 
@@ -307,7 +347,7 @@ if opt.plotburst
     MP = get(0,'monitorposition');
     set(gcf,'outerposition',MP(2,:).*[1 1 0.75 1]+[MP(3)/4 0 0 0]);
     subplot(1,5,1)
-    pcolor(binnum,squeeze(zbins(:,:,ibeam))',squeeze(wraw(:,:,ibeam))')
+    pcolor(binnum,squeeze(z(:,:,ibeam))',squeeze(wraw(:,:,ibeam))')
     shading flat;
     xlabel('Bin #')
     clim([-0.05 0.05]);cmocean('balance')
@@ -315,7 +355,7 @@ if opt.plotburst
     c.Location = 'SouthOutside';
     title('W');
     subplot(1,5,2)
-    pcolor(binnum,squeeze(zbins(:,:,ibeam))',squeeze(hramp(:,:,ibeam))')
+    pcolor(binnum,squeeze(z(:,:,ibeam))',squeeze(hramp(:,:,ibeam))')
     shading flat;
     cmocean('amp')
     title('Amp');
@@ -324,7 +364,7 @@ if opt.plotburst
     c = colorbar;c.Label.String = 'A (dB)';
     c.Location = 'SouthOutside';
     subplot(1,5,3)
-    pcolor(binnum,squeeze(zbins(:,:,ibeam))',squeeze(hrcorr(:,:,ibeam))')
+    pcolor(binnum,squeeze(z(:,:,ibeam))',squeeze(hrcorr(:,:,ibeam))')
     shading flat;
     clim([35 100]);cmocean('amp')
     xlabel('Bin #')
@@ -332,7 +372,7 @@ if opt.plotburst
     c.Location = 'SouthOutside';
         title('Corr');
     subplot(1,5,4)
-    pcolor(binnum,squeeze(zbins(:,:,ibeam))',squeeze(wpeof(:,:,ibeam))')
+    pcolor(binnum,squeeze(z(:,:,ibeam))',squeeze(wpeof(:,:,ibeam))')
     shading flat;
     xlabel('Bin #')
     clim([-0.05 0.05]);cmocean('balance')
@@ -340,7 +380,7 @@ if opt.plotburst
     c.Location = 'SouthOutside';
     title('W''');
     subplot(1,5,5)
-    plot(log10(eps(:,ibeam)),z,'k','LineWidth',2)
+    plot(log10(eps(:,ibeam)),zbin,'k','LineWidth',2)
     xlabel('\epsilon [m^2s^{-3}]')
     c = colorbar;c.Visible = 'off';
     c.Location = 'SouthOutside';
@@ -363,23 +403,59 @@ clear HRprofile
 
 % Results
 HRprofile.time = mean(time,'omitnan');
-HRprofile.z = z;
-HRprofile.w = squeeze(mean(wclean,2,'omitnan'));
-HRprofile.wvar = squeeze(std(wclean,[],2,'omitnan'));
-HRprofile.eps = eps;
-HRprofile.enu = squeeze(mean(enuclean,2,'omitnan'));
+HRprofile.z = zbin;
 
-% Additional information for quality control
-HRprofile.QC.N = N;
-HRprofile.QC.slope = slope;
+% Dissipation
+HRprofile.eps = eps;
+HRprofile.w = NaN(nzbin,nbeam);
+HRprofile.wvar = NaN(nzbin,nbeam);
+HRprofile.enu = NaN(nzbin,nbeam-1);
+
 HRprofile.QC.eofs = eofs;
 HRprofile.QC.eofvar = eofvar;
-HRprofile.QC.eofamp = eofamp;
-HRprofile.QC.wpeofmag = squeeze(std(wpeof,[],2,'omitnan'));
-HRprofile.QC.hrcorr = squeeze(mean(hrcorr,2,'omitnan'));
-HRprofile.QC.hramp = squeeze(mean(hramp,2,'omitnan'));
-HRprofile.QC.pbad = squeeze(100*sum(ibad,2,'omitnan')./nbin); 
-HRprofile.QC.enuerr = squeeze(mean(errclean,2,'omitnan'));
+HRprofile.QC.nfit = nfit;
+HRprofile.QC.ndat = ndat;
+HRprofile.QC.N = N;
+HRprofile.QC.slope = slope;
+HRprofile.QC.wpeofmag = NaN(nzbin,nbeam);
+HRprofile.QC.hrcorr = NaN(nzbin,nbeam);
+HRprofile.QC.hramp = NaN(nzbin,nbeam);
+HRprofile.QC.pbad = NaN(nzbin,nbeam);
+for ibeam = 1:nbeam
+
+        zi = squeeze(z(:,:,ibeam)); 
+        wi = squeeze(wclean(:,:,ibeam));
+        hrcorri = squeeze(hrcorr(:,:,ibeam));
+        hrampi = squeeze(hramp(:,:,ibeam));
+        wpeofi = squeeze(wpeof(:,:,ibeam));
+        ibadi = squeeze(ibad(:,:,ibeam));
+
+        if ibeam <5
+            enui = squeeze(enuclean(:,:,ibeam));
+        end
+
+        for izbin = 1:nzbin
+    
+            zmin = zbin(izbin)-dzbin/2;
+            zmax = zbin(izbin)+dzbin/2;
+    
+            idat2bin = zi >= zmin & zi < zmax;
+    
+            HRprofile.w(izbin,ibeam) = mean(wi(idat2bin),'omitnan');
+            HRprofile.wvar(izbin,ibeam) = std(wi(idat2bin),[],'omitnan');
+            if ibeam < 5
+                HRprofile.enu(izbin,ibeam) = mean(enui(idat2bin),'omitnan');
+            end
+    
+            HRprofile.QC.wpeofmag(izbin,ibeam) = std(wpeof(idat2bin),[],'omitnan');
+            HRprofile.QC.hrcorr(izbin,ibeam) = mean(hrcorri(idat2bin),'omitnan');
+            HRprofile.QC.hramp(izbin,ibeam) = mean(hrampi(idat2bin),'omitnan');
+            HRprofile.QC.pbad(izbin,ibeam) = sum(100*ibadi(idat2bin)./numel(idat2bin),'omitnan');
+
+        end
+
+end
+
 
 end
                    

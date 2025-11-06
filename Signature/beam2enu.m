@@ -19,7 +19,7 @@ function [enu, xyz] = beam2enu(beam, heading, pitch, roll)
 theta = 25;
 
 % Uplooking or downlooking
-uplooking = false;
+downlooking = false;
 
 %% Convert to ENU
 
@@ -89,7 +89,7 @@ for iping = 1:nping
 end
 
 % Adjust sign of velocities if downlooking
-if ~uplooking
+if downlooking
 enu(:,:,2:4) = -enu(:,:,2:4);
 end
 
