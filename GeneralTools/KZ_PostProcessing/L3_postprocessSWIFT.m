@@ -152,10 +152,10 @@ end
 if rpIMU
     if ~isempty(dir([missiondir slash '*' slash 'Raw' slash '*' slash '*_IMU_*.dat']))
         disp('Reprocessing IMU data...')
-        calctype = 'GPS';
+        calctype = 'IMU';
         filtertype = 'RC';
         saveraw = false; % this is the raw wave displacements, not the raw motion data
-        interpf = true; % this interpolates spectra to original 42 bands.  It should be true unless you really want high freqs
+        interpf = false; % this interpolates spectra to original 42 bands.  It should be true unless you really want high freqs
         [SWIFT,sinfo] = reprocess_IMU(missiondir,calctype,filtertype,saveraw,interpf);
     else 
         disp('No IMU data...')
