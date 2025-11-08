@@ -454,7 +454,7 @@ while 1
         
     elseif type == 52 & size >= 327, % microSWIFT, size should be 327 bytes for v2.1, or 331 bytes for v2.2
         disp('reading microSWIFT NEDwaves (payload 52)')
-        firmwareasunit8 = port % microSWIFT specific
+        firmwareasunit8 = port; % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
