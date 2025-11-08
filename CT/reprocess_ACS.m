@@ -109,15 +109,12 @@ for iburst = 1:length(bfiles)
     % Plotdata
     if plotburst
         figure('color','w')
-<<<<<<< Updated upstream
         %fullscreen
         subplot(2,1,1)
         plot(Temperature,'-kx')
-=======
-        fullscreen
+        %fullscreen
         subplot(4,1,1)
         plot(Temperature,'-x','color',rgb('cornflowerblue'))
->>>>>>> Stashed changes
         hold on
         axis tight
         plot(xlim,[1 1]*meantemp,'-','color',rgb('cornflowerblue'))
