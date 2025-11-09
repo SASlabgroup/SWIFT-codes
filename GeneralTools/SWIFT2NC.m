@@ -168,7 +168,27 @@ if isfield(SWIFT,'signature')
         z_names = [];
     end
 end
-
+obs_dim = -1;
+obs_size = -1;
+if isfield(SWIFT, 'OBS_uncalibrated')
+    obs_dim = netcdf.defDim(ncid,'obs_sample', length(SWIFT(1).OBS_uncalibrated));
+    obs_size = length(SWIFT(1).OBS_uncalibrated);
+end
+if isfield(SWIFT, 'OBS_ambient')
+    if obs_dim == -1
+        obs_dim = netcdf.defDim(ncid,'obs_sample', length(SWIFT(1).OBS_ambient));
+        obs_size = length(SWIFT(1).OBS_ambient);
+    elseif obs_size ~= length(SWIFT(1).OBS_ambient)
+        error('bad obs size')
+    end
+end
+if isfield(SWIFT, 'OBS_calibratedNTU')
+    if obs_dim == -1
+        obs_dim = netcdf.defDim(ncid,'obs_sample', length(SWIFT(1).OBS_calibratedNTU));
+    elseif obs_size ~= length(SWIFT(1).OBS_calibratedNTU);
+        error('bad obs size')
+    end
+end
 
 
 j=1;
@@ -205,9 +225,14 @@ end
 
 
 %% creating netcdf variables
-
 for i=1:length(names)
-    if strcmp(names{i},'wavespectra')
+    if strcmp(names{i},'OBS_uncalibrated')
+        var_ids.(names{i})  = netcdf.defVar(ncid, 'OBS_uncalibrated', 'NC_INT', [obs_dim, t_dim]);
+    elseif strcmp(names{i},'OBS_ambient')
+        var_ids.(names{i})  = netcdf.defVar(ncid, 'OBS_ambient', 'NC_INT', [obs_dim, t_dim]);
+    elseif strcmp(names{i},'OBS_calibratedNTU')
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'OBS_calibratedNTU', 'NC_INT', [obs_dim, t_dim]);
+    elseif strcmp(names{i},'wavespectra')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
                 spec_var_ids.(spec_names{j}) = netcdf.defVar(ncid, spec_names{j}, 'NC_DOUBLE', f_dim);
@@ -368,7 +393,13 @@ netcdf.endDef(ncid);
 %% filling them with values
 
 for i=1:length(names)
-    if strcmp(names{i},'wavespectra') & exist('spec_names', 'var')
+    if strcmp(names{i},'OBS_uncalibrated')
+        netcdf.putVar(ncid, var_ids.(names{i}), S.OBS_uncalibrated)
+    elseif strcmp(names{i},'OBS_ambient')
+        netcdf.putVar(ncid, var_ids.(names{i}), S.OBS_ambient)
+    elseif strcmp(names{i},'OBS_calibratedNTU')
+        netcdf.putVar(ncid, var_ids.(names{i}), S.OBS_calibratedNTU)
+    elseif strcmp(names{i},'wavespectra') & exist('spec_names', 'var')
         for j=1:length(spec_names)
             if strcmp(spec_names{j},'freq')
                 netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), S.wavespectra(ref_idx).freq);
@@ -431,9 +462,7 @@ for i=1:length(names)
             end
         end
     else
-
         netcdf.putVar(ncid, var_ids.(names{i}), S.(names{i}));
-
     end
 end
 
@@ -446,7 +475,20 @@ netcdf.close(ncid)
 ncwriteatt(filename,'trajectory','trajectory_id',SWIFT(1).ID)
 
 for i=1:length(names)
-    if strcmp(names{i},'wavespectra')
+    if strcmp(names{i},'OBS_uncalibrated')
+        ncwriteatt(filename,'OBS_uncalibrated','units','digital count')
+        ncwriteatt(filename,'OBS_uncalibrated','long_name','Raw optical back scatter sensor count')
+        ncwriteatt(filename,'OBS_uncalibrated','instrument','OpenOBS')
+    elseif strcmp(names{i},'OBS_ambient')
+        ncwriteatt(filename,'OBS_ambient','units','digital count')
+        ncwriteatt(filename,'OBS_ambient','long_name','Raw optical back scatter sensor count (ambient)')
+        ncwriteatt(filename,'OBS_ambient','instrument','OpenOBS')
+    elseif strcmp(names{i},'OBS_calibratedNTU')
+        ncwriteatt(filename,'OBS_calibratedNTU','units','Nephelometric Turbidity Uni')
+        ncwriteatt(filename,'OBS_calibratedNTU','long_name','Calibrated NTU from optical back scatter')
+        ncwriteatt(filename,'OBS_calibratedNTU','instrument','openOBS')
+        ncwriteatt(filename,'OBS_calibratedNTU','method','Optical backscatter as shown in Eidem et al. Limnology and Oceanography: Methods, 2022')
+    elseif strcmp(names{i},'wavespectra')
         for j=1:length(spec_names)
             if strcmp(spec_names(j),'a1')
                 ncwriteatt(filename,'a1','units',' ')
