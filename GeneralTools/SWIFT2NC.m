@@ -373,9 +373,9 @@ netcdf.endDef(ncid);
 
 for i=1:length(names)
     if strcmp(names{i},'OBS_uncalibrated')
-        netcdf.putVar(ncid, var_ids.(names{i}), S.OBS_calibratedNTU)
-    elseif strcmp(names{i},'OBS_calibrated')
-        netcdf.putVar(ncid, var_ids.(names{i}), S.OBS_calibratedNTU)
+        netcdf.putVar(ncid, var_ids.(names{i}), S.OBS_uncalibrated)
+    elseif strcmp(names{i},'OBS_ambient')
+        netcdf.putVar(ncid, var_ids.(names{i}), S.OBS_ambient)
     elseif strcmp(names{i},'OBS_calibratedNTU')
         netcdf.putVar(ncid, var_ids.(names{i}), S.OBS_calibratedNTU)
     elseif strcmp(names{i},'wavespectra') & exist('spec_names', 'var')
