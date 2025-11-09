@@ -74,6 +74,27 @@ if isfield(SWIFT,'burstID')
     SWIFT=rmfield(SWIFT,'burstID');
 end
 
+if isfield(SWIFT,'windspdskew')
+    SWIFT=rmfield(SWIFT,'windspdskew');
+end
+
+if isfield(SWIFT,'windspdkurt')
+    SWIFT=rmfield(SWIFT,'windspdkurt');
+end
+
+if isfield(SWIFT,'wavespectra')
+    for si=1:length(SWIFT)
+        specsize(si) = length(SWIFT(si).wavespectra.freq);
+        checkcheck(si) = ~isfield(SWIFT(si).wavespectra,'check');
+    end
+    if all(specsize ~= 42 | checkcheck)
+        SWIFT=rmfield(SWIFT,'wavespectra');
+    else
+        SWIFT( specsize ~= 42 | checkcheck) = [];
+    end
+end
+
+
 %% loading variables
 % extract dimension sizes: time, freq, z, zHR (if available)
 
