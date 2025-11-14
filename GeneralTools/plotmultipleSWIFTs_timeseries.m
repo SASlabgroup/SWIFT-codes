@@ -20,11 +20,18 @@ for fi=1:length(flist)
     ax(1)= subplot(4,1,1);
     if isfield(SWIFT, 'windspd')
         plot([SWIFT.time],[SWIFT.windspd],'x','color',thiscolor,'linewidth',2,'linewidth',2), hold on
+        ylabel('Wind spd [m/s]')
+    elseif isfield(SWIFT, 'OBS_calibratedNTU')
+        for si=1:length(SWIFT)
+            OBS(si,:) = SWIFT(si).OBS_calibratedNTU;
+            %plot(SWIFT(si).time,SWIFT(si).OBS_calibratedNTU,'x','color',thiscolor,'linewidth',2), hold on
+        end
+        plot([SWIFT.time],OBS,'x','color',thiscolor,'linewidth',2), hold on
+        ylabel('OBS [NTU]')
     else
-        %plot([SWIFT.time],NaN,'x','color',thiscolor,'linewidth',2), hold on
+        plot([SWIFT.time],NaN,'x','color',thiscolor,'linewidth',2), hold on
     end
     datetick
-    ylabel('Wind spd [m/s]')
 
     ax(2) = subplot(4,1,2);
     plot([SWIFT.time],[SWIFT.sigwaveheight],'x','color',thiscolor,'linewidth',2), hold on
@@ -56,6 +63,6 @@ end
 %% legend
 axes(ax(2))
 legend(num2str(ID'))
-linkaxes(ax,'x')
+%linkaxes(ax,'x')
 
 

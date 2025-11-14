@@ -508,7 +508,7 @@ while 1
         elseif errorflag==25, disp('!!!!!Floating point exception occured')
         elseif errorflag==26 | 27 | 28, disp('!!!!!error not defined')
         elseif errorflag==29, disp('!!!!!Watchdog reset detected')
-        elseif errorflag==20, disp('!!!!!Software reset detected')
+        elseif errorflag==30, disp('!!!!!Software reset detected')
         elseif errorflag==31, disp('!!!!!Memory corruption detected')
         else
         end 
@@ -717,7 +717,7 @@ if isfield(SWIFT,'salinity')
 end
 
 if isfield(SWIFT,'watertemp')
-    if all(SWIFT.watertemp >= 9999),
+    if all(SWIFT.watertemp >= 9999 | SWIFT.watertemp==0)
         SWIFT.watertemp = NaN;
     end
 end
