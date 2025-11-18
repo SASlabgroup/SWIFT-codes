@@ -6,7 +6,7 @@ function [EOFs,alpha,E,Xm] = eof(X)
 [nsamp,~] = size(X);
 
 %Remove the time mean of each column
-Xm = nanmean(X);
+Xm = mean(X,'omitnan');
 X0 = repmat(Xm,nsamp,1);
 X = X - X0;
 
