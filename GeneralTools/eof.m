@@ -10,27 +10,27 @@ Xm = mean(X,'omitnan');
 X0 = repmat(Xm,nsamp,1);
 X = X - X0;
 
-%Sub NaN w/0
+% Sub NaN w/0
 inan = isnan(X);
 X(inan) = 0;
 
-%Data-data covariance matrix: 
+% Data-data covariance matrix: 
 R = X'*X;
 
-%Eigenvectors are modes and eigenvalues are variance
+% Eigenvectors are modes and eigenvalues are variance
 [EOFs,E] = eig(R,'vector');
 
-%Sort by EOF variance
+% Sort by EOF variance
 [E,s] = sort(E,'descend');
 EOFs = EOFs(:,s);
 
-%Fraction of variance explained by each mode
+% Fraction of variance explained by each mode
 E = (E./sum(E))';
 
-%EOF amplitudes
+% EOF amplitudes
 alpha = (X*EOFs);
 % inan = any(inan,2);
 % alpha(repmat(inan,1,ndata)) = NaN;
 
-%EOF timeseries
+% EOF timeseries
 %Y = alpha(:,npick)*EOFs(:,npick)' + X0;

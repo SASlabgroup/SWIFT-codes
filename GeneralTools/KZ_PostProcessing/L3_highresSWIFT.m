@@ -10,7 +10,6 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt)
 % missiondir = 'S:\SanJuanIslands\WaldronIsland_CoastalFronts2022\Main_Jun2022\SWIFTs\L0\SWIFT26_02Jul2022';
 % missiondir = cd;
 % burstdt = floor(8.5*60/10)/(60*60*24); % datenum units (days)
-%
 %%
 
 if ispc
