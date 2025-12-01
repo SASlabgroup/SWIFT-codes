@@ -109,7 +109,6 @@ for iburst = 1:length(bfiles)
     % Plotdata
     if plotburst
         figure('color','w')
-        fullscreen
         subplot(4,1,1)
         plot(Temperature,'-x','color',rgb('cornflowerblue'))
         hold on

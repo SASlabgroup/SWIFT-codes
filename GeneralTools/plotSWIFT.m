@@ -853,7 +853,7 @@ if isfield(SWIFT,'OBS_uncalibrated')
     plot([SWIFT.time], mean(OBS_uncal'),'ks','linewidth',2,'markersize',14),
     datetick
     ylabel('uncalibrated OBS')
-    title(['OBS serial numer ' num2str(nanmean(OBS_sn(~isnan(OBS_sn))))])
+    title(['microSWIFT ' SWIFT(1).ID ', OBS serial numer ' num2str(median(OBS_sn(~isnan(OBS_sn))))])
 
     subplot(3,1,3)
     plot([SWIFT.time], OBS_ambient,'k.'), hold on

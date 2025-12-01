@@ -198,7 +198,7 @@ if isfield(swift,'wavepower')
     end
 end
 xlim([0.05 1])
-ylim(10.^([-5 0]))
+ylim(10.^([-5 2]))
 set(gca,'YScale','log','XScale','log')
 colormap(gca,cwind)
 c = colorbar;% slimcolorbar;
