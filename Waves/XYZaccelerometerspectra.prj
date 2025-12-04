@@ -1,7 +1,7 @@
 <deployment-project plugin="plugin.coder" plugin-version="R2021a">
-  <configuration build-checksum="3608715899" file="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/NEDwaves.prj" location="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves" name="NEDwaves" preferred-package-location="/Users/jthomson/Downloads/NEDwaves_testcases" preferred-package-type="package.type.zip.flat" target="target.unifiedcoder" target-name="MATLAB Coder">
+  <configuration build-checksum="3030870674" file="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/XYZaccelerometerspectra.prj" location="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves" name="XYZaccelerometerspectra" preferred-package-location="/Users/jthomson/Downloads/NEDwaves_testcases" preferred-package-type="package.type.zip.flat" target="target.unifiedcoder" target-name="MATLAB Coder">
     <profile key="profile.mex">
-      <param.BuiltInstrumentedMex />
+      <param.BuiltInstrumentedMex>false</param.BuiltInstrumentedMex>
       <param.RanInstrumentedMex>false</param.RanInstrumentedMex>
       <param.WorkingFolder>option.WorkingFolder.Project</param.WorkingFolder>
       <param.SpecifiedWorkingFolder />
@@ -27,14 +27,14 @@
       <param.RowMajor>option.RowMajor.ColumnMajor</param.RowMajor>
       <param.HighlightPotentialRowMajorIssues>true</param.HighlightPotentialRowMajorIssues>
       <param.PreserveArrayDimensions>false</param.PreserveArrayDimensions>
-      <param.EliminateSingleDimensions />
+      <param.EliminateSingleDimensions>false</param.EliminateSingleDimensions>
       <param.StackUsageMax>200000</param.StackUsageMax>
       <param.FilePartitionMethod>option.FilePartitionMethod.MapMFileToCFile</param.FilePartitionMethod>
       <param.GenerateComments>true</param.GenerateComments>
       <param.MATLABSourceComments>false</param.MATLABSourceComments>
       <param.CodeFormattingTool>option.CodeFormattingTool.Auto</param.CodeFormattingTool>
       <param.ReservedNameArray />
-      <param.CppStyleConst />
+      <param.CppStyleConst>true</param.CppStyleConst>
       <param.EnableDebugging>false</param.EnableDebugging>
       <param.Verbosity>option.Verbosity.Info</param.Verbosity>
       <param.ReportPotentialDifferences>false</param.ReportPotentialDifferences>
@@ -44,10 +44,10 @@
       <param.ReportInfoVarName />
       <param.DefaultTestFile />
       <param.MergeInstrumentationResults>false</param.MergeInstrumentationResults>
-      <param.VerificationMode />
-      <param.VerificationStatus>option.VerificationStatus.Inactive</param.VerificationStatus>
+      <param.VerificationMode>option.VerificationMode.None</param.VerificationMode>
+      <param.VerificationStatus>option.VerificationStatus.Passed</param.VerificationStatus>
       <param.EnableMexProfiling>false</param.EnableMexProfiling>
-      <var.BuiltWithMexProfiling />
+      <var.BuiltWithMexProfiling>false</var.BuiltWithMexProfiling>
       <param.CustomSourceCode />
       <param.CustomHeaderCode />
       <param.CustomInitializer />
@@ -77,11 +77,11 @@
       <param.EnableAutoParallelizationReporting>true</param.EnableAutoParallelizationReporting>
       <param.CacheDynamicArrayDataPointer>true</param.CacheDynamicArrayDataPointer>
       <param.EnableJIT>false</param.EnableJIT>
-      <param.EnableJITSilentBailOut />
+      <param.EnableJITSilentBailOut>false</param.EnableJITSilentBailOut>
       <param.CheckForIssuesJIT>true</param.CheckForIssuesJIT>
-      <param.EnableGitSupport />
-      <param.EnableAutoCommit />
-      <param.RepositoryStyle />
+      <param.EnableGitSupport>false</param.EnableGitSupport>
+      <param.EnableAutoCommit>true</param.EnableAutoCommit>
+      <param.RepositoryStyle>option.RepositoryStyle.Auto</param.RepositoryStyle>
       <unset>
         <param.BuiltInstrumentedMex />
         <param.RanInstrumentedMex />
@@ -127,7 +127,6 @@
         <param.DefaultTestFile />
         <param.MergeInstrumentationResults />
         <param.VerificationMode />
-        <param.VerificationStatus />
         <param.EnableMexProfiling />
         <var.BuiltWithMexProfiling />
         <param.CustomSourceCode />
@@ -190,7 +189,7 @@
       <param.RowMajor>option.RowMajor.ColumnMajor</param.RowMajor>
       <param.HighlightPotentialRowMajorIssues>true</param.HighlightPotentialRowMajorIssues>
       <param.PreserveArrayDimensions>false</param.PreserveArrayDimensions>
-      <param.EliminateSingleDimensions />
+      <param.EliminateSingleDimensions>false</param.EliminateSingleDimensions>
       <param.StackUsageMax>20000</param.StackUsageMax>
       <param.MultiInstanceCode>false</param.MultiInstanceCode>
       <param.PreserveUnusedStructFields>false</param.PreserveUnusedStructFields>
@@ -236,9 +235,9 @@
       <param.CustomSymbolStrEMXArray>emxArray_$M$N</param.CustomSymbolStrEMXArray>
       <param.CustomSymbolStrEMXArrayFcn>emx$M$N</param.CustomSymbolStrEMXArrayFcn>
       <param.ReservedNameArray />
-      <param.CppStyleConst />
+      <param.CppStyleConst>true</param.CppStyleConst>
       <param.RuntimeChecks>false</param.RuntimeChecks>
-      <param.Verbose />
+      <param.Verbose>false</param.Verbose>
       <param.Verbosity>option.Verbosity.Info</param.Verbosity>
       <param.ReportPotentialDifferences>false</param.ReportPotentialDifferences>
       <param.GenerateReport>true</param.GenerateReport>
@@ -257,7 +256,7 @@
       <param.DefaultTestFile />
       <param.MergeInstrumentationResults>false</param.MergeInstrumentationResults>
       <param.RanPilSilVerification>false</param.RanPilSilVerification>
-      <param.VerificationMode />
+      <param.VerificationMode>option.VerificationMode.None</param.VerificationMode>
       <param.VerificationStatus>option.VerificationStatus.Inactive</param.VerificationStatus>
       <param.CustomSourceCode />
       <param.CustomHeaderCode />
@@ -269,7 +268,7 @@
       <param.PostCodeGenCommand />
       <param.TargetLangStandard>Auto</param.TargetLangStandard>
       <param.CodeReplacementLibrary>None</param.CodeReplacementLibrary>
-      <param.DeprecatedCRLFlag />
+      <param.DeprecatedCRLFlag>false</param.DeprecatedCRLFlag>
       <param.SameHardware>true</param.SameHardware>
       <param.Toolchain>Automatically locate an installed toolchain</param.Toolchain>
       <param.BuildConfiguration>Faster Runs</param.BuildConfiguration>
@@ -280,7 +279,7 @@
       <param.target.ActiveTarget>ARM Cortex-M3 (QEMU)</param.target.ActiveTarget>
       <param.HardwareVendor.Production>ARM Compatible</param.HardwareVendor.Production>
       <param.HardwareType.Production>ARM Cortex</param.HardwareType.Production>
-      <param.HWDeviceType.Production />
+      <param.HWDeviceType.Production>ARM Compatible-&gt;ARM Cortex</param.HWDeviceType.Production>
       <var.instance.enabled.Production>true</var.instance.enabled.Production>
       <param.HardwareSizeChar.Production>8</param.HardwareSizeChar.Production>
       <param.HardwareSizeShort.Production>16</param.HardwareSizeShort.Production>
@@ -301,7 +300,7 @@
       <param.HardwareDivisionRounding.Production>option.HardwareDivisionRounding.Zero</param.HardwareDivisionRounding.Production>
       <param.HardwareVendor.Target>ARM Compatible</param.HardwareVendor.Target>
       <param.HardwareType.Target>ARM Cortex</param.HardwareType.Target>
-      <param.HWDeviceType.Target />
+      <param.HWDeviceType.Target>ARM Compatible-&gt;ARM Cortex</param.HWDeviceType.Target>
       <var.instance.enabled.Target>false</var.instance.enabled.Target>
       <param.HardwareSizeChar.Target>8</param.HardwareSizeChar.Target>
       <param.HardwareSizeShort.Target>16</param.HardwareSizeShort.Target>
@@ -320,7 +319,7 @@
       <param.HardwareAtomicIntegerSize.Target>option.HardwareAtomicIntegerSize.Long</param.HardwareAtomicIntegerSize.Target>
       <param.HardwareAtomicFloatSize.Target>option.HardwareAtomicFloatSize.Double</param.HardwareAtomicFloatSize.Target>
       <param.HardwareDivisionRounding.Target>option.HardwareDivisionRounding.Zero</param.HardwareDivisionRounding.Target>
-      <var.SuppressHardwareChange />
+      <var.SuppressHardwareChange>false</var.SuppressHardwareChange>
       <param.CastingMode>option.CastingMode.Nominal</param.CastingMode>
       <param.IndentStyle>option.IndentStyle.K&amp;R</param.IndentStyle>
       <param.IndentSize>2</param.IndentSize>
@@ -359,17 +358,17 @@
       <param.EnableTraceability>true</param.EnableTraceability>
       <param.SILPILVerbosity>option.SILPILVerbosity.off</param.SILPILVerbosity>
       <param.UseECoderFeatures>true</param.UseECoderFeatures>
-      <param.EnableGitSupport />
-      <param.EnableAutoCommit />
-      <param.RepositoryStyle />
-      <param.psCustomPrjState />
+      <param.EnableGitSupport>false</param.EnableGitSupport>
+      <param.EnableAutoCommit>true</param.EnableAutoCommit>
+      <param.RepositoryStyle>option.RepositoryStyle.Auto</param.RepositoryStyle>
+      <param.psCustomPrjState>false</param.psCustomPrjState>
       <param.psCustomProjectFile />
-      <param.psCheckConfValue />
-      <param.psUniqueOutPutState />
-      <param.psOpenResultsState />
-      <param.psProductModeValue />
-      <param.psQuickConfValue />
-      <param.psOutputFolder />
+      <param.psCheckConfValue>option.psCheckConfValue.onWarnCheckConfDlg</param.psCheckConfValue>
+      <param.psUniqueOutPutState>true</param.psUniqueOutPutState>
+      <param.psOpenResultsState>true</param.psOpenResultsState>
+      <param.psProductModeValue>option.psProductModeValue.codeProver</param.psProductModeValue>
+      <param.psQuickConfValue>option.psQuickConfValue.proj</param.psQuickConfValue>
+      <param.psOutputFolder>results_$codegenName$</param.psOutputFolder>
       <unset>
         <param.WorkingFolder />
         <param.SpecifiedWorkingFolder />
@@ -557,17 +556,14 @@
       </unset>
     </profile>
     <param.objective>option.objective.c</param.objective>
-    <param.WorkflowStep>generateCode</param.WorkflowStep>
+    <param.WorkflowStep>workflowSummary</param.WorkflowStep>
     <param.TestSnippets>
-      <item>[ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs);
-[ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs);
-[ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves(north,east,down,fs);
-[ Hs, Tp, Dp, E, f, a1, b1, a2, b2, check ] = NEDwaves_memlight(north,east,down,fs);</item>
+      <item>[ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectra(x, y, z, fs)</item>
     </param.TestSnippets>
-    <param.ExternalFcnMajority />
+    <param.ExternalFcnMajority>column</param.ExternalFcnMajority>
     <param.UseGlobals>option.UseGlobals.No</param.UseGlobals>
-    <param.outputfile>${PROJECT_ROOT}/codegen/lib/NEDwaves_memlight/NEDwaves_memlight.a</param.outputfile>
-    <param.version />
+    <param.outputfile>${PROJECT_ROOT}/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra.a</param.outputfile>
+    <param.version>R2012a</param.version>
     <param.HasECoderFeatures>true</param.HasECoderFeatures>
     <param.HasGpuCoder>false</param.HasGpuCoder>
     <var.HasNeuralNetworkToolbox>false</var.HasNeuralNetworkToolbox>
@@ -575,13 +571,13 @@
     <param.grt.mainhtml />
     <param.CallGeneratedCodeFromTest>true</param.CallGeneratedCodeFromTest>
     <param.AutoInferDefaultFile />
-    <param.AutoInferUseVariableSize />
-    <param.AutoInferUseUnboundedSize />
-    <param.AutoInferVariableSizeThreshold />
-    <param.AutoInferUnboundedSizeThreshold />
-    <param.EnableFixedPointStep />
+    <param.AutoInferUseVariableSize>false</param.AutoInferUseVariableSize>
+    <param.AutoInferUseUnboundedSize>false</param.AutoInferUseUnboundedSize>
+    <param.AutoInferVariableSizeThreshold>1024</param.AutoInferVariableSizeThreshold>
+    <param.AutoInferUnboundedSizeThreshold>2048</param.AutoInferUnboundedSizeThreshold>
+    <param.EnableFixedPointStep>false</param.EnableFixedPointStep>
     <param.EnableScreener>true</param.EnableScreener>
-    <param.AnnotationChecksum>4033070073</param.AnnotationChecksum>
+    <param.AnnotationChecksum>2474037785</param.AnnotationChecksum>
     <var.LegacyTarget />
     <var.MirrorOnOpen>false</var.MirrorOnOpen>
     <param.FixedPointEnabled>false</param.FixedPointEnabled>
@@ -589,56 +585,57 @@
     <var.DismissScreener>true</var.DismissScreener>
     <param.unifiedParamStorage />
     <param.hdlParamStorage />
-    <var.gc.lastOutputRoot>codegen/lib/NEDwaves_memlight</var.gc.lastOutputRoot>
+    <var.gc.lastOutputRoot>codegen/lib/XYZaccelerationspectra</var.gc.lastOutputRoot>
     <var.gc.lastOutputType>C_CODE</var.gc.lastOutputType>
-    <var.gc.preBuildChecksum>956814122</var.gc.preBuildChecksum>
-    <var.cfi.lastOutputRoot />
-    <var.cfi.preBuildChecksum />
-    <var.outdatedOnRestore />
-    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/Users/jthomson/Dropbox/Mac/Documents/GitHub/SWIFT-codes/Waves/NEDwaves_memlight.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;3074347350&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
-    <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/NEDwaves_memlight.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
+    <var.gc.preBuildChecksum>885328156</var.gc.preBuildChecksum>
+    <var.cfi.lastOutputRoot>codegen/mex/XYZaccelerationspectra</var.cfi.lastOutputRoot>
+    <var.cfi.preBuildChecksum>3528381376</var.cfi.preBuildChecksum>
+    <var.lastCfiTestSnippet>[ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectra(x, y, z, fs)</var.lastCfiTestSnippet>
+    <var.outdatedOnRestore>false</var.outdatedOnRestore>
+    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/XYZaccelerationspectra.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;3383286612&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
+    <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/XYZaccelerationspectra.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
     <param.forceMexBuild>false</param.forceMexBuild>
-    <param.NoDefaultJIT />
+    <param.NoDefaultJIT>false</param.NoDefaultJIT>
     <param.configImportActive>false</param.configImportActive>
     <var.isGpuCoder>false</var.isGpuCoder>
     <var.notGpuCoder>true</var.notGpuCoder>
     <var.boundToGui>true</var.boundToGui>
-    <var.isConfigDialog />
+    <var.isConfigDialog>false</var.isConfigDialog>
     <var.ecoderEnabled>true</var.ecoderEnabled>
-    <param.AlwaysGenerateTypedefGuards />
-    <param.RemoveDuplicateFunctionsAndTypes />
-    <param.EnableStructExplosion />
-    <param.ForceANSIC />
-    <param.NumCompileJobs />
-    <param.mex.outputfile>NEDwaves_memlight_mex</param.mex.outputfile>
-    <param.grt.outputfile>NEDwaves_memlight</param.grt.outputfile>
+    <param.AlwaysGenerateTypedefGuards>false</param.AlwaysGenerateTypedefGuards>
+    <param.RemoveDuplicateFunctionsAndTypes>true</param.RemoveDuplicateFunctionsAndTypes>
+    <param.EnableStructExplosion>true</param.EnableStructExplosion>
+    <param.ForceANSIC>false</param.ForceANSIC>
+    <param.NumCompileJobs>1</param.NumCompileJobs>
+    <param.mex.outputfile>XYZaccelerationspectra_mex</param.mex.outputfile>
+    <param.grt.outputfile>XYZaccelerationspectra</param.grt.outputfile>
     <param.artifact>option.target.artifact.lib</param.artifact>
-    <param.outputfile>${PROJECT_ROOT}/codegen/lib/NEDwaves_memlight/NEDwaves_memlight.a</param.outputfile>
+    <param.outputfile>${PROJECT_ROOT}/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra.a</param.outputfile>
     <param.CppNamespace />
     <param.CppPackagesToNamespaces>true</param.CppPackagesToNamespaces>
     <param.CppNamespaceForMathworksCode>coder</param.CppNamespaceForMathworksCode>
     <param.CppPreserveClasses>true</param.CppPreserveClasses>
     <param.CppGenerateEnumClass>true</param.CppGenerateEnumClass>
     <param.gpu.Enabled>false</param.gpu.Enabled>
-    <param.gpu.SelectCudaDevice />
+    <param.gpu.SelectCudaDevice>-1</param.gpu.SelectCudaDevice>
     <param.gpu.ComputeCapability />
     <param.gpu.CustomComputeCapability />
     <param.gpu.MallocMode />
-    <param.gpu.MallocThreshold />
-    <param.gpu.StackLimitPerThread />
-    <param.gpu.MaximumBlocksPerKernel />
+    <param.gpu.MallocThreshold>200</param.gpu.MallocThreshold>
+    <param.gpu.StackLimitPerThread>1024</param.gpu.StackLimitPerThread>
+    <param.gpu.MaximumBlocksPerKernel>0</param.gpu.MaximumBlocksPerKernel>
     <param.gpu.Benchmarking>false</param.gpu.Benchmarking>
-    <param.gpu.SafeBuild />
+    <param.gpu.SafeBuild>false</param.gpu.SafeBuild>
     <param.gpu.KernelNamePrefix />
     <param.gpu.CompilerFlags />
     <param.gpu.EnableCUBLAS>false</param.gpu.EnableCUBLAS>
     <param.gpu.EnableCUSOLVER>false</param.gpu.EnableCUSOLVER>
     <param.gpu.EnableCUFFT>false</param.gpu.EnableCUFFT>
     <param.gpu.EnableMemoryManager>false</param.gpu.EnableMemoryManager>
-    <param.gpu.BlockAlignment />
+    <param.gpu.BlockAlignment>256</param.gpu.BlockAlignment>
     <param.gpu.FreeMode />
-    <param.gpu.MinPoolSize />
-    <param.gpu.MaxPoolSize />
+    <param.gpu.MinPoolSize>8</param.gpu.MinPoolSize>
+    <param.gpu.MaxPoolSize>2048</param.gpu.MaxPoolSize>
     <var.checkIssuesGpu>false</var.checkIssuesGpu>
     <var.hasGpu>false</var.hasGpu>
     <var.isDeepLearningForMatlabCoderEnabled>true</var.isDeepLearningForMatlabCoderEnabled>
@@ -648,17 +645,17 @@
     <var.cfiTargetLibSuppression>false</var.cfiTargetLibSuppression>
     <var.hasMatlabDeepLearningSupportPackage>true</var.hasMatlabDeepLearningSupportPackage>
     <var.hasGpuDeepLearningSupportPackage>true</var.hasGpuDeepLearningSupportPackage>
-    <param.tensorrt.DataType />
+    <param.tensorrt.DataType>option.tensorrt.datatype.fp32</param.tensorrt.DataType>
     <param.tensorrt.DataPath />
-    <param.tensorrt.NumCalibrationBatches />
-    <param.cudnn.AutoTuning />
-    <param.cudnn.DataType />
+    <param.tensorrt.NumCalibrationBatches>0</param.tensorrt.NumCalibrationBatches>
+    <param.cudnn.AutoTuning>true</param.cudnn.AutoTuning>
+    <param.cudnn.DataType>option.cudnn.datatype.fp32</param.cudnn.DataType>
     <param.cudnn.CalibrationResultFile />
-    <param.arm-compute.ArmComputeVersion />
-    <param.arm-compute.ArmArchitecture />
-    <param.arm-compute.DataType />
+    <param.arm-compute.ArmComputeVersion>option.arm-compute.version.20_02_1</param.arm-compute.ArmComputeVersion>
+    <param.arm-compute.ArmArchitecture>option.arm-compute.architecture.unspecified</param.arm-compute.ArmArchitecture>
+    <param.arm-compute.DataType>option.arm-compute.datatype.fp32</param.arm-compute.DataType>
     <param.arm-compute.CalibrationResultFile />
-    <param.cmsis-nn.DataType />
+    <param.cmsis-nn.DataType>option.arm-compute.datatype.int8</param.cmsis-nn.DataType>
     <param.cmsis-nn.CalibrationResultFile />
     <param.TargetLang>option.TargetLang.C</param.TargetLang>
     <param.EnableAutoExtrinsicCalls>true</param.EnableAutoExtrinsicCalls>
@@ -666,20 +663,20 @@
     <param.UsePreconditions>false</param.UsePreconditions>
     <param.FeatureFlags />
     <param.FixedPointMode>option.FixedPointMode.None</param.FixedPointMode>
-    <param.AutoScaleLoopIndexVariables />
+    <param.AutoScaleLoopIndexVariables>false</param.AutoScaleLoopIndexVariables>
     <param.ComputedFixedPointData />
     <param.UserFixedPointData />
-    <param.DefaultWordLength />
-    <param.DefaultFractionLength />
-    <param.FixedPointSafetyMargin />
-    <param.FixedPointFimath />
-    <param.FixedPointTypeSource />
+    <param.DefaultWordLength>16</param.DefaultWordLength>
+    <param.DefaultFractionLength>4</param.DefaultFractionLength>
+    <param.FixedPointSafetyMargin>0</param.FixedPointSafetyMargin>
+    <param.FixedPointFimath>fimath('RoundingMethod', 'Floor', 'OverflowAction', 'Wrap', 'ProductMode', 'FullPrecision', 'MaxProductWordLength', 128, 'SumMode', 'FullPrecision', 'MaxSumWordLength', 128)</param.FixedPointFimath>
+    <param.FixedPointTypeSource>option.FixedPointTypeSource.SimAndDerived</param.FixedPointTypeSource>
     <param.StaticAnalysisTimeout />
-    <param.StaticAnalysisGlobalRangesOnly />
-    <param.LogAllIOValues />
-    <param.DetectOverflows />
-    <param.LogHistogram />
-    <param.ShowCoverage />
+    <param.StaticAnalysisGlobalRangesOnly>false</param.StaticAnalysisGlobalRangesOnly>
+    <param.LogAllIOValues>false</param.LogAllIOValues>
+    <param.DetectOverflows>false</param.DetectOverflows>
+    <param.LogHistogram>false</param.LogHistogram>
+    <param.ShowCoverage>true</param.ShowCoverage>
     <param.ExcludedFixedPointVerificationFiles />
     <param.ExcludedFixedPointSimulationFiles />
     <param.InstrumentedBuildChecksum />
@@ -688,16 +685,16 @@
     <param.FixedPointValidationChecksum />
     <param.FixedPointSourceCodeChecksum />
     <param.FixedPointFunctionReplacements />
-    <param.OptimizeWholeNumbers />
-    <param.ContainerTypes />
+    <param.OptimizeWholeNumbers>true</param.OptimizeWholeNumbers>
+    <param.ContainerTypes>false</param.ContainerTypes>
     <param.GeneratedFixedPointFileSuffix>_fixpt</param.GeneratedFixedPointFileSuffix>
     <param.PlotFunction />
-    <param.SDIPlot />
-    <param.EnableCodeEfficiencyChecks />
-    <param.DefaultFixedPointSignedness />
-    <param.FixedPointTypeProposalMode />
-    <param.EnableFixedPointStep />
-    <var.lastFixedPointAction />
+    <param.SDIPlot>false</param.SDIPlot>
+    <param.EnableCodeEfficiencyChecks>false</param.EnableCodeEfficiencyChecks>
+    <param.DefaultFixedPointSignedness>option.DefaultFixedPointSignedness.Automatic</param.DefaultFixedPointSignedness>
+    <param.FixedPointTypeProposalMode>option.FixedPointTypeProposalMode.ProposeFractionLengths</param.FixedPointTypeProposalMode>
+    <param.EnableFixedPointStep>false</param.EnableFixedPointStep>
+    <var.lastFixedPointAction>option.fixedPointAction.none</var.lastFixedPointAction>
     <var.lastSimContext />
     <var.lastVerifyContext />
     <param.fpDataRoot />
@@ -705,9 +702,9 @@
     <var.snapshotChecksum />
     <param.fpLastConvertChecksum />
     <var.functionBlockSid />
-    <param.fptSignedness />
-    <var.FixedPointAnalysisMode />
-    <param.FixedPointUseDesignRanges />
+    <param.fptSignedness>false</param.fptSignedness>
+    <var.FixedPointAnalysisMode>option.FixedPointAnalysisMode.Sim</var.FixedPointAnalysisMode>
+    <param.FixedPointUseDesignRanges>false</param.FixedPointUseDesignRanges>
     <unset>
       <param.objective />
       <param.ExternalFcnMajority />
@@ -733,8 +730,6 @@
       <var.redirectedInputTypeData />
       <param.unifiedParamStorage />
       <param.hdlParamStorage />
-      <var.cfi.lastOutputRoot />
-      <var.cfi.preBuildChecksum />
       <var.outdatedOnRestore />
       <param.forceMexBuild />
       <param.NoDefaultJIT />
@@ -845,17 +840,17 @@
       <param.FixedPointUseDesignRanges />
     </unset>
     <fileset.entrypoints>
-      <file custom-data-expanded="false" value="${PROJECT_ROOT}/NEDwaves_memlight.m">
-        <Marker>1688136686075</Marker>
+      <file custom-data-expanded="false" value="${PROJECT_ROOT}/XYZaccelerationspectra.m">
+        <Marker>1764822770923</Marker>
       </file>
     </fileset.entrypoints>
     <fileset.testbench />
     <fileset.inputtypes>
-      <file custom-data-expanded="false" value="${PROJECT_ROOT}/NEDwaves_memlight.m">
-        <Inputs fileName="NEDwaves_memlight.m" functionName="NEDwaves_memlight">
-          <Input Name="north" typeId="0" />
-          <Input Name="east" typeId="0" />
-          <Input Name="down" typeId="0" />
+      <file custom-data-expanded="false" value="${PROJECT_ROOT}/XYZaccelerationspectra.m">
+        <Inputs fileName="XYZaccelerationspectra.m" functionName="XYZaccelerationspectra">
+          <Input Name="x" typeId="0" />
+          <Input Name="y" typeId="0" />
+          <Input Name="z" typeId="0" />
           <Input Name="fs" typeId="1" />
           <idpTable>
             <type typeId="0">
@@ -880,7 +875,7 @@
       </file>
     </fileset.inputtypes>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}/codegen/lib/NEDwaves_memlight" name="NEDwaves_memlight.a" optional="false">/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/codegen/lib/NEDwaves_memlight/NEDwaves_memlight.a</file>
+      <file location="${PROJECT_ROOT}/codegen/lib/XYZaccelerationspectra" name="XYZaccelerationspectra.a" optional="false">/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra.a</file>
     </build-deliverables>
     <workflow />
     <matlab>
