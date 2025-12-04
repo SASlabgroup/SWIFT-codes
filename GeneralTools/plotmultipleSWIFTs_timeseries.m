@@ -22,6 +22,7 @@ for fi=1:length(flist)
         plot([SWIFT.time],[SWIFT.windspd],'x','color',thiscolor,'linewidth',2,'linewidth',2), hold on
         ylabel('Wind spd [m/s]')
     elseif isfield(SWIFT, 'OBS_calibratedNTU')
+        clear OBS
         for si=1:length(SWIFT)
             OBS(si,:) = SWIFT(si).OBS_calibratedNTU;
             %plot(SWIFT(si).time,SWIFT(si).OBS_calibratedNTU,'x','color',thiscolor,'linewidth',2), hold on
