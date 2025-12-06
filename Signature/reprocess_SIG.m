@@ -315,7 +315,7 @@ for iburst = 1:nburst
    if exist('echo','var')
        if ~isempty(echo)
 
-       if ~isempty(SWIFT)
+       if ~isempty(SWIFT) && isfield(SWIFT,'salinity')
         S = mean([SWIFT.salinity],'omitnan');
        else
            S = 25;
