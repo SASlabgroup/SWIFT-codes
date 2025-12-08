@@ -5,23 +5,18 @@ function [mdir,stddir] = meandir(heading)
 
 % Grok AI 04/2025
 
-% Convert degrees to radians
-heading = deg2rad(heading);
-
 % Compute mean of sine and cosine components
-meany = mean(sin(heading),'omitnan');
-meanx = mean(cos(heading),'omitnan');
+meany = mean(sind(heading),'omitnan');
+meanx = mean(cosd(heading),'omitnan');
 
 % Mean resultant length 
 r = sqrt(meanx.^2 + meany.^2);
 
 % Compute mean angle using atan2
-mdir = rad2deg(atan2(meany, meanx));
+mdir = atan2d(meany, meanx);
 
 % Ensure output is in [0, 360]
-if mdir < 0
-    mdir = mdir + 360;
-end
+mdir(mdir < 0) = mdir(mdir < 0) + 360;
 
 % Standard deviation
 stddir = sqrt(-2*log(r));

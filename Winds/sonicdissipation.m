@@ -1,4 +1,4 @@
-function [eps,ustar,ps,cs,f,uadv,thetaH,iso,power] = sonicdissipation(u,v,w,temp,fs,twin,z)
+function [eps,ustar,windpsd,f,adv,winddirR,tilt,ani,isrslope] = sonicdissipation(u,v,w,temp,fs,twin,z)
 
 %%% Rotate to get streamwise + cross-stream velocities
 
@@ -19,6 +19,8 @@ u_rot = uw_rot(1,:);
 w_rot = uw_rot(2,:);
 
 uadv = mean(u_rot,'omitnan');
+vadv = mean(v_rot,'omitnan');
+wadv = mean(w_rot,'omitnan');
 
 %%% Convert direction to oceanographic convention
 thetaH = -thetaH + 90;
@@ -36,6 +38,7 @@ norm = 'par';
 
 % Cospectra
 [UW,~,~] = hannwinCOPSD2(u_rot,w_rot,nwin,fs,norm);
+[UV,~,~] = hannwinCOPSD2(u_rot,v_rot,nwin,fs,norm);
 [VW,~,~] = hannwinCOPSD2(v_rot,w_rot,nwin,fs,norm);
 [TW,~,~] = hannwinCOPSD2(temp,w_rot,nwin,fs,norm);
 
@@ -45,11 +48,8 @@ k = 0.41;
 isr = f>= 1.5 & f<=4;
 
 EUisr = mean(UU(isr).*f(isr).^(5/3),2,'omitnan');
-EVisr = mean(VV(:,isr).*f(isr).^(5/3),2,'omitnan');
-EWisr = mean(WW(:,isr).*f(isr).^(5/3),2,'omitnan');
-
-iso.v = EVisr./EUisr;
-iso.w = EWisr./EUisr;
+EVisr = mean(VV(isr).*f(isr).^(5/3),2,'omitnan');
+EWisr = mean(WW(isr).*f(isr).^(5/3),2,'omitnan');
 
 eps.u = (EUisr./K).^(3/2).*(2*pi./uadv);
 eps.v = ((3/4)*EVisr./K).^(3/2).*(2*pi./uadv);
@@ -63,21 +63,33 @@ ustar.w = (k.*z.*eps.w).^(1/3);
 [~,mu,bu,~] = fitline(log10(f(isr)),log10(UU(isr)));
 [~,mv,bv,~] = fitline(log10(f(isr)),log10(VV(isr)));
 [~,mw,bw,~] = fitline(log10(f(isr)),log10(WW(isr)));
-power.u = mu;
-power.v = mv;
-power.w = mw;  
-power.uint = bu;
-power.vint = bv;
-power.wint = bw;
+isrslope.u = mu;
+isrslope.v = mv;
+isrslope.w = mw;  
+isrslope.uint = bu;
+isrslope.vint = bv;
+isrslope.wint = bw;
+
+% Anisotropy
+ani = (1/2)*(EVisr + EUisr)./EWisr;
+
+% Wind Direction
+tilt = thetaV;
+winddirR = thetaH;
 
 % Save Spectra
-ps.UU = UU;
-ps.VV = VV;
-ps.WW = WW;
-ps.TT = TT;
+windpsd.uu = UU';
+windpsd.vv = VV';
+windpsd.ww = WW';
+windpsd.tt = TT';
+windpsd.uw = UW';
+windpsd.uv = UV';
+windpsd.vw = VW';
+windpsd.tw = TW';
 
-cs.UW = UW;
-cs.VW = VW;
-cs.TW = TW;
+% Save advective velocities (rotated)
+adv.u = uadv;
+adv.v = vadv;
+adv.w = wadv;
 
 end
