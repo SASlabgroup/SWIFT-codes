@@ -1,10 +1,10 @@
-function [ustar,epsilon,meanu,meanv,meanw,meantemp,anisotropy,quality,f,TKEpsd] = inertialdissipation(u,v,w,temp,z,fs)
+function [ustar,epsilon,meanu,meanv,meanw,meantemp,anisotropy,quality,f,TKEpsd,isrslope,windpsd,adv,tilt] = inertialdissipation(u,v,w,temp,z,fs,varargin)
 % Function to process 3D sonic anemometer data using the inertial dissipation method of Yelland et al 1994.
 % Inputs: turbulent wind components (u,v,w), sonic (virtual) air
 %         temperature (temp), measurement height (z) and sampling frequency (fs)
 % Outputs: wind friction velocity (ustar), dissipation rate (epsilon), mean
 %         velocities and temperature (meanu,meanv,meanw,meantemp), quality checks
-%         (anisotropy,quality), and TKE spectrum and corresponding frequency (TKEpsd)
+%         (anisotropy, quality), and TKE spectrum and corresponding frequency (TKEpsd)
 %
 % The intent is to run this on short bursts of data (nominally 10 to 60 minutes)
 %   such that the input data have stationary statistics
@@ -51,6 +51,15 @@ f = 1/(twin) + bandwidth/2 + bandwidth.*(0:(nf-1)) ;
 fmin = 1.5;  % min frequency
 fmax = 4; % max frequency
 
+% Rotate?
+rotateu = false;
+if nargin > 6 
+    if strcmp(varargin{1},'rotate')
+        rotateu = true;
+        % disp('Rotating winds')
+    end
+end
+
 %% Mean burst wind speed and temperature values
 
 meanu = mean(u);
@@ -89,6 +98,8 @@ end
 % Ur = downstream, Vr = horizontal cross stream, 
 %       Wr = vertical cross stream
 
+if rotateu
+
 Ur = NaN(size(U));
 Vr = NaN(size(V));
 Wr = NaN(size(W));
@@ -115,6 +126,15 @@ Ur(:,iwin) = UrW_rot(1,:);
 Wr(:,iwin) = UrW_rot(2,:);
 end
 
+else
+
+    Ur = U;
+    Vr = V;
+    Wr = W;
+
+    thetaV = 90;
+end
+
 %% Detrend windows
 Ud = detrend(Ur);
 Vd = detrend(Vr);
@@ -137,8 +157,8 @@ wsca = sqrt(var(Wd)./var(Wt));
 
 % Apply scaling
 Us = Ut.*repmat(usca,nwin,1);
-Vs = Ut.*repmat(vsca,nwin,1);
-Ws = Ut.*repmat(wsca,nwin,1);
+Vs = Vt.*repmat(vsca,nwin,1);
+Ws = Wt.*repmat(wsca,nwin,1);
 
 %% Compute power-spectra (auto) and cross-spectra
 
@@ -210,7 +230,13 @@ Eisr = mean(repmat(f(isrf)'.^(5/3),1,M).* PUm(isrf,:));
 Eisrstd = std((f(isrf)'.^(5/3)*ones(1,M)).*PUm(isrf,:)); 
 
 % Downstream advective speed (frozen field)
-Uadv = mean(Ur); 
+Uadv = abs(mean(Ur));
+
+% Crossstream speed
+Uadvcross = mean(Vr);
+
+% Vertical
+Uadvvert = mean(Wr);
 
 % Dissipation rate
 Eps =  (Eisr./((Uadv./(2*pi)).^(2/3).*K)).^(3/2);
@@ -218,18 +244,29 @@ Eps =  (Eisr./((Uadv./(2*pi)).^(2/3).*K)).^(3/2);
 % Friction velocity (assumes neutral stability)
 Ustar = (kv*Eps*z).^(1/3);
 
+% Correct ustar for 4/3 factor due to platform tilting downwind
+% After computing u* from Ur spectrum
+Kcorr = 1 + (1/3)*sind(thetaV).^2;
+Ustar = Ustar./sqrt(Kcorr);
+
 %% Ensemble average across windows
+epsilon = mean(Eps);
+ustar = mean(Ustar);
 
 upsd = mean(PUm,2);
 vpsd = mean(PVm,2);
 wpsd = mean(PWm,2);
-uvcopsd = mean(CUVm,2); 
-uwcopsd = mean(CUWm,2); 
-vwcopsd = mean(CVWm,2);
 
-% uadv = mean(Uadv);
-epsilon = mean(Eps);
-ustar = mean(Ustar);
+% For posterity
+windpsd.uu = upsd;
+windpsd.vv = vpsd;
+windpsd.ww = wpsd;
+windpsd.uv = mean(CUVm,2); 
+windpsd.uw = mean(CUWm,2); 
+windpsd.vw = mean(CVWm,2);
+adv.u = mean(Uadv);
+adv.v = mean(Uadvcross);
+adv.w = mean(Uadvvert);
 
 %% Sum component spectra to get proxy for TKE spectra
 TKEpsd = (upsd + vpsd + wpsd);
@@ -241,6 +278,12 @@ quality = mean((Eisr-Eisrstd)./Eisr);
 
 % Anisotropy 
 anisotropy = (mean(upsd(isrf))./mean(wpsd(isrf)) + mean(vpsd(isrf))./mean(wpsd(isrf)) )./2;
+
+% Inertial Subrange Slope
+[~,isrslope,~] = fitline(log10(f(isrf))',log10(upsd(isrf)));
+
+% Platform tilt
+tilt = mean(thetaV);
 
 % Drag coefficient
 % Cd =  ustar.^2 ./ (uadv).^2;

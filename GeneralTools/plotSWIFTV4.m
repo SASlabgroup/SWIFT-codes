@@ -22,7 +22,7 @@ ylim([0 15])
 set(gca,'Clipping','off')
 axes(h(4))
 plot(swift.time,swift.tair,'-rx','LineWidth',lw)
-ylim([10 20])
+%ylim([10 20])
 ylabel('T_{air} [^{\circ}C]')
 title('Air Temperature')
 
