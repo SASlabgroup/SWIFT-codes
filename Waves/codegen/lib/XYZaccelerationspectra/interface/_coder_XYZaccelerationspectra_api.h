@@ -5,7 +5,7 @@
  * File: _coder_XYZaccelerationspectra_api.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 03-Dec-2025 20:33:49
+ * C/C++ source code generated on  : 11-Dec-2025 06:39:36
  */
 
 #ifndef _CODER_XYZACCELERATIONSPECTRA_API_H
@@ -33,21 +33,6 @@ struct emxArray_real32_T {
 typedef struct emxArray_real32_T emxArray_real32_T;
 #endif /* typedef_emxArray_real32_T */
 
-#ifndef struct_emxArray_real16_T
-#define struct_emxArray_real16_T
-struct emxArray_real16_T {
-  real16_T *data;
-  int32_T *size;
-  int32_T allocatedSize;
-  int32_T numDimensions;
-  boolean_T canFreeData;
-};
-#endif /* struct_emxArray_real16_T */
-#ifndef typedef_emxArray_real16_T
-#define typedef_emxArray_real16_T
-typedef struct emxArray_real16_T emxArray_real16_T;
-#endif /* typedef_emxArray_real16_T */
-
 /* Variable Declarations */
 extern emlrtCTX emlrtRootTLSGlobal;
 extern emlrtContext emlrtContextGlobal;
@@ -59,8 +44,10 @@ extern "C" {
 /* Function Declarations */
 void XYZaccelerationspectra(emxArray_real32_T *x, emxArray_real32_T *y,
                             emxArray_real32_T *z, real_T fs, real16_T *b_fmin,
-                            real16_T *b_fmax, emxArray_real16_T *XX,
-                            emxArray_real16_T *YY, emxArray_real16_T *ZZ);
+                            real16_T *b_fmax, real16_T XX_data[],
+                            int32_T XX_size[2], real16_T YY_data[],
+                            int32_T YY_size[2], real16_T ZZ_data[],
+                            int32_T ZZ_size[2]);
 
 void XYZaccelerationspectra_api(const mxArray *const prhs[4], int32_T nlhs,
                                 const mxArray *plhs[5]);

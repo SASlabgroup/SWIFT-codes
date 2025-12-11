@@ -5,7 +5,7 @@
  * File: colon.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 03-Dec-2025 20:33:49
+ * C/C++ source code generated on  : 11-Dec-2025 06:39:36
  */
 
 #ifndef COLON_H
@@ -22,9 +22,7 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-void b_eml_float_colon(double b, emxArray_real_T *y);
-
-void eml_float_colon(double b, emxArray_real_T *y);
+void eml_float_colon(double a, double d, double b, emxArray_real_T *y);
 
 #ifdef __cplusplus
 }

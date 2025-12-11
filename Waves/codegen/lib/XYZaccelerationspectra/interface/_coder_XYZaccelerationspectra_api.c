@@ -5,7 +5,7 @@
  * File: _coder_XYZaccelerationspectra_api.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 03-Dec-2025 20:33:49
+ * C/C++ source code generated on  : 11-Dec-2025 06:39:36
  */
 
 /* Include Files */
@@ -33,7 +33,8 @@ static void b_emlrt_marshallIn(const emlrtStack *sp, const mxArray *u,
                                const emlrtMsgIdentifier *parentId,
                                emxArray_real32_T *y);
 
-static const mxArray *b_emlrt_marshallOut(const emxArray_real16_T *u);
+static const mxArray *b_emlrt_marshallOut(const real16_T u_data[],
+                                          const int32_T u_size[2]);
 
 static real_T c_emlrt_marshallIn(const emlrtStack *sp, const mxArray *fs,
                                  const char_T *identifier);
@@ -53,14 +54,8 @@ static const mxArray *emlrt_marshallOut(const real16_T u);
 static void emxEnsureCapacity_real32_T(emxArray_real32_T *emxArray,
                                        int32_T oldNumel);
 
-static void emxFree_real16_T(const emlrtStack *sp,
-                             emxArray_real16_T **pEmxArray);
-
 static void emxFree_real32_T(const emlrtStack *sp,
                              emxArray_real32_T **pEmxArray);
-
-static void emxInit_real16_T(const emlrtStack *sp,
-                             emxArray_real16_T **pEmxArray);
 
 static void emxInit_real32_T(const emlrtStack *sp,
                              emxArray_real32_T **pEmxArray);
@@ -85,20 +80,20 @@ static void b_emlrt_marshallIn(const emlrtStack *sp, const mxArray *u,
 }
 
 /*
- * Arguments    : const emxArray_real16_T *u
+ * Arguments    : const real16_T u_data[]
+ *                const int32_T u_size[2]
  * Return Type  : const mxArray *
  */
-static const mxArray *b_emlrt_marshallOut(const emxArray_real16_T *u)
+static const mxArray *b_emlrt_marshallOut(const real16_T u_data[],
+                                          const int32_T u_size[2])
 {
   static const int32_T iv[2] = {0, 0};
   const mxArray *m;
   const mxArray *y;
-  const real16_T *u_data;
-  u_data = u->data;
   y = NULL;
   m = emlrtCreateNumericArray(2, (const void *)&iv[0], mxHALF_CLASS, mxREAL);
   emlrtMxSetData((mxArray *)m, (void *)&u_data[0]);
-  emlrtSetDimensions((mxArray *)m, &u->size[0], 2);
+  emlrtSetDimensions((mxArray *)m, &u_size[0], 2);
   emlrtAssign(&y, m);
   return y;
 }
@@ -242,25 +237,6 @@ static void emxEnsureCapacity_real32_T(emxArray_real32_T *emxArray,
 
 /*
  * Arguments    : const emlrtStack *sp
- *                emxArray_real16_T **pEmxArray
- * Return Type  : void
- */
-static void emxFree_real16_T(const emlrtStack *sp,
-                             emxArray_real16_T **pEmxArray)
-{
-  if (*pEmxArray != (emxArray_real16_T *)NULL) {
-    if (((*pEmxArray)->data != (real16_T *)NULL) && (*pEmxArray)->canFreeData) {
-      emlrtFreeMex((*pEmxArray)->data);
-    }
-    emlrtFreeMex((*pEmxArray)->size);
-    emlrtRemoveHeapReference((emlrtCTX)sp, (void *)pEmxArray);
-    emlrtFreeEmxArray(*pEmxArray);
-    *pEmxArray = (emxArray_real16_T *)NULL;
-  }
-}
-
-/*
- * Arguments    : const emlrtStack *sp
  *                emxArray_real32_T **pEmxArray
  * Return Type  : void
  */
@@ -275,32 +251,6 @@ static void emxFree_real32_T(const emlrtStack *sp,
     emlrtRemoveHeapReference((emlrtCTX)sp, (void *)pEmxArray);
     emlrtFreeEmxArray(*pEmxArray);
     *pEmxArray = (emxArray_real32_T *)NULL;
-  }
-}
-
-/*
- * Arguments    : const emlrtStack *sp
- *                emxArray_real16_T **pEmxArray
- * Return Type  : void
- */
-static void emxInit_real16_T(const emlrtStack *sp,
-                             emxArray_real16_T **pEmxArray)
-{
-  emxArray_real16_T *emxArray;
-  int32_T i;
-  *pEmxArray =
-      (emxArray_real16_T *)emlrtMallocEmxArray(sizeof(emxArray_real16_T));
-  emlrtPushHeapReferenceStackEmxArray((emlrtCTX)sp, true, (void *)pEmxArray,
-                                      (void *)&emxFree_real16_T, NULL, NULL,
-                                      NULL);
-  emxArray = *pEmxArray;
-  emxArray->data = (real16_T *)NULL;
-  emxArray->numDimensions = 2;
-  emxArray->size = (int32_T *)emlrtMallocMex(sizeof(int32_T) * 2U);
-  emxArray->allocatedSize = 0;
-  emxArray->canFreeData = true;
-  for (i = 0; i < 2; i++) {
-    emxArray->size[i] = 0;
   }
 }
 
@@ -362,23 +312,26 @@ void XYZaccelerationspectra_api(const mxArray *const prhs[4], int32_T nlhs,
       NULL, /* tls */
       NULL  /* prev */
   };
-  emxArray_real16_T *XX;
-  emxArray_real16_T *YY;
-  emxArray_real16_T *ZZ;
   emxArray_real32_T *x;
   emxArray_real32_T *y;
   emxArray_real32_T *z;
   real_T fs;
+  int32_T XX_size[2];
+  int32_T YY_size[2];
+  int32_T ZZ_size[2];
+  real16_T(*XX_data)[48];
+  real16_T(*YY_data)[48];
+  real16_T(*ZZ_data)[48];
   real16_T b_fmax;
   real16_T b_fmin;
   st.tls = emlrtRootTLSGlobal;
+  XX_data = (real16_T(*)[48])mxMalloc(sizeof(real16_T[48]));
+  YY_data = (real16_T(*)[48])mxMalloc(sizeof(real16_T[48]));
+  ZZ_data = (real16_T(*)[48])mxMalloc(sizeof(real16_T[48]));
   emlrtHeapReferenceStackEnterFcnR2012b(&st);
   emxInit_real32_T(&st, &x);
   emxInit_real32_T(&st, &y);
   emxInit_real32_T(&st, &z);
-  emxInit_real16_T(&st, &XX);
-  emxInit_real16_T(&st, &YY);
-  emxInit_real16_T(&st, &ZZ);
   /* Marshall function inputs */
   x->canFreeData = false;
   emlrt_marshallIn(&st, emlrtAlias(prhs[0]), "x", x);
@@ -388,7 +341,8 @@ void XYZaccelerationspectra_api(const mxArray *const prhs[4], int32_T nlhs,
   emlrt_marshallIn(&st, emlrtAlias(prhs[2]), "z", z);
   fs = c_emlrt_marshallIn(&st, emlrtAliasP(prhs[3]), "fs");
   /* Invoke the target function */
-  XYZaccelerationspectra(x, y, z, fs, &b_fmin, &b_fmax, XX, YY, ZZ);
+  XYZaccelerationspectra(x, y, z, fs, &b_fmin, &b_fmax, *XX_data, XX_size,
+                         *YY_data, YY_size, *ZZ_data, ZZ_size);
   /* Marshall function outputs */
   plhs[0] = emlrt_marshallOut(b_fmin);
   emxFree_real32_T(&st, &z);
@@ -398,20 +352,14 @@ void XYZaccelerationspectra_api(const mxArray *const prhs[4], int32_T nlhs,
     plhs[1] = emlrt_marshallOut(b_fmax);
   }
   if (nlhs > 2) {
-    XX->canFreeData = false;
-    plhs[2] = b_emlrt_marshallOut(XX);
+    plhs[2] = b_emlrt_marshallOut(*XX_data, XX_size);
   }
-  emxFree_real16_T(&st, &XX);
   if (nlhs > 3) {
-    YY->canFreeData = false;
-    plhs[3] = b_emlrt_marshallOut(YY);
+    plhs[3] = b_emlrt_marshallOut(*YY_data, YY_size);
   }
-  emxFree_real16_T(&st, &YY);
   if (nlhs > 4) {
-    ZZ->canFreeData = false;
-    plhs[4] = b_emlrt_marshallOut(ZZ);
+    plhs[4] = b_emlrt_marshallOut(*ZZ_data, ZZ_size);
   }
-  emxFree_real16_T(&st, &ZZ);
   emlrtHeapReferenceStackLeaveFcnR2012b(&st);
 }
 

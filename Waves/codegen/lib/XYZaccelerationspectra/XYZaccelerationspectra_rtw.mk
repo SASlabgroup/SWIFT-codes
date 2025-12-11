@@ -2,7 +2,7 @@
 ## Makefile generated for component 'XYZaccelerationspectra'. 
 ## 
 ## Makefile     : XYZaccelerationspectra_rtw.mk
-## Generated on : Wed Dec 03 20:24:54 2025
+## Generated on : Thu Dec 11 06:39:53 2025
 ## Final product: ./XYZaccelerationspectra.a
 ## Product type : static-library
 ## 
@@ -172,7 +172,7 @@ DEFINES = $(DEFINES_) $(DEFINES_CUSTOM) $(DEFINES_SKIPFORSIL) $(DEFINES_STANDARD
 ## SOURCE FILES
 ###########################################################################
 
-SRCS = $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_data.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/rt_nonfinite.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/rtGetNaN.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/rtGetInf.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_initialize.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_terminate.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/colon.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/mean.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/var.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/fft.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/FFTImplementationCallback.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/minOrMax.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/nullAssignment.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_emxutil.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_emxAPI.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/rtwhalf.c
+SRCS = $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_data.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/rt_nonfinite.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/rtGetNaN.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/rtGetInf.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_initialize.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_terminate.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/colon.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/mean.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/var.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/fft.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/FFTImplementationCallback.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/minOrMax.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/nullAssignment.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/div.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_emxutil.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/XYZaccelerationspectra_emxAPI.c $(START_DIR)/codegen/lib/XYZaccelerationspectra/rtwhalf.c
 
 ALL_SRCS = $(SRCS)
 
@@ -180,7 +180,7 @@ ALL_SRCS = $(SRCS)
 ## OBJECTS
 ###########################################################################
 
-OBJS = XYZaccelerationspectra_data.o rt_nonfinite.o rtGetNaN.o rtGetInf.o XYZaccelerationspectra_initialize.o XYZaccelerationspectra_terminate.o XYZaccelerationspectra.o colon.o mean.o var.o fft.o FFTImplementationCallback.o minOrMax.o nullAssignment.o XYZaccelerationspectra_emxutil.o XYZaccelerationspectra_emxAPI.o rtwhalf.o
+OBJS = XYZaccelerationspectra_data.o rt_nonfinite.o rtGetNaN.o rtGetInf.o XYZaccelerationspectra_initialize.o XYZaccelerationspectra_terminate.o XYZaccelerationspectra.o colon.o mean.o var.o fft.o FFTImplementationCallback.o minOrMax.o nullAssignment.o div.o XYZaccelerationspectra_emxutil.o XYZaccelerationspectra_emxAPI.o rtwhalf.o
 
 ALL_OBJS = $(OBJS)
 
@@ -356,6 +356,10 @@ minOrMax.o : $(START_DIR)/codegen/lib/XYZaccelerationspectra/minOrMax.c
 
 
 nullAssignment.o : $(START_DIR)/codegen/lib/XYZaccelerationspectra/nullAssignment.c
+	$(CC) $(CFLAGS) -o "$@" "$<"
+
+
+div.o : $(START_DIR)/codegen/lib/XYZaccelerationspectra/div.c
 	$(CC) $(CFLAGS) -o "$@" "$<"
 
 

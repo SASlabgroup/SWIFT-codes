@@ -5,14 +5,13 @@
  * File: XYZaccelerationspectra_types.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 03-Dec-2025 20:33:49
+ * C/C++ source code generated on  : 11-Dec-2025 06:39:36
  */
 
 #ifndef XYZACCELERATIONSPECTRA_TYPES_H
 #define XYZACCELERATIONSPECTRA_TYPES_H
 
 /* Include Files */
-#include "rtwhalf.h"
 #include "rtwtypes.h"
 
 /* Type Definitions */
@@ -30,21 +29,6 @@ struct emxArray_real32_T {
 #define typedef_emxArray_real32_T
 typedef struct emxArray_real32_T emxArray_real32_T;
 #endif /* typedef_emxArray_real32_T */
-
-#ifndef struct_emxArray_real16_T
-#define struct_emxArray_real16_T
-struct emxArray_real16_T {
-  real16_T *data;
-  int *size;
-  int allocatedSize;
-  int numDimensions;
-  bool canFreeData;
-};
-#endif /* struct_emxArray_real16_T */
-#ifndef typedef_emxArray_real16_T
-#define typedef_emxArray_real16_T
-typedef struct emxArray_real16_T emxArray_real16_T;
-#endif /* typedef_emxArray_real16_T */
 
 #ifndef struct_emxArray_real_T
 #define struct_emxArray_real_T
@@ -72,21 +56,6 @@ typedef struct {
 } emxArray_creal32_T;
 #endif /* typedef_emxArray_creal32_T */
 
-#ifndef struct_emxArray_int32_T
-#define struct_emxArray_int32_T
-struct emxArray_int32_T {
-  int *data;
-  int *size;
-  int allocatedSize;
-  int numDimensions;
-  bool canFreeData;
-};
-#endif /* struct_emxArray_int32_T */
-#ifndef typedef_emxArray_int32_T
-#define typedef_emxArray_int32_T
-typedef struct emxArray_int32_T emxArray_int32_T;
-#endif /* typedef_emxArray_int32_T */
-
 #ifndef struct_emxArray_boolean_T
 #define struct_emxArray_boolean_T
 struct emxArray_boolean_T {
@@ -101,6 +70,21 @@ struct emxArray_boolean_T {
 #define typedef_emxArray_boolean_T
 typedef struct emxArray_boolean_T emxArray_boolean_T;
 #endif /* typedef_emxArray_boolean_T */
+
+#ifndef struct_emxArray_int32_T
+#define struct_emxArray_int32_T
+struct emxArray_int32_T {
+  int *data;
+  int *size;
+  int allocatedSize;
+  int numDimensions;
+  bool canFreeData;
+};
+#endif /* struct_emxArray_int32_T */
+#ifndef typedef_emxArray_int32_T
+#define typedef_emxArray_int32_T
+typedef struct emxArray_int32_T emxArray_int32_T;
+#endif /* typedef_emxArray_int32_T */
 
 #endif
 /*

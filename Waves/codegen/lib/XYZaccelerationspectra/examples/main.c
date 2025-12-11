@@ -5,7 +5,7 @@
  * File: main.c
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 03-Dec-2025 20:33:49
+ * C/C++ source code generated on  : 11-Dec-2025 06:39:36
  */
 
 /*************************************************************************/
@@ -101,17 +101,17 @@ static double argInit_real_T(void)
  */
 static void main_XYZaccelerationspectra(void)
 {
-  emxArray_real16_T *XX;
-  emxArray_real16_T *YY;
-  emxArray_real16_T *ZZ;
   emxArray_real32_T *x;
   emxArray_real32_T *y;
   emxArray_real32_T *z;
+  int XX_size[2];
+  int YY_size[2];
+  int ZZ_size[2];
+  real16_T XX_data[48];
+  real16_T YY_data[48];
+  real16_T ZZ_data[48];
   real16_T b_fmax;
   real16_T b_fmin;
-  emxInitArray_real16_T(&XX, 2);
-  emxInitArray_real16_T(&YY, 2);
-  emxInitArray_real16_T(&ZZ, 2);
   /* Initialize function 'XYZaccelerationspectra' input arguments. */
   /* Initialize function input argument 'x'. */
   x = argInit_1xUnbounded_real32_T();
@@ -120,11 +120,8 @@ static void main_XYZaccelerationspectra(void)
   /* Initialize function input argument 'z'. */
   z = argInit_1xUnbounded_real32_T();
   /* Call the entry-point 'XYZaccelerationspectra'. */
-  XYZaccelerationspectra(x, y, z, argInit_real_T(), &b_fmin, &b_fmax, XX, YY,
-                         ZZ);
-  emxDestroyArray_real16_T(ZZ);
-  emxDestroyArray_real16_T(YY);
-  emxDestroyArray_real16_T(XX);
+  XYZaccelerationspectra(x, y, z, argInit_real_T(), &b_fmin, &b_fmax, XX_data,
+                         XX_size, YY_data, YY_size, ZZ_data, ZZ_size);
   emxDestroyArray_real32_T(z);
   emxDestroyArray_real32_T(y);
   emxDestroyArray_real32_T(x);

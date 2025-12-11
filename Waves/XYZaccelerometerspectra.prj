@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.coder" plugin-version="R2021a">
-  <configuration build-checksum="3030870674" file="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/XYZaccelerometerspectra.prj" location="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves" name="XYZaccelerometerspectra" preferred-package-location="/Users/jthomson/Downloads/NEDwaves_testcases" preferred-package-type="package.type.zip.flat" target="target.unifiedcoder" target-name="MATLAB Coder">
+  <configuration build-checksum="2404295098" file="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/XYZaccelerometerspectra.prj" location="/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves" name="XYZaccelerometerspectra" preferred-package-location="/Users/jthomson/Downloads/NEDwaves_testcases" preferred-package-type="package.type.zip.flat" target="target.unifiedcoder" target-name="MATLAB Coder">
     <profile key="profile.mex">
       <param.BuiltInstrumentedMex>false</param.BuiltInstrumentedMex>
       <param.RanInstrumentedMex>false</param.RanInstrumentedMex>
@@ -577,7 +577,7 @@
     <param.AutoInferUnboundedSizeThreshold>2048</param.AutoInferUnboundedSizeThreshold>
     <param.EnableFixedPointStep>false</param.EnableFixedPointStep>
     <param.EnableScreener>true</param.EnableScreener>
-    <param.AnnotationChecksum>2474037785</param.AnnotationChecksum>
+    <param.AnnotationChecksum>3749995999</param.AnnotationChecksum>
     <var.LegacyTarget />
     <var.MirrorOnOpen>false</var.MirrorOnOpen>
     <param.FixedPointEnabled>false</param.FixedPointEnabled>
@@ -587,12 +587,12 @@
     <param.hdlParamStorage />
     <var.gc.lastOutputRoot>codegen/lib/XYZaccelerationspectra</var.gc.lastOutputRoot>
     <var.gc.lastOutputType>C_CODE</var.gc.lastOutputType>
-    <var.gc.preBuildChecksum>885328156</var.gc.preBuildChecksum>
+    <var.gc.preBuildChecksum>254591540</var.gc.preBuildChecksum>
     <var.cfi.lastOutputRoot>codegen/mex/XYZaccelerationspectra</var.cfi.lastOutputRoot>
-    <var.cfi.preBuildChecksum>3528381376</var.cfi.preBuildChecksum>
+    <var.cfi.preBuildChecksum>3920042216</var.cfi.preBuildChecksum>
     <var.lastCfiTestSnippet>[ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectra(x, y, z, fs)</var.lastCfiTestSnippet>
     <var.outdatedOnRestore>false</var.outdatedOnRestore>
-    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/XYZaccelerationspectra.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;3383286612&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
+    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/XYZaccelerationspectra.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;1569185960&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
     <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;/Users/jthomson/Documents/GitHub/SWIFT-codes/Waves/XYZaccelerationspectra.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
     <param.forceMexBuild>false</param.forceMexBuild>
     <param.NoDefaultJIT>false</param.NoDefaultJIT>
@@ -841,7 +841,7 @@
     </unset>
     <fileset.entrypoints>
       <file custom-data-expanded="false" value="${PROJECT_ROOT}/XYZaccelerationspectra.m">
-        <Marker>1764822770923</Marker>
+        <Marker>1765463922367</Marker>
       </file>
     </fileset.entrypoints>
     <fileset.testbench />
@@ -858,7 +858,7 @@
               <Size>1 x :inf</Size>
               <Value />
               <InitialValue />
-              <UserDefined>true</UserDefined>
+              <UserDefined>false</UserDefined>
               <Complex>false</Complex>
             </type>
             <type typeId="1">

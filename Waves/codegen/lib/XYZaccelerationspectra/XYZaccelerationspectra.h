@@ -5,7 +5,7 @@
  * File: XYZaccelerationspectra.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 03-Dec-2025 20:33:49
+ * C/C++ source code generated on  : 11-Dec-2025 06:39:36
  */
 
 #ifndef XYZACCELERATIONSPECTRA_H
@@ -27,8 +27,9 @@ extern void XYZaccelerationspectra(const emxArray_real32_T *x,
                                    const emxArray_real32_T *y,
                                    const emxArray_real32_T *z, double fs,
                                    real16_T *b_fmin, real16_T *b_fmax,
-                                   emxArray_real16_T *XX, emxArray_real16_T *YY,
-                                   emxArray_real16_T *ZZ);
+                                   real16_T XX_data[], int XX_size[2],
+                                   real16_T YY_data[], int YY_size[2],
+                                   real16_T ZZ_data[], int ZZ_size[2]);
 
 #ifdef __cplusplus
 }

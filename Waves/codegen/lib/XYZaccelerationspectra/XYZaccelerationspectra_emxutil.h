@@ -5,7 +5,7 @@
  * File: XYZaccelerationspectra_emxutil.h
  *
  * MATLAB Coder version            : 5.4
- * C/C++ source code generated on  : 03-Dec-2025 20:33:49
+ * C/C++ source code generated on  : 11-Dec-2025 06:39:36
  */
 
 #ifndef XYZACCELERATIONSPECTRA_EMXUTIL_H
@@ -30,9 +30,6 @@ extern void emxEnsureCapacity_creal32_T(emxArray_creal32_T *emxArray,
 
 extern void emxEnsureCapacity_int32_T(emxArray_int32_T *emxArray, int oldNumel);
 
-extern void emxEnsureCapacity_real16_T(emxArray_real16_T *emxArray,
-                                       int oldNumel);
-
 extern void emxEnsureCapacity_real32_T(emxArray_real32_T *emxArray,
                                        int oldNumel);
 
@@ -44,8 +41,6 @@ extern void emxFree_creal32_T(emxArray_creal32_T **pEmxArray);
 
 extern void emxFree_int32_T(emxArray_int32_T **pEmxArray);
 
-extern void emxFree_real16_T(emxArray_real16_T **pEmxArray);
-
 extern void emxFree_real32_T(emxArray_real32_T **pEmxArray);
 
 extern void emxFree_real_T(emxArray_real_T **pEmxArray);
@@ -56,8 +51,6 @@ extern void emxInit_creal32_T(emxArray_creal32_T **pEmxArray,
                               int numDimensions);
 
 extern void emxInit_int32_T(emxArray_int32_T **pEmxArray, int numDimensions);
-
-extern void emxInit_real16_T(emxArray_real16_T **pEmxArray, int numDimensions);
 
 extern void emxInit_real32_T(emxArray_real32_T **pEmxArray, int numDimensions);
 
