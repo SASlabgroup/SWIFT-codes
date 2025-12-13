@@ -14,7 +14,7 @@ h = sqrt(8/3)*hanning(nwin);% Hanning window variance preservation
 T = nwin/fs; 
 df = 1/T; 
 F = (0:nwin-1)*df; 
-F = F(1:floor(end/2));
+F = F(1:floor(end/2))';
 
 PX = NaN(M,floor(nwin/2));
 Ph = NaN(M,floor(nwin/2));
@@ -53,8 +53,8 @@ end
 
 % Average
 PXstd = std(PX,[],1,'omitnan');
-PX = mean(PX,'omitnan');
-Ph = mean(Ph,'omitnan');
+PX = mean(PX,'omitnan')';
+Ph = mean(Ph,'omitnan')';
 
 % Normalize to satisfy Parsevals Theorem or produce PSD
 if strcmp(norm,'psd')

@@ -47,9 +47,9 @@ K = 0.55;
 k = 0.41;
 isr = f>= 1.5 & f<=4;
 
-EUisr = mean(UU(isr).*f(isr).^(5/3),2,'omitnan');
-EVisr = mean(VV(isr).*f(isr).^(5/3),2,'omitnan');
-EWisr = mean(WW(isr).*f(isr).^(5/3),2,'omitnan');
+EUisr = mean(UU(isr).*f(isr).^(5/3),'omitnan');
+EVisr = mean(VV(isr).*f(isr).^(5/3),'omitnan');
+EWisr = mean(WW(isr).*f(isr).^(5/3),'omitnan');
 
 eps.u = (EUisr./K).^(3/2).*(2*pi./uadv);
 eps.v = ((3/4)*EVisr./K).^(3/2).*(2*pi./uadv);
