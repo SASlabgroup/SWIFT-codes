@@ -1,4 +1,4 @@
-function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectraLEL(x_input, y_input, z_input, fs) %#codegen
+function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectraLEL(x_input, y_input, z_input, fs)
 % matlab function to process linear accelerations (x,y,z) components
 %   following the spectral processing steps of microSWIFT wave processing with "NEDwaves"
 %
@@ -56,7 +56,9 @@ end
 %% frequency resolution
 Nyquist = fs / 2;     % highest spectral frequency
 
-f1 = 1/wsecs;    % frequency resolution
+% TODO(LEL) Sort this out (though it probably doesn't matter)
+%%f1 = 1/wsecs;    % frequency resolution
+f1 = fs / wpts;
 
 % TODO(LEL): Actually probably don't even need to keep the array of raw frequencies
 %     around -- you can derive it from the index of the FFT if you know the sampling
@@ -75,7 +77,9 @@ bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 %    the case where length(merged_freqs) < nfbands, and so we woudl be calculating
 %    fewer frequency bands. The matlab code handled that by truncating the array,
 %    but I don't want to have variable sized arrays ...
-f0 = f1 + bandwidth / 2;
+% TODO(LEL): I think f0 needs to be at the center of the cell, not this.
+%%f0 = f1 + bandwidth / 2;
+f0 = f1 * (1 + merge) / 2;  % arthmeetic mean of merged frequencies
 if f0 + bandwidth * (nfbands - 1) > Nyquist % Exit early if merged frequency vector would be too small
     fmin = half(9999);
     fmax = half(9999);
@@ -89,14 +93,17 @@ merged_freqs = zeros(1, nfbands); % Frequency vector after merging
 for idx = 1:nfbands % prune the higher frequencies
     merged_freqs(idx) = f0 + bandwidth*(idx-1);
 end
+%if merged_freqs(nfbands) < Nyquist
+%    "Pruned higher frequencies: ", nfbands, merged_freqs(nfbands), Nyquist
+%end
 
 %% initialize spectral ouput, which will accumulate as windows are processed
 XX = single(zeros(1, nfbands));
 YY = single(zeros(1, nfbands));
 ZZ = single(zeros(1, nfbands));
 
+%% Initialize taper and loop variables
 
-%% loop thru windows, accumulating spectral results
 % QUESTION(LEL): Why does the taper start at sin(pi/wpts) rather than sin(0)?
 % taper = sin ( (1:wpts) * pi/wpts );     % define the taper
 taper = zeros(1, wpts);
@@ -104,9 +111,9 @@ for idx=1:wpts
     taper(idx) = sin(idx * pi / wpts);
 end
 
-xwin = zeros(1, wpts);
-ywin = zeros(1, wpts);
-zwin = zeros(1, wpts);
+xwin = single(zeros(1, wpts));
+ywin = single(zeros(1, wpts));
+zwin = single(zeros(1, wpts));
 
 XXwindow = zeros(1, merge * nfbands);
 YYwindow = zeros(1, merge * nfbands);
@@ -196,10 +203,12 @@ for q=1:num_windows
     end
 
     % accumulate window results and merge neighboring frequency bands (to increase DOFs)
-    for mi = merge : merge : (length(merged_freqs)-1)*merge
-        XX(mi/merge) = XX(mi/merge) + mean( XXwindow((mi-merge+1):mi) );
-        YY(mi/merge) = YY(mi/merge) + mean( YYwindow((mi-merge+1):mi) );
-        ZZ(mi/merge) = ZZ(mi/merge) + mean( ZZwindow((mi-merge+1):mi) );
+    % NOTE(LEL): The previous code didn't actually do the calculations
+    %    for the final bin.
+    for mi = 1 : 1 : nfbands % (length(merged_freqs)-1)
+        XX(mi) = XX(mi) + mean( XXwindow((mi*merge-merge+1):mi*merge) );
+        YY(mi) = YY(mi) + mean( YYwindow((mi*merge-merge+1):mi*merge) );
+        ZZ(mi) = ZZ(mi) + mean( ZZwindow((mi*merge-merge+1):mi*merge) );
     end
 
 
