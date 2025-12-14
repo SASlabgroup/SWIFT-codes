@@ -1,5 +1,4 @@
-function [ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectraLEL(x, y, z, fs)
-
+function [ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectraLEL(x_input, y_input, z_input, fs) %#codegen
 % matlab function to process linear accelerations (x,y,z) components
 %   following the spectral processing steps of microSWIFT wave processing with "NEDwaves"
 %
@@ -28,7 +27,7 @@ function [ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectraLEL(x, y, z, fs)
 %% parameters
 
 % TODO(LEL): In the C implementation, this will either be a constant or a parameter.
-pts = length(x);  % length of the input data (should be 2^N for efficiency)
+pts = length(x_input);  % length of the input data (should be 2^N for efficiency)
 
 % QUESTION(LEL): Why do we call `round(fs)` here?
 wsecs =  4096/round(fs)/2; % window length in seconds, usually 512 for wave processing ** now dynamic **
@@ -113,9 +112,9 @@ zwin = zeros(1, wpts);
 for q=1:windows
     offset = (q-1)*floor(.25*wpts);
     for idx=1:wpts
-        xwin(idx) = x(offset+idx);
-        ywin(idx) = y(offset+idx);
-        zwin(idx) = z(offset+idx);
+        xwin(idx) = x_input(offset+idx);
+        ywin(idx) = y_input(offset+idx);
+        zwin(idx) = z_input(offset+idx);
     end
 
     %% remove the mean
