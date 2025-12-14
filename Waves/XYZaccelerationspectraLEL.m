@@ -22,10 +22,11 @@ function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectraLEL(x_
 %
 %#codegen
 
+%% Parameters
 
 % Laura's take on input parameters:
 % DATA_POINTS = 4096
-% WINDOW_POINTS = 512  % Should be 2^N for efficiency
+% WINDOW_POINTS = 1024  % Should be 2^N for efficiency
 % MERGE = 5  % How many bins of the FFT to merge in reported spectra. Must be odd.
 % NFBANDS = 48 % How many frequency bands to report
 % FREQ = ??  (Simply used for converting output spectra into units involving Hz)
@@ -36,34 +37,44 @@ function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectraLEL(x_
 % %  (And the implementation requires data_points >= (5/4) * window_points, but
 % %  I don't think that's a fundamental constraint.)
 
+data_points = length(x_input);
 
-%% parameters
+window_points = 1024;
+% TODO: Delete this section as soon as Jim agrees to modify original Matlab code.
+%   (I have to leave it in for now to make results match!)
+window_points = round(2048 * fs / round(fs));
+if rem(window_points, 2) ~= 0
+    window_points = window_points - 1;
+end
+assert(rem(window_points, 2) == 0);   % Window must be even
 
-% TODO(LEL): In the C implementation, this will either be a constant or a parameter.
-% NOTE(LEL): I don't think that *this* needs to be 2^N ... presumably, the window
-%    length should be, and window_pts/4 needs to divide evenly into this.
-pts = length(x_input);  % length of the input data (should be 2^N for efficiency)
+window_step = floor(0.25 * window_points)  % 75% overlap between windows
+if rem(data_points, window_step) ~= 0
+    discarded_points = rem(data_points, window_step);
+    fprintf("window_length/4 (%d) does not evenly divide data length (%d); will discard %d points.\n", window_step, data_points, discarded_points)
+end
+num_windows = floor (data_points / window_step) - 3;
+% TODO(LEL): Confirm with Jim that the intent was >= 1, not > 1
+%   I think this is another case where we could do something like:
+% `static_assert(data_points >= window_points, "Insufficient points in input data to fill window");`
+assert(num_windows >= 1);  % Need at least one window!
 
-% QUESTION(LEL): Why do we call `round(fs)` here?
-% NOTE(LEL): maybe just directly specify window length in points?
-wsecs =  4096/round(fs)/2; % window length in seconds, usually 512 for wave processing ** now dynamic **
 merge = 5;   % freq bands to merge in reported spectra, must be odd
+assert(rem(merge, 2) == 1);
 
 nfbands = 48; % number of frequency bands
 
-wpts = round(fs * wsecs); % window length in data points
-if rem(wpts,2) ~= 0  % if (wpts % 2 != 0 ) {
-    wpts = wpts-1; % make wpts an even number
-end
+% Confirm that we will have enough points in a window to calculate the
+% requested number of frequency components.
+% This is unitless check because frequency cancels out:
+% max-frequency component <= nyquist frequency
+%    (fs / window_points) * (merge * nfbands) <= fs / 2
+%    2 * merge * nfbands <= window_points
+assert (2 * merge * nfbands <= window_points);
 
-% QUESTION(LEL): Should it be an error/warning if the number of windows doesn't
-%    divide evenly? In that case, we'd just be ignoring the last few points...
-num_windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 75% overlap
 
-% TODO(LEL): Confirm with Jim that the intent was if NO windows were available,
-%   not that we need 5.
-%   I think this is another case where we could do somethign like:
-% `static_assert(data_points >= window_points, "Insufficient points in input data to fill window");`
+% TODO: For *any* of the early-exit criteria that can't be checked with
+%    a static assert, we need to set these values.
 if num_windows <= 1 % Exit early if insufficient data
     fmin = half(9999);
     fmax = half(9999);
@@ -73,64 +84,12 @@ if num_windows <= 1 % Exit early if insufficient data
     return
 end
 
-%% frequency resolution
-% Not needed any more -- fs cancels out in the nyquist criterion
-% check.
-% Nyquist = fs / 2;     % highest spectral frequency
-
-% TODO(LEL) Sort this out, (though it probably doesn't matter)
-%%f1 = 1/wsecs;    % frequency resolution
-
-% TODO(LEL): Actually probably don't even need to keep the array of raw frequencies
-%     around -- you can derive it from the index of the FFT if you know the sampling
-%     period.
-% Yeah -- this was only being used to compare to merged_freqs and decide which
-% to keep. replacing with 1:merge*nfbands worked.
-% Initialize it like I would in C...
-% rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
-% raw_freqs = zeros(1, wpts/2);
-% for idx=1:wpts/2
-%     raw_freqs(idx) = idx*f1;
-% end
-f1 = fs / window_points;
-
-bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 
 % f = [ (f1 + bandwidth/2) : bandwidth : Nyquist ];  % frequency vector after merging
-% TODO(LEL): Find more intuitive way to express this -- this early return is handling
-%    the case where length(merged_freqs) < nfbands, and so we woudl be calculating
-%    fewer frequency bands. The matlab code handled that by truncating the array,
-%    but I don't want to have variable sized arrays ...
-% TODO(LEL): I think f0 needs to be at the center of the cell, not this.
-%%f0 = f1 + bandwidth / 2;
-f0 = f1 * (1 + merge) / 2;  % arthmetic mean of merged frequencies
-% TODO(LEL): Better way to handle case where the bands we've requested go beyond Nyquist?
-%   The example code simply returns a shorter array, so I guess we could
-%   check for (fs/wpts)*merge*nfbands > fs/w => wpts < 2 * merge * nfbands
-% if f0 + bandwidth * (nfbands - 1) > Nyquist % Exit early if merged frequency vector would be too small
-% Confirm the requested number of frequency bands is supportable by our data
-% (aka all calculated frequencies will be below Nyquist)
-% TODO: If this isn't satisfied, could simply return data for fewer nfbands ...
-%    I think that the proper way of handling that will depend on how
-%    configuration is handled. Either make it a check in the configuration GUI,
-%    or a compile-time assert? Maybe try:
-%  `static_assert(wpts >= 2 * merge * nfbands, "Window size too short to meet nyquist criteria");`
-if window_points < 2 * merge * nfbands
-    fmin = half(9999);
-    fmax = half(9999);
-    half_XX = half(ones(1,nfbands)*9999);
-    half_YY = half(ones(1,nfbands)*9999);
-    half_ZZ = half(ones(1,nfbands)*9999);
-    return
-end
-
-merged_freqs = zeros(1, nfbands); % Frequency vector after merging
-for idx = 1:nfbands % prune the higher frequencies
-    merged_freqs(idx) = f0 + bandwidth*(idx-1);
-end
-%if merged_freqs(nfbands) < Nyquist
-%    "Pruned higher frequencies: ", nfbands, merged_freqs(nfbands), Nyquist
-%end
+f1 = fs / window_points;
+min_freq = f1 * (1 + merge) / 2;
+bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
+max_freq = min_freq + (nfbands - 1) * bandwidth;
 
 %% initialize spectral ouput, which will accumulate as windows are processed
 XX = single(zeros(1, nfbands));
@@ -274,8 +233,8 @@ end
 
 
 %% format for microSWIFT telemetry output (payload type 52)
-fmin = half(min(merged_freqs));
-fmax = half(max(merged_freqs));
+fmin = half(min_freq);
+fmax = half(max_freq);
 half_XX = half(XX);
 half_YY = half(YY);
 half_ZZ = half(ZZ);
