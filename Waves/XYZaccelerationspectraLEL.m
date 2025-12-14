@@ -62,7 +62,7 @@ f1 = 1/wsecs;    % frequency resolution
 % TODO(LEL): Actually probably don't even need to keep the array of raw frequencies
 %     around -- you can derive it from the index of the FFT if you know the sampling
 %     period.
-% Give this a fixed size.
+% Initialize it like I would in C...
 % rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
 raw_freqs = zeros(1, wpts/2);
 for idx=1:wpts/2
@@ -72,8 +72,10 @@ end
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 
 % f = [ (f1 + bandwidth/2) : bandwidth : Nyquist ];  % frequency vector after merging
-
-% TODO(LEL): Construct f so that it doesn't have to be re-sized
+% TODO(LEL): Find more intuitive way to express this -- this early return is handling
+%    the case where length(merged_freqs) < nfbands, and so we woudl be calculating
+%    fewer frequency bands. The matlab code handled that by truncating the array,
+%    but I don't want to have variable sized arrays ...
 f0 = f1 + bandwidth / 2;
 if f0 + bandwidth * (nfbands - 1) > Nyquist % Exit early if merged frequency vector would be too small
     fmin = half(9999);
@@ -96,7 +98,7 @@ ZZ = single(zeros(1, nfbands));
 
 
 %% loop thru windows, accumulating spectral results
-% QUESTION(LEL): Why doe sthe taper start at sin(pi/wpts) rather than sin(0)?
+% QUESTION(LEL): Why does the taper start at sin(pi/wpts) rather than sin(0)?
 % taper = sin ( (1:wpts) * pi/wpts );     % define the taper
 taper = zeros(1, wpts);
 for idx=1:wpts
@@ -198,4 +200,17 @@ ZZ = half(ZZ);
 
 
 
+% Replace `mean` with arm_mean_f32: (example from Google AI)
+% #include "arm_math.h"
+% float32_t data_array[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+% uint32_t num_pts = sizeof(data_array) / sizeof(data_array[0]); // Number of samples
+% float32_t result_mean;
+% // Parameters: *pSrc (input array), blockSize (number of elements), *pResult (output pointer)
+% arm_mean_f32(data_array, num_pts, &result_mean);
 
+% zeros(1, npts);  will be replaced by something like
+% float32_t foo[npts]; memset(foo, 0, sizeof(foo));
+% or float32-t foo[npts] = {0};
+
+
+% floor() and round() exist in C; just #include <math.h>
