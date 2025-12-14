@@ -204,11 +204,20 @@ for q=1:num_windows
 
     % accumulate window results and merge neighboring frequency bands (to increase DOFs)
     % NOTE(LEL): The previous code didn't actually do the calculations
-    %    for the final bin.
-    for mi = 1 : 1 : nfbands % (length(merged_freqs)-1)
-        XX(mi) = XX(mi) + mean( XXwindow((mi*merge-merge+1):mi*merge) );
-        YY(mi) = YY(mi) + mean( YYwindow((mi*merge-merge+1):mi*merge) );
-        ZZ(mi) = ZZ(mi) + mean( ZZwindow((mi*merge-merge+1):mi*merge) );
+    %    for the final bin. Fix this once Jim OK's it.
+    xx_merge = zeros(1, merge);
+    yy_merge = zeros(1, merge);
+    zz_merge = zeros(1, merge);
+    for mi = 1 : 1 : nfbands-1 % (length(merged_freqs)-1)
+        for idx=1:merge
+            xx_merge(idx) = XXwindow((mi-1)*merge + idx);
+            yy_merge(idx) = YYwindow((mi-1)*merge + idx);
+            zz_merge(idx) = ZZwindow((mi-1)*merge + idx);
+        end
+
+        XX(mi) = XX(mi) + mean(xx_merge);
+        YY(mi) = YY(mi) + mean(yy_merge);
+        ZZ(mi) = ZZ(mi) + mean(zz_merge);
     end
 
 
