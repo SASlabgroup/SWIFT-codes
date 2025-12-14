@@ -205,9 +205,11 @@ for q=1:windows
 end % close window loop
 
 %% divide accumulated results by number of windows (effectively an ensemble avg)
-XX = XX ./ windows;
-YY = YY ./ windows;
-ZZ = ZZ ./ windows;
+for idx=1:nfbands
+    XX(idx) = XX(idx) ./ windows;
+    YY(idx) = YY(idx) ./ windows;
+    ZZ(idx) = ZZ(idx) ./ windows;
+end
 
 
 %% format for microSWIFT telemetry output (payload type 52)
