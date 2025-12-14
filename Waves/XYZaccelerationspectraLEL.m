@@ -38,6 +38,8 @@ function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectraLEL(x_
 % %  I don't think that's a fundamental constraint.)
 
 data_points = length(x_input);
+merge = 5;   % freq bands to merge in reported spectra, must be odd
+nfbands = 48; % number of frequency bands
 
 window_points = 2048;
 % % TODO: Delete this section as soon as Jim agrees to modify original Matlab code.
@@ -46,23 +48,32 @@ window_points = 2048;
 % if rem(window_points, 2) ~= 0
 %     window_points = window_points - 1;
 % end
-assert(rem(window_points, 2) == 0);   % Window must be even
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Compute derived parameters
 
 window_step = floor(0.25 * window_points);  % 75% overlap between windows
+num_windows = floor(data_points / window_step) - 3;
+
+f1 = fs / window_points;
+min_freq = f1 * (1 + merge) / 2;
+bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
+max_freq = min_freq + (nfbands - 1) * bandwidth;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Check assumptions about input data
+assert(rem(merge, 2) == 1);
+assert(rem(window_points, 2) == 0);   % Window must be even
+
 if rem(data_points, window_step) ~= 0
     discarded_points = rem(data_points, window_step);
     fprintf("window_length/4 (%f) does not evenly divide data length (%f); will discard %f points.\n", window_step, data_points, discarded_points)
 end
-num_windows = floor (data_points / window_step) - 3;
+
 % TODO(LEL): Confirm with Jim that the intent was >= 1, not > 1
 %   I think this is another case where we could do something like:
 % `static_assert(data_points >= window_points, "Insufficient points in input data to fill window");`
 assert(num_windows >= 1);  % Need at least one window!
-
-merge = 5;   % freq bands to merge in reported spectra, must be odd
-assert(rem(merge, 2) == 1);
-
-nfbands = 48; % number of frequency bands
 
 % Confirm that we will have enough points in a window to calculate the
 % requested number of frequency components.
@@ -90,8 +101,16 @@ min_freq = f1 * (1 + merge) / 2;
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 max_freq = min_freq + (nfbands - 1) * bandwidth;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialize taper and loop variables
 
+x_window = single(zeros(1, window_points));
+y_window = single(zeros(1, window_points));
+z_window = single(zeros(1, window_points));
+
+fft_x = zeros(1, window_points);
+fft_y = zeros(1, window_points);
+fft_z = zeros(1, window_points);
 
 % initialize spectral ouput, which will accumulate as windows
 % are processed
@@ -108,11 +127,7 @@ for idx=1:window_points
     taper(idx) = sin(idx * pi / window_points);
 end
 
-
-x_window = single(zeros(1, window_points));
-y_window = single(zeros(1, window_points));
-z_window = single(zeros(1, window_points));
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% loop thru windows, accumulating spectral results
 
 for win_idx=1:num_windows
