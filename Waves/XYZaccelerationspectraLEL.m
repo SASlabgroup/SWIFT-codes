@@ -111,10 +111,6 @@ x_window = single(zeros(1, window_points));
 y_window = single(zeros(1, window_points));
 z_window = single(zeros(1, window_points));
 
-XXwindow = zeros(1, merge * nfbands);
-YYwindow = zeros(1, merge * nfbands);
-ZZwindow = zeros(1, merge * nfbands);
-
 %% loop thru windows, accumulating spectral results
 
 for win_idx=1:num_windows
@@ -182,21 +178,22 @@ for win_idx=1:num_windows
     % Calculate the auto-spectra and cross-spectra from this window
     % ** do this before merging frequency bands or ensemble averging windows **
 
-    % QUESTION(LEL): Why are they dividing by that??
-    denom = (round(window_points/2) * fs );
-    for idx=1:merge*nfbands
-        XXwindow(idx) = real(fft_x(idx) * conj(fft_x(idx))) / denom;
-        YYwindow(idx) = real(fft_y(idx) * conj(fft_y(idx))) / denom;
-        ZZwindow(idx) = real(fft_z(idx) * conj(fft_z(idx))) / denom;
-    end
+    % These loops combine multiple accumulators from the original code:
+    %  XXwindow = ( real ( xwin( rawf < max(f) ) .* conj(xwin( rawf < max(f) )) ) / (round(wpts/2) * fs ) );
+    %  XX(mi/merge) = XX(mi/merge) + mean( XXwindow((mi-merge+1):mi) );
 
     % TODO: Get rid of the `-1` as soon as Jim confirms
+    % QUESTION(LEL): Why are they dividing by that??1
+    denom = (round(window_points/2) * fs );
     for ii = 1 : 1 : nfbands-1 % Iterate over merged frequency bins
         idx0 = (ii - 1) * merge;
         for jj=1:merge % Iterate over frequency in each bin
-            XX_output(ii) = XX_output(ii) + XXwindow(idx0 + jj);
-            YY_output(ii) = YY_output(ii) + YYwindow(idx0 + jj);
-            ZZ_output(ii) = ZZ_output(ii) + ZZwindow(idx0 + jj);
+            tmpx = real(fft_x(idx0 + jj) * conj(fft_x(idx0 + jj))) / denom;
+            tmpy = real(fft_y(idx0 + jj) * conj(fft_y(idx0 + jj))) / denom;
+            tmpz = real(fft_z(idx0 + jj) * conj(fft_z(idx0 + jj))) / denom;
+            XX_output(ii) = XX_output(ii) + tmpx;
+            YY_output(ii) = YY_output(ii) + tmpy;
+            ZZ_output(ii) = ZZ_output(ii) + tmpz;
         end
     end
 end
