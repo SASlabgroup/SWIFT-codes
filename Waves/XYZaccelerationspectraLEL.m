@@ -62,11 +62,23 @@ f1 = 1/(wsecs);    % frequency resolution
 rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
 
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
-f = [ (f1 + bandwidth/2) : bandwidth : Nyquist ];  % frequency vector after merging
-if length(f)>nfbands
-    f = f(1:nfbands);  % prume the higher frequencies
-else
-    nfbands = length(f);
+
+% f = [ (f1 + bandwidth/2) : bandwidth : Nyquist ];  % frequency vector after merging
+
+% TODO(LEL): Construct f so that it doesn't have to be re-sized
+f0 = f1 + bandwidth / 2;
+if f0 + bandwidth * (nfbands - 1) > Nyquist % Exit early if merged frequency vector would be too small
+    fmin = half(9999);
+    fmax = half(9999);
+    XX = half(ones(1,nfbands)*9999);
+    YY = half(ones(1,nfbands)*9999);
+    ZZ = half(ones(1,nfbands)*9999);
+    return
+end
+
+f = zeros(1, nfbands); % Frequency vector after merging
+for idx = 1:nfbands % prune the higher frequencies
+    f(idx) = f0 + bandwidth*(idx-1);
 end
 
 %% initialize spectral ouput, which will accumulate as windows are processed
