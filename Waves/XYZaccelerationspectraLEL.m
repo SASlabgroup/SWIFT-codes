@@ -27,22 +27,22 @@ function [ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectra(x, y, z, fs)
 
 %% parameters
 
+% TODO(LEL): In the C implementation, this will either be a constant or a parameter.
 pts = length(x);  % length of the input data (should be 2^N for efficiency)
 
+% QUESTION(LEL): Why do we call `round(fs)` here?
 wsecs =  4096/round(fs)/2; % window length in seconds, usually 512 for wave processing ** now dynamic **
 merge = 5;   % freq bands to merge, must be odd
-%maxf = .5;   % frequency cutoff for telemetry Hz ** NO LONGER USED...  USE "nfbands" INSTEAD **
+
 nfbands = 48; % number of frequency bands
 
 wpts = round(fs * wsecs); % window length in data points
-if rem(wpts,2) ~= 0
+if rem(wpts,2) ~= 0  % if (wpts % 2 != 0 ) {
     wpts = wpts-1; % make wpts an even number
 end
 
 windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 75% overlap
 dof = 2*windows*merge; % degrees of freedom
-
-
 
 if windows <= 1 % Exit early if insufficient data
     fmin = half(9999);
@@ -55,8 +55,12 @@ end
 
 %% frequency resolution
 Nyquist = fs / 2;     % highest spectral frequency
+
 f1 = 1/(wsecs);    % frequency resolution
+
+% TODO(LEL): make fixed length? this one could be known from number of samples + rate
 rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
+
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 f = [ (f1 + bandwidth/2) : bandwidth : Nyquist ];  % frequency vector after merging
 if length(f)>nfbands
