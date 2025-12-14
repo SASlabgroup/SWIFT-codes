@@ -148,30 +148,39 @@ for q=1:windows
 
     % calculate Fourier coefs (complex values, double sided)
     % overnight the time series variables (to save memory)
-    xwin= single(fft(xwin));
-    ywin= single(fft(ywin));
-    zwin= single(fft(zwin));
+    % QUESTION(LEL): Why convert to single precision here?
+    % TODO(LEL): I'm not a huge fan of this in-place attempt, since the types WILL be different.
+    % xwin= fft(xwin);
+    fft_x = fft(xwin);
+    fft_y = fft(ywin);
+    fft_z = fft(zwin);
 
     % second half of Matlab's FFT is redundant, so throw it out
-    xwin( round(wpts/2+1):wpts ) = [];
-    ywin( round(wpts/2+1):wpts ) = [];
-    zwin( round(wpts/2+1):wpts ) = [];
+    fft_x( round(wpts/2+1):wpts ) = [];
+    fft_y( round(wpts/2+1):wpts ) = [];
+    fft_z( round(wpts/2+1):wpts ) = [];
 
     % throw out the mean (first coef) by moving to the end and making it zero
-    xwin = xwin([2:end 1]);
-    ywin = ywin([2:end 1]);
-    zwin = zwin([2:end 1]);
-    xwin(end)=0;
-    ywin(end)=0;
-    zwin(end)=0;
+    % xwin = xwin([2:end 1]);
+    % ywin = ywin([2:end 1]);
+    % zwin = zwin([2:end 1]);
+    % UGH THEY RESIZED IT. Can we just ignore those fields??
+    for idx=1:round(wpts/2)-1
+        fft_x(idx)  = fft_x(idx+1);
+        fft_y(idx)  = fft_y(idx+1);
+        fft_z(idx)  = fft_z(idx+1);
+    end
+    fft_x(round(wpts/2))=0;
+    fft_y(round(wpts/2))=0;
+    fft_z(round(wpts/2))=0;
 
     % Calculate the auto-spectra and cross-spectra from this window
     % ** do this before merging frequency bands or ensemble averging windows **
     % only compute for raw frequencies less than the max frequency of interest (to save memory)
     good_idxs = raw_freqs < max(merged_freqs);
-    XXwindow = ( real ( xwin( good_idxs ) .* conj(xwin( good_idxs )) ) / (round(wpts/2) * fs ) );
-    YYwindow = ( real ( ywin( good_idxs ) .* conj(ywin( good_idxs )) ) / (round(wpts/2) * fs ) );
-    ZZwindow = ( real ( zwin( good_idxs ) .* conj(zwin( good_idxs )) ) / (round(wpts/2) * fs ) );
+    XXwindow = ( real ( fft_x( good_idxs ) .* conj(fft_x( good_idxs )) ) / (round(wpts/2) * fs ) );
+    YYwindow = ( real ( fft_y( good_idxs ) .* conj(fft_y( good_idxs )) ) / (round(wpts/2) * fs ) );
+    ZZwindow = ( real ( fft_z( good_idxs ) .* conj(fft_z( good_idxs )) ) / (round(wpts/2) * fs ) );
 
     % accumulate window results and merge neighboring frequency bands (to increase DOFs)
     for mi = merge : merge : (length(merged_freqs)-1)*merge
