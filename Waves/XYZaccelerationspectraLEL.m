@@ -1,4 +1,4 @@
-function [ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectra(x, y, z, fs)
+function [ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectraLEL(x, y, z, fs)
 
 % matlab function to process linear accelerations (x,y,z) components
 %   following the spectral processing steps of microSWIFT wave processing with "NEDwaves"
