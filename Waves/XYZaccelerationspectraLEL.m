@@ -80,7 +80,6 @@ end
 
 % TODO(LEL) Sort this out, (though it probably doesn't matter)
 %%f1 = 1/wsecs;    % frequency resolution
-f1 = fs / wpts;
 
 % TODO(LEL): Actually probably don't even need to keep the array of raw frequencies
 %     around -- you can derive it from the index of the FFT if you know the sampling
@@ -93,6 +92,7 @@ f1 = fs / wpts;
 % for idx=1:wpts/2
 %     raw_freqs(idx) = idx*f1;
 % end
+f1 = fs / window_points;
 
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 
@@ -115,7 +115,7 @@ f0 = f1 * (1 + merge) / 2;  % arthmetic mean of merged frequencies
 %    configuration is handled. Either make it a check in the configuration GUI,
 %    or a compile-time assert? Maybe try:
 %  `static_assert(wpts >= 2 * merge * nfbands, "Window size too short to meet nyquist criteria");`
-if wpts < 2 * merge * nfbands
+if window_points < 2 * merge * nfbands
     fmin = half(9999);
     fmax = half(9999);
     half_XX = half(ones(1,nfbands)*9999);
@@ -139,18 +139,16 @@ ZZ = single(zeros(1, nfbands));
 
 %% Initialize taper and loop variables
 
-% QUESTION(LEL): Why does the taper start at sin(pi/wpts) rather than sin(0)?
-%    ... actually, I think it should probably be (1:wpts)*pi/(wpts+1) so neither
-%    end point evaluates to 0.
-% taper = sin ( (1:wpts) * pi/wpts );     % define the taper
-taper = zeros(1, wpts);
-for idx=1:wpts
-    taper(idx) = sin(idx * pi / wpts);
+taper = zeros(1, window_points);
+for idx=1:window_points
+    % NOTE(LEL): I think the denom should probably be (window_points + 1)
+    %    so neither end point evaluates to 0.
+    taper(idx) = sin(idx * pi / window_points);
 end
 
-xwin = single(zeros(1, wpts));
-ywin = single(zeros(1, wpts));
-zwin = single(zeros(1, wpts));
+xwin = single(zeros(1, window_points));
+ywin = single(zeros(1, window_points));
+zwin = single(zeros(1, window_points));
 
 XXwindow = zeros(1, merge * nfbands);
 YYwindow = zeros(1, merge * nfbands);
@@ -158,9 +156,9 @@ ZZwindow = zeros(1, merge * nfbands);
 
 %% loop thru windows, accumulating spectral results
 
-for q=1:num_windows
-    offset = (q-1)*floor(.25*wpts);
-    for idx=1:wpts
+for win_idx=1:num_windows
+    offset = (win_idx - 1) * floor(.25 * window_points);
+    for idx=1:window_points
         xwin(idx) = x_input(offset+idx);
         ywin(idx) = y_input(offset+idx);
         zwin(idx) = z_input(offset+idx);
@@ -171,7 +169,7 @@ for q=1:num_windows
     mean_x = mean(xwin);
     mean_y = mean(ywin);
     mean_z = mean(zwin);
-    for idx=1:wpts
+    for idx=1:window_points
         xwin(idx) = xwin(idx) - mean_x;
         ywin(idx) = ywin(idx) - mean_y;
         zwin(idx) = zwin(idx) - mean_z;
@@ -183,15 +181,21 @@ for q=1:num_windows
     xvar = var(xwin);
     yvar = var(ywin);
     zvar = var(zwin);
-    % apply the taper
 
-    xwin = xwin.* taper;
-    ywin = ywin.* taper;
-    zwin = zwin.* taper;
+    % apply the taper
+    for idx=1:window_points
+        xwin(idx) = xwin(idx) * taper(idx);
+        ywin(idx) = ywin(idx) * taper(idx);
+        zwin(idx) = zwin(idx) * taper(idx);
+    end
+
     % then rescale to regain the same original variance
-    xwin = xwin* sqrt( xvar ./ var(xwin) );
-    ywin = ywin* sqrt( yvar ./ var(ywin) );
-    zwin = zwin* sqrt( zvar ./ var(zwin) );
+    new_xvar = var(xwin);
+    xwin = xwin * sqrt(xvar / new_xvar);
+    new_yvar = var(ywin);
+    ywin = ywin * sqrt(yvar / new_yvar);
+    new_zvar = var(zwin);
+    zwin = zwin * sqrt(zvar / new_zvar);
 
 
     %% FFT
@@ -206,23 +210,23 @@ for q=1:num_windows
     fft_z = fft(zwin);
 
     % second half of Matlab's FFT is redundant, so throw it out
-    fft_x( round(wpts/2+1):wpts ) = [];
-    fft_y( round(wpts/2+1):wpts ) = [];
-    fft_z( round(wpts/2+1):wpts ) = [];
+    fft_x( round(window_points/2+1):window_points ) = [];
+    fft_y( round(window_points/2+1):window_points ) = [];
+    fft_z( round(window_points/2+1):window_points ) = [];
 
     % throw out the mean (first coef) by moving to the end and making it zero
     % xwin = xwin([2:end 1]);
     % ywin = ywin([2:end 1]);
     % zwin = zwin([2:end 1]);
     % UGH THEY RESIZED IT. Can we just ignore those fields??
-    for idx=1:round(wpts/2)-1
+    for idx=1:round(window_points/2)-1
         fft_x(idx)  = fft_x(idx+1);
         fft_y(idx)  = fft_y(idx+1);
         fft_z(idx)  = fft_z(idx+1);
     end
-    fft_x(round(wpts/2))=0;
-    fft_y(round(wpts/2))=0;
-    fft_z(round(wpts/2))=0;
+    fft_x(round(window_points/2))=0;
+    fft_y(round(window_points/2))=0;
+    fft_z(round(window_points/2))=0;
 
     % Calculate the auto-spectra and cross-spectra from this window
     % ** do this before merging frequency bands or ensemble averging windows **
@@ -232,7 +236,7 @@ for q=1:num_windows
     %      dynamic allocation ... but I think that we could figure out
     %      what the "good" indices are analytically, rather than at run time.
     % QUESTION(LEL): Why are they dividing by that??
-    denom = (round(wpts/2) * fs );
+    denom = (round(window_points/2) * fs );
     for idx=1:merge*nfbands
         XXwindow(idx) = real(fft_x(idx) .* conj(fft_x(idx))) / denom;
         YYwindow(idx) = real(fft_y(idx) .* conj(fft_y(idx))) / denom;
