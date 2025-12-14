@@ -90,13 +90,15 @@ min_freq = f1 * (1 + merge) / 2;
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 max_freq = min_freq + (nfbands - 1) * bandwidth;
 
-%% initialize spectral ouput, which will accumulate as windows
-% are processed
-XX_output = single(zeros(1, nfbands));
-YY_output = single(zeros(1, nfbands));
-ZZ_output = single(zeros(1, nfbands));
-
 %% Initialize taper and loop variables
+
+
+% initialize spectral ouput, which will accumulate as windows
+% are processed
+XX_bands = single(zeros(1, nfbands));
+YY_bands = single(zeros(1, nfbands));
+ZZ_bands = single(zeros(1, nfbands));
+
 
 taper = zeros(1, window_points);
 for idx=1:window_points
@@ -191,9 +193,9 @@ for win_idx=1:num_windows
             tmpx = real(fft_x(idx0 + jj) * conj(fft_x(idx0 + jj))) / denom;
             tmpy = real(fft_y(idx0 + jj) * conj(fft_y(idx0 + jj))) / denom;
             tmpz = real(fft_z(idx0 + jj) * conj(fft_z(idx0 + jj))) / denom;
-            XX_output(ii) = XX_output(ii) + tmpx;
-            YY_output(ii) = YY_output(ii) + tmpy;
-            ZZ_output(ii) = ZZ_output(ii) + tmpz;
+            XX_bands(ii) = XX_bands(ii) + tmpx;
+            YY_bands(ii) = YY_bands(ii) + tmpy;
+            ZZ_bands(ii) = ZZ_bands(ii) + tmpz;
         end
     end
 end
@@ -205,9 +207,9 @@ end
 % both loops and divide now.
 
 for idx=1:nfbands
-    XX_output(idx) = XX_output(idx) / (num_windows * merge);
-    YY_output(idx) = YY_output(idx) / (num_windows * merge);
-    ZZ_output(idx) = ZZ_output(idx) / (num_windows * merge);
+    XX_bands(idx) = XX_bands(idx) / (num_windows * merge);
+    YY_bands(idx) = YY_bands(idx) / (num_windows * merge);
+    ZZ_bands(idx) = ZZ_bands(idx) / (num_windows * merge);
 end
 
 
@@ -215,9 +217,9 @@ end
 
 fmin = half(min_freq);
 fmax = half(max_freq);
-half_XX = half(XX_output);
-half_YY = half(YY_output);
-half_ZZ = half(ZZ_output);
+half_XX = half(XX_bands);
+half_YY = half(YY_bands);
+half_ZZ = half(ZZ_bands);
 
 
 
