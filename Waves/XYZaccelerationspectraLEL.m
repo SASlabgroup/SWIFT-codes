@@ -42,9 +42,9 @@ end
 
 % QUESTION(LEL): Should it be an error/warning if the number of windows doesn't
 %    divide evenly? In that case, we'd just be ignoring the last few points...
-windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 75% overlap
+num_windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 75% overlap
 
-if windows <= 1 % Exit early if insufficient data
+if num_windows <= 1 % Exit early if insufficient data
     fmin = half(9999);
     fmax = half(9999);
     half_XX = half(ones(1,nfbands)*9999);
@@ -112,8 +112,9 @@ XXwindow = zeros(1, merge * nfbands);
 YYwindow = zeros(1, merge * nfbands);
 ZZwindow = zeros(1, merge * nfbands);
 
+%% loop thru windows, accumulating spectral results
 
-for q=1:windows
+for q=1:num_windows
     offset = (q-1)*floor(.25*wpts);
     for idx=1:wpts
         xwin(idx) = x_input(offset+idx);
@@ -205,10 +206,11 @@ for q=1:windows
 end % close window loop
 
 %% divide accumulated results by number of windows (effectively an ensemble avg)
+% XX = XX / num_windows
 for idx=1:nfbands
-    XX(idx) = XX(idx) ./ windows;
-    YY(idx) = YY(idx) ./ windows;
-    ZZ(idx) = ZZ(idx) ./ windows;
+    XX(idx) = XX(idx) / num_windows;
+    YY(idx) = YY(idx) / num_windows;
+    ZZ(idx) = ZZ(idx) / num_windows;
 end
 
 
