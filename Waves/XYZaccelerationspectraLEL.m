@@ -190,34 +190,27 @@ for win_idx=1:num_windows
         ZZwindow(idx) = real(fft_z(idx) * conj(fft_z(idx))) / denom;
     end
 
-    % accumulate window results and merge neighboring frequency bands
-    XX_merge = zeros(1, merge);
-    YY_merge = zeros(1, merge);
-    ZZ_merge = zeros(1, merge);
-
     % TODO: Get rid of the `-1` as soon as Jim confirms
     for ii = 1 : 1 : nfbands-1 % Iterate over merged frequency bins
         idx0 = (ii - 1) * merge;
         for jj=1:merge % Iterate over frequency in each bin
-            XX_merge(jj) = XXwindow(idx0 + jj);
-            YY_merge(jj) = YYwindow(idx0 + jj);
-            ZZ_merge(jj) = ZZwindow(idx0 + jj);
+            XX_output(ii) = XX_output(ii) + XXwindow(idx0 + jj);
+            YY_output(ii) = YY_output(ii) + YYwindow(idx0 + jj);
+            ZZ_output(ii) = ZZ_output(ii) + ZZwindow(idx0 + jj);
         end
-
-        XX_output(ii) = XX_output(ii) + mean(XX_merge);
-        YY_output(ii) = YY_output(ii) + mean(YY_merge);
-        ZZ_output(ii) = ZZ_output(ii) + mean(ZZ_merge);
     end
-
-
 end
 
 %% Finish computing average
 
+% Rather than averaging over merge bins and then again over windows
+% like the Matlab implementation did, we just accumulate through
+% both loops and divide now.
+
 for idx=1:nfbands
-    XX_output(idx) = XX_output(idx) / num_windows;
-    YY_output(idx) = YY_output(idx) / num_windows;
-    ZZ_output(idx) = ZZ_output(idx) / num_windows;
+    XX_output(idx) = XX_output(idx) / (num_windows * merge);
+    YY_output(idx) = YY_output(idx) / (num_windows * merge);
+    ZZ_output(idx) = ZZ_output(idx) / (num_windows * merge);
 end
 
 
