@@ -65,9 +65,9 @@ f1 = 1/(wsecs);    % frequency resolution
 %     period.
 % Give this a fixed size.
 % rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
-rawf = zeros(1, wpts/2);
+raw_freqs = zeros(1, wpts/2);
 for idx=1:wpts/2
-    rawf(idx) = idx*f1;
+    raw_freqs(idx) = idx*f1;
 end
 
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
@@ -85,10 +85,9 @@ if f0 + bandwidth * (nfbands - 1) > Nyquist % Exit early if merged frequency vec
     return
 end
 
-f = zeros(1, nfbands); % Frequency vector after merging
-%
+merged_freqs = zeros(1, nfbands); % Frequency vector after merging
 for idx = 1:nfbands % prune the higher frequencies
-    f(idx) = f0 + bandwidth*(idx-1);
+    merged_freqs(idx) = f0 + bandwidth*(idx-1);
 end
 
 %% initialize spectral ouput, which will accumulate as windows are processed
@@ -164,12 +163,13 @@ for q=1:windows
     % Calculate the auto-spectra and cross-spectra from this window
     % ** do this before merging frequency bands or ensemble averging windows **
     % only compute for raw frequencies less than the max frequency of interest (to save memory)
-    XXwindow = ( real ( xwin( rawf < max(f) ) .* conj(xwin( rawf < max(f) )) ) / (round(wpts/2) * fs ) );
-    YYwindow = ( real ( ywin( rawf < max(f) ) .* conj(ywin( rawf < max(f) )) ) / (round(wpts/2) * fs ) );
-    ZZwindow = ( real ( zwin( rawf < max(f) ) .* conj(zwin( rawf < max(f) )) ) / (round(wpts/2) * fs ) );
+    good_idxs = raw_freqs < max(merged_freqs);
+    XXwindow = ( real ( xwin( good_idxs ) .* conj(xwin( good_idxs )) ) / (round(wpts/2) * fs ) );
+    YYwindow = ( real ( ywin( good_idxs ) .* conj(ywin( good_idxs )) ) / (round(wpts/2) * fs ) );
+    ZZwindow = ( real ( zwin( good_idxs ) .* conj(zwin( good_idxs )) ) / (round(wpts/2) * fs ) );
 
     % accumulate window results and merge neighboring frequency bands (to increase DOFs)
-    for mi = merge : merge : (length(f)-1)*merge
+    for mi = merge : merge : (length(merged_freqs)-1)*merge
         XX(mi/merge) = XX(mi/merge) + mean( XXwindow((mi-merge+1):mi) );
         YY(mi/merge) = YY(mi/merge) + mean( YYwindow((mi-merge+1):mi) );
         ZZ(mi/merge) = ZZ(mi/merge) + mean( ZZwindow((mi-merge+1):mi) );
@@ -185,8 +185,8 @@ ZZ = ZZ ./ windows;
 
 
 %% format for microSWIFT telemetry output (payload type 52)
-fmin = half(min(f));
-fmax = half(max(f));
+fmin = half(min(merged_freqs));
+fmax = half(max(merged_freqs));
 XX = half(XX);
 YY = half(YY);
 ZZ = half(ZZ);
