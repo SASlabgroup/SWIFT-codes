@@ -41,6 +41,8 @@ if rem(wpts,2) ~= 0  % if (wpts % 2 != 0 ) {
     wpts = wpts-1; % make wpts an even number
 end
 
+% QUESTION(LEL): Should it be an error/warning if the number of windows doesn't
+%    divide evenly? In that case, we'd just be ignoring the last few points...
 windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 75% overlap
 dof = 2*windows*merge; % degrees of freedom
 
@@ -58,8 +60,15 @@ Nyquist = fs / 2;     % highest spectral frequency
 
 f1 = 1/(wsecs);    % frequency resolution
 
-% TODO(LEL): make fixed length? this one could be known from number of samples + rate
-rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
+% TODO(LEL): Actually probably don't even need to keep the array of raw frequencies
+%     around -- you can derive it from the index of the FFT if you know the sampling
+%     period.
+% Give this a fixed size.
+% rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
+rawf = zeros(1, wpts/2);
+for idx=1:wpts/2
+    rawf(idx) = idx*f1;
+end
 
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 
@@ -77,6 +86,7 @@ if f0 + bandwidth * (nfbands - 1) > Nyquist % Exit early if merged frequency vec
 end
 
 f = zeros(1, nfbands); % Frequency vector after merging
+%
 for idx = 1:nfbands % prune the higher frequencies
     f(idx) = f0 + bandwidth*(idx-1);
 end
@@ -109,11 +119,9 @@ for q=1:windows
     end
 
     %% remove the mean
-
     xwin = xwin - mean(xwin);
     ywin = ywin - mean(ywin);
     zwin = zwin - mean(zwin);
-
 
     %% taper and rescale (to preserve variance)
 
@@ -122,6 +130,7 @@ for q=1:windows
     yvar = var(ywin);
     zvar = var(zwin);
     % apply the taper
+
     xwin = xwin.* taper;
     ywin = ywin.* taper;
     zwin = zwin.* taper;
