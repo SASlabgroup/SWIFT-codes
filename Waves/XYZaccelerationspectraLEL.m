@@ -108,6 +108,10 @@ xwin = zeros(1, wpts);
 ywin = zeros(1, wpts);
 zwin = zeros(1, wpts);
 
+XXwindow = zeros(1, merge * nfbands);
+YYwindow = zeros(1, merge * nfbands);
+ZZwindow = zeros(1, merge * nfbands);
+
 
 for q=1:windows
     offset = (q-1)*floor(.25*wpts);
@@ -177,10 +181,17 @@ for q=1:windows
     % Calculate the auto-spectra and cross-spectra from this window
     % ** do this before merging frequency bands or ensemble averging windows **
     % only compute for raw frequencies less than the max frequency of interest (to save memory)
-    good_idxs = raw_freqs < max(merged_freqs);
-    XXwindow = ( real ( fft_x( good_idxs ) .* conj(fft_x( good_idxs )) ) / (round(wpts/2) * fs ) );
-    YYwindow = ( real ( fft_y( good_idxs ) .* conj(fft_y( good_idxs )) ) / (round(wpts/2) * fs ) );
-    ZZwindow = ( real ( fft_z( good_idxs ) .* conj(fft_z( good_idxs )) ) / (round(wpts/2) * fs ) );
+    % NOTE(LEL): % This is probably actually worth doing, since it's a
+    %      factor of ~4 in array length. However, this is the last remaining
+    %      dynamic allocation ... but I think that we could figure out
+    %      what the "good" indices are analytically, rather than at run time.
+    % QUESTION(LEL): Why are they dividing by that??
+    denom = (round(wpts/2) * fs );
+    for idx=1:merge*nfbands
+        XXwindow(idx) = real(fft_x(idx) .* conj(fft_x(idx))) / denom;
+        YYwindow(idx) = real(fft_y(idx) .* conj(fft_y(idx))) / denom;
+        ZZwindow(idx) = real(fft_z(idx) .* conj(fft_z(idx))) / denom;
+    end
 
     % accumulate window results and merge neighboring frequency bands (to increase DOFs)
     for mi = merge : merge : (length(merged_freqs)-1)*merge
