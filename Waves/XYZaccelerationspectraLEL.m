@@ -44,7 +44,6 @@ end
 % QUESTION(LEL): Should it be an error/warning if the number of windows doesn't
 %    divide evenly? In that case, we'd just be ignoring the last few points...
 windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 75% overlap
-dof = 2*windows*merge; % degrees of freedom
 
 if windows <= 1 % Exit early if insufficient data
     fmin = half(9999);
@@ -58,7 +57,7 @@ end
 %% frequency resolution
 Nyquist = fs / 2;     % highest spectral frequency
 
-f1 = 1/(wsecs);    % frequency resolution
+f1 = 1/wsecs;    % frequency resolution
 
 % TODO(LEL): Actually probably don't even need to keep the array of raw frequencies
 %     around -- you can derive it from the index of the FFT if you know the sampling
