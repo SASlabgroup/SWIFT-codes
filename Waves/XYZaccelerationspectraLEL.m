@@ -76,6 +76,8 @@ ZZ = single(zeros(1, nfbands));
 
 
 %% loop thru windows, accumulating spectral results
+% QUESTION(LEL): Why doe sthe taper start at sin(pi/wpts) rather than sin(0)?
+taper = sin ( (1:wpts) * pi/wpts );     % define the taper
 
 for q=1:windows
     xwin = x(  (q-1)*floor(.25*wpts)+1  :  (q-1)*floor(.25*wpts)+wpts  );
@@ -95,8 +97,6 @@ for q=1:windows
     xvar = var(xwin);
     yvar = var(ywin);
     zvar = var(zwin);
-    % define the taper
-    taper = sin ( (1:wpts) * pi/wpts );
     % apply the taper
     xwin = xwin.* taper;
     ywin = ywin.* taper;
