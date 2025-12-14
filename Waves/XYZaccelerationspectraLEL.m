@@ -128,7 +128,7 @@ for idx=1:window_points
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% loop thru windows, accumulating spectral results
+%% Loop thru windows, accumulating spectral results
 
 for win_idx=1:num_windows
     offset = (win_idx - 1) * floor(.25 * window_points);
@@ -138,7 +138,7 @@ for win_idx=1:num_windows
         z_window(idx) = z_input(offset+idx);
     end
 
-    %% remove the mean
+    %% Remove the mean
 
     mean_x = mean(x_window);
     mean_y = mean(y_window);
@@ -149,21 +149,21 @@ for win_idx=1:num_windows
         z_window(idx) = z_window(idx) - mean_z;
     end
 
-    %% taper and rescale (to preserve variance)
+    %% Taper and rescale (to preserve variance)
 
-    % get original variance of each window
+    % Get original variance of each window
     xvar = var(x_window);
     yvar = var(y_window);
     zvar = var(z_window);
 
-    % apply the taper
+    % Apply the taper
     for idx=1:window_points
         x_window(idx) = x_window(idx) * taper(idx);
         y_window(idx) = y_window(idx) * taper(idx);
         z_window(idx) = z_window(idx) * taper(idx);
     end
 
-    % then rescale to regain the same original variance
+    % Rescale to regain the same original variance
     new_xvar = var(x_window);
     new_yvar = var(y_window);
     new_zvar = var(z_window);
@@ -176,7 +176,7 @@ for win_idx=1:num_windows
 
     %% FFT
 
-    % calculate Fourier coefs (complex values, double sided)
+    % Calculate Fourier coeffs (complex values, double sided)
 
     fft_x = fft(x_window);
     fft_y = fft(y_window);
