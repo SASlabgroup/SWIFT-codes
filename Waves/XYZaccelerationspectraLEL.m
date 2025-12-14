@@ -117,9 +117,14 @@ for q=1:windows
     end
 
     %% remove the mean
-    xwin = xwin - mean(xwin);
-    ywin = ywin - mean(ywin);
-    zwin = zwin - mean(zwin);
+    mean_x = mean(xwin);
+    mean_y = mean(ywin);
+    mean_z = mean(zwin);
+    for idx=1:wpts
+        xwin(idx) = xwin(idx) - mean_x;
+        ywin(idx) = ywin(idx) - mean_y;
+        zwin(idx) = zwin(idx) - mean_z;
+    end
 
     %% taper and rescale (to preserve variance)
 
