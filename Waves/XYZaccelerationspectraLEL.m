@@ -39,13 +39,13 @@ function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectraLEL(x_
 
 data_points = length(x_input);
 
-window_points = 1024;
-% TODO: Delete this section as soon as Jim agrees to modify original Matlab code.
-%   (I have to leave it in for now to make results match!)
-window_points = round(2048 * fs / round(fs));
-if rem(window_points, 2) ~= 0
-    window_points = window_points - 1;
-end
+window_points = 2048;
+% % TODO: Delete this section as soon as Jim agrees to modify original Matlab code.
+% %   (I have to leave it in for now to make results match!)
+% window_points = round(2048 * fs / round(fs));
+% if rem(window_points, 2) ~= 0
+%     window_points = window_points - 1;
+% end
 assert(rem(window_points, 2) == 0);   % Window must be even
 
 window_step = floor(0.25 * window_points);  % 75% overlap between windows
@@ -85,14 +85,13 @@ if num_windows <= 1 % Exit early if insufficient data
 end
 
 
-% f = [ (f1 + bandwidth/2) : bandwidth : Nyquist ];  % frequency vector after merging
 f1 = fs / window_points;
 min_freq = f1 * (1 + merge) / 2;
 bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
 max_freq = min_freq + (nfbands - 1) * bandwidth;
 
-%% initialize spectral ouput, which will accumulate as windows are processed
-% x_freqs
+%% initialize spectral ouput, which will accumulate as windows
+% are processed
 XX_output = single(zeros(1, nfbands));
 YY_output = single(zeros(1, nfbands));
 ZZ_output = single(zeros(1, nfbands));
@@ -101,7 +100,8 @@ ZZ_output = single(zeros(1, nfbands));
 
 taper = zeros(1, window_points);
 for idx=1:window_points
-    % NOTE(LEL): I think the denom should probably be (window_points + 1)
+    % NOTE(LEL): I think the denom should probably be
+    %    (window_points + 1)
     %    so neither end point evaluates to 0.
     taper(idx) = sin(idx * pi / window_points);
 end
@@ -111,7 +111,6 @@ xwin = single(zeros(1, window_points));
 ywin = single(zeros(1, window_points));
 zwin = single(zeros(1, window_points));
 
-% In C, this will be a complex, from #include<complex.h>
 XXwindow = zeros(1, merge * nfbands);
 YYwindow = zeros(1, merge * nfbands);
 ZZwindow = zeros(1, merge * nfbands);
@@ -165,26 +164,12 @@ for win_idx=1:num_windows
     %% FFT
 
     % calculate Fourier coefs (complex values, double sided)
-    % overnight the time series variables (to save memory)
-    % QUESTION(LEL): Why convert to single precision here?
-    % TODO(LEL): I'm not a huge fan of this in-place attempt, since the types WILL be different.
-    % xwin= fft(xwin);
+
     fft_x = fft(xwin);
     fft_y = fft(ywin);
     fft_z = fft(zwin);
 
-    % second half of Matlab's FFT is redundant, so throw it out
-    % NOTE(LEL): Resizing the already-created array isn't worth it;
-    %   nowhere actually uses these values.
-    % fft_x( round(window_points/2+1):window_points ) = [];
-    % fft_y( round(window_points/2+1):window_points ) = [];
-    % fft_z( round(window_points/2+1):window_points ) = [];
-
     % throw out the mean (first coef) by moving to the end and making it zero
-    % xwin = xwin([2:end 1]);
-    % ywin = ywin([2:end 1]);
-    % zwin = zwin([2:end 1]);
-    % UGH THEY RESIZED IT. Can we just ignore those fields??
     for idx=1:round(window_points/2)-1
         fft_x(idx)  = fft_x(idx+1);
         fft_y(idx)  = fft_y(idx+1);
@@ -196,7 +181,7 @@ for win_idx=1:num_windows
 
     % Calculate the auto-spectra and cross-spectra from this window
     % ** do this before merging frequency bands or ensemble averging windows **
-    % only compute for raw frequencies less than the max frequency of interest (to save memory)
+
     % QUESTION(LEL): Why are they dividing by that??
     denom = (round(window_points/2) * fs );
     for idx=1:merge*nfbands
@@ -205,11 +190,12 @@ for win_idx=1:num_windows
         ZZwindow(idx) = real(fft_z(idx) * conj(fft_z(idx))) / denom;
     end
 
-    % accumulate window results and merge neighboring frequency bands (to increase DOFs)
+    % accumulate window results and merge neighboring frequency bands
     XX_merge = zeros(1, merge);
     YY_merge = zeros(1, merge);
     ZZ_merge = zeros(1, merge);
-    % TODO: Get rid of the `-1` as soon as Jim confirms that change in matlab
+
+    % TODO: Get rid of the `-1` as soon as Jim confirms
     for ii = 1 : 1 : nfbands-1 % Iterate over merged frequency bins
         idx0 = (ii - 1) * merge;
         for jj=1:merge % Iterate over frequency in each bin
@@ -224,10 +210,10 @@ for win_idx=1:num_windows
     end
 
 
-end % close window loop
+end
 
-%% divide accumulated results by number of windows (effectively an ensemble avg)
-% XX_output = XX_output / num_windows
+%% Finish computing average
+
 for idx=1:nfbands
     XX_output(idx) = XX_output(idx) / num_windows;
     YY_output(idx) = YY_output(idx) / num_windows;
@@ -235,7 +221,8 @@ for idx=1:nfbands
 end
 
 
-%% format for microSWIFT telemetry output (payload type 52)
+%% format for microSWIFT telemetry output (payload type 55)
+
 fmin = half(min_freq);
 fmax = half(max_freq);
 half_XX = half(XX_output);
@@ -244,21 +231,3 @@ half_ZZ = half(ZZ_output);
 
 
 
-
-% Replace `mean` with arm_mean_f32: (example from Google AI)
-% #include "arm_math.h"
-% float32_t data_array[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-% uint32_t num_pts = sizeof(data_array) / sizeof(data_array[0]); // Number of samples
-% float32_t result_mean;
-% // Parameters: *pSrc (input array), blockSize (number of elements), *pResult (output pointer)
-% arm_mean_f32(data_array, num_pts, &result_mean);
-
-% for variance, arm_math.h also has a function
-% arm_var_f32(data_input, blockSize, &variance);
-
-% zeros(1, npts);  will be replaced by something like
-% float32_t foo[npts]; memset(foo, 0, sizeof(foo));
-% or float32-t foo[npts] = {0};
-
-
-% floor() and round() exist in C; just #include <math.h>
