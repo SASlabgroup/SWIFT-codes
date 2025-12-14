@@ -66,10 +66,9 @@ else
 end
 
 %% initialize spectral ouput, which will accumulate as windows are processed
-% length will only be 42 if wsecs = 256, merge = 3, maxf = 0.5 (params above)
-XX = single( zeros(1, length(f) ) );
-YY = single( zeros(1, length(f) ) );
-ZZ = single( zeros(1, length(f) ) );
+XX = single(zeros(1, nfbands));
+YY = single(zeros(1, nfbands));
+ZZ = single(zeros(1, nfbands));
 
 
 %% loop thru windows, accumulating spectral results
