@@ -153,11 +153,13 @@ for win_idx=1:num_windows
 
     % then rescale to regain the same original variance
     new_xvar = var(xwin);
-    xwin = xwin * sqrt(xvar / new_xvar);
     new_yvar = var(ywin);
-    ywin = ywin * sqrt(yvar / new_yvar);
     new_zvar = var(zwin);
-    zwin = zwin * sqrt(zvar / new_zvar);
+    for idx=1:window_points
+        xwin(idx) = xwin(idx) * sqrt(xvar / new_xvar);
+        ywin(idx) = ywin(idx) * sqrt(yvar / new_yvar);
+        zwin(idx) = zwin(idx) * sqrt(zvar / new_zvar);
+    end
 
 
     %% FFT
