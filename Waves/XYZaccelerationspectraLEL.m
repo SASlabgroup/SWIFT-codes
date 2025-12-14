@@ -107,9 +107,9 @@ for idx=1:window_points
 end
 
 
-xwin = single(zeros(1, window_points));
-ywin = single(zeros(1, window_points));
-zwin = single(zeros(1, window_points));
+x_window = single(zeros(1, window_points));
+y_window = single(zeros(1, window_points));
+z_window = single(zeros(1, window_points));
 
 XXwindow = zeros(1, merge * nfbands);
 YYwindow = zeros(1, merge * nfbands);
@@ -120,44 +120,44 @@ ZZwindow = zeros(1, merge * nfbands);
 for win_idx=1:num_windows
     offset = (win_idx - 1) * floor(.25 * window_points);
     for idx=1:window_points
-        xwin(idx) = x_input(offset+idx);
-        ywin(idx) = y_input(offset+idx);
-        zwin(idx) = z_input(offset+idx);
+        x_window(idx) = x_input(offset+idx);
+        y_window(idx) = y_input(offset+idx);
+        z_window(idx) = z_input(offset+idx);
     end
 
     %% remove the mean
 
-    mean_x = mean(xwin);
-    mean_y = mean(ywin);
-    mean_z = mean(zwin);
+    mean_x = mean(x_window);
+    mean_y = mean(y_window);
+    mean_z = mean(z_window);
     for idx=1:window_points
-        xwin(idx) = xwin(idx) - mean_x;
-        ywin(idx) = ywin(idx) - mean_y;
-        zwin(idx) = zwin(idx) - mean_z;
+        x_window(idx) = x_window(idx) - mean_x;
+        y_window(idx) = y_window(idx) - mean_y;
+        z_window(idx) = z_window(idx) - mean_z;
     end
 
     %% taper and rescale (to preserve variance)
 
     % get original variance of each window
-    xvar = var(xwin);
-    yvar = var(ywin);
-    zvar = var(zwin);
+    xvar = var(x_window);
+    yvar = var(y_window);
+    zvar = var(z_window);
 
     % apply the taper
     for idx=1:window_points
-        xwin(idx) = xwin(idx) * taper(idx);
-        ywin(idx) = ywin(idx) * taper(idx);
-        zwin(idx) = zwin(idx) * taper(idx);
+        x_window(idx) = x_window(idx) * taper(idx);
+        y_window(idx) = y_window(idx) * taper(idx);
+        z_window(idx) = z_window(idx) * taper(idx);
     end
 
     % then rescale to regain the same original variance
-    new_xvar = var(xwin);
-    new_yvar = var(ywin);
-    new_zvar = var(zwin);
+    new_xvar = var(x_window);
+    new_yvar = var(y_window);
+    new_zvar = var(z_window);
     for idx=1:window_points
-        xwin(idx) = xwin(idx) * sqrt(xvar / new_xvar);
-        ywin(idx) = ywin(idx) * sqrt(yvar / new_yvar);
-        zwin(idx) = zwin(idx) * sqrt(zvar / new_zvar);
+        x_window(idx) = x_window(idx) * sqrt(xvar / new_xvar);
+        y_window(idx) = y_window(idx) * sqrt(yvar / new_yvar);
+        z_window(idx) = z_window(idx) * sqrt(zvar / new_zvar);
     end
 
 
@@ -165,9 +165,9 @@ for win_idx=1:num_windows
 
     % calculate Fourier coefs (complex values, double sided)
 
-    fft_x = fft(xwin);
-    fft_y = fft(ywin);
-    fft_z = fft(zwin);
+    fft_x = fft(x_window);
+    fft_y = fft(y_window);
+    fft_z = fft(z_window);
 
     % throw out the mean (first coef) by moving to the end and making it zero
     for idx=1:round(window_points/2)-1
