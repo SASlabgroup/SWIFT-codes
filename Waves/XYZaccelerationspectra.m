@@ -29,7 +29,7 @@ function [ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectra(x, y, z, fs)
 
 pts = length(x);  % length of the input data (should be 2^N for efficiency)
 
-wsecs =  4096/round(fs)/2; % window length in seconds, usually 512 for wave processing ** now dynamic **
+wsecs =  4096/fs/2; % window length in seconds, usually 512 for wave processing ** now dynamic **
 merge = 5;   % freq bands to merge, must be odd
 %maxf = .5;   % frequency cutoff for telemetry Hz ** NO LONGER USED...  USE "nfbands" INSTEAD **
 nfbands = 48; % number of frequency bands
@@ -37,7 +37,7 @@ nfbands = 48; % number of frequency bands
 wpts = round(fs * wsecs); % window length in data points
 if rem(wpts,2) ~= 0
     wpts = wpts-1; % make wpts an even number
-end  
+end
 windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 75% overlap
 dof = 2*windows*merge; % degrees of freedom
 
@@ -48,7 +48,7 @@ if windows>1 % only proceed if enough data
     f1 = 1/(wsecs);    % frequency resolution
     rawf = [ f1 : f1 : Nyquist ];  % raw frequency bands
     bandwidth = f1*merge;  % freq (Hz) bandwitdh after merging
-    f = [ (f1 + bandwidth/2) : bandwidth : Nyquist ];  % frequency vector after merging
+    f = [ f1 * (1 + merge)/2 : bandwidth : Nyquist ];  % frequency vector after merging
     if length(f)>nfbands
         f = f(1:nfbands);  % prume the higher frequencies
     else
@@ -83,7 +83,7 @@ if windows>1 % only proceed if enough data
         yvar = var(ywin);
         zvar = var(zwin);
         % define the taper
-        taper = sin ( (1:wpts) * pi/wpts );
+        taper = sin ( (0:wpts-1) * pi/(wpts-1) );
         % apply the taper
         xwin = xwin.* taper;
         ywin = ywin.* taper;
@@ -118,12 +118,12 @@ if windows>1 % only proceed if enough data
         % Calculate the auto-spectra and cross-spectra from this window
         % ** do this before merging frequency bands or ensemble averging windows **
         % only compute for raw frequencies less than the max frequency of interest (to save memory)
-        XXwindow = ( real ( xwin( rawf < max(f) ) .* conj(xwin( rawf < max(f) )) ) / (round(wpts/2) * fs ) );
-        YYwindow = ( real ( ywin( rawf < max(f) ) .* conj(ywin( rawf < max(f) )) ) / (round(wpts/2) * fs ) );
-        ZZwindow = ( real ( zwin( rawf < max(f) ) .* conj(zwin( rawf < max(f) )) ) / (round(wpts/2) * fs ) );
+        XXwindow = ( real ( xwin( 1:merge*nfbands ) .* conj(xwin( 1:merge*nfbands )) ) / (round(wpts/2) * fs ) );
+        YYwindow = ( real ( ywin( 1:merge*nfbands ) .* conj(ywin( 1:merge*nfbands )) ) / (round(wpts/2) * fs ) );
+        ZZwindow = ( real ( zwin( 1:merge*nfbands ) .* conj(zwin( 1:merge*nfbands )) ) / (round(wpts/2) * fs ) );
 
         % accumulate window results and merge neighboring frequency bands (to increase DOFs)
-        for mi = merge : merge : (length(f)-1)*merge
+        for mi = merge : merge : length(f)*merge
             XX(mi/merge) = XX(mi/merge) + mean( XXwindow((mi-merge+1):mi) );
             YY(mi/merge) = YY(mi/merge) + mean( YYwindow((mi-merge+1):mi) );
             ZZ(mi/merge) = ZZ(mi/merge) + mean( ZZwindow((mi-merge+1):mi) );
