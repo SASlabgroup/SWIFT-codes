@@ -1,4 +1,4 @@
-function [ fmin, fmax, XX, YY, ZZ] = XYZaccelerationspectraLEL(x_input, y_input, z_input, fs) %#codegen
+function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectraLEL(x_input, y_input, z_input, fs) %#codegen
 % matlab function to process linear accelerations (x,y,z) components
 %   following the spectral processing steps of microSWIFT wave processing with "NEDwaves"
 %
@@ -47,9 +47,9 @@ windows = floor( 4*(pts/wpts - 1)+1 ); % number of windows, the 4 comes from a 7
 if windows <= 1 % Exit early if insufficient data
     fmin = half(9999);
     fmax = half(9999);
-    XX = half(ones(1,nfbands)*9999);
-    YY = half(ones(1,nfbands)*9999);
-    ZZ = half(ones(1,nfbands)*9999);
+    half_XX = half(ones(1,nfbands)*9999);
+    half_YY = half(ones(1,nfbands)*9999);
+    half_ZZ = half(ones(1,nfbands)*9999);
     return
 end
 
@@ -79,9 +79,9 @@ f0 = f1 + bandwidth / 2;
 if f0 + bandwidth * (nfbands - 1) > Nyquist % Exit early if merged frequency vector would be too small
     fmin = half(9999);
     fmax = half(9999);
-    XX = half(ones(1,nfbands)*9999);
-    YY = half(ones(1,nfbands)*9999);
-    ZZ = half(ones(1,nfbands)*9999);
+    half_XX = half(ones(1,nfbands)*9999);
+    half_YY = half(ones(1,nfbands)*9999);
+    half_ZZ = half(ones(1,nfbands)*9999);
     return
 end
 
@@ -122,6 +122,7 @@ for q=1:windows
     end
 
     %% remove the mean
+
     mean_x = mean(xwin);
     mean_y = mean(ywin);
     mean_z = mean(zwin);
@@ -212,9 +213,9 @@ ZZ = ZZ ./ windows;
 %% format for microSWIFT telemetry output (payload type 52)
 fmin = half(min(merged_freqs));
 fmax = half(max(merged_freqs));
-XX = half(XX);
-YY = half(YY);
-ZZ = half(ZZ);
+half_XX = half(XX);
+half_YY = half(YY);
+half_ZZ = half(ZZ);
 
 
 
