@@ -91,10 +91,18 @@ ZZ = single(zeros(1, nfbands));
 % QUESTION(LEL): Why doe sthe taper start at sin(pi/wpts) rather than sin(0)?
 taper = sin ( (1:wpts) * pi/wpts );     % define the taper
 
+xwin = zeros(1, wpts);
+ywin = zeros(1, wpts);
+zwin = zeros(1, wpts);
+
+
 for q=1:windows
-    xwin = x(  (q-1)*floor(.25*wpts)+1  :  (q-1)*floor(.25*wpts)+wpts  );
-    ywin = y(  (q-1)*floor(.25*wpts)+1  :  (q-1)*floor(.25*wpts)+wpts  );
-    zwin = z(  (q-1)*floor(.25*wpts)+1  :  (q-1)*floor(.25*wpts)+wpts  );
+    offset = (q-1)*floor(.25*wpts);
+    for idx=1:wpts
+        xwin(idx) = x(offset+idx);
+        ywin(idx) = y(offset+idx);
+        zwin(idx) = z(offset+idx);
+    end
 
     %% remove the mean
 
