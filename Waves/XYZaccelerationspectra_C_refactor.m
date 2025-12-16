@@ -1,7 +1,10 @@
-function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectraLEL(x_input, y_input, z_input, fs)
+function [ fmin, fmax, half_XX, half_YY, half_ZZ] = XYZaccelerationspectra_C_refactor(x_input, y_input, z_input, fs)
 % matlab function to process linear accelerations (x,y,z) components
 %   following the spectral processing steps of microSWIFT wave processing with "NEDwaves"
 %
+% This version of the code has been refactored to match a C implementation
+% as closely as possible, for easier porting of the code while still being
+% able to readilly test against the version written in idiomatic matlab.
 %
 % input time series are linear acceleration components x [m/s^2], y [m/s^2], z [m/s^2]
 % and sampling rate [Hz], which must be at least 1 Hz
@@ -114,9 +117,6 @@ ZZ_bands = single(zeros(1, nfbands));
 
 taper = zeros(1, window_points);
 for idx=0:window_points-1
-    % NOTE(LEL): I think the denom should probably be
-    %    (window_points + 1)
-    %    so neither end point evaluates to 0.
     taper(idx+1) = sin(idx * pi / (window_points-1));
 end
 
@@ -176,7 +176,6 @@ for win_idx=1:num_windows
     fft_z = fft(z_window);
 
     % throw out the mean (first coef) by moving to the end and making it zero
-    % QUESTION(LEL): Wouldn't it be more efficient to increment the index when accessing these arrays, rather than shifting them?
     for idx=1:round(window_points/2)-1
         fft_x(idx)  = fft_x(idx+1);
         fft_y(idx)  = fft_y(idx+1);
@@ -188,12 +187,6 @@ for win_idx=1:num_windows
 
     % Calculate the auto-spectra and cross-spectra from this window
     % ** do this before merging frequency bands or ensemble averging windows **
-    % These loops combine multiple accumulators from the original code:
-    %  XXwindow = ( real ( xwin( rawf < max(f) ) .* conj(xwin( rawf < max(f) )) ) / (round(wpts/2) * fs ) );
-    %  XX(mi/merge) = XX(mi/merge) + mean( XXwindow((mi-merge+1):mi) );
-
-    % TODO: Get rid of the `-1` as soon as Jim confirms
-    % QUESTION(LEL): Why are they dividing by that?
     denom = (round(window_points/2) * fs );
     for ii = 1 : 1 : nfbands % Iterate over merged frequency bins
         idx0 = (ii - 1) * merge;
@@ -212,7 +205,7 @@ end
 
 % Rather than averaging over merge bins and then again over windows
 % like the Matlab implementation did, we just accumulate through
-% both loops and divide now.
+% both loops and divide in one place.
 
 for idx=1:nfbands
     XX_bands(idx) = XX_bands(idx) / (num_windows * merge);
