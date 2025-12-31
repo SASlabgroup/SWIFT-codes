@@ -1,4 +1,4 @@
-function [avgout, corrparams, fh] = fixSIGenu(avg, burst, sbgData, headoff)
+function [avgout, cparams, fh] = fixSIGenu(avg, burst, sbgData, hoffgiven)
 % Recompute ENU velocity profiles from beam velocities using SBG Ellipse
 % motion sensor orientation data with automatic time-lag correction.
 % 
@@ -17,56 +17,13 @@ function [avgout, corrparams, fh] = fixSIGenu(avg, burst, sbgData, headoff)
 % Extended to use SBG data with automatic lag correction
 
 % Handle optional heading offset
-if nargin < 4 || isempty(headoff)
+if nargin < 4 || isempty(hoffgiven)
     compute_offset = true;
 else
     compute_offset = false;
 end
 
-%% Extract and prepare SBG data
-
-% Build SBG UTC time
-sbgtime = [sbgData.UtcTime.year(:) sbgData.UtcTime.month(:) sbgData.UtcTime.day(:)...
-    sbgData.UtcTime.hour(:) sbgData.UtcTime.min(:) sbgData.UtcTime.sec(:)];
-sbgtime = datenum(sbgtime);
-sbgtime = sbgtime + sbgData.UtcTime.nanosec'./((10^9)*60*60*24);
-
-% Extract SBG orientation data (convert from radians to degrees)
-sbgpitch = interp1(sbgData.EkfEuler.time_stamp, sbgData.EkfEuler.pitch, ...
-                   sbgData.UtcTime.time_stamp) * 180/pi;
-sbgroll = interp1(sbgData.EkfEuler.time_stamp, sbgData.EkfEuler.roll, ...
-                  sbgData.UtcTime.time_stamp) * 180/pi;
-sbgyaw = interp1(sbgData.EkfEuler.time_stamp, sbgData.EkfEuler.yaw, ...
-                 sbgData.UtcTime.time_stamp) * 180/pi;
-
-% Adjust yaw to 0-360 range
-sbgyaw(sbgyaw < 0) = sbgyaw(sbgyaw < 0) + 360;
-
-% Extract SBG gyroscope data (convert from radians/s to degrees/s)
-sbggyrox = interp1(sbgData.ImuData.time_stamp, sbgData.ImuData.gyro_x, ...
-                   sbgData.UtcTime.time_stamp) * 180/pi;
-sbggyroy = interp1(sbgData.ImuData.time_stamp, sbgData.ImuData.gyro_y, ...
-                   sbgData.UtcTime.time_stamp) * 180/pi;
-sbggyroz = interp1(sbgData.ImuData.time_stamp, sbgData.ImuData.gyro_z, ...
-                   sbgData.UtcTime.time_stamp) * 180/pi;
-
-% Compute total angular velocity magnitude
-sbgangv = sqrt(sbggyrox.^2 + sbggyroy.^2 + sbggyroz.^2);
-
-% Trim SBG data to within 12 minutes of ADCP data
-sig_tmin = min(burst.time) - 12/(24*60);
-sig_tmax = max(burst.time) + 12/(24*60);
-igood = sbgtime >= sig_tmin & sbgtime <= sig_tmax;
-sbgtime = sbgtime(igood);
-sbgpitch = sbgpitch(igood);
-sbgroll = sbgroll(igood);
-sbgyaw = sbgyaw(igood);
-sbggyrox = sbggyrox(igood);
-sbggyroy = sbggyroy(igood);
-sbggyroz = sbggyroz(igood);
-sbgangv = sbgangv(igood);
-
-%% Extract ADCP AHRS gyroscope data
+%% ADCP AHRS gyroscope data
 
 sigtime = burst.time;
 siggyrox = burst.AHRS_GyroX;
@@ -76,56 +33,105 @@ siggyroz = burst.AHRS_GyroZ;
 % Compute total angular velocity magnitude
 sigangv = sqrt(siggyrox.^2 + siggyroy.^2 + siggyroz.^2);
 
+[~,iu] = unique(sigtime);
+sigtime = sigtime(iu);
+sigangv = sigangv(iu);
+
+%% SBG Euler + gyroscope data
+
+% Good timestamps
+[~,iuekf] = unique(sbgData.EkfEuler.time_stamp);
+[~,iuutc] = unique(sbgData.UtcTime.time_stamp);
+[~,iuimu] = unique(sbgData.ImuData.time_stamp);
+
+% Build SBG UTC time
+sbgtime = [sbgData.UtcTime.year(iuutc)' sbgData.UtcTime.month(iuutc)' sbgData.UtcTime.day(iuutc)'...
+    sbgData.UtcTime.hour(iuutc)' sbgData.UtcTime.min(iuutc)' sbgData.UtcTime.sec(iuutc)'];
+sbgtime = datenum(sbgtime);
+sbgtime = sbgtime' + sbgData.UtcTime.nanosec(iuutc)./((10^9)*60*60*24);
+
+% SBG orientation data (convert from radians to degrees)
+sbgpitch = interp1(sbgData.EkfEuler.time_stamp(iuekf), sbgData.EkfEuler.pitch(iuekf), ...
+                   sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
+sbgroll = interp1(sbgData.EkfEuler.time_stamp(iuekf), sbgData.EkfEuler.roll(iuekf), ...
+                  sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
+sbgyaw = interp1(sbgData.EkfEuler.time_stamp(iuekf), sbgData.EkfEuler.yaw(iuekf), ...
+                 sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
+
+% SBG gyroscope data (convert from radians/s to degrees/s)
+sbggyrox = interp1(sbgData.ImuData.time_stamp(iuimu), sbgData.ImuData.gyro_x(iuimu), ...
+                   sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
+sbggyroy = interp1(sbgData.ImuData.time_stamp(iuimu), sbgData.ImuData.gyro_y(iuimu), ...
+                   sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
+sbggyroz = interp1(sbgData.ImuData.time_stamp(iuimu), sbgData.ImuData.gyro_z(iuimu), ...
+                   sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
+
+% Compute angular velocity
+sbgangv = sqrt(sbggyrox.^2 + sbggyroy.^2 + sbggyroz.^2);
+
+%% Fix SBG time
+sbgdt = (1/5)/(60*60*24);
+tmin = min(sigtime) - 1/24;
+tmax = max(sigtime) + 1/24;
+istart = find(sbgtime >= tmin & sbgtime <=tmax,1,'first');
+sbgtime = sbgdt*((1:length(sbgtime))-istart) + sbgtime(istart);
+
+% Skip burst if times are way off...
+toff = min(sbgtime)-min(sigtime);
+if toff > 12/(24*60)
+    disp('No timeseries overlap...')
+    avgout = [];
+    cparams = [];
+    fh = [];
+    return
+end
+
 %% Compute time lag via cross-correlation
 
-% Interpolate SBG angular velocity to ADCP timestamps
-sbgangv_int = interp1(sbgtime, sbgangv, sigtime);
-sbgangv_int(isnan(sbgangv_int)) = 0;
+% Interpolate to high res time grid (10 Hz)
+dt = (1/10)/(24*60*60); % days
+ctime = max([min(sbgtime) min(sigtime)]):dt:min([max(sbgtime) max(sigtime)]);
+csbgangv = interp1(sbgtime, sbgangv, ctime);
+csigangv = interp1(sigtime, sigangv, ctime);
 
-% Cross-correlate to find lag
-[r, lags] = xcorr(sbgangv_int, sigangv, 'coeff');
-
-% Find peak correlation and convert to time
-sigdt = median(diff(sigtime)) * 24 * 60 * 60; % seconds
+% Cross-correlate to find lag (max lag 100 s)
+[r,lags] = xcorr(csbgangv,csigangv,1000,'unbiased');
 [~, imaxr] = max(r);
-tlag = lags(imaxr) * sigdt / (24 * 60 * 60); % days
+tlag = lags(imaxr) * dt; % days
 
-% Apply time correction to SBG data
+% Apply time shift to SBG data
 sbgtime_corrected = sbgtime - tlag;
 
 %% Interpolate SBG orientation to ADCP timestamps
 
 adcp_time = avg.time;
-heading = interp1(sbgtime_corrected, sbgyaw, adcp_time);
+heading = interp1(sbgtime_corrected, unwrap(sbgyaw*pi/180)*180/pi, adcp_time);
+heading = wrapToPi(heading*pi/180)*180/pi;
 pitch = interp1(sbgtime_corrected, sbgpitch, adcp_time);
 roll = interp1(sbgtime_corrected, sbgroll, adcp_time);
 
 %% Apply heading offset
 
-if compute_offset
-    % Auto-compute heading offset from data
-    [mean_adcp, ~] = meandir(avg.Heading);
-    [mean_sbg, ~] = meandir(heading);
-    
-    % Compute circular difference
-    headoff = mean_adcp - mean_sbg;
-    
-    % Handle wrapping to keep offset in -180 to 180 range
-    if headoff > 180
-        headoff = headoff - 360;
-    elseif headoff < -180
-        headoff = headoff + 360;
-    end
-    
-    fprintf('Auto-computed heading offset: %.2f degrees\n', headoff);
+% Compute heading offset from data
+[mean_adcp, ~] = meandir(avg.Heading);
+[mean_sbg, ~] = meandir(heading);
+hoffdata = mean_adcp - mean_sbg;
+
+% Handle wrapping to keep offset in -180 to 180 range
+if hoffdata > 180
+    hoffdata = hoffdata - 360;
+    elseif hoffdata < -180
+        hoffdata = hoffdata + 360;
 end
 
 % Apply offset to SBG heading
-heading = heading + headoff;
+if compute_offset
+    heading = heading + hoffdata;
+    fprintf('Auto-computed heading offset: %.2f degrees\n', hoffdata);
+else
+    heading = heading + hoffgiven;
+end
 
-% Wrap to 0-360 range
-heading(heading >= 360) = heading(heading >= 360) - 360;
-heading(heading < 0) = heading(heading < 0) + 360;
 
 %% Recompute ENU velocities using SBG orientation
 
@@ -209,21 +215,23 @@ avgout.VelocityData = velENU_new;
 
 %% Create diagnostics structure
 
-corrparams.sbgtime_original = sbgtime;
-corrparams.sbgtime_corrected = sbgtime_corrected;
-corrparams.adcp_time = adcp_time;
-corrparams.tlag_seconds = tlag * 24 * 60 * 60;
-corrparams.tlag_days = tlag;
-corrparams.heading_offset = headoff;
-corrparams.max_correlation = max(r);
-corrparams.xcorr_r = r;
-corrparams.xcorr_lags = lags * sigdt;
-corrparams.heading_sbg = heading;
-corrparams.pitch_sbg = pitch;
-corrparams.roll_sbg = roll;
-corrparams.heading_adcp = avg.Heading;
-corrparams.pitch_adcp = avg.Pitch;
-corrparams.roll_adcp = avg.Roll;
+cparams.sbgtime_original = sbgtime;
+cparams.sbgtime_corrected = sbgtime_corrected;
+cparams.adcp_time = adcp_time;
+cparams.toff_seconds = toff * 24 * 60 * 60;
+cparams.toff_days = toff;
+cparams.tlag_seconds = tlag * 24 * 60 * 60;
+cparams.tlag_days = tlag;
+cparams.heading_offset = hoffdata;
+cparams.max_correlation = max(r);
+cparams.xcorr_r = r;
+cparams.xcorr_lags = lags * dt;
+cparams.heading_sbg = heading;
+cparams.pitch_sbg = pitch;
+cparams.roll_sbg = roll;
+cparams.heading_adcp = avg.Heading;
+cparams.pitch_adcp = avg.Pitch;
+cparams.roll_adcp = avg.Roll;
 
 %% Plot diagnostics
 fh = figure('Color', 'w');
@@ -231,9 +239,9 @@ fullscreen
 
 % Subplot 1: Cross-correlation
 subplot(7,1,1)
-plot(lags * sigdt, r, 'b-', 'LineWidth', 1.5);
+plot(lags * dt*24*60*60, r, 'b-', 'LineWidth', 1.5);
 hold on;
-plot(lags(imaxr) * sigdt, max(r), 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+plot(lags(imaxr) * dt*24*60*60, max(r), 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
 grid on;
 ylabel('XC');
 title(sprintf('Cross-correlation (lag = %.2f s)', tlag*24*60*60));
@@ -251,14 +259,13 @@ datetick('x', 'HH:MM:SS', 'keeplimits');
 
 % Subplot 3: Heading comparison
 subplot(7,1,3)
-plot(adcp_time, avg.Heading, 'b.-');
+plot(adcp_time, wrapToPi(avg.Heading*pi/180)*180/pi, 'b.-');
 hold on;
-plot(adcp_time, heading, 'r.-');
+plot(sbgtime_corrected, sbgyaw, 'r-');
 grid on;
-ylabel('H [deg]');
+ylabel('H [deg]');ylim([-180 180])
 [mean_adcp, std_adcp] = meandir(avg.Heading);
-[mean_sbg, std_sbg] = meandir(heading);
-legend('ADCP', 'SBG', 'Location', 'best');
+[mean_sbg, std_sbg] = meandir(sbgyaw);
 title(sprintf('Heading | ADCP: %.1f±%.1f° | SBG: %.1f±%.1f°', mean_adcp, std_adcp, mean_sbg, std_sbg));
 datetick('x', 'HH:MM:SS', 'keeplimits');
 
@@ -266,23 +273,22 @@ datetick('x', 'HH:MM:SS', 'keeplimits');
 subplot(7,1,4)
 plot(adcp_time, avg.Pitch, 'b.-');
 hold on;
-plot(adcp_time, pitch, 'r.-');
+plot(sbgtime_corrected, sbgpitch, 'r-');
 grid on;
-ylabel('P [deg]');
+ylabel('P [deg]');ylim([-180 180])
 [mean_adcp, std_adcp] = meandir(avg.Pitch);
-[mean_sbg, std_sbg] = meandir(pitch);
-legend('ADCP', 'SBG', 'Location', 'best');
+[mean_sbg, std_sbg] = meandir(sbgpitch);
 title(sprintf('Pitch | ADCP: %.1f±%.1f° | SBG: %.1f±%.1f°', mean_adcp, std_adcp, mean_sbg, std_sbg));
 
 % Subplot 5: Roll comparison
 subplot(7,1,5)
 plot(adcp_time, avg.Roll, 'b.-');
 hold on;
-plot(adcp_time, roll, 'r.-');
+plot(sbgtime_corrected, sbgroll, 'r-');
 grid on;
-ylabel('R [deg]');
+ylabel('R [deg]');ylim([-180 180])
 [mean_adcp, std_adcp] = meandir(avg.Roll);
-[mean_sbg, std_sbg] = meandir(roll);
+[mean_sbg, std_sbg] = meandir(sbgroll);
 title(sprintf('Roll | ADCP: %.1f±%.1f° | SBG: %.1f±%.1f°', mean_adcp, std_adcp, mean_sbg, std_sbg));
 
 % Subplot 6: East velocity (original)
@@ -293,7 +299,7 @@ colorbar;
 colormap(cmocean('balance'));
 ylabel('Bin');
 title('East Velocity - Original (m/s)');
-clim([-1 1] * max(abs(velENU(:,:,1)), [], 'all'));
+clim([-1 1])
 
 % Subplot 7: East velocity (corrected)
 subplot(7,1,7)
@@ -304,7 +310,7 @@ colormap(cmocean('balance'));
 ylabel('Bin');
 title('East Velocity - SBG Corrected (m/s)');
 datetick('x', 'HH:MM:SS', 'keeplimits');
-clim([-1 1] * max(abs(velENU_new(:,:,1)), [], 'all'));
+clim([-1 1])
 axis tight
 
 % Link x-axes of subplots 2–7
