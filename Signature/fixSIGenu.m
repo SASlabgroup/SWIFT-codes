@@ -58,6 +58,10 @@ sbgroll = interp1(sbgData.EkfEuler.time_stamp(iuekf), sbgData.EkfEuler.roll(iuek
 sbgyaw = interp1(sbgData.EkfEuler.time_stamp(iuekf), sbgData.EkfEuler.yaw(iuekf), ...
                  sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
 
+% Force SBG roll to 180 to match ADCP
+sbgroll = sbgroll + 180;
+sbgroll = wrapToPi(sbgroll*pi/180)*180/pi;
+
 % SBG gyroscope data (convert from radians/s to degrees/s)
 sbggyrox = interp1(sbgData.ImuData.time_stamp(iuimu), sbgData.ImuData.gyro_x(iuimu), ...
                    sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
@@ -208,30 +212,21 @@ end
 % Swap signs in ENU
 velENU_new(:, :, 2:4) = -velENU_new(:, :, 2:4);
 
+% Scalar speed
+bavgspd = mean(squeeze(velENU_new(:,:,1).^2 + velENU_new(:,:,2).^2),'omitnan');
+
 %% Create output structure
 
 avgout = avg;
 avgout.VelocityData = velENU_new;
 
 %% Create diagnostics structure
-
-cparams.sbgtime_original = sbgtime;
-cparams.sbgtime_corrected = sbgtime_corrected;
-cparams.adcp_time = adcp_time;
-cparams.toff_seconds = toff * 24 * 60 * 60;
-cparams.toff_days = toff;
-cparams.tlag_seconds = tlag * 24 * 60 * 60;
-cparams.tlag_days = tlag;
-cparams.heading_offset = hoffdata;
-cparams.max_correlation = max(r);
-cparams.xcorr_r = r;
-cparams.xcorr_lags = lags * dt;
-cparams.heading_sbg = heading;
-cparams.pitch_sbg = pitch;
-cparams.roll_sbg = roll;
-cparams.heading_adcp = avg.Heading;
-cparams.pitch_adcp = avg.Pitch;
-cparams.roll_adcp = avg.Roll;
+cparams.toff = toff;
+cparams.tlag = tlag;
+cparams.hoff = hoffdata;
+cparams.mheading = meandir(sbgyaw);
+cparams.mpitch = meandir(sbgpitch);
+cparams.mroll = meandir(sbgroll);
 
 %% Plot diagnostics
 fh = figure('Color', 'w');
@@ -284,7 +279,7 @@ title(sprintf('Pitch | ADCP: %.1f±%.1f° | SBG: %.1f±%.1f°', mean_adcp, std_a
 subplot(7,1,5)
 plot(adcp_time, avg.Roll, 'b.-');
 hold on;
-plot(sbgtime_corrected, sbgroll, 'r-');
+scatter(sbgtime_corrected, sbgroll,1,'r','filled');
 grid on;
 ylabel('R [deg]');ylim([-180 180])
 [mean_adcp, std_adcp] = meandir(avg.Roll);
