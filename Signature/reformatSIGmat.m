@@ -3,7 +3,8 @@ function reformatSIGmat(missiondir)
 % software to match the convensions of the lab structures
 % K.Zeiden June 2024
 
-bfiles = dir([missiondir '\SIG\Raw\*\*00000.mat']);
+bfiles = dir(fullfile(missiondir, '**', '*.mat'));
+
 if isempty(bfiles)
     disp('No burst mat files found.')
     return
@@ -28,8 +29,22 @@ for iburst = 1:nburst
         continue
     end
 
+    % Check to see what format type it is
+    formattype = false;
+    if isfield(Config,'Plan_AverageEnabled')
+        formattype = 1;
+    elseif isfield(Config,'avg_enable')
+        formattype = 2;
+    else
+        disp('Format type not recognized. Skipping...')
+        continue
+    end
+
+    %% 
+    if formattype == 1
+    
     % Average Data
-    if strcmp(Config.Plan_AverageEnabled,'True')
+    if isfield(Data,'Average_Time')
 
         nbeams_avg = Config.Average_NBeams;
         nbins_avg = Config.Average_NCells;
@@ -45,26 +60,23 @@ for iburst = 1:nburst
         avg.Blanking = Config.Average_BlankingDistance;
         avg.Magnetometer = Data.Average_Magnetometer; 
         avg.Accelerometer = Data.Average_Accelerometer;
-
         avg.VelocityData = NaN(npings_avg,nbins_avg,nbeams_avg);
         avg.CorrelationData = NaN(npings_avg,nbins_avg,nbeams_avg);
         avg.AmplitudeData = NaN(npings_avg,nbins_avg,nbeams_avg);
-        for ibeam = 1:nbeams_avg
-            velname = ['Average_VelBeam' num2str(ibeam)];
-            corname = ['Average_CorBeam' num2str(ibeam)];
-            ampname = ['Average_AmpBeam' num2str(ibeam)];
-        avg.VelocityData(:,:,ibeam) = Data.(velname);
-        avg.CorrelationData(:,:,ibeam) = Data.(corname);
-        avg.AmplitudeData(:,:,ibeam) = Data.(ampname);
+        if isfield(Data,'Average_VelBeam1')
+            for ibeam = 1:nbeams_avg
+            avg.VelocityData(:,:,ibeam) = Data.(['Average_VelBeam' num2str(ibeam)]);
+            end
+        elseif isfield(Data,'Average_VelEast')
+            avg.VelocityData(:,:,1) = Data.Average_VelEast;
+            avg.VelocityData(:,:,2) = Data.Average_VelNorth;
+            avg.VelocityData(:,:,3) = Data.Average_VelUp1;
+            avg.VelocityData(:,:,4) = Data.Average_VelUp2;
         end
-
-        % Need to do AST, Altimeter,AHRS
-        % if Config.Average_Altimeter
-        %     avg.AltimeterDistance = Data.Average_AltimeterDistanceLE;
-        %     avg.AltimeterQuality = Data.Average_AltimeterQualityLE; 
-        %     avg.Status = Data.Average_AltimeterStatus;
-        % end
-
+        for ibeam = 1:nbeams_avg
+        avg.CorrelationData(:,:,ibeam) = Data.(['Average_CorBeam' num2str(ibeam)]);
+        avg.AmplitudeData(:,:,ibeam) = Data.(['Average_AmpBeam' num2str(ibeam)]);
+        end
     end
 
     % Burst data
@@ -151,15 +163,130 @@ for iburst = 1:nburst
         burst.EchoSounder = Data.([ename '_Echo']);
     end
 
-    % Save
+    % AST,Altimeter,AHRS
+    % if Config.Average_Altimeter
+    %     avg.AltimeterDistance = Data.Average_AltimeterDistanceLE;
+    %     avg.AltimeterQuality = Data.Average_AltimeterQualityLE; 
+    %     avg.Status = Data.Average_AltimeterStatus;
+    % end
+
+    %%
+    elseif formattype == 2
+
+
+        % Average Data
+    if isfield(Data,'Average_MatlabTimeStamp')
+
+        nbeams_avg = Config.avg_nBeams;
+        nbins_avg = Config.avg_nCells;
+        npings_avg = length(Data.Average_MatlabTimeStamp);
+        avg.time = Data.Average_MatlabTimeStamp;
+        avg.SoundSpeed = Data.Average_SpeedOfSound;
+        avg.Temperature = Data.Average_WaterTemperature;
+        avg.Pressure = Data.Average_Pressure;
+        avg.Heading = Data.Average_Heading;
+        avg.Pitch = Data.Average_Pitch;
+        avg.Roll = Data.Average_Roll;
+        avg.CellSize = Config.avg_cellSize;
+        avg.Blanking = Config.avg_blankingDistance;
+        avg.Magnetometer(:,1) = Data.Average_MagnetometerX; 
+        avg.Magnetometer(:,2) = Data.Average_MagnetometerY;
+        avg.Magnetometer(:,3) = Data.Average_MagnetometerZ;
+        avg.Accelerometer(:,1) = Data.Average_AccelerometerX;
+        avg.Accelerometer(:,2) = Data.Average_AccelerometerY;
+        avg.Accelerometer(:,3) = Data.Average_AccelerometerZ;
+        avg.VelocityData = NaN(npings_avg,nbins_avg,nbeams_avg);
+        avg.CorrelationData = NaN(npings_avg,nbins_avg,nbeams_avg);
+        avg.AmplitudeData = NaN(npings_avg,nbins_avg,nbeams_avg);
+        if isfield(Data,'Average_VelBeam1')
+            for ibeam = 1:nbeams_avg
+            avg.VelocityData(:,:,ibeam) = Data.(['Average_VelBeam' num2str(ibeam)]);
+            end
+        elseif isfield(Data,'Average_VelEast')
+            avg.VelocityData(:,:,1) = Data.Average_VelEast;
+            avg.VelocityData(:,:,2) = Data.Average_VelNorth;
+            avg.VelocityData(:,:,3) = Data.Average_VelUp1;
+            avg.VelocityData(:,:,4) = Data.Average_VelUp2;
+        end
+        for ibeam = 1:nbeams_avg
+        avg.CorrelationData(:,:,ibeam) = Data.(['Average_CorBeam' num2str(ibeam)]);
+        avg.AmplitudeData(:,:,ibeam) = Data.(['Average_AmpBeam' num2str(ibeam)]);
+        end
+    end
+
+    % Burst data
+    if isfield(Data,'BurstHR_MatlabTimeStamp')
+
+        nbins_burst = Config.bursthr_nCells;
+        npings_burst = length(Data.BurstHR_MatlabTimeStamp);
+        burst.time = Data.BurstHR_MatlabTimeStamp;
+        burst.SoundSpeed = Data.BurstHR_SpeedOfSound;
+        burst.Temperature = Data.BurstHR_WaterTemperature;
+        burst.Pressure = Data.BurstHR_Pressure;
+        burst.Heading = Data.BurstHR_Heading;
+        burst.Pitch = Data.BurstHR_Pitch;
+        burst.Roll = Data.BurstHR_Roll;
+        burst.CellSize = Config.bursthr_cellSize;
+        burst.Blanking = Config.bursthr_blankingDistance;
+        burst.Magnetometer(:,1) = Data.BurstHR_MagnetometerX; 
+        burst.Magnetometer(:,2) = Data.BurstHR_MagnetometerY;
+        burst.Magnetometer(:,3) = Data.BurstHR_MagnetometerZ;
+        burst.Accelerometer(:,1) = Data.BurstHR_AccelerometerX;
+        burst.Accelerometer(:,2) = Data.BurstHR_AccelerometerY;
+        burst.Accelerometer(:,3) = Data.BurstHR_AccelerometerZ;
+
+        % Single Beam HR
+        if ~Config.bursthr_enable5
+
+            burst.VelocityData = Data.BurstHR_VelBeam5;
+            burst.AmplitudeData = Data.BurstHR_AmpBeam5;
+            burst.CorrelationData = Data.BurstHR_CorBeam5;
+
+        % 5-beam HR
+        elseif Config.bursthr_enable5
+
+            nbeams_burst = Config.burst_nBeams;
+            burst.VelocityData = NaN(npings_burst,nbins_burst,nbeams_burst);
+            burst.CorrelationData = NaN(npings_burst,nbins_burst,nbeams_burst);
+            burst.AmplitudeData = NaN(npings_burst,nbins_burst,nbeams_burst);
+            % Slanted Beams
+            for ibeam = 1:4
+                burst.VelocityData(:,:,ibeam) = Data.(['BurstHR_VelBeam' num2str(ibeam)]);
+                burst.CorrelationData(:,:,ibeam ) = Data.(['BurstHR_CorBeam' num2str(ibeam)]);
+                burst.AmplitudeData(:,:,ibeam) = Data.(['BurstHR_AmpBeam' num2str(ibeam)]);
+            end
+            % Vertical Beam
+            nburst = size(burst.VelocityData,1);
+            nburst5 = size(Data.IBurstHR_VelBeam5,1);
+            if nburst == nburst5
+            burst.VelocityData(:,:,5) = Data.IBurstHR_VelBeam5;
+            burst.CorrelationData(:,:,5) = Data.IBurstHR_CorBeam5;
+            burst.AmplitudeData(:,:,5) = Data.IBurstHR_AmpBeam5;
+            elseif nburst > nburst5
+            burst.VelocityData(1:nburst5,:,5) = Data.IBurstHR_VelBeam5;
+            burst.CorrelationData(1:nburst5,:,5) = Data.IBurstHR_CorBeam5;
+            burst.AmplitudeData(1:nburst5,:,5) = Data.IBurstHR_AmpBeam5;
+            else
+                burst.VelocityData(:,:,5) = Data.IBurstHR_VelBeam5(1:nburst,:);
+                burst.CorrelationData(:,:,5) = Data.IBurstHR_CorBeam5(1:nburst,:);
+                burst.AmplitudeData(:,:,5) = Data.IBurstHR_AmpBeam5(1:nburst,:);
+            end
+
+        end
+
+    end
+
+    end
+
+    %% Save
     if exist('burst','var') && exist('echo','var')
-        save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '.mat'],...
+        save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '_reformat.mat'],...
         'burst','avg','echo')
     elseif exist('burst','var')
-                save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '.mat'],...
+                save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '_reformat.mat'],...
         'burst','avg')
     else
-                save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '.mat'],...
+                save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '_reformat.mat'],...
         'avg');
     end
 
