@@ -147,7 +147,7 @@ for iburst = 1:length(bfiles)
 
             h = findall(gcf,'Type','Axes');
             linkaxes(h,'x');
-            xlim([0 550])
+            xlim([0 max([550 max(gpstime)])])
         
             print([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4)],'-dpng')
             close gcf

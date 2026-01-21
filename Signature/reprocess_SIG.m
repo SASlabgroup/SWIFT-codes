@@ -128,6 +128,7 @@ opt.plotburst = plotburst; % generate plots for each burst
 
 %%% Internal Toggles
 opt.saveSIG = true; % save detailed sig data in separate SIG structure
+opt.plotsig = false;
 opt.saveplots = true; % save generated plots
 
 % Out of water correlation
@@ -221,8 +222,9 @@ for iburst = 1:nburst
     end
 
     % Skip if any of the burst fields are 3D
-    if ~ismatrix(burst.VelocityData) || ~ismatrix(burst.CorrelationData) || ~ismatrix(burst.AmplitudeData)
-        disp('Burst fields have more than 2 dimensions, skipping burst...')
+    if (~ismatrix(burst.VelocityData) || ~ismatrix(burst.CorrelationData) || ~ismatrix(burst.AmplitudeData))...
+            && size(burst.VelocityData,3) ~= 5
+        disp('Burst fields have more than 2 dimensions but not 5-beam data, skipping burst...')
         continue
     end
 
@@ -293,23 +295,35 @@ for iburst = 1:nburst
 
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
     
+    % Determine whether single or 5-beam data
+    if ismatrix(burst.VelocityData)
         [HRprofile,fh] = processSIGburst(burst,opt);
+    elseif ndims(burst.VelocityData) == 3
+        [HRprofile,fh] = processSIGburst_5B(burst);
+    end
 
         % Remove EOF data (too large)
-        HRprofile.QC = rmfield(HRprofile.QC,{'eofs','eofvar','eofamp','wpeofmag'});
-        
+        if isfield(HRprofile.QC,'eofs')
+            HRprofile.QC = rmfield(HRprofile.QC,{'eofs','eofvar','eofamp','wpeofmag'});
+        end
+      
         if isempty(HRprofile)
             HRprofile = NaNstructR(SIG(isig-1).HRprofile);
         end
     
-           if opt.saveplots && ~isempty(fh)
-            figure(fh(1))
-            set(gcf,'Name',[bname '_HR_data'])
-            figname = [bfiles(iburst).folder slash get(gcf,'Name')];
-            print(figname,'-dpng')
-            close gcf
-           
-           end
+        if opt.saveplots && ~isempty(fh)
+            for ifig = 1:length(fh)
+                figure(fh(ifig))
+                if length(fh) > 1
+                set(gcf,'Name',[bname '_HR_data_Beam' num2str(ifig)])
+                else 
+                    set(gcf,'Name',[bname '_HR_data'])
+                end
+                figname = [bfiles(iburst).folder slash get(gcf,'Name')];
+                print(figname,'-dpng')
+                close gcf
+            end
+         end
 
     %%%%%%%% Process Echo data %%%%%%%%%%%
    if exist('echo','var')
@@ -422,6 +436,10 @@ for iburst = 1:nburst
             SWIFT(sindex).signature.HRprofile.z = HRprofile.z;
             SWIFT(sindex).signature.HRprofile.tkedissipationrate = ...
                 HRprofile.eps;
+            if isfield(HRprofile,'enu')
+                SWIFT(sindex).signature.HRprofile.enu = HRprofile.enu;
+                SWIFT(sindex).signature.HRprofile.enuvar = HRprofile.enuvar;
+            end
             % Broadband data
             SWIFT(sindex).signature.profile = [];
             SWIFT(sindex).signature.profile.east = profile.u;
@@ -547,12 +565,14 @@ if opt.saveSIG
 end
 
 % Plot burst Averaged SWIFT Signature Data
-catSIG(SIG,'plot');
-set(gcf,'Name',sfile.name(1:end-7))
-if opt.saveplots
-    figname = [missiondir slash get(gcf,'Name')];
-    print([figname '_SIG'],'-dpng')
-    close gcf
+if opt.plotsig
+    catSIG(SIG,'plot');
+    set(gcf,'Name',sfile.name(1:end-7))
+    if opt.plotsig && opt.saveplots
+        figname = [missiondir slash get(gcf,'Name')];
+        print([figname '_SIG'],'-dpng')
+        close gcf
+    end
 end
 
 %% Log reprocessing and flags, then save new L3 file or overwrite existing one

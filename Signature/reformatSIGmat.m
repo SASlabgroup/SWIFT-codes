@@ -11,19 +11,18 @@ if isempty(bfiles)
 end
 nburst = length(bfiles);
 
-progressbar()
 for iburst = 1:nburst
 
     disp(['Reformatting ' bfiles(iburst).name ])
 
-    vars = whos('-file',[bfiles(iburst).folder '\' bfiles(iburst).name]);
+    vars = whos('-file',[bfiles(iburst).folder slash bfiles(iburst).name]);
 
     % Check to see if already in lab format, skip file if so
     if any(strcmp({vars.name},'avg'))
         disp('Burst file already in Lab format. Skipping...')
         continue
     elseif any(strcmp({vars.name},'Data')) && any(strcmp({vars.name},'Config'))
-        load([bfiles(iburst).folder '\' bfiles(iburst).name])
+        load([bfiles(iburst).folder slash bfiles(iburst).name])
     else
         disp('No Data or Config structure found. Skipping...')
         continue
@@ -60,9 +59,9 @@ for iburst = 1:nburst
         avg.Blanking = Config.Average_BlankingDistance;
         avg.Magnetometer = Data.Average_Magnetometer; 
         avg.Accelerometer = Data.Average_Accelerometer;
-        avg.VelocityData = NaN(npings_avg,nbins_avg,nbeams_avg);
-        avg.CorrelationData = NaN(npings_avg,nbins_avg,nbeams_avg);
-        avg.AmplitudeData = NaN(npings_avg,nbins_avg,nbeams_avg);
+        avg.VelocityData = NaN(npings_avg,nbins_avg,nbeams_avg,'single');
+        avg.CorrelationData = NaN(npings_avg,nbins_avg,nbeams_avg,'single');
+        avg.AmplitudeData = NaN(npings_avg,nbins_avg,nbeams_avg,'single');
         if isfield(Data,'Average_VelBeam1')
             for ibeam = 1:nbeams_avg
             avg.VelocityData(:,:,ibeam) = Data.(['Average_VelBeam' num2str(ibeam)]);
@@ -107,9 +106,9 @@ for iburst = 1:nburst
         elseif strcmp(Config.Burst_HighResolution5,'True') && strcmp(Config.Burst_HighResolution,'True')
 
             nbeams_burst = Config.Burst_NBeams;
-            burst.VelocityData = NaN(npings_burst,nbins_burst,nbeams_burst);
-            burst.CorrelationData = NaN(npings_burst,nbins_burst,nbeams_burst);
-            burst.AmplitudeData = NaN(npings_burst,nbins_burst,nbeams_burst);
+            burst.VelocityData = NaN(npings_burst,nbins_burst,nbeams_burst,'single');
+            burst.CorrelationData = NaN(npings_burst,nbins_burst,nbeams_burst,'single');
+            burst.AmplitudeData = NaN(npings_burst,nbins_burst,nbeams_burst,'single');
             % Slanted Beams
             for ibeam = 1:4
                 velname = ['BurstHR_VelBeam' num2str(ibeam)];
@@ -195,9 +194,9 @@ for iburst = 1:nburst
         avg.Accelerometer(:,1) = Data.Average_AccelerometerX;
         avg.Accelerometer(:,2) = Data.Average_AccelerometerY;
         avg.Accelerometer(:,3) = Data.Average_AccelerometerZ;
-        avg.VelocityData = NaN(npings_avg,nbins_avg,nbeams_avg);
-        avg.CorrelationData = NaN(npings_avg,nbins_avg,nbeams_avg);
-        avg.AmplitudeData = NaN(npings_avg,nbins_avg,nbeams_avg);
+        avg.VelocityData = NaN(npings_avg,nbins_avg,nbeams_avg,'single');
+        avg.CorrelationData = NaN(npings_avg,nbins_avg,nbeams_avg,'single');
+        avg.AmplitudeData = NaN(npings_avg,nbins_avg,nbeams_avg,'single');
         if isfield(Data,'Average_VelBeam1')
             for ibeam = 1:nbeams_avg
             avg.VelocityData(:,:,ibeam) = Data.(['Average_VelBeam' num2str(ibeam)]);
@@ -234,6 +233,9 @@ for iburst = 1:nburst
         burst.Accelerometer(:,1) = Data.BurstHR_AccelerometerX;
         burst.Accelerometer(:,2) = Data.BurstHR_AccelerometerY;
         burst.Accelerometer(:,3) = Data.BurstHR_AccelerometerZ;
+        burst.AHRS_GyroX = Data.BurstHR_AHRSGyroX;
+        burst.AHRS_GyroY = Data.BurstHR_AHRSGyroY;
+        burst.AHRS_GyroZ = Data.BurstHR_AHRSGyroZ;
 
         % Single Beam HR
         if ~Config.bursthr_enable5
@@ -246,9 +248,9 @@ for iburst = 1:nburst
         elseif Config.bursthr_enable5
 
             nbeams_burst = Config.burst_nBeams;
-            burst.VelocityData = NaN(npings_burst,nbins_burst,nbeams_burst);
-            burst.CorrelationData = NaN(npings_burst,nbins_burst,nbeams_burst);
-            burst.AmplitudeData = NaN(npings_burst,nbins_burst,nbeams_burst);
+            burst.VelocityData = NaN(npings_burst,nbins_burst,nbeams_burst,'single');
+            burst.CorrelationData = NaN(npings_burst,nbins_burst,nbeams_burst,'single');
+            burst.AmplitudeData = NaN(npings_burst,nbins_burst,nbeams_burst,'single');
             % Slanted Beams
             for ibeam = 1:4
                 burst.VelocityData(:,:,ibeam) = Data.(['BurstHR_VelBeam' num2str(ibeam)]);
@@ -275,22 +277,23 @@ for iburst = 1:nburst
         end
 
     end
-
     end
 
     %% Save
     if exist('burst','var') && exist('echo','var')
-        save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '_reformat.mat'],...
+        save([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '_reformat.mat'],...
         'burst','avg','echo')
     elseif exist('burst','var')
-                save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '_reformat.mat'],...
+                save([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '_reformat.mat'],...
         'burst','avg')
     else
-                save([bfiles(iburst).folder '\' bfiles(iburst).name(1:end-4) '_reformat.mat'],...
+                save([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '_reformat.mat'],...
         'avg');
     end
 
-    progressbar(iburst/nburst)
+    %% Clear structures
+    clearvars  avg burst echo
+
 % End file loop
 end
 

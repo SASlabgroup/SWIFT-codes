@@ -115,10 +115,15 @@ function [profile,fh] = processSIGavg(avg,opt)
     uvar = squeeze(var(velqc,[],1,'omitnan'));
 
     % Compute alternate shear profile (compute spd before averaging, fix for bad HPR)
-    [~,spd_alt,~] = altSIGenu(avg,mean(avg.Heading,'omitnan'));
-    iNaN = isnan(mean(u(:,[1 2 4]),2,'omitnan'));
-    if opt.avg.QCbin
-        spd_alt(iNaN) = NaN;
+    if isfield(avg,'AHRS_M11')
+        [~,spd_alt,~] = altSIGenu(avg,mean(avg.Heading,'omitnan'));
+        iNaN = isnan(mean(u(:,[1 2 4]),2,'omitnan'));
+        if opt.avg.QCbin
+            spd_alt(iNaN) = NaN;
+        end
+    else
+        disp('No AHRS data, cannot recalculate burst-averaged speed.')
+        spd_alt = NaN(size(u));
     end
 
     % Separate U, V, W

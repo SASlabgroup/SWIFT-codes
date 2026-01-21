@@ -90,7 +90,7 @@ readraw = true;
 
 % Plotting
 plotswift = true;
-plotburst = false;
+plotburst = true;
 
 % MET
 rpWXT = true; % MET
@@ -109,7 +109,7 @@ rpACO = true;
 
 % ADCP
 rpSIG = true; % TKE 
-rpAQH = false; % TKE
+rpAQH = true; % TKE
 rpAQD = true; % TKE    
 
 end

@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt)
+function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 
 % Calculates higher res burst-averages using L1 SWIFT product. 
 % K. Zeiden Aug 2025
@@ -101,9 +101,10 @@ for iburst = 1:length(SWIFT)
         continue
     end
 
-    % Make sure Signature dimensions are correct
-    if length(size(sig.burst.VelocityData)) > 2 || length(size(sig.burst.AmplitudeData)) > 2 || length(size(sig.burst.CorrelationData)) > 2
-        disp('   SIG HR data dimensions bad. Skipping.')
+    % Skip if any of the burst fields are 3D
+    if (~ismatrix(sig.burst.VelocityData) || ~ismatrix(sig.burst.CorrelationData) || ~ismatrix(sig.burst.AmplitudeData))...
+            && size(sig.burst.VelocityData,3) ~= 5
+        disp('Burst fields have more than 2 dimensions but not 5-beam data, skipping burst...')
         continue
     end
 
@@ -128,15 +129,26 @@ for iburst = 1:length(SWIFT)
         burstint = sig.burst.time >= time(it) & sig.burst.time < time(it+1);
         burstfields = fieldnames(sig.burst);
         for ivar = 1:length(burstfields)
-            if any(size(sig.burst.(burstfields{ivar})) == 1) && length(sig.burst.(burstfields{ivar})) ~= 1
-                sighr.burst.(burstfields{ivar}) = sig.burst.(burstfields{ivar})(burstint);
-            elseif ~any(size(sig.burst.(burstfields{ivar})) == 1) && length(sig.burst.(burstfields{ivar})) ~= 1
-                sighr.burst.(burstfields{ivar}) = sig.burst.(burstfields{ivar})(burstint,:);
-            else
+
+            if isscalar(sig.burst.(burstfields{ivar}))
                 sighr.burst.(burstfields{ivar}) = sig.burst.(burstfields{ivar});
+            elseif ismatrix(sig.burst.(burstfields{ivar}))
+                sighr.burst.(burstfields{ivar}) = sig.burst.(burstfields{ivar})(burstint,:);
+            elseif ndims(sig.burst.(burstfields{ivar})) == 3
+                sighr.burst.(burstfields{ivar}) = sig.burst.(burstfields{ivar})(burstint,:,:);
+            else
+                warning(['Unrecognized dimensions for ' burstfields{ivar}])
             end
+            
         end
-        [HRprofile,~] = processSIGburst(sighr.burst,sigopt);
+
+         % Determine whether single or 5-beam data
+        if ismatrix(sighr.burst.VelocityData)
+            [HRprofile,~] = processSIGburst(sighr.burst,opt);
+        elseif ndims(sighr.burst.VelocityData) == 3
+            [HRprofile,~] = processSIGburst_5B(sighr.burst);
+        end
+        
         oneSWIFT(it).signature.HRprofile = [];
         oneSWIFT(it).signature.HRprofile.w = HRprofile.w;
         oneSWIFT(it).signature.HRprofile.wvar = HRprofile.wvar;
@@ -145,6 +157,10 @@ for iburst = 1:length(SWIFT)
             HRprofile.eps;
         oneSWIFT(it).watertemp2 = mean(sighr.burst.Temperature,'omitnan');
         oneSWIFT(it).watertemp2stddev = std(sighr.burst.Temperature,[],'omitnan');
+        if isfield(HRprofile,'enu')
+            oneSWIFT(it).signature.HRprofile.enu = HRprofile.enu;
+            oneSWIFT(it).signature.HRprofile.enuvar = HRprofile.enuvar;
+        end
 
         % BB data
         avgint = sig.avg.time >= time(it) & sig.avg.time < time(it+1);
@@ -576,6 +592,8 @@ save([L1file.folder slash L1file.name(1:end-6) 'L3_highres.mat'],'SWIFT','sinfo'
 
 %% Plot
 
+if plotswift
+
 if length(SWIFT) == 0
     disp('All data Out of water')
     return
@@ -703,5 +721,7 @@ datetick('x')
 
 set(fh,'Name',[ L1file.name(1:end-6) 'L3_highres'])
 print(fh,[L1file.folder slash L1file.name(1:end-6) 'L3_highres'],'-dpng')
+
+end
 
 end
