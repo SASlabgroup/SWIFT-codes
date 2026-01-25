@@ -22,6 +22,9 @@ if nargin <2
     plotflag = 0;
 end
 
+
+%% Hardcoded Inputs (change to function input in the future)
+% Inputs are for CT15 sn14056
 % Cbb/Cbb-1 and Epsilon entry
 
 % [incidence angle, epsilon] incidence angle is from angle normal to
@@ -65,6 +68,7 @@ Terrorcoeff = [0.07601486369602617
 
 % Choose emmissivity value
 em = 0.97515589; % 45 degree
+
 
 
 for i = 1:length(SWIFT)
