@@ -37,6 +37,8 @@ function SWIFT_Stokes = SWIFT_Stokes(SWIFT, varargin)
 %                              (profile - bias)
 %
 % M. Moulton,        revised by J. Thomson in Mar 2021 to include factor of 2 at lines 176-183
+%                    revised by K. Zeiden in Jan 2026 to fix bug where omega is redefined (from bulk) in spectral
+%                                                   calculation, but wavenumber wasn't.
 
 % Get water depth or assume deep water waves
 if ~isempty(varargin)
@@ -193,7 +195,7 @@ for ii = 1:length(SWIFT)
     SWIFT(ii).stokesdrift.spectral.profile.east = Stokes_spectral_east;
     SWIFT(ii).stokesdrift.spectral.profile.north = Stokes_spectral_north;
     SWIFT(ii).stokesdrift.spectral.profile.z = zsave;
-    
+
     SWIFT(ii).wavebias.spectral.bias.east = WaveBias_spectral_east;
     SWIFT(ii).wavebias.spectral.bias.north = WaveBias_spectral_north;
     SWIFT(ii).wavebias.spectral.bias.z = zsave;
