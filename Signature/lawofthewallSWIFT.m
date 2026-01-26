@@ -17,6 +17,8 @@ function [shear, eps, z_shear, z_eps] = lawofthewallSWIFT(SWIFT, ustar, varargin
 %       'plotflag', 0 1 true or false ; bool to give option of plotting results
 %       'rhoa', [scaler or vector quantity] ; user inputted air density,
 %       default is 1.225 kg/m^3
+%       'rhow', [scaler or vector quantity] ; user inputted water density,
+%       default is 1025 kg/m^3 for seawater
 %       'z', [depth vector] ; user defined and will override
 %       function which grabs this to match SWIFT.signature bins.
 %   
@@ -50,13 +52,15 @@ addRequired(p, 'ustar', isMatrixNumeric);
 % Optional name-value parameters
 addParameter(p, 'plotflag', 0, isFlag);
 addParameter(p, 'rhoa', 1.225, isMatrixNumeric);
-addParameter(p, 'z', [0:20]', isMatrixNumeric)
+addParameter(p, 'rhow', 1025, isMatrixNumeric);
+addParameter(p, 'z', [0:20]', isMatrixNumeric);
 
 % Parse inputs  (IMPORTANT FIX)
 parse(p, SWIFT, ustar, varargin{:});
 
 % Extract results
-rhoa     = p.Results.rhoa;
+rhoa     = p.Results.rhoa(:);
+rhow     = p.Results.rhow(:);
 plotflag = p.Results.plotflag;
 
 % Check for optional z input which overrides other calculations
@@ -135,10 +139,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tau = ustar.^2 .*rhoa; % Assumption tau_water == tau_air, stress is opposite and equal at the surface
 
-% General density of SW (might need to change)
-rho_water = 1025; % kg/m^3
-
-ustar_water = sqrt(tau./rho_water)';
+ustar_water = sqrt(tau./rhow)';
 
 shear = ustar_water ./ (0.41 .* z_shear);
 eps = (ustar_water.^3) ./ (0.41.*z_eps);
