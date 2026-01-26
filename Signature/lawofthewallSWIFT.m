@@ -59,7 +59,7 @@ parse(p, SWIFT, ustar, varargin{:});
 rhoa     = p.Results.rhoa;
 plotflag = p.Results.plotflag;
 
-% Check for optional inputs
+% Check for optional z input which overrides other calculations
 hasz = any(strcmpi(varargin, 'z'));
 
 % Depth grids decision tree
@@ -133,7 +133,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Impliment scaling based off of Zeiden et. al. 2024
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-tau = ustar.^2 .*rhoa;
+tau = ustar.^2 .*rhoa; % Assumption tau_water == tau_air, stress is opposite and equal at the surface
 
 % General density of SW (might need to change)
 rho_water = 1025; % kg/m^3
