@@ -91,7 +91,7 @@ end
 %                             MESH DEFINITION
 %                           ------------------
 %                           ------------------
-Nangle = 5; % number of displayed graduation for the angle
+Nangle = 4; % number of displayed graduation for the angle
 Nradius = 3; % number of displayed graduation for the radius
 
 % Definition of the mesh
@@ -142,8 +142,8 @@ set(gca,'dataaspectratio',[1 1 1]);axis off;
     cost = cosd(90-angleMesh); % the zero angle is aligned with North
     sint = sind(90-angleMesh); % the zero angle is aligned with North
     for kk = 1:length(angleMesh)
-        plot(cost(kk)*contour,sint(kk)*contour,ls,'color','black','linewidth',1,...
-            'handlevisibility','off');
+        %plot(cost(kk)*contour,sint(kk)*contour,ls,'color','black','linewidth',1,...
+        %   'handlevisibility','off');
         % % plot graduations of angles
         % text(1.07.*contour(end).*cost(kk),1.07.*contour(end).*sint(kk),...
         %     sprintf('%.3g^{o}',angleMesh(kk)),...
@@ -159,7 +159,7 @@ for ii = 1:length(angleGrid),
 end
 
 
-% radius tick label
+%radius tick label
 % for kk=1:Nradius
 %     text((contour(kk)).*cosd(90-mean(angleMesh)),(contour(kk)).*sind(90-mean(angleMesh)),...
 %         num2str(radiusMesh(kk),2),'verticalalignment','bottom',...
