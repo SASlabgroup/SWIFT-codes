@@ -1,4 +1,4 @@
-function [ustar, U10] = equilibriumustar( SWIFT );
+function [ustar, U10] = equilibriumustar( SWIFT )
 % function to calculate the equilibrium ustar (Phillips 1985)
 % based on the fourth moment of the high frequency tail of scalar surface wave spectra
 % stored in a SWIFT-compliant matlab structure
@@ -9,15 +9,15 @@ function [ustar, U10] = equilibriumustar( SWIFT );
 % J. Thomson, 9/2018
 %           12/2024 include estimate of 10 m wind speed
 
-exponenttolerance = 0.5; 
-errortolerance = 3; 
+exponenttolerance = 2; % 0.5
+errortolerance = 20; % 3
 maxwind = 23; 
 
 ustar = NaN(1,length([SWIFT.time]));
 Ip = 2.5;
 beta = 0.012;
-% fmin = 0.25 * ones(1,length(SWIFT)); % fixed
-fmin = 1.5 * 1./[SWIFT.peakwaveperiod]; % dyanmic, based on multiple of Tp
+%fmin = 0.25 * ones(1,length(SWIFT)); % fixed
+fmin = 1.1 * 1./[SWIFT.peakwaveperiod]; % dyanmic, based on multiple of Tp
 fmax = 0.45 * ones(1,length(SWIFT)); % max freq
 
 if isfield(SWIFT,'wavespectra'),
