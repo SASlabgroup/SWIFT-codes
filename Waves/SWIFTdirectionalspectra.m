@@ -131,6 +131,12 @@ spread2 = 180 ./ 3.14 .* spread2;
 spread2alt = 180 ./ 3.14 .* spread2alt;
 
 
+%% make theta complete circle
+theta = [0, theta(1:180), 360];
+Etheta = [Etheta(:,1), Etheta(:,1:180), Etheta(:,1)];
+
+%% plots    
+
 if plotflag == true, 
 
 figure(3), clf
@@ -143,16 +149,10 @@ figure(3), clf
 
 %subplot(2,1,2)
 %pcolor(f,theta,log10(Etheta')), shading flat;
-if iscolumn(f),
-    % Explicitly wrap theta to 360 to close the circle
-    theta_plot = [theta(1:180), 360];
-    Etheta_plot = [Etheta(:,1:180), Etheta(:,1)];
-    polarPcolor(f', theta_plot, log10(Etheta_plot'));
-elseif isrow(f), 
-    % Explicitly wrap theta to 360 to close the circle
-    theta_plot = [theta(1:180), 360];
-    Etheta_plot = [Etheta(:,1:180), Etheta(:,1)];
-    polarPcolor(f, theta_plot, log10(Etheta_plot'));
+if iscolumn(f)
+    polarPcolor(f', theta, log10(Etheta'));
+elseif isrow(f)
+    polarPcolor(f, theta, log10(Etheta'));
 else
     disp('Problem with the size of frequency vector')
 end

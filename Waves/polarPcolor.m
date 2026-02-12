@@ -91,8 +91,8 @@ end
 %                             MESH DEFINITION
 %                           ------------------
 %                           ------------------
-Nangle = 4; % number of displayed graduation for the angle
-Nradius = 3; % number of displayed graduation for the radius
+Nangle = 5; % number of displayed graduation for the angle
+Nradius = 4; % number of displayed graduation for the radius
 
 % Definition of the mesh
 radiusMesh = linspace(min(R),max(R),Nradius);
@@ -142,35 +142,39 @@ set(gca,'dataaspectratio',[1 1 1]);axis off;
     cost = cosd(90-angleMesh); % the zero angle is aligned with North
     sint = sind(90-angleMesh); % the zero angle is aligned with North
     for kk = 1:length(angleMesh)
-        %plot(cost(kk)*contour,sint(kk)*contour,ls,'color','black','linewidth',1,...
-        %   'handlevisibility','off');
-        % % plot graduations of angles
-        % text(1.07.*contour(end).*cost(kk),1.07.*contour(end).*sint(kk),...
-        %     sprintf('%.3g^{o}',angleMesh(kk)),...
-        %     'horiz', 'center', 'vert', 'middle');
+        plot(cost(kk)*contour,sint(kk)*contour,ls,'color','black','linewidth',1,...
+          'handlevisibility','off');
+        if kk~=length(angleMesh) % don't plot the last one
+        % plot graduations of angles
+        text(1.14.*contour(end).*cost(kk),1.07.*contour(end).*sint(kk),...
+            sprintf('%.3g^{o}',angleMesh(kk)),...
+            'horiz', 'center', 'vert', 'middle');
+        end
     end
     
     
 % Increase the size of the text on the figure
 angleGrid = findall(gcf,'Type','text');
 for ii = 1:length(angleGrid),
-    set(angleGrid(ii),'FontSize',14,'Fontweight','bold')
+    set(angleGrid(ii),'FontSize',12,'Fontweight','demi')
     
 end
 
 
 %radius tick label
-% for kk=1:Nradius
-%     text((contour(kk)).*cosd(90-mean(angleMesh)),(contour(kk)).*sind(90-mean(angleMesh)),...
-%         num2str(radiusMesh(kk),2),'verticalalignment','bottom',...
-%         'handlevisibility','off','parent',cax,'fontsize',14);
-% end
+for kk=1:Nradius
+    if kk~=1 % skip inner ring
+    text((contour(kk)).*cosd(90-mean(angleMesh)),(contour(kk)).*sind(90-mean(angleMesh)),...
+        [num2str(radiusMesh(kk),1) ' Hz'],'verticalalignment','bottom',...
+        'handlevisibility','off','parent',cax,'fontsize',12);
+    end
+end
 
 
 
 text(contour(end).*1.2.*cosd(90-mean(angleMesh)),contour(end).*1.2.*sind(90-mean(angleMesh)),...
     [legendLabel],'verticalalignment','bottom',...
-    'handlevisibility','off','parent',cax,'fontsize',14);
+    'handlevisibility','off','parent',cax,'fontsize',12);
 
 
 % set figure to screen size
