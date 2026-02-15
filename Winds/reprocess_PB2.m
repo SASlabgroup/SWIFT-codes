@@ -160,7 +160,7 @@ for iburst = 1:length(bfiles)
         % Plotdata
         if plotburst
             figure('color','w')
-            %fullscreen % THIS BREAKS FOR JIM
+            fullscreen % THIS BREAKS FOR JIM
             subplot(5,1,1)
             plot(windspd,'-kx')
             hold on

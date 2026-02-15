@@ -387,9 +387,16 @@ if isfield(SWIFT,'peakwaveperiod')
     swift.wavepeakdir = [SWIFT.peakwavedirT];
     
     % Calculate new Stokes drift (Us = omega*k*(Hs/4)^2)
+    if isfield(SWIFT,'Stokes')
+        for it = 1:nt
+            swift.waveustokes(it) = sqrt(SWIFT(it).Stokes.spec1d.surface.east.^2 + ...
+                SWIFT(it).Stokes.spec1d.surface.north.^2);
+        end
+    else
     om = 2*pi./swift.wavepeakT;
     k = om.^2./9.81;
     swift.waveustokes = (swift.wavesigH./4).^2.*om.*k;
+    end
     
     % Re-calculate peak wave period (via centroid method)
     if isfield(SWIFT,'centwaveperiod')

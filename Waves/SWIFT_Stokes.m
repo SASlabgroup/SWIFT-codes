@@ -110,6 +110,8 @@ for ii = 1:length(SWIFT)
     % Load spectral information
     energy = SWIFT(ii).wavespectra.energy;
     frequency = SWIFT(ii).wavespectra.freq;
+    igood = ~isnan(energy) & ~isnan(frequency);
+    energy = energy(igood);frequency = frequency(igood);
     a1 = SWIFT(ii).wavespectra.a1;
     b1 = SWIFT(ii).wavespectra.b1;
     dir1 = atan2d(b1,a1); % direction in degrees
@@ -155,7 +157,7 @@ for ii = 1:length(SWIFT)
     WaveBias_spectral_north = zeros(size(z)); % At mean z of Signature bins
     
     % Frequency resolution (*assumes constant*)
-    df = mean(abs(diff(frequency)));
+    df = mean(abs(diff(frequency)),'omitnan');
     
     % Loop over frequency
     for jj=1:length(frequency)
