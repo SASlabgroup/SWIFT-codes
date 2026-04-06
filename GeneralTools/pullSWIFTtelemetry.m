@@ -72,12 +72,7 @@ for si=1:size(IDs,1),
     
     out = websave(['SWIFT' IDs(si,:) '.zip'],[baseurl buoy  '&start=' starttime '&end=' endtime '&format=zip'],options)
     
-    if pcflag
-        zipfile = ['SWIFT' IDs(si,:) '.zip'];
-        unzip(zipfile)
-    else
-        eval(['!unzip SWIFT' IDs(si,:) '.zip']);
-    end
+    unzip(['SWIFT' IDs(si,:) '.zip']);  % MATLAB built-in: cross-platform, never prompts for replace, just clobbers existing files
     expanded = dir(['*SWIFT ' IDs(si,:) '*']);
     if length(expanded)==1 && expanded(1).isdir == true,
         cd(expanded(1).name)
