@@ -46,8 +46,27 @@ leftPanel = uipanel(t1Grid, 'Title', 'Parameters');
 leftPanel.Layout.Row    = 1;
 leftPanel.Layout.Column = 1;
 
-lg = uigridlayout(leftPanel, [14 1]);
-lg.RowHeight  = {20, 28, 8, 20, 110, 10, 20, 28, 10, 20, 28, 10, 36, '1x'};
+lg = uigridlayout(leftPanel, [19 1]);
+lg.RowHeight  = { ...
+    20, ...   % 1  label: Recent
+    28, ...   % 2  recentDD dropdown
+     8, ...   % 3  spacer
+    20, ...   % 4  label: Active Buoys
+    28, ...   % 5  activeBuoysDD + Refresh button row
+    26, ...   % 6  Add to IDs button
+     8, ...   % 7  spacer
+    20, ...   % 8  label: SWIFT IDs
+   110, ...   % 9  idsArea text area
+    10, ...   % 10 spacer
+    20, ...   % 11 label: Start Time
+    28, ...   % 12 startDP + time field
+    10, ...   % 13 spacer
+    20, ...   % 14 label: End Time
+    28, ...   % 15 endDP + time field + Now checkbox
+    10, ...   % 16 spacer
+    36, ...   % 17 output dir field + Browse button
+    '1x', ... % 18 Pull Telemetry button (fills remaining space)
+    22};      % 19 Clear Saved Preferences button
 lg.Padding    = [8 8 8 8];
 lg.RowSpacing = 2;
 
@@ -59,18 +78,35 @@ recentDD.Layout.Row = 2;  recentDD.Layout.Column = 1;
 
 spacer(lg, 3);
 
+% -- Active Buoys from server --
+mkLabel(lg, 4, 'Active Buoys');
+activeBuoysGrid = uigridlayout(lg, [1 2]);
+activeBuoysGrid.Layout.Row = 5;  activeBuoysGrid.Layout.Column = 1;
+activeBuoysGrid.ColumnWidth = {'1x', 75};
+activeBuoysGrid.Padding = [0 0 0 0];
+activeBuoysDD = uidropdown(activeBuoysGrid, 'Items', {'(loading...)'});
+activeBuoysDD.Layout.Row = 1;  activeBuoysDD.Layout.Column = 1;
+refreshBuoysBtn = uibutton(activeBuoysGrid, 'Text', 'Refresh', ...
+    'ButtonPushedFcn', @refreshBuoysCB);
+refreshBuoysBtn.Layout.Row = 1;  refreshBuoysBtn.Layout.Column = 2;
+
+addBuoyBtn = uibutton(lg, 'Text', 'Add to IDs', 'ButtonPushedFcn', @addBuoyCB);
+addBuoyBtn.Layout.Row = 6;  addBuoyBtn.Layout.Column = 1;
+
+spacer(lg, 7);
+
 % -- IDs --
-mkLabel(lg, 4, 'SWIFT IDs  (one per line)');
+mkLabel(lg, 8, 'SWIFT IDs  (one per line)');
 idsArea = uitextarea(lg, 'Value', {'16'; '17'}, ...
     'FontName', 'Courier New', ...
     'Tooltip',  'SWIFT v3/v4: 2-digit IDs (e.g. 16)   microSWIFT: 3-digit IDs (e.g. 016)');
-idsArea.Layout.Row = 5;  idsArea.Layout.Column = 1;
+idsArea.Layout.Row = 9;  idsArea.Layout.Column = 1;
 
-spacer(lg, 6);
-mkLabel(lg, 7, 'Start Time (UTC)');
+spacer(lg, 10);
+mkLabel(lg, 11, 'Start Time (UTC)');
 
 startGrid = uigridlayout(lg, [1 2]);
-startGrid.Layout.Row = 8;  startGrid.Layout.Column = 1;
+startGrid.Layout.Row = 12;  startGrid.Layout.Column = 1;
 startGrid.ColumnWidth = {'1x', 85};
 startGrid.Padding = [0 0 0 0];
 startDP = uidatepicker(startGrid, ...
@@ -82,11 +118,11 @@ startTimeField = uieditfield(startGrid, 'text', ...
     'Tooltip', 'Time of day (HH:MM:SS)');
 startTimeField.Layout.Row = 1;  startTimeField.Layout.Column = 2;
 
-spacer(lg, 9);
-mkLabel(lg, 10, 'End Time (UTC)');
+spacer(lg, 13);
+mkLabel(lg, 14, 'End Time (UTC)');
 
 endGrid = uigridlayout(lg, [1 3]);
-endGrid.Layout.Row = 11;  endGrid.Layout.Column = 1;
+endGrid.Layout.Row = 15;  endGrid.Layout.Column = 1;
 endGrid.ColumnWidth = {'1x', 85, 80};
 endGrid.Padding = [0 0 0 0];
 endDP = uidatepicker(endGrid, ...
@@ -104,11 +140,11 @@ nowCheck.Layout.Row = 1;  nowCheck.Layout.Column = 3;
 endDP.Enable        = 'off';
 endTimeField.Enable = 'off';
 
-spacer(lg, 12);
+spacer(lg, 16);
 
 % -- Output directory --
 dirRowGrid = uigridlayout(lg, [1 2]);
-dirRowGrid.Layout.Row = 13;  dirRowGrid.Layout.Column = 1;
+dirRowGrid.Layout.Row = 17;  dirRowGrid.Layout.Column = 1;
 dirRowGrid.ColumnWidth = {'1x', 90};
 dirRowGrid.Padding = [0 0 0 0];
 dirField = uieditfield(dirRowGrid, 'text', 'Value', pwd, 'FontName', 'Courier New');
@@ -120,7 +156,12 @@ runBtn = uibutton(lg, ...
     'Text', 'Pull Telemetry', 'FontWeight', 'bold', 'FontSize', 13, ...
     'BackgroundColor', [0.18 0.55 0.34], 'FontColor', [1 1 1], ...
     'ButtonPushedFcn', @runCB);
-runBtn.Layout.Row = 14;  runBtn.Layout.Column = 1;
+runBtn.Layout.Row = 18;  runBtn.Layout.Column = 1;
+
+clearPrefsBtn = uibutton(lg, ...
+    'Text', 'Clear Saved Preferences', 'FontSize', 10, ...
+    'ButtonPushedFcn', @clearPrefsCB);
+clearPrefsBtn.Layout.Row = 19;  clearPrefsBtn.Layout.Column = 1;
 
 loadPrefs();  % restore last-used parameters + populate recent dropdown
 
@@ -144,6 +185,8 @@ mkLabel(rg, 3, 'Log');
 logArea = uitextarea(rg, 'Editable', 'off', 'FontName', 'Courier New', 'FontSize', 11, ...
     'Value', {'Ready. Set parameters and press  ''Pull Telemetry''.'});
 logArea.Layout.Row = 4;  logArea.Layout.Column = 1;
+
+fetchActiveBuoys();  % populate active buoys dropdown on startup
 
 %% ==========================================================================
 %%  TAB 2 – Visualize
@@ -487,6 +530,52 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         hold(axMap, 'off');  hold(axTS1, 'off');  hold(axTS2, 'off');
     end
 
+    function refreshBuoysCB(~, ~)
+        fetchActiveBuoys();
+    end
+
+    function addBuoyCB(~, ~)
+        sel = activeBuoysDD.Value;
+        if isempty(sel) || any(strcmp(sel, {'(loading...)', '(none available)', '(fetch failed)'}))
+            return
+        end
+        % Extract trailing number: "SWIFT 19" → "19", "microSWIFT 124" → "124"
+        tok = regexp(sel, '(\d+)\s*$', 'tokens');
+        if isempty(tok), return; end
+        newID = tok{1}{1};
+        currentIDs = idsArea.Value;
+        currentIDs = currentIDs(~cellfun(@(s) isempty(strtrim(s)), currentIDs));
+        if ~any(strcmp(strtrim(currentIDs), newID))
+            idsArea.Value = [currentIDs; {newID}];
+        end
+    end
+
+    function fetchActiveBuoys()
+        activeBuoysDD.Items = {'(loading...)'};
+        activeBuoysDD.Value = '(loading...)';
+        drawnow;
+        try
+            data = webread('https://swiftserver.apl.uw.edu/services/active_buoys');
+            if isstruct(data) && isfield(data, 'buoys') && ~isempty(data.buoys)
+                buoys = data.buoys;
+                names = cell(numel(buoys), 1);
+                for bi = 1:numel(buoys)
+                    names{bi} = buoys(bi).name;
+                end
+                activeBuoysDD.Items = names;
+                activeBuoysDD.Value = names{1};
+                appendLog(logArea, sprintf('Active buoys: fetched %d buoy(s).', numel(buoys)));
+            else
+                activeBuoysDD.Items = {'(none available)'};
+                activeBuoysDD.Value = '(none available)';
+            end
+        catch ME
+            activeBuoysDD.Items = {'(fetch failed)'};
+            activeBuoysDD.Value = '(fetch failed)';
+            appendLog(logArea, ['Active buoys fetch failed: ' ME.message]);
+        end
+    end
+
     function recentDDCB(~, ~)
         history = loadHistory();
         sel = recentDD.Value;
@@ -603,6 +692,15 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             recentDD.Items = [{'(select recent...)'}, labels];
         end
         recentDD.Value = recentDD.Items{1};
+    end
+
+    function clearPrefsCB(~, ~)
+        p = 'pullSWIFTtelemetryGUI';
+        if ispref(p)
+            rmpref(p);
+        end
+        refreshRecentDD({});
+        appendLog(logArea, 'Saved preferences cleared.');
     end
 
 end  % pullSWIFTtelemetryGUI
