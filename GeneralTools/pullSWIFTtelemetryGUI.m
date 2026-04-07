@@ -17,15 +17,22 @@ if verLessThan('matlab', '9.9')   % 9.9 = R2020b
 end
 
 %% ---- Shared state ----------------------------------------------------------
+% Variables declared here in the outer function are accessible to all nested
+% callback functions below (MATLAB closure / shared workspace pattern).
 loadedSWIFT = {};   % cell array: each cell holds full SWIFT struct array for one buoy
 loadedIDs   = {};   % cell array of ID strings (one per SWIFT struct)
 
 %% ---- Figure & tab group ----------------------------------------------------
+% uifigure creates a modern "App Designer"-style window (introduced R2016a).
+% It is NOT the same as the legacy `figure` command — it uses a different
+% rendering engine and supports uigridlayout, uidropdown, uitextarea, etc.
 fig = uifigure( ...
     'Name',     'SWIFT Telemetry Puller', ...
-    'Position', [60 60 1100 680], ...
+    'Position', [60 60 1100 680], ...   % [left bottom width height] in pixels
     'Resize',   'on');
 
+% uitabgroup holds multiple uitab pages; the user clicks tab titles to switch.
+% Setting Position to [0 0 1 1] with normalized Units makes it fill the figure.
 tg = uitabgroup(fig, 'Units', 'normalized', 'Position', [0 0 1 1]);
 
 tab1 = uitab(tg, 'Title', '  Pull Telemetry  ');
@@ -35,18 +42,27 @@ tab2 = uitab(tg, 'Title', '  Visualize  ');
 %%  TAB 1 – Pull Telemetry
 %% ==========================================================================
 
-t1Grid = uigridlayout(tab1, [1 2]);
-t1Grid.ColumnWidth  = {'1x', '2x'};
-t1Grid.RowHeight    = {'1x'};
-t1Grid.Padding      = [8 8 8 8];
+% uigridlayout divides a container into a grid of rows and columns.
+% Row/column sizes can be fixed pixels (e.g. 20) or fractional ('1x', '2x').
+% Fractional sizes divide whatever space is left after fixed rows/columns are
+% allocated: '1x' gets all of it, '1x'+'2x' gives 1/3 and 2/3 respectively.
+t1Grid = uigridlayout(tab1, [1 2]);    % 1 row, 2 columns
+t1Grid.ColumnWidth  = {'1x', '2x'};   % left panel gets 1/3, right gets 2/3
+t1Grid.RowHeight    = {'1x'};          % single row fills the full tab height
+t1Grid.Padding      = [8 8 8 8];       % [left top right bottom] padding in px
 t1Grid.ColumnSpacing = 8;
 
 %% ---- Left panel (inputs) --------------------------------------------------
+% uipanel is a grouping container that draws a titled border around its children.
+% Placing it inside t1Grid and setting Layout.Row/Column tells the grid where to put it.
 leftPanel = uipanel(t1Grid, 'Title', 'Parameters');
-leftPanel.Layout.Row    = 1;
-leftPanel.Layout.Column = 1;
+leftPanel.Layout.Row    = 1;   % place in grid row 1 ...
+leftPanel.Layout.Column = 1;   % ... column 1
 
-lg = uigridlayout(leftPanel, [19 1]);
+% Nest another uigridlayout inside the panel for fine-grained row control.
+% Fixed pixel heights keep labels/buttons compact; '1x' on the text area lets
+% it expand to fill whatever vertical space remains as the window is resized.
+lg = uigridlayout(leftPanel, [19 1]);  % 19 rows, 1 column
 lg.RowHeight  = { ...
     20, ...   % 1  label: Recent
     28, ...   % 2  recentDD dropdown
@@ -56,7 +72,7 @@ lg.RowHeight  = { ...
     26, ...   % 6  Add to IDs button
      8, ...   % 7  spacer
     20, ...   % 8  label: SWIFT IDs
-   110, ...   % 9  idsArea text area
+   '1x', ...  % 9  idsArea text area (grows with window height)
     10, ...   % 10 spacer
     20, ...   % 11 label: Start Time
     28, ...   % 12 startDP + time field
@@ -65,12 +81,15 @@ lg.RowHeight  = { ...
     28, ...   % 15 endDP + time field + Now checkbox
     10, ...   % 16 spacer
     36, ...   % 17 output dir field + Browse button
-    '1x', ... % 18 Pull Telemetry button (fills remaining space)
+    36, ...   % 18 Pull Telemetry button
     22};      % 19 Clear Saved Preferences button
 lg.Padding    = [8 8 8 8];
 lg.RowSpacing = 2;
 
 % -- Recent parameters dropdown --
+% `@recentDDCB` is a function handle — MATLAB calls recentDDCB(src, event)
+% whenever the dropdown value changes. Callbacks always receive two arguments:
+% the source widget (src) and an event object; we often ignore them with ~.
 mkLabel(lg, 1, 'Recent');
 recentDD = uidropdown(lg, 'Items', {'(no history yet)'}, ...
     'ValueChangedFcn', @recentDDCB);
@@ -79,6 +98,8 @@ recentDD.Layout.Row = 2;  recentDD.Layout.Column = 1;
 spacer(lg, 3);
 
 % -- Active Buoys from server --
+% A nested uigridlayout inside a single grid cell splits that cell into
+% sub-columns, here placing the dropdown and Refresh button side by side.
 mkLabel(lg, 4, 'Active Buoys');
 activeBuoysGrid = uigridlayout(lg, [1 2]);
 activeBuoysGrid.Layout.Row = 5;  activeBuoysGrid.Layout.Column = 1;
@@ -152,6 +173,8 @@ dirField.Layout.Row = 1;  dirField.Layout.Column = 1;
 browseBtn = uibutton(dirRowGrid, 'Text', 'Browse...', 'ButtonPushedFcn', @browseDirCB);
 browseBtn.Layout.Row = 1;  browseBtn.Layout.Column = 2;
 
+% Row 18 is a fixed 36 px, so the button is the same height as the other
+% action rows rather than expanding to fill all remaining space.
 runBtn = uibutton(lg, ...
     'Text', 'Pull Telemetry', 'FontWeight', 'bold', 'FontSize', 13, ...
     'BackgroundColor', [0.18 0.55 0.34], 'FontColor', [1 1 1], ...
@@ -169,6 +192,7 @@ loadPrefs();  % restore last-used parameters + populate recent dropdown
 rightPanel = uipanel(t1Grid, 'Title', 'Results');
 rightPanel.Layout.Row = 1;  rightPanel.Layout.Column = 2;
 
+% '1x' on the log row lets the text area grow as the window is resized.
 rg = uigridlayout(rightPanel, [4 1]);
 rg.RowHeight  = {22, 200, 22, '1x'};
 rg.Padding    = [8 8 8 8];
@@ -268,6 +292,12 @@ grid(axTS2, 'on');  box(axTS2, 'on');
 %% ==========================================================================
 %%  Callbacks – Tab 1 (Pull)
 %% ==========================================================================
+% All callbacks are nested functions so they share the outer workspace:
+% they can read/write widgets (runBtn, logArea, etc.) and state variables
+% (loadedSWIFT, loadedIDs) without passing them as arguments.
+%
+% The `~` in function signatures discards the two arguments that MATLAB
+% always passes to callbacks: the source widget and the event object.
 
     function browseDirCB(~, ~)
         d = uigetdir(dirField.Value, 'Select Output Directory');
@@ -328,7 +358,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         savePrefs();  % cache parameters before running
 
         runBtn.Enable = 'off';  runBtn.Text = 'Running...';
-        drawnow;
+        drawnow;  % flush the event queue so the button visually updates before the long pull
 
         appendLog(logArea, repmat('-',1,60));
         appendLog(logArea, ['Pull started: ' datestr(now,'yyyy-mm-dd HH:MM:SS')]);
@@ -633,6 +663,9 @@ grid(axTS2, 'on');  box(axTS2, 'on');
     end
 
     function savePrefs()
+        % setpref/getpref persist key-value pairs in MATLAB's preferences store
+        % (~/.matlab/<release>/MATLABprefs.mat on most systems), so values
+        % survive across sessions without needing a separate config file.
         p = 'pullSWIFTtelemetryGUI';
         % Build entry for history
         e.ids       = idsArea.Value;
@@ -708,6 +741,10 @@ end  % pullSWIFTtelemetryGUI
 %% ==========================================================================
 %%  Helper functions
 %% ==========================================================================
+% These are regular (non-nested) functions defined after the main function.
+% They do NOT share the outer workspace, so GUI widgets must be passed in
+% as arguments. Compare to the nested callbacks above which access everything
+% from the closure.
 
 function history = loadHistory()
     if ispref('pullSWIFTtelemetryGUI', 'history')
@@ -742,12 +779,17 @@ function isoStr = buildISO(dp, timeField)
     isoStr = [datestr(datenum(d), 'yyyy-mm-dd') 'T' t];
 end
 
+% Create a bold section-header label at the specified grid row.
+% uigridlayout does not auto-place widgets — every widget must declare
+% its Layout.Row and Layout.Column, or it defaults to the next available cell.
 function mkLabel(parent, row, txt)
     lbl = uilabel(parent, 'Text', txt, 'FontWeight', 'bold');
     lbl.Layout.Row    = row;
     lbl.Layout.Column = 1;
 end
 
+% Place an invisible label as a visual gap between sections in a grid row.
+% uigridlayout has no built-in "spacer" widget, so an empty label is idiomatic.
 function spacer(parent, row)
     lbl = uilabel(parent, 'Text', '');
     lbl.Layout.Row    = row;

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWIFT Data Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.27.0/plotly.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-section {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .form-row {
+            margin: 12px 0;
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .form-row label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+            padding-top: 8px;
+        }
+        .form-row input, .form-row select, .form-row textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-row input[type="text"] {
+            width: 250px;
+        }
+        .form-row textarea {
+            width: 100%;
+            max-width: 800px;
+            min-height: 150px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .form-row input[type="date"], .form-row input[type="time"] {
+            margin-right: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.error {
+            background-color: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+        .status.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+        .plot-container {
+            margin: 30px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: white;
+        }
+        .plot-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .info-box code {
+            background-color: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .url-display {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            font-size: 14px;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SWIFT Data Visualizer</h1>
+        <p class="subtitle">Visualize telemetry data from Surface Wave Instrument Float with Tracking</p>
+        
+        <div class="info-box">
+            <h3>Instructions</h3>
+            <p><strong>Step 1:</strong> Fill in the buoy name and date/time range below to generate a URL</p>
+            <p><strong>Step 2:</strong> Click the generated URL to open it in a new tab and copy the JSON data</p>
+            <p><strong>Step 3:</strong> Paste the JSON data into the text area and click "Visualize Data"</p>
+            <p><strong>Note:</strong> For multiple buoys, repeat steps 1-3 for each buoy, pasting all JSON arrays into the text area (comma-separated)</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('url')">1. Generate URL</button>
+            <button class="tab" onclick="switchTab('paste')">2. Paste JSON Data</button>
+        </div>
+
+        <div id="urlTab" class="tab-content active">
+            <div class="form-section">
+                <h3>Generate Data URL</h3>
+                <div class="form-row">
+                    <label for="buoyName">Buoy ID:</label>
+                    <input type="text" id="buoyName" placeholder="e.g., SWIFT 13">
+                </div>
+                <div class="form-row">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" id="startDate">
+                    <label for="startTime" style="width: auto; margin-left: 10px;">Time (UTC):</label>
+                    <input type="time" id="startTime" value="00:00:00" step="1">
+                </div>
+                <div class="form-row">
+                    <label for="endDate">End Date:</label>
+                    <input type="date" id="endDate">
+                    <label for="endTime" style="width: auto; margin-left: 10px;">Time (UTC):</label>
+                    <input type="time" id="endTime" value="23:59:59" step="1">
+                </div>
+                <button onclick="generateURL()">Generate URL</button>
+                
+                <div id="urlOutput" style="display: none;">
+                    <h4>Click this URL to get the JSON data:</h4>
+                    <div class="url-display">
+                        <a id="dataUrl" href="#" target="_blank" style="color: #1976D2; text-decoration: underline;"></a>
+                    </div>
+                    <p style="margin-top: 10px; color: #666;">The URL will open in a new tab. Copy all the JSON data from that page.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="pasteTab" class="tab-content">
+            <div class="form-section">
+                <h3>Paste JSON Data</h3>
+                <div class="form-row">
+                    <label for="jsonData" style="align-self: flex-start;">JSON Data:</label>
+                    <textarea id="jsonData" placeholder='Paste JSON data here. For multiple buoys, format as:
+{
+  "SWIFT 13": [{...}, {...}],
+  "SWIFT 15": [{...}, {...}]
+}
+
+or paste arrays and add labels manually'></textarea>
+                </div>
+                <button onclick="visualizeData()">Visualize Data</button>
+                <div id="status" class="status"></div>
+            </div>
+        </div>
+
+        <div id="plots" style="display: none;">
+            <div class="plot-container">
+                <div class="plot-title">Battery Voltage Time Series</div>
+                <div id="batteryPlot"></div>
+            </div>
+
+            <div class="plot-container">
+                <div class="plot-title">Significant Wave Height Time Series</div>
+                <div id="waveHeightPlot"></div>
+            </div>
+
+            <div class="plot-container">
+                <div class="plot-title">Wind Speed Time Series</div>
+                <div id="windSpeedPlot"></div>
+            </div>
+
+            <div class="plot-container">
+                <div class="plot-title">SWIFT Trajectory</div>
+                <div id="mapPlot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default dates on page load - last 24 hours UTC
+        window.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            
+            // Format as YYYY-MM-DD
+            document.getElementById('startDate').value = yesterday.toISOString().substring(0, 10);
+            document.getElementById('endDate').value = now.toISOString().substring(0, 10);
+            
+            // Format times as HH:MM:SS
+            document.getElementById('startTime').value = yesterday.toISOString().substring(11, 19);
+            document.getElementById('endTime').value = now.toISOString().substring(11, 19);
+        });
+
+        const colors = [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+        ];
+
+        const markers = [
+            'circle', 'square', 'diamond', 'cross', 'triangle-up',
+            'triangle-down', 'star', 'hexagon', 'pentagon', 'octagon'
+        ];
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        function generateURL() {
+            const buoyName = document.getElementById('buoyName').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endDate = document.getElementById('endDate').value;
+            const endTime = document.getElementById('endTime').value;
+
+            if (!buoyName || !startDate || !endDate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const startDateTime = `${startDate}T${startTime}`;
+            const endDateTime = `${endDate}T${endTime}`;
+
+            const baseUrl = 'http://swiftserver.apl.washington.edu/kml';
+            const params = new URLSearchParams({
+                action: 'kml',
+                buoy_name: buoyName,
+                start: startDateTime,
+                end: endDateTime,
+                format: 'json'
+            });
+
+            const url = `${baseUrl}?${params.toString()}`;
+            
+            const urlLink = document.getElementById('dataUrl');
+            urlLink.href = url;
+            urlLink.textContent = url;
+            document.getElementById('urlOutput').style.display = 'block';
+        }
+
+        function setStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+
+        function visualizeData() {
+            const jsonDataText = document.getElementById('jsonData').value.trim();
+            
+            if (!jsonDataText) {
+                setStatus('Please paste JSON data', 'error');
+                return;
+            }
+
+            try {
+                let parsedData = JSON.parse(jsonDataText);
+                
+                // Convert to consistent format
+                let results = [];
+                
+                // Check if it's SWIFT server format with buoys array
+                if (parsedData.buoys && Array.isArray(parsedData.buoys)) {
+                    parsedData.buoys.forEach(buoy => {
+                        if (buoy.name && buoy.data && Array.isArray(buoy.data)) {
+                            results.push({ buoyName: buoy.name, data: buoy.data });
+                        }
+                    });
+                } else if (Array.isArray(parsedData)) {
+                    // Single array - ask for buoy name or use default
+                    const buoyName = prompt('Enter buoy name for this data:', 'SWIFT');
+                    if (buoyName) {
+                        results.push({ buoyName, data: parsedData });
+                    }
+                } else if (typeof parsedData === 'object') {
+                    // Object with buoy names as keys
+                    for (const [buoyName, data] of Object.entries(parsedData)) {
+                        if (Array.isArray(data)) {
+                            results.push({ buoyName, data });
+                        }
+                    }
+                }
+
+                if (results.length === 0) {
+                    setStatus('No valid data found. Check console for details.', 'error');
+                    console.log('Parsed data structure:', parsedData);
+                    return;
+                }
+
+                const totalPoints = results.reduce((sum, r) => sum + r.data.length, 0);
+                
+                if (totalPoints === 0) {
+                    setStatus('No data points found', 'error');
+                    return;
+                }
+
+                createPlots(results);
+                setStatus(`Successfully loaded ${totalPoints} data points from ${results.length} buoy(s)`, 'success');
+                document.getElementById('plots').style.display = 'block';
+                
+                // Scroll to plots
+                document.getElementById('plots').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                setStatus(`Error parsing JSON: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        function createPlots(results) {
+            createTimeSeriesPlot(results, 'batteryPlot', 'voltage', 'Battery Voltage (V)');
+            createTimeSeriesPlot(results, 'waveHeightPlot', 'wave_height', 'Significant Wave Height (m)');
+            createTimeSeriesPlot(results, 'windSpeedPlot', 'wind_speed', 'Wind Speed (m/s)');
+            createMapPlot(results);
+        }
+
+        function parseDateTime(point) {
+            // Try different datetime field names
+            const dateField = point.timestamp || point.datetime || point.time || point.date;
+            if (!dateField) return null;
+            
+            // Handle different formats
+            if (typeof dateField === 'number') {
+                // Unix timestamp
+                return new Date(dateField * 1000);
+            }
+            return new Date(dateField);
+        }
+
+        function createTimeSeriesPlot(results, plotId, dataKey, yAxisLabel) {
+            const traces = results.map((result, idx) => {
+                const times = [];
+                const values = [];
+
+                result.data.forEach(point => {
+                    if (point[dataKey] !== undefined && point[dataKey] !== null) {
+                        const time = parseDateTime(point);
+                        if (time && !isNaN(time.getTime())) {
+                            times.push(time);
+                            values.push(point[dataKey]);
+                        }
+                    }
+                });
+
+                return {
+                    x: times,
+                    y: values,
+                    mode: 'lines+markers',
+                    name: result.buoyName,
+                    line: { color: colors[idx % colors.length] },
+                    marker: { size: 6, color: colors[idx % colors.length] }
+                };
+            });
+
+            const layout = {
+                xaxis: { title: 'Time (UTC)' },
+                yaxis: { title: yAxisLabel },
+                hovermode: 'closest',
+                showlegend: true,
+                legend: { x: 1.02, y: 1, xanchor: 'left' },
+                margin: { l: 60, r: 150, t: 20, b: 60 }
+            };
+
+            Plotly.newPlot(plotId, traces, layout, { responsive: true });
+        }
+
+        function createMapPlot(results) {
+            const traces = results.map((result, idx) => {
+                const lats = [];
+                const lons = [];
+                const times = [];
+                const timeValues = [];
+
+                result.data.forEach(point => {
+                    if (point.lat !== undefined && point.lon !== undefined) {
+                        const time = parseDateTime(point);
+                        if (time && !isNaN(time.getTime())) {
+                            lats.push(point.lat);
+                            lons.push(point.lon);
+                            times.push(time.toISOString());
+                            timeValues.push(time.getTime());
+                        }
+                    }
+                });
+
+                if (timeValues.length === 0) {
+                    return null;
+                }
+
+                // Normalize time values for colorscale (per buoy)
+                const minTime = Math.min(...timeValues);
+                const maxTime = Math.max(...timeValues);
+                const normalizedTimes = timeValues.map(t => (t - minTime) / (maxTime - minTime || 1));
+
+                return {
+                    type: 'scattergeo',
+                    mode: 'markers',
+                    lon: lons,
+                    lat: lats,
+                    text: times.map((t, i) => 
+                        `${result.buoyName}<br>Time: ${t}<br>Lat: ${lats[i].toFixed(4)}<br>Lon: ${lons[i].toFixed(4)}`
+                    ),
+                    name: result.buoyName,
+                    marker: {
+                        size: 10,
+                        color: normalizedTimes,
+                        colorscale: 'Viridis',
+                        showscale: idx === 0,
+                        colorbar: {
+                            title: 'Time',
+                            tickvals: [0, 0.5, 1],
+                            ticktext: [
+                                new Date(minTime).toISOString().substring(0, 16).replace('T', ' '),
+                                new Date((minTime + maxTime) / 2).toISOString().substring(0, 16).replace('T', ' '),
+                                new Date(maxTime).toISOString().substring(0, 16).replace('T', ' ')
+                            ]
+                        },
+                        line: {
+                            color: colors[idx % colors.length],
+                            width: 2
+                        }
+                    },
+                    hoverinfo: 'skip'
+                };
+            }).filter(trace => trace !== null);
+
+            // Calculate bounds from all data
+            let allLats = [];
+            let allLons = [];
+            results.forEach(result => {
+                result.data.forEach(point => {
+                    if (point.lat !== undefined && point.lon !== undefined) {
+                        allLats.push(point.lat);
+                        allLons.push(point.lon);
+                    }
+                });
+            });
+
+            const minLat = Math.min(...allLats);
+            const maxLat = Math.max(...allLats);
+            const minLon = Math.min(...allLons);
+            const maxLon = Math.max(...allLons);
+            
+            const latRange = maxLat - minLat;
+            const lonRange = maxLon - minLon;
+            
+            // Add 20% padding for better view
+            const latPadding = latRange * 0.2 || 0.5;
+            const lonPadding = lonRange * 0.2 || 0.5;
+
+            const layout = {
+                geo: {
+                    projection: {
+                        type: 'equirectangular'
+                    },
+                    showland: true,
+                    landcolor: 'rgb(243, 243, 243)',
+                    showocean: true,
+                    oceancolor: 'rgb(200, 230, 255)',
+                    showlakes: true,
+                    lakecolor: 'rgb(200, 230, 255)',
+                    showcountries: true,
+                    countrycolor: 'rgb(204, 204, 204)',
+                    countrywidth: 0.5,
+                    lonaxis: {
+                        range: [minLon - lonPadding, maxLon + lonPadding],
+                        showgrid: true,
+                        gridwidth: 0.5,
+                        gridcolor: 'rgba(102, 102, 102, 0.3)',
+                        dtick: 0.5
+                    },
+                    lataxis: {
+                        range: [minLat - latPadding, maxLat + latPadding],
+                        showgrid: true,
+                        gridwidth: 0.5,
+                        gridcolor: 'rgba(102, 102, 102, 0.3)',
+                        dtick: 0.5
+                    }
+                },
+                showlegend: true,
+                legend: { 
+                    x: 0.01, 
+                    y: 0.99, 
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    bordercolor: 'rgba(0,0,0,0.2)',
+                    borderwidth: 1
+                },
+                margin: { l: 0, r: 0, t: 0, b: 0 },
+                height: 600,
+                hovermode: false
+            };
+
+            const config = {
+                responsive: true,
+                scrollZoom: true,
+                doubleClick: 'reset'
+            };
+
+            Plotly.newPlot('mapPlot', traces, layout, config);
+        }
+    </script>
+</body>
+</html>
