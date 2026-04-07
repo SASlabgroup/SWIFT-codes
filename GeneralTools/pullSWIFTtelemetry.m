@@ -1,12 +1,14 @@
-function [ allbatterylevels lasttime lastlat lastlon] = pullSWIFTtelemetry( IDs, starttime, endtime );
+function [ allbatterylevels lasttime lastlat lastlon] = pullSWIFTtelemetry( IDs, starttime, endtime, plotflag );
 % pull and compile sbd files from swiftserver for multiple SWIFTs
 % use for quasi-realtime situtational awareness during a mission / project
 %
 %   [ voltage lasttime lastlat lastlon ] = pullSWIFTtelemetry( IDs, starttime, endtime );
+%   [ voltage lasttime lastlat lastlon ] = pullSWIFTtelemetry( IDs, starttime, endtime, plotflag );
 %
 %   where inputs at strings arrays of two-digit SWIFT IDs (e.g., ['16';'17';'18';]
 %   startime string (e.g., '2018-09-12T22:00:00')
-%   and end time string, which can be empty to pull until present time
+%   and end time string, which can be epmpty to pull until present time
+%   plotflag logical, default true; set false to suppress map plots (e.g. GUI mode)
 %
 %   outputs are the minimum battery reading and the lasttime, lastlat, lastlon of telemetry
 %
@@ -17,6 +19,10 @@ function [ allbatterylevels lasttime lastlat lastlon] = pullSWIFTtelemetry( IDs,
 %           8/2022 make compatible with Winddows PCs
 
 global battery
+
+if nargin < 4 || isempty(plotflag)
+    plotflag = true;
+end
 
 options = weboptions('Timeout', 60);
 pcflag = ispc; % binary flag to determine if a Windows PC (use different commands for copy, unzip)
@@ -66,19 +72,14 @@ for si=1:size(IDs,1),
     
     out = websave(['SWIFT' IDs(si,:) '.zip'],[baseurl buoy  '&start=' starttime '&end=' endtime '&format=zip'],options)
     
-    if pcflag
-        zipfile = ['SWIFT' IDs(si,:) '.zip'];
-        unzip(zipfile)
-    else
-        eval(['!unzip SWIFT' IDs(si,:) '.zip']);
-    end
+    unzip(['SWIFT' IDs(si,:) '.zip']);  % MATLAB built-in: cross-platform, never prompts for replace, just clobbers existing files
     expanded = dir(['*SWIFT ' IDs(si,:) '*']);
     if length(expanded)==1 && expanded(1).isdir == true,
         cd(expanded(1).name)
         
         % run compile SBD, which calls readSWIFT_SBD for each file
         % use a temp file work around the clear all in compile
-        save temp si IDs starttime endtime options allbatterylevels lasttime lastlon lastlat SWIFTtype pcflag
+        save temp si IDs starttime endtime options allbatterylevels lasttime lastlon lastlat SWIFTtype pcflag plotflag
         compileSWIFT_SBDservertelemetry
         load temp
         wd = pwd;
@@ -118,14 +119,16 @@ end
 %% combine the resulting mat files in the top level directory and make map plots
 
 
-if isfield(SWIFT,'watertemp') && ~isempty(SWIFT)
-    tempfig = mapSWIFT('watertemp');
-end
-if isfield(SWIFT,'salinity') && ~isempty(SWIFT)
-    salinityfig = mapSWIFT('salinity');
-end
-if isfield(SWIFT,'sigwaveheight') && ~isempty(SWIFT)
-    wavefig = mapSWIFT('sigwaveheight');
+if plotflag && exist('SWIFT','var') && ~isempty(SWIFT)
+    if isfield(SWIFT,'watertemp')
+        tempfig = mapSWIFT('watertemp');
+    end
+    if isfield(SWIFT,'salinity')
+        salinityfig = mapSWIFT('salinity');
+    end
+    if isfield(SWIFT,'sigwaveheight')
+        wavefig = mapSWIFT('sigwaveheight');
+    end
 end
 
 %clc,

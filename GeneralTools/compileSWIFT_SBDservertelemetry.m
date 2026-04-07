@@ -24,7 +24,13 @@
 %             structure
 clear all
 
-plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
+% Recover plotflag forwarded via temp file (set by pullSWIFTtelemetry)
+if exist('temp.mat', 'file')
+    load('temp', 'plotflag');
+end
+if ~exist('plotflag', 'var')
+    plotflag = true;  % binary flag for plotting (compiled plots, not individual plots... that flag is in the readSWIFT_SBD call)
+end
 fixspectra = false; % binary flag to redact low freq wave spectra, note this also recalcs wave heights
 fixpositions = false; % binary flag to use "filloutliers" to fix spurious positions.   Use with care. 
 
