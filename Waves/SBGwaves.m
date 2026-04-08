@@ -42,7 +42,7 @@ merge = 3;      % freq bands to merge, must be odd?
 recip = true;   % flip wave directions (but not moments)
 RC = 3.5;   % RC fitler... cuttoff freq is 1/(2*pi*RC), so nominal value is RC = 3.5
 fmin = 0.05;  % lower frequency limit (usually 0.05 Hz)
-fmax = 1;   % upper frequency limit (usually 1 Hz)
+fmax = 2.5;   % upper frequency limit (usually 1 Hz)
 
 pts = length(u);       % record length in data points
 w = round(fs * wsecs);  % window length in data points
@@ -308,10 +308,11 @@ end
 
 % quality control
 if Tp > 20 
-     disp('Invalid Peak Direction. Returning 9999 for bulk metrics.')
-     Hs = 9999;
-     Tp = 9999; 
-     Dp = 9999; 
+    disp('!!!!!  Peak period > 20 s   !!!!') 
+    %disp('Invalid Peak Direction. Returning 9999 for bulk metrics.')
+     %Hs = 9999;
+     %Tp = 9999; 
+     %Dp = 9999; 
 else 
 
 end
