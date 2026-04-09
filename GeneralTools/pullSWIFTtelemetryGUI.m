@@ -62,9 +62,9 @@ leftPanel.Layout.Column = 1;   % ... column 1
 % Nest another uigridlayout inside the panel for fine-grained row control.
 % Fixed pixel heights keep labels/buttons compact; '1x' on the text area lets
 % it expand to fill whatever vertical space remains as the window is resized.
-lg = uigridlayout(leftPanel, [19 1]);  % 19 rows, 1 column
+lg = uigridlayout(leftPanel, [20 1]);  % 20 rows, 1 column
 lg.RowHeight  = { ...
-    20, ...   % 1  label: Recent
+    20, ...   % 1  label: Recent Queries
     28, ...   % 2  recentDD dropdown
      8, ...   % 3  spacer
     20, ...   % 4  label: Active Buoys
@@ -80,9 +80,10 @@ lg.RowHeight  = { ...
     20, ...   % 14 label: End Time
     28, ...   % 15 endDP + time field + Now checkbox
     10, ...   % 16 spacer
-    36, ...   % 17 output dir field + Browse button
-    36, ...   % 18 Pull Telemetry button
-    22};      % 19 Clear Saved Preferences button
+    20, ...   % 17 label: Save Destination
+    36, ...   % 18 output dir field + Browse button
+    36, ...   % 19 Pull Telemetry button
+    22};      % 20 Clear Saved Preferences button
 lg.Padding    = [8 8 8 8];
 lg.RowSpacing = 2;
 
@@ -90,7 +91,7 @@ lg.RowSpacing = 2;
 % `@recentDDCB` is a function handle — MATLAB calls recentDDCB(src, event)
 % whenever the dropdown value changes. Callbacks always receive two arguments:
 % the source widget (src) and an event object; we often ignore them with ~.
-mkLabel(lg, 1, 'Recent');
+mkLabel(lg, 1, 'Recent Queries');
 recentDD = uidropdown(lg, 'Items', {'(no history yet)'}, ...
     'ValueChangedFcn', @recentDDCB);
 recentDD.Layout.Row = 2;  recentDD.Layout.Column = 1;
@@ -164,8 +165,9 @@ endTimeField.Enable = 'off';
 spacer(lg, 16);
 
 % -- Output directory --
+mkLabel(lg, 17, 'Save Destination');
 dirRowGrid = uigridlayout(lg, [1 2]);
-dirRowGrid.Layout.Row = 17;  dirRowGrid.Layout.Column = 1;
+dirRowGrid.Layout.Row = 18;  dirRowGrid.Layout.Column = 1;
 dirRowGrid.ColumnWidth = {'1x', 90};
 dirRowGrid.Padding = [0 0 0 0];
 dirField = uieditfield(dirRowGrid, 'text', 'Value', pwd, 'FontName', 'Courier New');
@@ -179,12 +181,12 @@ runBtn = uibutton(lg, ...
     'Text', 'Pull Telemetry', 'FontWeight', 'bold', 'FontSize', 13, ...
     'BackgroundColor', [0.18 0.55 0.34], 'FontColor', [1 1 1], ...
     'ButtonPushedFcn', @runCB);
-runBtn.Layout.Row = 18;  runBtn.Layout.Column = 1;
+runBtn.Layout.Row = 19;  runBtn.Layout.Column = 1;
 
 clearPrefsBtn = uibutton(lg, ...
     'Text', 'Clear Saved Preferences', 'FontSize', 10, ...
     'ButtonPushedFcn', @clearPrefsCB);
-clearPrefsBtn.Layout.Row = 19;  clearPrefsBtn.Layout.Column = 1;
+clearPrefsBtn.Layout.Row = 20;  clearPrefsBtn.Layout.Column = 1;
 
 loadPrefs();  % restore last-used parameters + populate recent dropdown
 
@@ -226,30 +228,63 @@ t2Grid.ColumnSpacing = 8;
 vizCtrl = uipanel(t2Grid, 'Title', 'Load & Filter');
 vizCtrl.Layout.Row = 1;  vizCtrl.Layout.Column = 1;
 
-vc = uigridlayout(vizCtrl, [14 1]);
-vc.RowHeight  = {36, 10, 20, 100, 10, 20, 22, 10, 20, 22, 10, 20, 22, '1x'};
-vc.Padding    = [8 8 8 8];
-vc.RowSpacing = 2;
+% uigridlayout arranges child widgets in a grid.  [17 1] = 17 rows, 1 col.
+% Each widget is placed by setting its .Layout.Row / .Layout.Column.
+% RowHeight values are pixels (numeric) or stretchy ('1x' fills remaining).
+% The pattern is: widget, spacer, label, widget, spacer, label, widget, ...
+vc = uigridlayout(vizCtrl, [17 1]);
+vc.RowHeight  = { ...
+    36,   ... % row 1:  Load button (tall, prominent)
+    10,   ... % row 2:  spacer
+    20,   ... % row 3:  "Loaded SWIFTs" label
+    100,  ... % row 4:  listbox (tall to show multiple buoy names)
+    10,   ... % row 5:  spacer
+    20,   ... % row 6:  "Color tracks by" label
+    22,   ... % row 7:  color dropdown
+    10,   ... % row 8:  spacer
+    20,   ... % row 9:  "Time series 1" label
+    22,   ... % row 10: time-series-1 dropdown
+    10,   ... % row 11: spacer
+    20,   ... % row 12: "Time series 2" label
+    22,   ... % row 13: time-series-2 dropdown
+    10,   ... % row 14: spacer
+    20,   ... % row 15: "Basemap" label
+    22,   ... % row 16: basemap dropdown
+    '1x'};    % row 17: stretchy filler — pushes everything above upward
+vc.Padding    = [8 8 8 8];   % [left bottom right top] inner margin (px)
+vc.RowSpacing = 2;            % vertical gap between rows (px)
 
+% --- Load button ---
+% uibutton creates a push button.  ButtonPushedFcn fires when clicked.
 loadBtn = uibutton(vc, ...
     'Text', 'Load .mat Files...', 'FontWeight', 'bold', 'FontSize', 12, ...
     'BackgroundColor', [0.22 0.45 0.70], 'FontColor', [1 1 1], ...
     'ButtonPushedFcn', @loadMatCB);
 loadBtn.Layout.Row = 1;  loadBtn.Layout.Column = 1;
 
+% --- Buoy listbox ---
+% spacer() and mkLabel() are local helpers defined at the bottom of this
+% file.  spacer inserts a blank, mkLabel creates a uilabel in a given row.
 spacer(vc, 2);
 mkLabel(vc, 3, 'Loaded SWIFTs');
+% uilistbox shows a scrollable list.  'Multiselect','on' lets the user
+% ctrl/shift-click to select several buoys at once.
 loadedListBox = uilistbox(vc, 'Items', {}, 'Multiselect', 'on');
 loadedListBox.Layout.Row = 4;  loadedListBox.Layout.Column = 1;
+% ValueChangedFcn fires whenever the selection changes — triggers replot.
 loadedListBox.ValueChangedFcn = @vizUpdateCB;
 
+% --- Color-by dropdown ---
 spacer(vc, 5);
 mkLabel(vc, 6, 'Color tracks by');
+% uidropdown creates a combo-box.  'Items' is the list of choices, 'Value'
+% is the initial selection.  ValueChangedFcn triggers replot on change.
 colorDD = uidropdown(vc, ...
     'Items', {'SWIFT ID', 'Time', 'Battery', 'Hs', 'Water Temp', 'Salinity'}, ...
     'Value', 'SWIFT ID', 'ValueChangedFcn', @vizUpdateCB);
 colorDD.Layout.Row = 7;  colorDD.Layout.Column = 1;
 
+% --- Time-series variable 1 ---
 spacer(vc, 8);
 mkLabel(vc, 9, 'Time series — variable 1');
 ts1DD = uidropdown(vc, ...
@@ -257,6 +292,7 @@ ts1DD = uidropdown(vc, ...
     'Value', 'sigwaveheight', 'ValueChangedFcn', @vizUpdateCB);
 ts1DD.Layout.Row = 10;  ts1DD.Layout.Column = 1;
 
+% --- Time-series variable 2 ---
 spacer(vc, 11);
 mkLabel(vc, 12, 'Time series — variable 2');
 ts2DD = uidropdown(vc, ...
@@ -264,10 +300,26 @@ ts2DD = uidropdown(vc, ...
     'Value', 'watertemp', 'ValueChangedFcn', @vizUpdateCB);
 ts2DD.Layout.Row = 13;  ts2DD.Layout.Column = 1;
 
-%% ---- compi panel -----------------------------------------------------------
+% --- Basemap style ---
+spacer(vc, 14);
+mkLabel(vc, 15, 'Basemap');
+% These are the built-in MATLAB basemap tile layers (R2018b+, no toolbox).
+% Tiles are fetched from MathWorks servers so an internet connection is
+% needed (except 'none').
+basemapDD = uidropdown(vc, ...
+    'Items', {'bluegreen', 'streets', 'streets-light', 'streets-dark', ...
+              'topographic', 'satellite', 'ocean', 'darkwater', ...
+              'grayland', 'grayterrain', 'colorterrain', 'landcover', 'none'}, ...
+    'Value', 'darkwater', 'ValueChangedFcn', @basemapChangeCB);
+basemapDD.Layout.Row = 16;  basemapDD.Layout.Column = 1;
+
+%% ---- Plot panel ------------------------------------------------------------
 plotPanel = uipanel(t2Grid, 'Title', 'Plots');
 plotPanel.Layout.Row = 1;  plotPanel.Layout.Column = 2;
 
+% 2x2 grid for the plots: map on the left (spans both rows), two time-
+% series plots stacked on the right.  '1x' means each row/col gets equal
+% share of available space.
 pg = uigridlayout(plotPanel, [2 2]);
 pg.RowHeight    = {'1x', '1x'};
 pg.ColumnWidth  = {'1x', '1x'};
@@ -275,14 +327,18 @@ pg.Padding      = [6 6 6 6];
 pg.RowSpacing   = 6;
 pg.ColumnSpacing = 6;
 
-axMap  = uiaxes(pg);  axMap.Layout.Row  = [1 2];  axMap.Layout.Column  = 1;
+% geoaxes is like axes but projects lat/lon onto a map with basemap tiles.
+% Layout.Row = [1 2] makes it span both rows (full left column).
+axMap  = geoaxes(pg);  axMap.Layout.Row  = [1 2];  axMap.Layout.Column  = 1;
+% uiaxes creates standard Cartesian axes for the time-series panels.
 axTS1  = uiaxes(pg);  axTS1.Layout.Row  = 1;       axTS1.Layout.Column  = 2;
 axTS2  = uiaxes(pg);  axTS2.Layout.Row  = 2;       axTS2.Layout.Column  = 2;
 
-xlabel(axMap, 'Longitude');  ylabel(axMap, 'Latitude');
-title(axMap,  'Position Tracks');
-grid(axMap, 'on');  box(axMap, 'on');
+% Set the initial basemap tile layer (geoaxes draws lat/lon labels itself).
+geobasemap(axMap, 'bluegreen');
+title(axMap, 'Position Tracks');
 
+% Standard axes setup for the two time-series panels.
 xlabel(axTS1, 'Time (UTC)');
 grid(axTS1, 'on');  box(axTS1, 'on');
 
@@ -470,12 +526,14 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         var2     = ts2DD.Value;
         byID     = strcmp(colorVar, 'SWIFT ID');
 
-        cla(axMap);  cla(axTS1);  cla(axTS2);
+        delete(allchild(axMap));  delete(allchild(axTS1));  delete(allchild(axTS2));
         colorbar(axMap, 'off');
+        geobasemap(axMap, basemapDD.Value);  % re-apply after clearing children
         hold(axMap, 'on');  hold(axTS1, 'on');  hold(axTS2, 'on');
 
         cmap    = lines(numel(selIDs));
-        allLats = [];
+        allLats  = [];
+        allTimes = [];
 
         for k = 1:numel(selIDs)
             idx = find(strcmp(loadedIDs, selIDs{k}), 1);
@@ -486,7 +544,8 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             lats = [sw.lat];
             lons = [sw.lon];
             tvec = [sw.time];
-            allLats = [allLats, lats]; %#ok<AGROW>
+            allLats  = [allLats, lats]; %#ok<AGROW>
+            allTimes = [allTimes, tvec]; %#ok<AGROW>
 
             % Scatter color values
             if byID
@@ -503,13 +562,13 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             end
 
             % Track line (always per-buoy color) + scatter dots
-            plot(axMap, lons, lats, '-', 'Color', col, 'LineWidth', 1, ...
+            geoplot(axMap, lats, lons, '-', 'Color', col, 'LineWidth', 1, ...
                 'HandleVisibility', 'off');
             if byID
-                scatter(axMap, lons, lats, 20, cvals, 'filled', ...
+                geoscatter(axMap, lats, lons, 20, cvals, 'filled', ...
                     'DisplayName', ['SWIFT ' selIDs{k}]);
             else
-                scatter(axMap, lons, lats, 25, cvals, 'filled', ...
+                geoscatter(axMap, lats, lons, 25, cvals, 'filled', ...
                     'DisplayName', ['SWIFT ' selIDs{k}]);
             end
 
@@ -537,13 +596,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             end
         end
 
-        % Correct aspect ratio for lat/lon (1 deg lon ≠ 1 deg lat)
-        if ~isempty(allLats)
-            latMid = mean(allLats, 'omitnan');
-            if ~isnan(latMid) && abs(latMid) < 90
-                daspect(axMap, [1/cosd(latMid), 1, 1]);
-            end
-        end
+        % geoaxes handles aspect ratio automatically
 
         legend(axMap,  'Location', 'best', 'FontSize', 8);
         legend(axTS1,  'Location', 'best', 'FontSize', 8);
@@ -552,12 +605,24 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         ylabel(axTS1, prettifyName(var1));  title(axTS1, prettifyName(var1));
         ylabel(axTS2, prettifyName(var2));  title(axTS2, prettifyName(var2));
 
+        % Set shared x-axis limits across all buoys, then format as dates
+        if ~isempty(allTimes)
+            tMin = min(allTimes);
+            tMax = max(allTimes);
+            pad  = max(0.01 * (tMax - tMin), 1/24);  % at least 1-hour pad
+            xlim(axTS1, [tMin - pad, tMax + pad]);
+            xlim(axTS2, [tMin - pad, tMax + pad]);
+        end
         axTS1.XTickLabelRotation = 30;
         axTS2.XTickLabelRotation = 30;
-        datetick(axTS1, 'x', 'mm/dd HH:MM', 'keeplimits', 'keepticks');
-        datetick(axTS2, 'x', 'mm/dd HH:MM', 'keeplimits', 'keepticks');
+        datetick(axTS1, 'x', 'mm/dd HH:MM', 'keeplimits');
+        datetick(axTS2, 'x', 'mm/dd HH:MM', 'keeplimits');
 
         hold(axMap, 'off');  hold(axTS1, 'off');  hold(axTS2, 'off');
+    end
+
+    function basemapChangeCB(~, ~)
+        geobasemap(axMap, basemapDD.Value);
     end
 
     function refreshBuoysCB(~, ~)
