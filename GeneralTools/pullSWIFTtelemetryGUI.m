@@ -208,9 +208,15 @@ resultsTable = uitable(rg, ...
 resultsTable.Layout.Row = 2;  resultsTable.Layout.Column = 1;
 
 mkLabel(rg, 3, 'Log');
-logArea = uitextarea(rg, 'Editable', 'off', 'FontName', 'Courier New', 'FontSize', 11, ...
-    'Value', {'Ready. Set parameters and press  ''Pull Telemetry''.'});
+% uihtml renders an HTML string — lets us style individual log lines
+% (bold headers, red errors) which uitextarea cannot do.
+logArea = uihtml(rg);
 logArea.Layout.Row = 4;  logArea.Layout.Column = 1;
+% Initialise with a wrapper div that behaves like a read-only log console.
+% The JS function appendLine() is called from MATLAB via logArea.Data and
+% a DataChangedFcn on the JS side to auto-scroll and append styled lines.
+logArea.HTMLSource = buildLogHTML();
+appendLog(logArea, 'Ready. Set parameters and press "Pull Telemetry".');
 
 fetchActiveBuoys();  % populate active buoys dropdown on startup
 
@@ -389,26 +395,71 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             if ~isempty(id), idList{end+1} = id; end %#ok<AGROW>
         end
         if isempty(idList)
-            appendLog(logArea, 'ERROR: No SWIFT IDs entered.'); return
+            appendLog(logArea, 'ERROR: No SWIFT IDs entered.', 'error'); return
         end
 
         % Type is inferred from ID length: 2-digit = v3/v4, 3-digit = microSWIFT
         lens = cellfun(@numel, idList);
         if ~all(lens == lens(1)) || ~any(lens(1) == [2 3])
-            appendLog(logArea, 'ERROR: All IDs must be the same length: 2-digit (SWIFT v3/v4) or 3-digit (microSWIFT).');
+            appendLog(logArea, 'ERROR: All IDs must be the same length: 2-digit (SWIFT v3/v4) or 3-digit (microSWIFT).', 'error');
             return
         end
         IDs = char(idList);
 
         if isempty(startStr)
-            appendLog(logArea, 'ERROR: Start time is required.'); return
+            appendLog(logArea, 'ERROR: Start time is required.', 'error'); return
+        end
+
+        % Build a subfolder name from search parameters so each pull lands
+        % in its own directory and never collides with previous results.
+        % e.g. "SWIFT_16_23_20250101T0000_20250115T0000"
+        idTag    = ['SWIFT_' strjoin(idList, '_')];
+        startTag = regexprep(startStr, '[-:]', '');  % 20250101T000000
+        if isempty(endStr)
+            endTag = 'now';
+        else
+            endTag = regexprep(endStr, '[-:]', '');
+        end
+        subName = [idTag '_' startTag '_' endTag];
+        pullDir = fullfile(outDir, subName);
+
+        % Create the output directory tree (including parents) if needed.
+        if ~isfolder(pullDir)
+            [ok, msg] = mkdir(pullDir);
+            if ~ok
+                appendLog(logArea, ['ERROR creating directory: ' msg], 'error'); return
+            end
+            appendLog(logArea, ['Created: ' pullDir]);
+        end
+
+        % Warn if the pull directory already contains SWIFT artifacts from
+        % a previous run with the same parameters.
+        appendLog(logArea, repmat('-',1,60), 'bold');
+        prevZips = dir(fullfile(pullDir, 'SWIFT*.zip'));              % downloaded archives
+        prevDirs = dir(fullfile(pullDir, 'buoy-*'));                  % unpacked SBD folders
+        prevDirs = prevDirs([prevDirs.isdir]);
+        prevMats = dir(fullfile(pullDir, '*SWIFT*_telemetry.mat'));   % processed output
+        if ~isempty(prevZips)
+            appendLog(logArea, sprintf( ...
+                'WARNING: %d downloaded zip file(s) found — will be overwritten.', numel(prevZips)), 'warn');
+        end
+        if ~isempty(prevDirs)
+            appendLog(logArea, sprintf( ...
+                'WARNING: %d unpacked buoy-* folder(s) found — contents will be overwritten.', numel(prevDirs)), 'warn');
+        end
+        if ~isempty(prevMats)
+            appendLog(logArea, sprintf( ...
+                'WARNING: %d processed telemetry .mat file(s) found — will be overwritten.', numel(prevMats)), 'warn');
+        end
+        if ~isempty(prevZips) || ~isempty(prevDirs) || ~isempty(prevMats)
+            appendLog(logArea, ['  Dir: ' pullDir], 'warn');
         end
 
         origDir = pwd;
         try
-            cd(outDir);
+            cd(pullDir);
         catch ME
-            appendLog(logArea, ['ERROR changing directory: ' ME.message]); return
+            appendLog(logArea, ['ERROR changing directory: ' ME.message], 'error'); return
         end
 
         savePrefs();  % cache parameters before running
@@ -416,12 +467,11 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         runBtn.Enable = 'off';  runBtn.Text = 'Running...';
         drawnow;  % flush the event queue so the button visually updates before the long pull
 
-        appendLog(logArea, repmat('-',1,60));
-        appendLog(logArea, ['Pull started: ' datestr(now,'yyyy-mm-dd HH:MM:SS')]);
-        appendLog(logArea, ['IDs:   ' strjoin(idList,', ')]);
-        appendLog(logArea, ['Start: ' startStr]);
-        appendLog(logArea, ['End:   ' endStr]);
-        appendLog(logArea, ['Dir:   ' outDir]);
+        appendLog(logArea, ['Pull started: ' datestr(now,'yyyy-mm-dd HH:MM:SS')], 'bold');
+        appendLog(logArea, ['IDs:   ' strjoin(idList,', ')], 'bold');
+        appendLog(logArea, ['Start: ' startStr], 'bold');
+        appendLog(logArea, ['End:   ' endStr], 'bold');
+        appendLog(logArea, ['Dir:   ' pullDir], 'bold');
         drawnow;
 
         try
@@ -445,17 +495,18 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             appendLog(logArea, ['Complete: ' datestr(now,'yyyy-mm-dd HH:MM:SS')]);
 
             % Auto-load pulled .mat files into Visualize tab
-            autoViz(outDir);
+            autoViz(pullDir);
 
         catch ME
-            appendLog(logArea, ['ERROR: ' ME.message]);
+            appendLog(logArea, ['ERROR: ' ME.message], 'error');
             for fi = 1:numel(ME.stack)
                 appendLog(logArea, sprintf('  at %s (line %d)', ...
-                    ME.stack(fi).name, ME.stack(fi).line));
+                    ME.stack(fi).name, ME.stack(fi).line), 'error');
             end
         end
 
         cd(origDir);
+        appendLog(logArea, 'Please see Command Window for full verbose output.');
         runBtn.Enable = 'on';  runBtn.Text = 'Pull Telemetry';
     end
 
@@ -480,7 +531,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             try
                 S = load(fullpath);  % expects variable 'SWIFT'
                 if ~isfield(S, 'SWIFT')
-                    appendLog(logArea, ['Skip (no SWIFT var): ' files{f}]);
+                    appendLog(logArea, ['Skip (no SWIFT var): ' files{f}], 'warn');
                     continue
                 end
                 sw = S.SWIFT;
@@ -504,7 +555,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
                 end
                 appendLog(logArea, sprintf('Loaded SWIFT %s  (%d records)', idStr, numel(sw)));
             catch ME
-                appendLog(logArea, ['ERROR loading ' files{f} ': ' ME.message]);
+                appendLog(logArea, ['ERROR loading ' files{f} ': ' ME.message], 'error');
             end
         end
 
@@ -667,7 +718,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         catch ME
             activeBuoysDD.Items = {'(fetch failed)'};
             activeBuoysDD.Value = '(fetch failed)';
-            appendLog(logArea, ['Active buoys fetch failed: ' ME.message]);
+            appendLog(logArea, ['Active buoys fetch failed: ' ME.message], 'error');
         end
     end
 
@@ -716,7 +767,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
                 end
                 appendLog(logArea, sprintf('  %s  (%d records)', hits(h).name, numel(S.SWIFT)));
             catch ME2
-                appendLog(logArea, ['  skip: ' hits(h).name ' — ' ME2.message]);
+                appendLog(logArea, ['  skip: ' hits(h).name ' — ' ME2.message], 'warn');
             end
         end
         if ~isempty(loadedIDs)
@@ -861,12 +912,54 @@ function spacer(parent, row)
     lbl.Layout.Column = 1;
 end
 
-function appendLog(logArea, msg)
-    cur = logArea.Value;
-    if ischar(cur), cur = {cur}; end
-    logArea.Value = [cur; {msg}];
-    scroll(logArea, 'bottom');
-    drawnow;
+function appendLog(logArea, msg, style)
+% Append a styled line to the uihtml log panel.
+%   style: 'normal' (default), 'bold', 'error' (red+bold), 'warn' (orange)
+    if nargin < 3, style = 'normal'; end
+    % HTML-escape special characters so messages render literally
+    msg = strrep(msg, '&', '&amp;');
+    msg = strrep(msg, '<', '&lt;');
+    msg = strrep(msg, '>', '&gt;');
+    % Build the HTML line directly and accumulate in the UserData buffer.
+    % We store the full HTML string in UserData so no messages are lost
+    % (the DataChanged JS event can miss rapid-fire .Data updates).
+    switch style
+        case 'bold',  line = ['<div class="bold">'  msg '</div>'];
+        case 'error', line = ['<div class="error">' msg '</div>'];
+        case 'warn',  line = ['<div class="warn">'  msg '</div>'];
+        otherwise,    line = ['<div>'               msg '</div>'];
+    end
+    if isempty(logArea.UserData)
+        logArea.UserData = line;
+    else
+        logArea.UserData = [logArea.UserData, line];
+    end
+    % Push the full accumulated HTML to JS; it replaces #log innerHTML.
+    logArea.Data = logArea.UserData;
+end
+
+function html = buildLogHTML()
+% Returns the inline HTML/CSS/JS for the log panel used by appendLog().
+    html = [ ...
+    '<html><head><style>' ...
+    'body{margin:0;padding:0;background:#fff;}' ...
+    '#log{font-family:"Courier New",monospace;font-size:11px;' ...
+    '  padding:6px;overflow-y:auto;height:100vh;box-sizing:border-box;' ...
+    '  white-space:pre-wrap;word-wrap:break-word;}' ...
+    '.bold{font-weight:bold;}' ...
+    '.error{color:#cc1111;font-weight:bold;}' ...
+    '.warn{color:#b8860b;}' ...
+    '</style></head><body><div id="log"></div>' ...
+    '<script>' ...
+    'function setup(htmlComponent){' ...
+    '  htmlComponent.addEventListener("DataChanged",function(){' ...
+    '    var d=htmlComponent.Data;if(!d)return;' ...
+    '    var log=document.getElementById("log");' ...
+    '    log.innerHTML=d;' ...
+    '    log.lastElementChild.scrollIntoView({behavior:"auto"});' ...
+    '  });' ...
+    '}' ...
+    '</script></body></html>'];
 end
 
 function vals = extractField(sw, fieldname)
