@@ -63,6 +63,7 @@ for fi=1:length(ahrsfiles)
 
     if plotahrs
 
+        figure(1), clf
         % [fh,sbgData] = plotSBG(sbgData,'qc')  % alternative
 
         figure('color','w')
@@ -139,9 +140,11 @@ fs = 20; % Hz, ** should confirm based on timestamps**
 for fi=1:length(parosfiles)
     parosData = importdata(parosfiles(fi).name);
     p = parosData.data;
-    ptime = NaN;%datenum(parosData.textdata{:,2});  % convert cell to string
+    %ptime = datenum(parosData.textdata{:,2});  %  not worth it when all 1970
 
-    % plot
+    % plotting
+    figure(2), clf
+
     subplot(1,2,1)
     plot([1:length(p)]./fs,p)
     ylabel('p [mb]'), xlabel('t [s]')
@@ -178,7 +181,9 @@ for fi=1:length(sonicfiles)
     bad = isnan(u+v+w);
     u(bad) = 0; v(bad) = 0; w(bad)=0;
 
-    % plot
+    % plotting
+    figure(3), clf
+
     subplot(1,2,1)
     plot(t,u,t,v,t,w)
     legend('u','v','w')
@@ -195,4 +200,90 @@ for fi=1:length(sonicfiles)
 
 end
 
-%% time logs (for synchronization)
+%% preliminary p'w' analysis
+
+clear all
+
+sonicfiles = dir('*sonic.log');
+parosfiles = dir('*paros.log');
+ahrsfiles = dir('*ahrs.log');
+
+% indices of filelist
+validtests = [3:9 12]; 
+boatwakes = 5;
+stilwater = 12; 
+
+for fi = validtests
+
+    load([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'t','u','v','w','T')
+    load([(parosfiles(fi).name(1:end-4)) '_processed.mat'],'p','ptime')
+    load([(ahrsfiles(fi).name(1:end-4)) '_processed.mat'],'Hs')
+
+    % interp the presure to match the sonic
+    toffset = 0;
+    ptime = linspace(min(t), max(t), length(p)) + toffset;
+    figure(4), clf
+    plot(ptime,p), hold on
+    p = interp1(ptime,p,t);  fs = 10;
+    plot(t,p,'.')
+
+    % or resample pressure (20 Hz) to match the sonic (10 Hz)... worst option
+    %p = resample(p, length(w), length(p));  fs = 10; % Hz
+
+    % or interp the sonic to match the pressure 
+    %u = interp(u,2); v = interp(v,2); w = interp(w,2);  fs = 20; %Hz 
+%     if length(u)>length(p) 
+%         u(length(p)+1:end)=[]; v(length(p)+1:end)=[];  w(length(p)+1:end)=[];
+%     elseif length(p)>length(u)
+%         p(length(u)+1:end)=[];
+%     end
+
+
+    DC = mean(detrend(p).*detrend(w)) % direct covariance
+
+    % cross-spectra
+
+    [ f, PP, PU, PV, PW, UU, VV, WW, UV , cohSIG ]  =  PWspectra( p, u, v, w , fs);
+
+    % Cospectrum & Quadrature:
+    coPU = real(PU);   quPU = imag(PU);
+    coPV = real(PV);   quPV = imag(PV);
+    coPW = real(PV);   quPW = imag(PV);
+    coUV = real(UV);   quUV = imag(UV);
+    % Coherence & Phase at each freq-band
+    % *** note that it's important to calc this AFTER all merging and ensemble avg.
+    cohPU = sqrt( (coPU.^2 + quPU.^2) ./ (PP.* UU) );
+    phPU  = 180/pi .* atan2( quPU , coPU );
+    cohPV = sqrt((coPV.^2 + quPV.^2)./ (PP.* VV));
+    phPV  = 180/pi .* atan2( quPV , coPV );
+    cohPW = sqrt((coPW.^2 + quPW.^2)./ (PP.* WW));
+    phPW  = 180/pi .* atan2( quPW , coPW );
+    cohUV = sqrt((coUV.^2 + quUV.^2)./(UU .* VV));
+    phUV  = 180/pi .* atan2( quUV , coUV );
+    % -----------------------------------------------------------------------------
+
+    figure(5), clf
+    subplot(2,1,1)
+    loglog(f,PP, f, WW)
+    legend('p','w')
+    ylabel('Energy density')
+    title([(sonicfiles(fi).name(1:15)) ', H_s = ' num2str(Hs,2) ' m'])
+
+    subplot(4,1,3)
+    semilogx(f,cohPW)
+    ylabel('Coherence')
+    set(gca,'YLim',[0 1])
+    hold on, 
+    plot([min(f) max(f)],[cohSIG cohSIG],'k:')
+
+    subplot(4,1,4)
+    semilogx(f,phPW)
+    ylabel('Phase')
+    set(gca,'YLim',[-180 180])
+
+    xlabel('f [Hz]')
+
+    print([(sonicfiles(fi).name(1:15)) '_crossspectra.png'],'-dpng')
+
+
+end
