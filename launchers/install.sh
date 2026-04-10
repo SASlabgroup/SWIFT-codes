@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# SWIFT Telemetry GUI Installer for macOS / Linux
+# SWIFT Telemetry Installer for macOS / Linux
 # Creates a desktop shortcut that launches pullSWIFTtelemetryGUI.sh
 # with the SWIFT logo icon.
 # ============================================================
@@ -17,7 +17,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ICON="$REPO_ROOT/Documents/SWIFTlogo_icon.png"
 DESKTOP="$HOME/Desktop"
 OS="$(uname -s)"
-APP_DISPLAY_NAME="SWIFT Telemetry GUI"
+APP_DISPLAY_NAME="SWIFT Telemetry"
 
 echo -e "${GREEN}======================================${NC}"
 echo -e "${GREEN}  ${APP_DISPLAY_NAME} Installer${NC}"
@@ -73,12 +73,13 @@ if [ "$OS" = "Darwin" ]; then
 PLIST
 
     # Launcher script inside the .app (no spaces in filename)
+    # --from-icon tells the launcher to pause before closing the terminal
     cat > "$APP_DIR/Contents/MacOS/launcher" << WRAPPER
 #!/usr/bin/env bash
-# Open a terminal and run the real launcher
+# Open a terminal, run the launcher, then close the terminal tab
 osascript -e 'tell application "Terminal"
     activate
-    do script "\"$LAUNCHER\""
+    do script "\"$LAUNCHER\" --from-icon; exit"
 end tell'
 WRAPPER
     chmod +x "$APP_DIR/Contents/MacOS/launcher"
@@ -121,7 +122,7 @@ elif [ "$OS" = "Linux" ]; then
 [Desktop Entry]
 Name=${APP_DISPLAY_NAME}
 Comment=Update SWIFT-codes and launch pullSWIFTtelemetryGUI
-Exec=$LAUNCHER
+Exec=$LAUNCHER --from-icon
 Icon=$ICON
 Terminal=true
 Type=Application

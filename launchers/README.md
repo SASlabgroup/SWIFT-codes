@@ -1,4 +1,4 @@
-# SWIFT Telemetry GUI Launchers
+# SWIFT Telemetry Launchers
 
 Desktop launchers that update the SWIFT-codes repo and open
 pullSWIFTtelemetryGUI in MATLAB with one click.
@@ -41,7 +41,7 @@ cd /path/to/SWIFT-codes/launchers
 ./install.sh
 ```
 
-This creates a **SWIFT Telemetry GUI.app** (macOS) or **swift-telemetry-gui.desktop** (Linux)
+This creates a **SWIFT Telemetry.app** (macOS) or **swift-telemetry-gui.desktop** (Linux)
 on your Desktop with the SWIFT logo icon.
 
 **Requirements:**
@@ -58,7 +58,7 @@ cd C:\path\to\SWIFT-codes\launchers
 install.bat
 ```
 
-This creates a **SWIFT Telemetry GUI.lnk** shortcut on your Desktop.
+This creates a **SWIFT Telemetry.lnk** shortcut on your Desktop.
 
 **Requirements:**
 - Git for Windows (Git Bash, Git GUI, or WSL)
@@ -70,17 +70,23 @@ This creates a **SWIFT Telemetry GUI.lnk** shortcut on your Desktop.
 
 ## First run
 
-Double-click the desktop shortcut. On first launch you will be prompted for the
-full path to your SWIFT-codes repo:
+Double-click the desktop shortcut. The launcher derives the repo path from
+its own location (it lives in `SWIFT-codes/launchers/`), so no path prompt
+is needed.
 
-| Platform | Example path |
-|----------|-------------|
-| Windows  | `C:\Users\yourname\Dropbox\phd\code\SWIFT-codes` |
-| macOS    | `/Users/yourname/Dropbox/phd/code/SWIFT-codes` |
-| Linux    | `/home/yourname/Dropbox/phd/code/SWIFT-codes` |
+If you're not on the `master` branch when the launcher runs, you'll see:
 
-This is saved to `.pullswift_config` next to the launcher scripts and reused
-on subsequent launches.
+```
+Switch to master and pull latest?
+  Y      = yes, switch this time
+  n      = no, stay on this branch this time
+  always = always switch to master (saves to config)
+  never  = never switch to master (saves to config)
+```
+
+Choosing `always` or `never` writes `master_behavior=always|never` to
+`.pullswift_config` next to the launcher scripts. Delete that file to be
+prompted again on next launch.
 
 ---
 
@@ -108,14 +114,15 @@ This removes the desktop shortcut and the saved `.pullswift_config` file.
 
 ## Reconfiguring
 
-To change the saved repo path, delete the `.pullswift_config` file in the
-`launchers/` directory and run the launcher again. You will be re-prompted.
+To reset the master-branch behavior, delete `.pullswift_config` in the
+`launchers/` directory. You'll be re-prompted the next time you launch
+from a non-master branch.
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---|---|
-| "Not a git repository" | The saved path is wrong. Delete `.pullswift_config` and re-run. |
+| "Not a git repository" | The `launchers/` folder must live inside `SWIFT-codes/`. |
 | "Could not find MATLAB" | MATLAB is not in a standard location. Add `matlab` to your PATH. |
 | Fast-forward failed | Someone force-pushed or your master diverged. Run `git pull --rebase` manually. |
 | macOS "unidentified developer" | Right-click the app > Open, then click Open in the dialog. |

@@ -7,13 +7,13 @@ setlocal enabledelayedexpansion
 :: ============================================================
 
 echo ======================================
-echo   SWIFT Telemetry GUI Uninstaller
+echo   SWIFT Telemetry Uninstaller
 echo ======================================
 echo.
 
 set "SCRIPT_DIR=%~dp0"
 set "CONFIG=%SCRIPT_DIR%.pullswift_config"
-set "SHORTCUT=%USERPROFILE%\Desktop\SWIFT Telemetry GUI.lnk"
+set "SHORTCUT=%USERPROFILE%\Desktop\SWIFT Telemetry.lnk"
 set "REMOVED=0"
 
 :: --- Remove desktop shortcut ---

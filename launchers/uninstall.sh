@@ -15,7 +15,7 @@ DESKTOP="$HOME/Desktop"
 OS="$(uname -s)"
 
 echo -e "${YELLOW}======================================${NC}"
-echo -e "${YELLOW}  SWIFT Telemetry GUI Uninstaller${NC}"
+echo -e "${YELLOW}  SWIFT Telemetry Uninstaller${NC}"
 echo -e "${YELLOW}======================================${NC}"
 echo ""
 
@@ -23,7 +23,7 @@ REMOVED=0
 
 # --- Remove desktop shortcut ---
 if [ "$OS" = "Darwin" ]; then
-    APP="$DESKTOP/SWIFT Telemetry GUI.app"
+    APP="$DESKTOP/SWIFT Telemetry.app"
     if [ -d "$APP" ]; then
         rm -rf "$APP"
         echo -e "${GREEN}Removed: $APP${NC}"

@@ -865,10 +865,9 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         appendLog(logArea, 'Saved preferences cleared.');
     end
 
-%% ---- Keep MATLAB alive until the GUI is closed ----------------------------
-% Without this, launching via "matlab -r pullSWIFTtelemetryGUI" returns
-% immediately and MATLAB exits, killing the figure.
-uiwait(fig);
+%% ---- Bring window to front and give it focus -----------------------------
+drawnow;
+figure(fig);
 
 end  % pullSWIFTtelemetryGUI
 

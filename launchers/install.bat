@@ -8,7 +8,7 @@ setlocal enabledelayedexpansion
 :: ============================================================
 
 echo ======================================
-echo   SWIFT Telemetry GUI Installer
+echo   SWIFT Telemetry Installer
 echo ======================================
 echo.
 
@@ -32,11 +32,12 @@ echo Creating desktop shortcut...
 set "VBS=%TEMP%\create_pullswift_shortcut.vbs"
 
 > "!VBS!" echo Set oWS = WScript.CreateObject("WScript.Shell")
->> "!VBS!" echo sLinkFile = oWS.ExpandEnvironmentStrings("!DESKTOP!\SWIFT Telemetry GUI.lnk")
+>> "!VBS!" echo sLinkFile = oWS.ExpandEnvironmentStrings("!DESKTOP!\SWIFT Telemetry.lnk")
 >> "!VBS!" echo Set oLink = oWS.CreateShortcut(sLinkFile)
 >> "!VBS!" echo oLink.TargetPath = "!LAUNCHER!"
+>> "!VBS!" echo oLink.Arguments = "--from-icon"
 >> "!VBS!" echo oLink.WorkingDirectory = "!SCRIPT_DIR!"
->> "!VBS!" echo oLink.Description = "SWIFT Telemetry GUI - Update SWIFT-codes and launch pullSWIFTtelemetryGUI"
+>> "!VBS!" echo oLink.Description = "SWIFT Telemetry - Update SWIFT-codes and launch pullSWIFTtelemetryGUI"
 >> "!VBS!" echo oLink.WindowStyle = 1
 :: Note: Windows shortcuts require .ico for icons. If an .ico exists, use it.
 if exist "!REPO_ROOT!\Documents\SWIFTlogo_icon.ico" (
@@ -47,12 +48,12 @@ if exist "!REPO_ROOT!\Documents\SWIFTlogo_icon.ico" (
 cscript //nologo "!VBS!"
 del "!VBS!"
 
-if exist "!DESKTOP!\SWIFT Telemetry GUI.lnk" (
+if exist "!DESKTOP!\SWIFT Telemetry.lnk" (
     echo.
     echo ======================================
     echo   Installation complete!
     echo ======================================
-    echo   Shortcut created: !DESKTOP!\SWIFT Telemetry GUI.lnk
+    echo   Shortcut created: !DESKTOP!\SWIFT Telemetry.lnk
     echo   Double-click it to launch.
     echo.
     if not exist "!REPO_ROOT!\Documents\SWIFTlogo_icon.ico" (
