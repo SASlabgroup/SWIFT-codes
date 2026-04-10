@@ -70,9 +70,17 @@ for si=1:size(IDs,1),
     else
     end
     
-    out = websave(['SWIFT' IDs(si,:) '.zip'],[baseurl buoy  '&start=' starttime '&end=' endtime '&format=zip'],options)
-    
-    unzip(['SWIFT' IDs(si,:) '.zip']);  % MATLAB built-in: cross-platform, never prompts for replace, just clobbers existing files
+    zipFile = ['SWIFT' IDs(si,:) '.zip'];
+    out = websave(zipFile,[baseurl buoy  '&start=' starttime '&end=' endtime '&format=zip'],options)
+
+    % unzip returns the list of extracted files; empty means the zip had no
+    % entries (no data for the requested buoy/time range).
+    extracted = unzip(zipFile); % MATLAB built-in: cross-platform, never prompts for replace, just clobbers existing files
+    if isempty(extracted)
+        error('pullSWIFTtelemetry:emptyZip', ...
+            'Downloaded zip file for SWIFT %s is empty — no data for the requested time range.', ...
+            strtrim(IDs(si,:)));
+    end
     expanded = dir(['*SWIFT ' IDs(si,:) '*']);
     if length(expanded)==1 && expanded(1).isdir == true,
         cd(expanded(1).name)

@@ -62,9 +62,9 @@ leftPanel.Layout.Column = 1;   % ... column 1
 % Nest another uigridlayout inside the panel for fine-grained row control.
 % Fixed pixel heights keep labels/buttons compact; '1x' on the text area lets
 % it expand to fill whatever vertical space remains as the window is resized.
-lg = uigridlayout(leftPanel, [19 1]);  % 19 rows, 1 column
+lg = uigridlayout(leftPanel, [20 1]);  % 20 rows, 1 column
 lg.RowHeight  = { ...
-    20, ...   % 1  label: Recent
+    20, ...   % 1  label: Recent Queries
     28, ...   % 2  recentDD dropdown
      8, ...   % 3  spacer
     20, ...   % 4  label: Active Buoys
@@ -80,9 +80,10 @@ lg.RowHeight  = { ...
     20, ...   % 14 label: End Time
     28, ...   % 15 endDP + time field + Now checkbox
     10, ...   % 16 spacer
-    36, ...   % 17 output dir field + Browse button
-    36, ...   % 18 Pull Telemetry button
-    22};      % 19 Clear Saved Preferences button
+    20, ...   % 17 label: Save Destination
+    36, ...   % 18 output dir field + Browse button
+    36, ...   % 19 Pull Telemetry button
+    22};      % 20 Clear Saved Preferences button
 lg.Padding    = [8 8 8 8];
 lg.RowSpacing = 2;
 
@@ -90,7 +91,7 @@ lg.RowSpacing = 2;
 % `@recentDDCB` is a function handle — MATLAB calls recentDDCB(src, event)
 % whenever the dropdown value changes. Callbacks always receive two arguments:
 % the source widget (src) and an event object; we often ignore them with ~.
-mkLabel(lg, 1, 'Recent');
+mkLabel(lg, 1, 'Recent Queries');
 recentDD = uidropdown(lg, 'Items', {'(no history yet)'}, ...
     'ValueChangedFcn', @recentDDCB);
 recentDD.Layout.Row = 2;  recentDD.Layout.Column = 1;
@@ -164,8 +165,9 @@ endTimeField.Enable = 'off';
 spacer(lg, 16);
 
 % -- Output directory --
+mkLabel(lg, 17, 'Save Destination');
 dirRowGrid = uigridlayout(lg, [1 2]);
-dirRowGrid.Layout.Row = 17;  dirRowGrid.Layout.Column = 1;
+dirRowGrid.Layout.Row = 18;  dirRowGrid.Layout.Column = 1;
 dirRowGrid.ColumnWidth = {'1x', 90};
 dirRowGrid.Padding = [0 0 0 0];
 dirField = uieditfield(dirRowGrid, 'text', 'Value', pwd, 'FontName', 'Courier New');
@@ -179,12 +181,12 @@ runBtn = uibutton(lg, ...
     'Text', 'Pull Telemetry', 'FontWeight', 'bold', 'FontSize', 13, ...
     'BackgroundColor', [0.18 0.55 0.34], 'FontColor', [1 1 1], ...
     'ButtonPushedFcn', @runCB);
-runBtn.Layout.Row = 18;  runBtn.Layout.Column = 1;
+runBtn.Layout.Row = 19;  runBtn.Layout.Column = 1;
 
 clearPrefsBtn = uibutton(lg, ...
     'Text', 'Clear Saved Preferences', 'FontSize', 10, ...
     'ButtonPushedFcn', @clearPrefsCB);
-clearPrefsBtn.Layout.Row = 19;  clearPrefsBtn.Layout.Column = 1;
+clearPrefsBtn.Layout.Row = 20;  clearPrefsBtn.Layout.Column = 1;
 
 loadPrefs();  % restore last-used parameters + populate recent dropdown
 
@@ -206,9 +208,15 @@ resultsTable = uitable(rg, ...
 resultsTable.Layout.Row = 2;  resultsTable.Layout.Column = 1;
 
 mkLabel(rg, 3, 'Log');
-logArea = uitextarea(rg, 'Editable', 'off', 'FontName', 'Courier New', 'FontSize', 11, ...
-    'Value', {'Ready. Set parameters and press  ''Pull Telemetry''.'});
+% uihtml renders an HTML string — lets us style individual log lines
+% (bold headers, red errors) which uitextarea cannot do.
+logArea = uihtml(rg);
 logArea.Layout.Row = 4;  logArea.Layout.Column = 1;
+% Initialise with a wrapper div that behaves like a read-only log console.
+% The JS function appendLine() is called from MATLAB via logArea.Data and
+% a DataChangedFcn on the JS side to auto-scroll and append styled lines.
+logArea.HTMLSource = buildLogHTML();
+appendLog(logArea, 'Ready. Set parameters and press "Pull Telemetry".');
 
 fetchActiveBuoys();  % populate active buoys dropdown on startup
 
@@ -226,30 +234,63 @@ t2Grid.ColumnSpacing = 8;
 vizCtrl = uipanel(t2Grid, 'Title', 'Load & Filter');
 vizCtrl.Layout.Row = 1;  vizCtrl.Layout.Column = 1;
 
-vc = uigridlayout(vizCtrl, [14 1]);
-vc.RowHeight  = {36, 10, 20, 100, 10, 20, 22, 10, 20, 22, 10, 20, 22, '1x'};
-vc.Padding    = [8 8 8 8];
-vc.RowSpacing = 2;
+% uigridlayout arranges child widgets in a grid.  [17 1] = 17 rows, 1 col.
+% Each widget is placed by setting its .Layout.Row / .Layout.Column.
+% RowHeight values are pixels (numeric) or stretchy ('1x' fills remaining).
+% The pattern is: widget, spacer, label, widget, spacer, label, widget, ...
+vc = uigridlayout(vizCtrl, [17 1]);
+vc.RowHeight  = { ...
+    36,   ... % row 1:  Load button (tall, prominent)
+    10,   ... % row 2:  spacer
+    20,   ... % row 3:  "Loaded SWIFTs" label
+    100,  ... % row 4:  listbox (tall to show multiple buoy names)
+    10,   ... % row 5:  spacer
+    20,   ... % row 6:  "Color tracks by" label
+    22,   ... % row 7:  color dropdown
+    10,   ... % row 8:  spacer
+    20,   ... % row 9:  "Time series 1" label
+    22,   ... % row 10: time-series-1 dropdown
+    10,   ... % row 11: spacer
+    20,   ... % row 12: "Time series 2" label
+    22,   ... % row 13: time-series-2 dropdown
+    10,   ... % row 14: spacer
+    20,   ... % row 15: "Basemap" label
+    22,   ... % row 16: basemap dropdown
+    '1x'};    % row 17: stretchy filler — pushes everything above upward
+vc.Padding    = [8 8 8 8];   % [left bottom right top] inner margin (px)
+vc.RowSpacing = 2;            % vertical gap between rows (px)
 
+% --- Load button ---
+% uibutton creates a push button.  ButtonPushedFcn fires when clicked.
 loadBtn = uibutton(vc, ...
     'Text', 'Load .mat Files...', 'FontWeight', 'bold', 'FontSize', 12, ...
     'BackgroundColor', [0.22 0.45 0.70], 'FontColor', [1 1 1], ...
     'ButtonPushedFcn', @loadMatCB);
 loadBtn.Layout.Row = 1;  loadBtn.Layout.Column = 1;
 
+% --- Buoy listbox ---
+% spacer() and mkLabel() are local helpers defined at the bottom of this
+% file.  spacer inserts a blank, mkLabel creates a uilabel in a given row.
 spacer(vc, 2);
 mkLabel(vc, 3, 'Loaded SWIFTs');
+% uilistbox shows a scrollable list.  'Multiselect','on' lets the user
+% ctrl/shift-click to select several buoys at once.
 loadedListBox = uilistbox(vc, 'Items', {}, 'Multiselect', 'on');
 loadedListBox.Layout.Row = 4;  loadedListBox.Layout.Column = 1;
+% ValueChangedFcn fires whenever the selection changes — triggers replot.
 loadedListBox.ValueChangedFcn = @vizUpdateCB;
 
+% --- Color-by dropdown ---
 spacer(vc, 5);
 mkLabel(vc, 6, 'Color tracks by');
+% uidropdown creates a combo-box.  'Items' is the list of choices, 'Value'
+% is the initial selection.  ValueChangedFcn triggers replot on change.
 colorDD = uidropdown(vc, ...
     'Items', {'SWIFT ID', 'Time', 'Battery', 'Hs', 'Water Temp', 'Salinity'}, ...
     'Value', 'SWIFT ID', 'ValueChangedFcn', @vizUpdateCB);
 colorDD.Layout.Row = 7;  colorDD.Layout.Column = 1;
 
+% --- Time-series variable 1 ---
 spacer(vc, 8);
 mkLabel(vc, 9, 'Time series — variable 1');
 ts1DD = uidropdown(vc, ...
@@ -257,6 +298,7 @@ ts1DD = uidropdown(vc, ...
     'Value', 'sigwaveheight', 'ValueChangedFcn', @vizUpdateCB);
 ts1DD.Layout.Row = 10;  ts1DD.Layout.Column = 1;
 
+% --- Time-series variable 2 ---
 spacer(vc, 11);
 mkLabel(vc, 12, 'Time series — variable 2');
 ts2DD = uidropdown(vc, ...
@@ -264,10 +306,26 @@ ts2DD = uidropdown(vc, ...
     'Value', 'watertemp', 'ValueChangedFcn', @vizUpdateCB);
 ts2DD.Layout.Row = 13;  ts2DD.Layout.Column = 1;
 
-%% ---- compi panel -----------------------------------------------------------
+% --- Basemap style ---
+spacer(vc, 14);
+mkLabel(vc, 15, 'Basemap');
+% These are the built-in MATLAB basemap tile layers (R2018b+, no toolbox).
+% Tiles are fetched from MathWorks servers so an internet connection is
+% needed (except 'none').
+basemapDD = uidropdown(vc, ...
+    'Items', {'bluegreen', 'streets', 'streets-light', 'streets-dark', ...
+              'topographic', 'satellite', 'ocean', 'darkwater', ...
+              'grayland', 'grayterrain', 'colorterrain', 'landcover', 'none'}, ...
+    'Value', 'darkwater', 'ValueChangedFcn', @basemapChangeCB);
+basemapDD.Layout.Row = 16;  basemapDD.Layout.Column = 1;
+
+%% ---- Plot panel ------------------------------------------------------------
 plotPanel = uipanel(t2Grid, 'Title', 'Plots');
 plotPanel.Layout.Row = 1;  plotPanel.Layout.Column = 2;
 
+% 2x2 grid for the plots: map on the left (spans both rows), two time-
+% series plots stacked on the right.  '1x' means each row/col gets equal
+% share of available space.
 pg = uigridlayout(plotPanel, [2 2]);
 pg.RowHeight    = {'1x', '1x'};
 pg.ColumnWidth  = {'1x', '1x'};
@@ -275,14 +333,18 @@ pg.Padding      = [6 6 6 6];
 pg.RowSpacing   = 6;
 pg.ColumnSpacing = 6;
 
-axMap  = uiaxes(pg);  axMap.Layout.Row  = [1 2];  axMap.Layout.Column  = 1;
+% geoaxes is like axes but projects lat/lon onto a map with basemap tiles.
+% Layout.Row = [1 2] makes it span both rows (full left column).
+axMap  = geoaxes(pg);  axMap.Layout.Row  = [1 2];  axMap.Layout.Column  = 1;
+% uiaxes creates standard Cartesian axes for the time-series panels.
 axTS1  = uiaxes(pg);  axTS1.Layout.Row  = 1;       axTS1.Layout.Column  = 2;
 axTS2  = uiaxes(pg);  axTS2.Layout.Row  = 2;       axTS2.Layout.Column  = 2;
 
-xlabel(axMap, 'Longitude');  ylabel(axMap, 'Latitude');
-title(axMap,  'Position Tracks');
-grid(axMap, 'on');  box(axMap, 'on');
+% Set the initial basemap tile layer (geoaxes draws lat/lon labels itself).
+geobasemap(axMap, 'bluegreen');
+title(axMap, 'Position Tracks');
 
+% Standard axes setup for the two time-series panels.
 xlabel(axTS1, 'Time (UTC)');
 grid(axTS1, 'on');  box(axTS1, 'on');
 
@@ -333,26 +395,71 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             if ~isempty(id), idList{end+1} = id; end %#ok<AGROW>
         end
         if isempty(idList)
-            appendLog(logArea, 'ERROR: No SWIFT IDs entered.'); return
+            appendLog(logArea, 'ERROR: No SWIFT IDs entered.', 'error'); return
         end
 
         % Type is inferred from ID length: 2-digit = v3/v4, 3-digit = microSWIFT
         lens = cellfun(@numel, idList);
         if ~all(lens == lens(1)) || ~any(lens(1) == [2 3])
-            appendLog(logArea, 'ERROR: All IDs must be the same length: 2-digit (SWIFT v3/v4) or 3-digit (microSWIFT).');
+            appendLog(logArea, 'ERROR: All IDs must be the same length: 2-digit (SWIFT v3/v4) or 3-digit (microSWIFT).', 'error');
             return
         end
         IDs = char(idList);
 
         if isempty(startStr)
-            appendLog(logArea, 'ERROR: Start time is required.'); return
+            appendLog(logArea, 'ERROR: Start time is required.', 'error'); return
+        end
+
+        % Build a subfolder name from search parameters so each pull lands
+        % in its own directory and never collides with previous results.
+        % e.g. "SWIFT_16_23_20250101T0000_20250115T0000"
+        idTag    = ['SWIFT_' strjoin(idList, '_')];
+        startTag = regexprep(startStr, '[-:]', '');  % 20250101T000000
+        if isempty(endStr)
+            endTag = 'now';
+        else
+            endTag = regexprep(endStr, '[-:]', '');
+        end
+        subName = [idTag '_' startTag '_' endTag];
+        pullDir = fullfile(outDir, subName);
+
+        % Create the output directory tree (including parents) if needed.
+        if ~isfolder(pullDir)
+            [ok, msg] = mkdir(pullDir);
+            if ~ok
+                appendLog(logArea, ['ERROR creating directory: ' msg], 'error'); return
+            end
+            appendLog(logArea, ['Created: ' pullDir]);
+        end
+
+        % Warn if the pull directory already contains SWIFT artifacts from
+        % a previous run with the same parameters.
+        appendLog(logArea, repmat('-',1,60), 'bold');
+        prevZips = dir(fullfile(pullDir, 'SWIFT*.zip'));              % downloaded archives
+        prevDirs = dir(fullfile(pullDir, 'buoy-*'));                  % unpacked SBD folders
+        prevDirs = prevDirs([prevDirs.isdir]);
+        prevMats = dir(fullfile(pullDir, '*SWIFT*_telemetry.mat'));   % processed output
+        if ~isempty(prevZips)
+            appendLog(logArea, sprintf( ...
+                'WARNING: %d downloaded zip file(s) found — will be overwritten.', numel(prevZips)), 'warn');
+        end
+        if ~isempty(prevDirs)
+            appendLog(logArea, sprintf( ...
+                'WARNING: %d unpacked buoy-* folder(s) found — contents will be overwritten.', numel(prevDirs)), 'warn');
+        end
+        if ~isempty(prevMats)
+            appendLog(logArea, sprintf( ...
+                'WARNING: %d processed telemetry .mat file(s) found — will be overwritten.', numel(prevMats)), 'warn');
+        end
+        if ~isempty(prevZips) || ~isempty(prevDirs) || ~isempty(prevMats)
+            appendLog(logArea, ['  Dir: ' pullDir], 'warn');
         end
 
         origDir = pwd;
         try
-            cd(outDir);
+            cd(pullDir);
         catch ME
-            appendLog(logArea, ['ERROR changing directory: ' ME.message]); return
+            appendLog(logArea, ['ERROR changing directory: ' ME.message], 'error'); return
         end
 
         savePrefs();  % cache parameters before running
@@ -360,12 +467,11 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         runBtn.Enable = 'off';  runBtn.Text = 'Running...';
         drawnow;  % flush the event queue so the button visually updates before the long pull
 
-        appendLog(logArea, repmat('-',1,60));
-        appendLog(logArea, ['Pull started: ' datestr(now,'yyyy-mm-dd HH:MM:SS')]);
-        appendLog(logArea, ['IDs:   ' strjoin(idList,', ')]);
-        appendLog(logArea, ['Start: ' startStr]);
-        appendLog(logArea, ['End:   ' endStr]);
-        appendLog(logArea, ['Dir:   ' outDir]);
+        appendLog(logArea, ['Pull started: ' datestr(now,'yyyy-mm-dd HH:MM:SS')], 'bold');
+        appendLog(logArea, ['IDs:   ' strjoin(idList,', ')], 'bold');
+        appendLog(logArea, ['Start: ' startStr], 'bold');
+        appendLog(logArea, ['End:   ' endStr], 'bold');
+        appendLog(logArea, ['Dir:   ' pullDir], 'bold');
         drawnow;
 
         try
@@ -389,17 +495,18 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             appendLog(logArea, ['Complete: ' datestr(now,'yyyy-mm-dd HH:MM:SS')]);
 
             % Auto-load pulled .mat files into Visualize tab
-            autoViz(outDir);
+            autoViz(pullDir);
 
         catch ME
-            appendLog(logArea, ['ERROR: ' ME.message]);
+            appendLog(logArea, ['ERROR: ' ME.message], 'error');
             for fi = 1:numel(ME.stack)
                 appendLog(logArea, sprintf('  at %s (line %d)', ...
-                    ME.stack(fi).name, ME.stack(fi).line));
+                    ME.stack(fi).name, ME.stack(fi).line), 'error');
             end
         end
 
         cd(origDir);
+        appendLog(logArea, 'Please see Command Window for full verbose output.');
         runBtn.Enable = 'on';  runBtn.Text = 'Pull Telemetry';
     end
 
@@ -424,7 +531,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             try
                 S = load(fullpath);  % expects variable 'SWIFT'
                 if ~isfield(S, 'SWIFT')
-                    appendLog(logArea, ['Skip (no SWIFT var): ' files{f}]);
+                    appendLog(logArea, ['Skip (no SWIFT var): ' files{f}], 'warn');
                     continue
                 end
                 sw = S.SWIFT;
@@ -448,7 +555,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
                 end
                 appendLog(logArea, sprintf('Loaded SWIFT %s  (%d records)', idStr, numel(sw)));
             catch ME
-                appendLog(logArea, ['ERROR loading ' files{f} ': ' ME.message]);
+                appendLog(logArea, ['ERROR loading ' files{f} ': ' ME.message], 'error');
             end
         end
 
@@ -470,12 +577,14 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         var2     = ts2DD.Value;
         byID     = strcmp(colorVar, 'SWIFT ID');
 
-        cla(axMap);  cla(axTS1);  cla(axTS2);
+        delete(allchild(axMap));  delete(allchild(axTS1));  delete(allchild(axTS2));
         colorbar(axMap, 'off');
+        geobasemap(axMap, basemapDD.Value);  % re-apply after clearing children
         hold(axMap, 'on');  hold(axTS1, 'on');  hold(axTS2, 'on');
 
         cmap    = lines(numel(selIDs));
-        allLats = [];
+        allLats  = [];
+        allTimes = [];
 
         for k = 1:numel(selIDs)
             idx = find(strcmp(loadedIDs, selIDs{k}), 1);
@@ -486,7 +595,8 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             lats = [sw.lat];
             lons = [sw.lon];
             tvec = [sw.time];
-            allLats = [allLats, lats]; %#ok<AGROW>
+            allLats  = [allLats, lats]; %#ok<AGROW>
+            allTimes = [allTimes, tvec]; %#ok<AGROW>
 
             % Scatter color values
             if byID
@@ -503,13 +613,13 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             end
 
             % Track line (always per-buoy color) + scatter dots
-            plot(axMap, lons, lats, '-', 'Color', col, 'LineWidth', 1, ...
+            geoplot(axMap, lats, lons, '-', 'Color', col, 'LineWidth', 1, ...
                 'HandleVisibility', 'off');
             if byID
-                scatter(axMap, lons, lats, 20, cvals, 'filled', ...
+                geoscatter(axMap, lats, lons, 20, cvals, 'filled', ...
                     'DisplayName', ['SWIFT ' selIDs{k}]);
             else
-                scatter(axMap, lons, lats, 25, cvals, 'filled', ...
+                geoscatter(axMap, lats, lons, 25, cvals, 'filled', ...
                     'DisplayName', ['SWIFT ' selIDs{k}]);
             end
 
@@ -537,13 +647,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             end
         end
 
-        % Correct aspect ratio for lat/lon (1 deg lon ≠ 1 deg lat)
-        if ~isempty(allLats)
-            latMid = mean(allLats, 'omitnan');
-            if ~isnan(latMid) && abs(latMid) < 90
-                daspect(axMap, [1/cosd(latMid), 1, 1]);
-            end
-        end
+        % geoaxes handles aspect ratio automatically
 
         legend(axMap,  'Location', 'best', 'FontSize', 8);
         legend(axTS1,  'Location', 'best', 'FontSize', 8);
@@ -552,12 +656,24 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         ylabel(axTS1, prettifyName(var1));  title(axTS1, prettifyName(var1));
         ylabel(axTS2, prettifyName(var2));  title(axTS2, prettifyName(var2));
 
+        % Set shared x-axis limits across all buoys, then format as dates
+        if ~isempty(allTimes)
+            tMin = min(allTimes);
+            tMax = max(allTimes);
+            pad  = max(0.01 * (tMax - tMin), 1/24);  % at least 1-hour pad
+            xlim(axTS1, [tMin - pad, tMax + pad]);
+            xlim(axTS2, [tMin - pad, tMax + pad]);
+        end
         axTS1.XTickLabelRotation = 30;
         axTS2.XTickLabelRotation = 30;
-        datetick(axTS1, 'x', 'mm/dd HH:MM', 'keeplimits', 'keepticks');
-        datetick(axTS2, 'x', 'mm/dd HH:MM', 'keeplimits', 'keepticks');
+        datetick(axTS1, 'x', 'mm/dd HH:MM', 'keeplimits');
+        datetick(axTS2, 'x', 'mm/dd HH:MM', 'keeplimits');
 
         hold(axMap, 'off');  hold(axTS1, 'off');  hold(axTS2, 'off');
+    end
+
+    function basemapChangeCB(~, ~)
+        geobasemap(axMap, basemapDD.Value);
     end
 
     function refreshBuoysCB(~, ~)
@@ -602,7 +718,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         catch ME
             activeBuoysDD.Items = {'(fetch failed)'};
             activeBuoysDD.Value = '(fetch failed)';
-            appendLog(logArea, ['Active buoys fetch failed: ' ME.message]);
+            appendLog(logArea, ['Active buoys fetch failed: ' ME.message], 'error');
         end
     end
 
@@ -651,7 +767,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
                 end
                 appendLog(logArea, sprintf('  %s  (%d records)', hits(h).name, numel(S.SWIFT)));
             catch ME2
-                appendLog(logArea, ['  skip: ' hits(h).name ' — ' ME2.message]);
+                appendLog(logArea, ['  skip: ' hits(h).name ' — ' ME2.message], 'warn');
             end
         end
         if ~isempty(loadedIDs)
@@ -796,12 +912,54 @@ function spacer(parent, row)
     lbl.Layout.Column = 1;
 end
 
-function appendLog(logArea, msg)
-    cur = logArea.Value;
-    if ischar(cur), cur = {cur}; end
-    logArea.Value = [cur; {msg}];
-    scroll(logArea, 'bottom');
-    drawnow;
+function appendLog(logArea, msg, style)
+% Append a styled line to the uihtml log panel.
+%   style: 'normal' (default), 'bold', 'error' (red+bold), 'warn' (orange)
+    if nargin < 3, style = 'normal'; end
+    % HTML-escape special characters so messages render literally
+    msg = strrep(msg, '&', '&amp;');
+    msg = strrep(msg, '<', '&lt;');
+    msg = strrep(msg, '>', '&gt;');
+    % Build the HTML line directly and accumulate in the UserData buffer.
+    % We store the full HTML string in UserData so no messages are lost
+    % (the DataChanged JS event can miss rapid-fire .Data updates).
+    switch style
+        case 'bold',  line = ['<div class="bold">'  msg '</div>'];
+        case 'error', line = ['<div class="error">' msg '</div>'];
+        case 'warn',  line = ['<div class="warn">'  msg '</div>'];
+        otherwise,    line = ['<div>'               msg '</div>'];
+    end
+    if isempty(logArea.UserData)
+        logArea.UserData = line;
+    else
+        logArea.UserData = [logArea.UserData, line];
+    end
+    % Push the full accumulated HTML to JS; it replaces #log innerHTML.
+    logArea.Data = logArea.UserData;
+end
+
+function html = buildLogHTML()
+% Returns the inline HTML/CSS/JS for the log panel used by appendLog().
+    html = [ ...
+    '<html><head><style>' ...
+    'body{margin:0;padding:0;background:#fff;}' ...
+    '#log{font-family:"Courier New",monospace;font-size:11px;' ...
+    '  padding:6px;overflow-y:auto;height:100vh;box-sizing:border-box;' ...
+    '  white-space:pre-wrap;word-wrap:break-word;}' ...
+    '.bold{font-weight:bold;}' ...
+    '.error{color:#cc1111;font-weight:bold;}' ...
+    '.warn{color:#b8860b;}' ...
+    '</style></head><body><div id="log"></div>' ...
+    '<script>' ...
+    'function setup(htmlComponent){' ...
+    '  htmlComponent.addEventListener("DataChanged",function(){' ...
+    '    var d=htmlComponent.Data;if(!d)return;' ...
+    '    var log=document.getElementById("log");' ...
+    '    log.innerHTML=d;' ...
+    '    log.lastElementChild.scrollIntoView({behavior:"auto"});' ...
+    '  });' ...
+    '}' ...
+    '</script></body></html>'];
 end
 
 function vals = extractField(sw, fieldname)
