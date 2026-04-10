@@ -216,7 +216,20 @@ logArea.Layout.Row = 4;  logArea.Layout.Column = 1;
 % The JS function appendLine() is called from MATLAB via logArea.Data and
 % a DataChangedFcn on the JS side to auto-scroll and append styled lines.
 logArea.HTMLSource = buildLogHTML();
-appendLog(logArea, 'Ready. Set parameters and press "Pull Telemetry".');
+appendLog(logArea, 'Ready. Set parameters and press "Pull Telemetry".', 'muted');
+
+% Show git branch and commit using MATLAB's built-in git API (R2023b+).
+try
+    repoDir = fileparts(fileparts(mfilename('fullpath')));  % SWIFT-codes root
+    repo = gitrepo(repoDir);
+    branchName = char(repo.CurrentBranch.Name);
+    commitId   = char(repo.LastCommit.ID);
+    if numel(commitId) > 7, commitId = commitId(1:7); end
+    appendLog(logArea, sprintf('SWIFT-codes  |  branch: %s  |  commit: %s', ...
+        branchName, commitId), 'muted');
+catch ME
+    appendLog(logArea, ['Git info unavailable: ' ME.message], 'muted');
+end
 
 fetchActiveBuoys();  % populate active buoys dropdown on startup
 
