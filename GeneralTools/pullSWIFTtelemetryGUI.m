@@ -710,7 +710,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
                 end
                 activeBuoysDD.Items = names;
                 activeBuoysDD.Value = names{1};
-                appendLog(logArea, sprintf('Active buoys: fetched %d buoy(s).', numel(buoys)));
+                appendLog(logArea, sprintf('Active buoys: fetched %d buoy(s).', numel(buoys)), 'muted');
             else
                 activeBuoysDD.Items = {'(none available)'};
                 activeBuoysDD.Value = '(none available)';
@@ -932,6 +932,7 @@ function appendLog(logArea, msg, style)
         case 'bold',  line = ['<div class="bold">'  msg '</div>'];
         case 'error', line = ['<div class="error">' msg '</div>'];
         case 'warn',  line = ['<div class="warn">'  msg '</div>'];
+        case 'muted', line = ['<div class="muted">' msg '</div>'];
         otherwise,    line = ['<div>'               msg '</div>'];
     end
     if isempty(logArea.UserData)
@@ -954,6 +955,7 @@ function html = buildLogHTML()
     '.bold{font-weight:bold;}' ...
     '.error{color:#cc1111;font-weight:bold;}' ...
     '.warn{color:#b8860b;}' ...
+    '.muted{color:#999999;}' ...
     '</style></head><body><div id="log"></div>' ...
     '<script>' ...
     'function setup(htmlComponent){' ...
