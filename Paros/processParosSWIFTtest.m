@@ -9,7 +9,7 @@
 %% AHRS data from SBG Ellipse sensor (GNSS-aided IMU with onboard EKF)
 
 plotahrs = true;
-tstart = 30; % seconds of warm-up time for the GPS
+tstart = 60; % seconds of warm-up time for the GPS
 
 ahrsfiles = dir('*ahrs.log');
 
@@ -68,27 +68,27 @@ for fi=1:length(ahrsfiles)
 
         figure('color','w')
         subplot(3,1,1)
-        plot(gpstime,z,'-kx')
+        plot(gpstime,z,'-k')
         hold on;
-        plot(gpstime,filloutliers(z,'linear'),'-rx')
-        ylabel('\eta [m]');ylim([-2 2])
+        plot(gpstime,filloutliers(z,'linear'),'-r','LineWidth',2)
+        ylabel('\eta [m]');ylim([-0.5 0.5])
         plot(tstart*[1 1],ylim,':k','LineWidth',2)
         legend('Raw','Despiked','Start')
         title(ahrsfiles(fi).name(1:end-4),'interpreter','none')
 
         subplot(3,1,2)
-        plot(gpstime,u,'-kx')
+        plot(gpstime,u,'-k')
         hold on;
-        plot(gpstime,filloutliers(u,'linear'),'-rx')
-        ylabel('u [m/s]');ylim([-2 2])
+        plot(gpstime,filloutliers(u,'linear'),'-r','LineWidth',2)
+        ylabel('u [m/s]');ylim([-1 1])
         plot(tstart*[1 1],ylim,':k','LineWidth',2)
 
         subplot(3,1,3)
-        plot(gpstime,v,'-kx')
+        plot(gpstime,v,'-k')
         hold on;axis tight
-        plot(gpstime,filloutliers(v,'linear'),'-rx')
+        plot(gpstime,filloutliers(v,'linear'),'-r','LineWidth',2)
         xlabel('Time [s]');
-        ylabel('v [m/s]');ylim([-2 2])
+        ylabel('v [m/s]');ylim([-1 1])
         plot(tstart*[1 1],ylim,':k','LineWidth',2)
 
         %             subplot(4,1,4)
@@ -208,38 +208,72 @@ sonicfiles = dir('*sonic.log');
 parosfiles = dir('*paros.log');
 ahrsfiles = dir('*ahrs.log');
 
+% initialize
+Preswork_DC = NaN(1,length(sonicfiles));
+Preswork_spec  = NaN(1,length(sonicfiles));
+Hs_all = NaN(1,length(sonicfiles));
+U = NaN(1,length(sonicfiles));
+
 % indices of filelist
-validtests = [3:9 12]; 
+validtests = [3:8 12];
 boatwakes = 5;
-stilwater = 12; 
+stilwater = 12;
 
 for fi = validtests
 
-    load([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'t','u','v','w','T')
-    load([(parosfiles(fi).name(1:end-4)) '_processed.mat'],'p','ptime')
-    load([(ahrsfiles(fi).name(1:end-4)) '_processed.mat'],'Hs')
+    load([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'t','u','v','w','T');
+    load([(parosfiles(fi).name(1:end-4)) '_processed.mat'],'p');
+    load([(ahrsfiles(fi).name(1:end-4)) '_processed.mat'],'Hs','z','E','f'); f_wavespec = f; clear f;
 
-    % interp the presure to match the sonic
+    % interp the presure and the ahrs to match the sonic
+    fs = 10; % sonic sampling rate
     toffset = 0;
+
     ptime = linspace(min(t), max(t), length(p)) + toffset;
-    figure(4), clf
-    plot(ptime,p), hold on
-    p = interp1(ptime,p,t);  fs = 10;
-    plot(t,p,'.')
+    praw = p;
+    p = interp1(ptime,p,t);
 
-    % or resample pressure (20 Hz) to match the sonic (10 Hz)... worst option
-    %p = resample(p, length(w), length(p));  fs = 10; % Hz
+    ztime = linspace(min(t), max(t), length(z)) + toffset;
+    zraw = z;
+    z = interp1(ztime,z,t);
 
-    % or interp the sonic to match the pressure 
-    %u = interp(u,2); v = interp(v,2); w = interp(w,2);  fs = 20; %Hz 
-%     if length(u)>length(p) 
-%         u(length(p)+1:end)=[]; v(length(p)+1:end)=[];  w(length(p)+1:end)=[];
-%     elseif length(p)>length(u)
-%         p(length(u)+1:end)=[];
-%     end
+    %     % or resample pressure (20 Hz) to match the sonic (10 Hz)... worst option
+    %     %p = resample(p, length(w), length(p));  fs = 10; % Hz
+    %
+    %     % or interp the sonic to match the pressure
+    %     %u = interp(u,2); v = interp(v,2); w = interp(w,2);  fs = 20; %Hz
+    %     if length(u)>length(p)
+    %         u(length(p)+1:end)=[]; v(length(p)+1:end)=[];  w(length(p)+1:end)=[];
+    %     elseif length(p)>length(u)
+    %         p(length(u)+1:end)=[];
+    %     end
+
+    figure(4), clf % timeseries
+    subplot(4,1,1)
+    plot(ztime,zraw,'k-',t,z,'k.','linewidth',2), hold on
+    set(gca,'YLim',[-0.5 0.5])
+    ylabel('\eta [m]')
+    set(gca,'fontsize',14,'fontweight','demi')
+
+    subplot(4,1,2)
+    plot(ptime,praw,'r-',t,p,'.','linewidth',2), hold on
+    ylabel('pres [mb]')
+    set(gca,'fontsize',14,'fontweight','demi')
 
 
-    DC = mean(detrend(p).*detrend(w)) % direct covariance
+    subplot(4,1,3)
+    plot(t,w,'b-','linewidth',2), hold on
+    ylabel('w [m/s]')
+    set(gca,'fontsize',14,'fontweight','demi')
+
+    subplot(4,1,4)
+    plot(t,u,'g',t,v,'m','linewidth',2), hold on
+    ylabel('u,v [m/s]')
+    set(gca,'fontsize',14,'fontweight','demi')
+    xlabel('time [s]')
+
+    print([(sonicfiles(fi).name(1:15)) '_timeseries.png'],'-dpng')
+
 
     % cross-spectra
 
@@ -264,26 +298,61 @@ for fi = validtests
 
     figure(5), clf
     subplot(2,1,1)
-    loglog(f,PP, f, WW)
-    legend('p','w')
+    loglog(f_wavespec,E,'k',f,PP,'r', f, WW,'b','linewidth',2)
+    legend('\eta','p','w')
     ylabel('Energy density')
     title([(sonicfiles(fi).name(1:15)) ', H_s = ' num2str(Hs,2) ' m'])
+    set(gca,'fontsize',14,'fontweight','demi')
 
     subplot(4,1,3)
-    semilogx(f,cohPW)
+    semilogx(f,cohPW,'r',f,cohPW,'b.','linewidth',2)
     ylabel('Coherence')
     set(gca,'YLim',[0 1])
-    hold on, 
+    hold on,
     plot([min(f) max(f)],[cohSIG cohSIG],'k:')
+    set(gca,'fontsize',14,'fontweight','demi')
 
     subplot(4,1,4)
-    semilogx(f,phPW)
+    semilogx(f,phPW,'r',f,phPW,'b.','linewidth',2)
     ylabel('Phase')
     set(gca,'YLim',[-180 180])
+    set(gca,'fontsize',14,'fontweight','demi')
 
     xlabel('f [Hz]')
 
     print([(sonicfiles(fi).name(1:15)) '_crossspectra.png'],'-dpng')
 
+    % stats from this burst
+    Preswork_DC(fi) = mean(detrend(p).*detrend(w)) % direct covariance
+    Preswork_spec(fi) = sum( real(PW) ) .* mean(diff(f)); % spectral variance
+    Hs_all(fi) = Hs;
+    U(fi) = sqrt( mean(u).^2 + mean(v).^2 );
 
 end
+
+figure(6), clf
+subplot(3,1,1)
+plot(Hs_all,'kx','linewidth',2)
+xlabel('burst index')
+ylabel('Waves H_s [m]')
+set(gca,'fontsize',14,'fontweight','demi')
+
+
+subplot(3,1,2)
+plot(U,'k+','linewidth',2)
+xlabel('burst index')
+ylabel('Winds |U| [m/s]')
+set(gca,'fontsize',14,'fontweight','demi')
+
+
+subplot(3,1,3)
+plot(Preswork_DC,'o','linewidth',3), hold on
+plot(Preswork_spec,'s','linewidth',2)
+xlabel('burst index')
+ylabel('Pressure work <pw>')
+legend('direct','spectral','Location','Southeast')
+set(gca,'fontsize',14,'fontweight','demi')
+
+print(['summary.png'],'-dpng')
+
+
