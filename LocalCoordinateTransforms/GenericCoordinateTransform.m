@@ -1,27 +1,23 @@
-function [ x, y ] = GenericCoordinateTransform(lat,lon,latoffset,lonoffset, rotation)
+function [ x, y ] = GenericCoordinateTransform(lat,lon,latorigin,lonorigin,rotation)
 
 % function to convert from lat & lon (decimal degrees, negative longitude)
-% to local x,y for a given lat/lon field and the SWIFT's location
-% (latoffset,lonoffset).
+% to local x,y for a given lat/lon field and local origin [latorigin,lonorigin].
+% with rotation that is deg CCW from east (i.e. cartesian)
+% ** note that rotation from a geographic axis (CW from north) requires the user input rotation as 90 - geographic angle
 %
+% [ x, y ] = GenericCoordinateTransform(lat,lon,latorigin,lonorigin,rotation)
 %
 % S. Kastner, 7/2016, adapted from J. Thomosn 1/2011.
-%       J. Thomson made rotation an input (deg CCW from True north)
-%           and fixed bug so that local radius at a given latitude is used
+%       sometime later J. Thomson made rotation an input 
+%           and fixed bug so that local earth radius at a given latitude is used
 
+radius = 6371*cosd(latorigin);
 
-%rotation = -180;                    % deg CCW from True north
-radius = 6371*cosd(latoffset);
-
-north = 1000*deg2km( lat - latoffset );
-east = 1000*deg2km(lonoffset - lon , radius );
+north = 1000*deg2km( lat - latorigin );
+east = 1000*deg2km( lon - lonorigin  , radius );
 
 x = east .* cosd(rotation)   -   north .* sind(rotation);
 
 y = east .* sind(rotation)   +   north .* cosd(rotation);
-
-% x = x;
-% 
- y= -y;
 
 end
