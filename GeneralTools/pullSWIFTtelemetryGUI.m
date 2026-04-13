@@ -231,6 +231,14 @@ catch ME
     appendLog(logArea, ['Git info unavailable: ' ME.message], 'muted');
 end
 
+% Check for required MATLAB toolboxes. Mapping Toolbox is needed for
+% geoaxes/geoplot basemap tiles on Tab 2; Fixed-Point Designer is required
+% by some pullSWIFTtelemetry dependencies.
+checkRequiredToolboxes( { ...
+    'MAP_Toolbox',         'Mapping Toolbox',      'https://www.mathworks.com/products/mapping.html'; ...
+    'Fixed_Point_Toolbox', 'Fixed-Point Designer', 'https://www.mathworks.com/products/fixed-point-designer.html'}, ...
+    @(msg, style) appendLog(logArea, msg, style));
+
 fetchActiveBuoys();  % populate active buoys dropdown on startup
 
 %% ==========================================================================

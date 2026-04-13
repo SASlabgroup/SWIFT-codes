@@ -22,6 +22,13 @@ them in the log at startup.
   git info line)
 - MATLAB installed in a standard location (see per-OS notes below)
 - The SWIFT-codes repo already cloned somewhere on your machine
+- **Required MATLAB toolboxes** (install via MATLAB's Add-On Explorer, or
+  tick them in the MathWorks installer). The GUI logs a red warning at
+  startup for any that are missing:
+  - [Mapping Toolbox](https://www.mathworks.com/products/mapping.html) —
+    needed for the map view on the Visualize tab
+  - [Fixed-Point Designer](https://www.mathworks.com/products/fixed-point-designer.html) —
+    required by `pullSWIFTtelemetry` dependencies
 
 ---
 
