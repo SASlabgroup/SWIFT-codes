@@ -164,8 +164,24 @@ if isfield(SWIFT,'signature')
         else
             z_names = [];
         end
-    else 
+    else
         z_names = [];
+    end
+
+    has_echo = false; echo_ref = 1;
+    for t=1:length(SWIFT)
+        if isfield(SWIFT(t).signature,'echo') && ~isempty(SWIFT(t).signature.echo)
+            has_echo = true; echo_ref = t; break
+        end
+    end
+    if has_echo
+        zecho_dim = netcdf.defDim(ncid,'zecho', length(SWIFT(echo_ref).signature.echo));
+    end
+    has_altimeter = false;
+    for t=1:length(SWIFT)
+        if isfield(SWIFT(t).signature,'altimeter') && ~isempty(SWIFT(t).signature.altimeter)
+            has_altimeter = true; break
+        end
     end
 end
 obs_dim = -1;
@@ -299,6 +315,13 @@ for i=1:length(names)
             else
                 zHR_var_ids.([zHR_names{j} 'HR']) = netcdf.defVar(ncid, [zHR_names{j} 'HR'], 'NC_DOUBLE', [t_dim zHR_dim]);
             end
+        end
+        if has_echo
+            echo_var_ids.echo  = netcdf.defVar(ncid, 'echo',  'NC_DOUBLE', [t_dim zecho_dim]);
+            echo_var_ids.echoz = netcdf.defVar(ncid, 'echoz', 'NC_DOUBLE', [t_dim zecho_dim]);
+        end
+        if has_altimeter
+            echo_var_ids.altimeter = netcdf.defVar(ncid, 'altimeter', 'NC_DOUBLE', t_dim);
         end
         %edit variable names to CF convention names - do this for all vars
         %with different names than the SWIFT defaults
@@ -494,7 +517,18 @@ for i=1:length(names)
                 netcdf.putVar(ncid, zHR_var_ids.([zHR_names{j} 'HR']), [S.signature.HRprofile.([zHR_names{j} 'HR'])]);
             end
         end
+        if has_echo
+            netcdf.putVar(ncid, echo_var_ids.echo,  S.signature.echo);
+            netcdf.putVar(ncid, echo_var_ids.echoz, S.signature.echoz);
+        end
+        if has_altimeter
+            netcdf.putVar(ncid, echo_var_ids.altimeter, S.signature.altimeter);
+        end
     else
+        if numel(S.(names{i})) ~= length(SWIFT)
+            fprintf('SWIFT2NC: size mismatch for %s: numel=%d, expected %d\n', ...
+                names{i}, numel(S.(names{i})), length(SWIFT));
+        end
         netcdf.putVar(ncid, var_ids.(names{i}), S.(names{i}));
     end
 end
@@ -733,6 +767,20 @@ for i=1:length(names)
                 ncwriteatt(filename,'zHR','long_name','depth bins for turbulent dissipation rate')
                 ncwriteatt(filename,'zHR','standard_name','depth')
             end
+        end
+        if has_echo
+            ncwriteatt(filename,'echo','units','dB')
+            ncwriteatt(filename,'echo','long_name','acoustic echo intensity profile')
+            ncwriteatt(filename,'echo','instrument','Nortek Signature 1000 ADCP with AHRS')
+            ncwriteatt(filename,'echoz','units','m')
+            ncwriteatt(filename,'echoz','long_name','depth bins for echo intensity profile')
+            ncwriteatt(filename,'echoz','standard_name','depth')
+            ncwriteatt(filename,'echoz','instrument','Nortek Signature 1000 ADCP with AHRS')
+        end
+        if has_altimeter
+            ncwriteatt(filename,'altimeter','units','m')
+            ncwriteatt(filename,'altimeter','long_name','altimeter range to seabed or target')
+            ncwriteatt(filename,'altimeter','instrument','Nortek Signature 1000 ADCP with AHRS')
         end
     elseif ~strcmp(names{i},'ID')
         if strcmp(names(i),'time')
