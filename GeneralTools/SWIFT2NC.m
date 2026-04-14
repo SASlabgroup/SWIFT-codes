@@ -210,13 +210,46 @@ for i=1:length(full_names)
                         S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(size(S.signature.HRprofile.([zHR_names{iz} 'HR'])(1,:)));
                     end
                 end
+                if has_echo
+                    if isfield(SWIFT(t).signature,'echo') && ~isempty(SWIFT(t).signature.echo)
+                        S.signature.echo(t,:)  = SWIFT(t).signature.echo(:);
+                        S.signature.echoz(t,:) = SWIFT(t).signature.echoz(:);
+                    else
+                        S.signature.echo(t,:)  = NaN(1, length(SWIFT(echo_ref).signature.echo));
+                        S.signature.echoz(t,:) = NaN(1, length(SWIFT(echo_ref).signature.echo));
+                    end
+                end
+                if has_altimeter
+                    if isfield(SWIFT(t).signature,'altimeter') && ~isempty(SWIFT(t).signature.altimeter)
+                        S.signature.altimeter(t) = SWIFT(t).signature.altimeter;
+                    else
+                        S.signature.altimeter(t) = NaN;
+                    end
+                end
             end
         elseif strcmp(full_names{i},'time')
             S.time= [SWIFT.time]-datenum(1970,1,1,0,0,0);
         elseif strcmp(full_names{i},'ID')
             S.ID = ones(length(SWIFT),1) * swiftnum;
         else
-            S.(full_names{i}) = [SWIFT.(full_names{i})]; % errors here if check factor in some but not all
+            tmp = [SWIFT.(full_names{i})]; % errors here if check factor in some but not all
+            if isempty(tmp)
+                fprintf('SWIFT2NC: dropping empty field %s\n', full_names{i});
+                if isfield(S, full_names{i}), S = rmfield(S, full_names{i}); end
+                continue
+            end
+            if numel(tmp) ~= length(SWIFT)
+                fprintf('SWIFT2NC: filling field %s (%d of %d bursts present) with NaN elsewhere\n', ...
+                    full_names{i}, numel(tmp), length(SWIFT));
+                tmp = NaN(1, length(SWIFT));
+                for tt = 1:length(SWIFT)
+                    v = SWIFT(tt).(full_names{i});
+                    if isscalar(v) && isnumeric(v)
+                        tmp(tt) = v;
+                    end
+                end
+            end
+            S.(full_names{i}) = tmp;
         end
         names{j} = full_names{i};
         j = j+1;
