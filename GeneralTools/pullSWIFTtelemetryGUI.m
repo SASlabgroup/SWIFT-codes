@@ -216,7 +216,28 @@ logArea.Layout.Row = 4;  logArea.Layout.Column = 1;
 % The JS function appendLine() is called from MATLAB via logArea.Data and
 % a DataChangedFcn on the JS side to auto-scroll and append styled lines.
 logArea.HTMLSource = buildLogHTML();
-appendLog(logArea, 'Ready. Set parameters and press "Pull Telemetry".');
+appendLog(logArea, 'Ready. Set parameters and press "Pull Telemetry".', 'muted');
+
+% Show git branch and commit using MATLAB's built-in git API (R2023b+).
+try
+    repoDir = fileparts(fileparts(mfilename('fullpath')));  % SWIFT-codes root
+    repo = gitrepo(repoDir);
+    branchName = char(repo.CurrentBranch.Name);
+    commitId   = char(repo.LastCommit.ID);
+    if numel(commitId) > 7, commitId = commitId(1:7); end
+    appendLog(logArea, sprintf('SWIFT-codes  |  branch: %s  |  commit: %s', ...
+        branchName, commitId), 'muted');
+catch ME
+    appendLog(logArea, ['Git info unavailable: ' ME.message], 'muted');
+end
+
+% Check for required MATLAB toolboxes. Mapping Toolbox is needed for
+% geoaxes/geoplot basemap tiles on Tab 2; Fixed-Point Designer is required
+% by some pullSWIFTtelemetry dependencies.
+checkRequiredToolboxes( { ...
+    'MAP_Toolbox',         'Mapping Toolbox',      'https://www.mathworks.com/products/mapping.html'; ...
+    'Fixed_Point_Toolbox', 'Fixed-Point Designer', 'https://www.mathworks.com/products/fixed-point-designer.html'}, ...
+    @(msg, style) appendLog(logArea, msg, style));
 
 fetchActiveBuoys();  % populate active buoys dropdown on startup
 
@@ -710,7 +731,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
                 end
                 activeBuoysDD.Items = names;
                 activeBuoysDD.Value = names{1};
-                appendLog(logArea, sprintf('Active buoys: fetched %d buoy(s).', numel(buoys)));
+                appendLog(logArea, sprintf('Active buoys: fetched %d buoy(s).', numel(buoys)), 'muted');
             else
                 activeBuoysDD.Items = {'(none available)'};
                 activeBuoysDD.Value = '(none available)';
@@ -852,6 +873,10 @@ grid(axTS2, 'on');  box(axTS2, 'on');
         appendLog(logArea, 'Saved preferences cleared.');
     end
 
+%% ---- Bring window to front and give it focus -----------------------------
+drawnow;
+figure(fig);
+
 end  % pullSWIFTtelemetryGUI
 
 %% ==========================================================================
@@ -927,6 +952,7 @@ function appendLog(logArea, msg, style)
         case 'bold',  line = ['<div class="bold">'  msg '</div>'];
         case 'error', line = ['<div class="error">' msg '</div>'];
         case 'warn',  line = ['<div class="warn">'  msg '</div>'];
+        case 'muted', line = ['<div class="muted">' msg '</div>'];
         otherwise,    line = ['<div>'               msg '</div>'];
     end
     if isempty(logArea.UserData)
@@ -949,6 +975,7 @@ function html = buildLogHTML()
     '.bold{font-weight:bold;}' ...
     '.error{color:#cc1111;font-weight:bold;}' ...
     '.warn{color:#b8860b;}' ...
+    '.muted{color:#999999;}' ...
     '</style></head><body><div id="log"></div>' ...
     '<script>' ...
     'function setup(htmlComponent){' ...
