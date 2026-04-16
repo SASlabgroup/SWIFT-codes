@@ -1,40 +1,59 @@
-function burstSIGmat(missiondir, outdir, swiftname)
-% BURSTSIGMAT Group reformatted Signature mat files into 12-minute bursts
-%   starting at the top of the hour (5 bursts/hr). Data is treated as
-%   sequential and bursts are allowed to span multiple reformat files.
+function burstSIGmat(missiondir, outdir, swiftname, burstMin)
+% BURSTSIGMAT Group reformatted Signature mat files into fixed-length bursts
+%   aligned within the hour. Data is treated as sequential and bursts are
+%   allowed to span multiple reformat files.
 %
 %   burstSIGmat(missiondir)
 %   burstSIGmat(missiondir, outdir)
 %   burstSIGmat(missiondir, outdir, swiftname)
+%   burstSIGmat(missiondir, outdir, swiftname, burstMin)
+%
+%   burstMin: burst length in minutes (default 12). Best if it divides 60
+%     evenly so bursts tile the hour cleanly (e.g. 5, 6, 10, 12, 15, 20, 30, 60).
 %
 %   Output files: {swiftname}_SIG_{ddMMMyyyy}_{HH}_{BB}.mat
-%   where BB is the burst index in the hour (01: :00-:12 ... 05: :48-:60).
+%   where BB is the burst index in the hour (01 = first burst of the hour).
 %
 % M.LeClair April 2026
 
 if nargin<2 || isempty(outdir),   outdir = fullfile(missiondir,'bursts'); end
+if nargin<4 || isempty(burstMin), burstMin = 12; end
 if ~exist(outdir,'dir'), mkdir(outdir); end
 
 files = dir(fullfile(missiondir,'*_reformat.mat'));
 if isempty(files), disp('No *_reformat.mat files found.'); return; end
 
-% Natural sort by (runIdx, chunkIdx): SWIFTNN_RRRR.ad2cp.00000_CC_reformat.mat
+% Natural sort by (runIdx, chunkIdx). Handles both
+%   SWIFTNN_RRRR.ad2cp.NNNNN_CC_reformat.mat
+%   Data.RRR.NNNNN.ad2cp.NNNNN_CC_reformat.mat
 keys = nan(length(files),2);
 for i=1:length(files)
-    tok = regexp(files(i).name,'_(\d+)\.ad2cp\.\d+_(\d+)_reformat\.mat$','tokens','once');
+    tok = regexp(files(i).name,'(\d+)\.ad2cp\.\d+_(\d+)_reformat\.mat$','tokens','once');
     if ~isempty(tok)
         keys(i,:) = [str2double(tok{1}) str2double(tok{2})];
     end
 end
-[~,ord] = sortrows(keys);
+if any(isnan(keys(:)))
+    warning('burstSIGmat:unparsedNames', ...
+        '%d file(s) did not match expected naming pattern; falling back to name sort.', ...
+        nnz(any(isnan(keys),2)));
+    [~,ord] = sort({files.name});
+else
+    [~,ord] = sortrows(keys);
+end
 files = files(ord);
 
 if nargin<3 || isempty(swiftname)
     tok = regexp(files(1).name,'^(SWIFT\d+)','tokens','once');
-    swiftname = tok{1};
+    if ~isempty(tok)
+        swiftname = tok{1};
+    else
+        [~,swiftname] = fileparts(missiondir);
+        if isempty(swiftname), swiftname = 'SIG'; end
+    end
 end
 
-burstDur = 12/1440; % days
+burstDur = burstMin/1440; % days
 avgBuf = []; burstBuf = []; echoMeta = [];
 curStart = [];
 
@@ -49,7 +68,7 @@ for i = 1:length(files)
         t0 = earliest(avgBuf, burstBuf);
         if isempty(t0), continue; end
         dv = datevec(t0);
-        dv(5) = floor(dv(5)/12)*12; dv(6) = 0;
+        dv(5) = floor(dv(5)/burstMin)*burstMin; dv(6) = 0;
         curStart = datenum(dv);
     end
 
@@ -66,7 +85,7 @@ for i = 1:length(files)
         avgOut   = sliceStruct(avgBuf,   curStart, burstEnd);
         burstOut = sliceStruct(burstBuf, curStart, burstEnd);
         if ~isempty(avgOut) || ~isempty(burstOut)
-            saveBurst(outdir, swiftname, curStart, avgOut, burstOut, echoMeta);
+            saveBurst(outdir, swiftname, curStart, avgOut, burstOut, echoMeta, burstMin);
         end
         avgBuf   = dropBefore(avgBuf,   burstEnd);
         burstBuf = dropBefore(burstBuf, burstEnd);
@@ -142,11 +161,11 @@ for k = 1:numel(fn)
 end
 end
 
-function saveBurst(outdir, swiftname, tstart, avg, burst, echo)
+function saveBurst(outdir, swiftname, tstart, avg, burst, echo, burstMin)
 dv = datevec(tstart);
 dstr = datestr(tstart,'ddmmmyyyy');
 hh = sprintf('%02d', dv(4));
-bn = sprintf('%02d', floor(dv(5)/12)+1);
+bn = sprintf('%02d', floor(dv(5)/burstMin)+1);
 fname = sprintf('%s_SIG_%s_%s_%s.mat', swiftname, dstr, hh, bn);
 daydir = fullfile(outdir, datestr(tstart,'yyyymmdd'));
 if ~exist(daydir,'dir'), mkdir(daydir); end

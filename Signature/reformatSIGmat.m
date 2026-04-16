@@ -245,8 +245,8 @@ for iburst = 1:nburst
         burst.AHRS_GyroY = Data.BurstHR_AHRSGyroY;
         burst.AHRS_GyroZ = Data.BurstHR_AHRSGyroZ;
 
-        % Single Beam HR
-        if ~Config.bursthr_enable5 && ~Config.bursthr_enable        
+        % Single Beam HR (vertical beam only)
+        if Config.bursthr_enable5 && ~Config.bursthr_enable
 
             burst.VelocityData = Data.BurstHR_VelBeam5;
             burst.AmplitudeData = Data.BurstHR_AmpBeam5;
