@@ -77,9 +77,9 @@ for si=1:size(IDs,1),
     % entries (no data for the requested buoy/time range).
     extracted = unzip(zipFile); % MATLAB built-in: cross-platform, never prompts for replace, just clobbers existing files
     if isempty(extracted)
-        error('pullSWIFTtelemetry:emptyZip', ...
+        disp(['pullSWIFTtelemetry:emptyZip', ...
             'Downloaded zip file for SWIFT %s is empty — no data for the requested time range.', ...
-            strtrim(IDs(si,:)));
+            strtrim(IDs(si,:))]);
     end
     expanded = dir(['*SWIFT ' IDs(si,:) '*']);
     if length(expanded)==1 && expanded(1).isdir == true,
@@ -108,9 +108,9 @@ for si=1:size(IDs,1),
         
         % copy the compiled results to the parent dir, then keep going to next SWIFT
         if pcflag
-            copystatus = copyfile('*telemetry.mat','..\')
+            copystatus = copyfile('*telemetry.mat','..\');
         else
-            copystatus = copyfile('*telemetry.mat','../')
+            copystatus = copyfile('*telemetry.mat','../');
         end
         cd('../')
         

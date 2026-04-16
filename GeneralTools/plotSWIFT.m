@@ -40,6 +40,7 @@ else
     slash = '/';
 end
 
+warning('off',  'MATLAB:linkaxes:RequireDataAxes')
 
 %% Initialize
 % Check that SWIFT contains information

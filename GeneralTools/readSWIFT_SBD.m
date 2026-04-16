@@ -14,8 +14,7 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %
 %   outputs are processed SWIFT results in a structure
 %
-%   [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
-%
+%       [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %
 % J. Thomson, 7/2013
 %             4/2014, revised for v3.1 Sutron output
@@ -38,11 +37,9 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %                       using isfield(SWIFT,'xxxxx') to make sure there is
 %                       something to plot **
 %                       The only required fields will be time, lat, and lon
-%
 %             9/2018    accomodating a bug in onboard signature processing,
 %                       which reads HR velocities as cm/s instead of m/s
 %                        and thereby scales dissipation rates by 10^(8/3)
-%
 %
 %   M. Smith  9/2018    added CTdepth and metheight fields
 %                       added SWIFT.id field using sbd filename
@@ -55,8 +52,7 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %   J. Thomson ?/2021   add microSWIFT light payload type (51)
 %
 %   J. Thomson 9/2021   fix parsing of Airmar PB200 positions (again)
-%                       * note ambiquity of E-W (+/-) longitudes persists,
-%                       so assume W (-)
+%                       * note ambiquity of E-W (+/-) longitudes persists, so assume W (-)
 %
 %   J. Thomson 7/2022   add radiometer (CT15) payload type (14)
 %
@@ -603,18 +599,17 @@ end
 fclose(fid);
 
 %% apply backup positions from Airmar PB200, if needed
-
 if ~isfield(SWIFT,'lat') % if no IMU, use this one
-    disp('No primary GPS position.')
-    SWIFT.lat = PBlat;
-    SWIFT.lon = PBlon;
+    disp('No primary GPS position, using Airmar position')
+        SWIFT.lat = PBlat;
+        SWIFT.lon = PBlon;
 end
-if isfield(SWIFT,'lat') & ( SWIFT(1).lat == 0 | isempty(SWIFT(1).lat) ) % if IMU did not give position, use this one
-    disp('No primary GPS position. ')
-    SWIFT.lat = PBlat;
-    SWIFT.lon = PBlon;
-else
-end
+% if isfield(SWIFT,'lat') & ( SWIFT(1).lat == 0 | isempty(SWIFT(1).lat) ) % if IMU did not give position, use this one
+%     disp('No primary GPS position. ')
+%         SWIFT.lat = NaN;
+%         SWIFT.lon = NaN;
+% else
+% end
 
 %% recalc ustar from wind spectra and change indicator for no windstress from 9999 to NaN
 

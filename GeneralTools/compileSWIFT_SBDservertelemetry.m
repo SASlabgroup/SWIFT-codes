@@ -35,17 +35,17 @@ fixspectra = false; % binary flag to redact low freq wave spectra, note this als
 fixpositions = false; % binary flag to use "filloutliers" to fix spurious positions.   Use with care. 
 
 disp('-------------------------------------')
-disp('Checking QC settings... you are currently using:')
+disp('Currently using default (weak) QC cutoffs')
 
-minwaveheight = 0 % minimum wave height in data screening
+minwaveheight = 0; % minimum wave height in data screening
 
-minsalinity = -10 % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
+minsalinity = -10; % PSU, for use in screen points when buoy is out of the water (unless testing on Lake WA)
 
-maxdriftspd = 5  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
+maxdriftspd = 10;  % m/s, this is applied to telemetry drift speed, but reported drift is calculated after that 
 
-maxwindspd = 30 % m/s for malfunctioning Airmars
+maxwindspd = 40; % m/s for malfunctioning Airmars
 
-minairtemp = -20 % min airtemp
+minairtemp = -50; % min airtemp
 disp('-------------------------------------')
 disp('run SWIFT_QC.m in same directory to apply stricter limits')
 disp('-------------------------------------')
