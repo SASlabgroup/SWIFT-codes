@@ -123,7 +123,7 @@ function [profile,fh] = processSIGavg(avg,opt)
         end
     else
         disp('No AHRS data, cannot recalculate burst-averaged speed.')
-        spd_alt = NaN(size(u));
+        spd_alt = NaN(size(u(:,1)));
     end
 
     % Separate U, V, W

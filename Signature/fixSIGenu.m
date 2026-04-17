@@ -23,6 +23,8 @@ else
     compute_offset = false;
 end
 
+plotburst = true;
+
 %% ADCP AHRS gyroscope data
 
 sigtime = burst.time;
@@ -78,6 +80,13 @@ sbgdt = (1/5)/(60*60*24);
 tmin = min(sigtime) - 1/24;
 tmax = max(sigtime) + 1/24;
 istart = find(sbgtime >= tmin & sbgtime <=tmax,1,'first');
+if isempty(istart)
+    disp('No timeseries overlap...')
+    avgout = [];
+    cparams = [];
+    fh = [];
+    return
+end
 sbgtime = sbgdt*((1:length(sbgtime))-istart) + sbgtime(istart);
 
 % Skip burst if times are way off...
@@ -212,9 +221,6 @@ end
 % Swap signs in ENU
 velENU_new(:, :, 2:4) = -velENU_new(:, :, 2:4);
 
-% Scalar speed
-bavgspd = mean(squeeze(velENU_new(:,:,1).^2 + velENU_new(:,:,2).^2),'omitnan');
-
 %% Create output structure
 
 avgout = avg;
@@ -229,6 +235,7 @@ cparams.mpitch = meandir(sbgpitch);
 cparams.mroll = meandir(sbgroll);
 
 %% Plot diagnostics
+if plotburst
 fh = figure('Color', 'w');
 fullscreen
 
@@ -327,4 +334,7 @@ for i = 1:7
 end
 % ==============================================================
 
+else
+    fh = [];
+end
 end

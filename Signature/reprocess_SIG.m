@@ -545,8 +545,10 @@ if ~isempty(fieldnames(SWIFT))
             SWIFT(it).signature.profile.z = profile.z;
             SWIFT(it).signature.profile.spd_alt = NaN(size(profile.z));
             % Echogram
+            if exist('echogram','var')
             SWIFT(it).signature.echoz = echogram.z;
             SWIFT(it).signature.echo = NaN(size(echogram.z));
+            end
         end
     end
 end

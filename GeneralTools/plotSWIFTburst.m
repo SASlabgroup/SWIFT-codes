@@ -35,7 +35,7 @@ SN = SWIFT(1).ID;
 % open(v);
 
 f = figure('color','w');
-halfscreen(1)
+halfscreen(2)
 
 for iburst = 1:length(SWIFT)
 
@@ -186,13 +186,13 @@ for iburst = 1:length(SWIFT)
     yyaxis left
     plot((acs.time-t0)*24*60,acs.Temperature,'color',rgb('cornflowerblue'),'LineWidth',2);
     hold on
-    plot((sig.burst.time-t0)*24*60,sig.burst.Temperature,'-b','LineWidth',2)
-    plot((aco.time-t0)*24*60,aco.Temp,'-','color',rgb('lightblue'),'LineWidth',2)
+    % plot((sig.burst.time-t0)*24*60,sig.burst.Temperature,'-b','LineWidth',2)
+    % plot((aco.time-t0)*24*60,aco.Temp,'-','color',rgb('lightblue'),'LineWidth',2)
     set(gca,'YColor',rgb('blue'));ylabel('T [C]')
     yyaxis right
     plot((acs.time-t0)*24*60,acs.Salinity,'color',rgb('coral'),'LineWidth',2);
     set(gca,'YColor',rgb('coral'));ylabel('S [psu]')
-    legend('ACS','SIG','ACO','fontsize',5)
+    % legend('ACS','SIG','ACO','fontsize',5)
     axis tight
     xlabel('Time [min]')
     set(gca,'XTick',0:8)
@@ -205,6 +205,7 @@ for iburst = 1:length(SWIFT)
     legend('SBG','SIG','fontsize',5)
     axis tight
     xlabel('Time [min]')
+    ylabel('d\Phi/dt [deg s^{-1}]')
     set(gca,'XTick',0:8)
     grid on
    
@@ -217,6 +218,7 @@ for iburst = 1:length(SWIFT)
     end
     hold on
     plot(xlim,[64 64],'--k')
+    ylabel('Bin #')
     axis tight
     grid on
     c = colorbar('south');
@@ -224,21 +226,23 @@ for iburst = 1:length(SWIFT)
     c.Label.String = 'Echo [dB]';
     else
         c.Label.String = 'Amp [dB]';
-        cmocean('thermal')
     end
+    cmocean('thermal')
     c.Position = c.Position.*[1 1 0.25 0.5];
     c.FontSize = 8;
+    c.Label.Color = 'w';
 
     subplot(6+iaco,1,6+iaco)    
-    imagesc((sig.burst.time-t0)*24*60,1:size(sig.burst.VelocityData,2),sig.burst.VelocityData')
+    imagesc((sig.burst.time-t0)*24*60,1:size(sig.burst.VelocityData,2),-sig.burst.VelocityData')
     clim([-0.5 0.5])
     cmocean('balance')
     axis tight
     xlabel('Time [min]')
+    ylabel('Bin #')
     grid on
     c = colorbar('south');
     c.Label.String = 'W [ms^{-1}]';
-    c.Position = c.Position.*[1 1 0.25 0.5];
+    c.Position = c.Position.*[1 1 0.25 0.5]+ [0 +0.01 0 0];
     c.FontSize = 8;
 
     h = findall(gcf,'Type','Axes');

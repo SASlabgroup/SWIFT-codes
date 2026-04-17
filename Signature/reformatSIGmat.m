@@ -211,6 +211,18 @@ for iburst = 1:nburst
         avg.CorrelationData(:,:,ibeam) = Data.(['Average_CorBeam' num2str(ibeam)]);
         avg.AmplitudeData(:,:,ibeam) = Data.(['Average_AmpBeam' num2str(ibeam)]);
         end
+
+        R = Data.Average_AHRSRotationMatrix;  % Nt x 9
+        avg.AHRS_M11 = R(:, 1);
+        avg.AHRS_M12 = R(:, 2);
+        avg.AHRS_M13 = R(:, 3);
+        avg.AHRS_M21 = R(:, 4);
+        avg.AHRS_M22 = R(:, 5);
+        avg.AHRS_M23 = R(:, 6);
+        avg.AHRS_M31 = R(:, 7);
+        avg.AHRS_M32 = R(:, 8);
+        avg.AHRS_M33 = R(:, 9);
+
     end
 
     % Burst data
