@@ -65,6 +65,7 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %   J. Thomson, 3/2025 add microSWIFT light sensor (payload type 54)
 %   J. Thomson, 3/2025 add Lufft WS700 sensor (payload types 100-104)
 %   J. Thomson, 9/2025 add microSWIFT OpenOBS sensor (payload type 53)
+%   J. Thomson, 4/2026 add microSWIFT accelerometer (type 55)
 
 recip = true; % binary flag to change wave direction to FROM
 errorfile = false; % initialize
@@ -572,6 +573,37 @@ while 1
             SWIFT(sw).lightchannels = fread(fid,11,'uint16');
             SWIFT(sw).ID = SWIFT.ID;
         end
+
+        elseif type == 55 && size == 340 % microSWIFT accelerometer, intended size 340
+        disp('reading microSWIFT accelerometer spectra (payload 55)')
+        %firmwareasunit8 = port; % microSWIFT specific
+        % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
+        if exist('fi','file') == 0
+            disp('Fixed-Point Designer Toolbox is not installed, message type 52 cannot be read.  Go to "Add-Ons" and install this first.')
+            return
+        end
+        epochTime                = fread(uint32, 1,'uint32'); % epoch time (seconds).  Is this float32 or uint32?
+        asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
+        SWIFT.time               = datenum(asDatetime); % time at end of burst
+        SWIFT.lat                = fread(fid, 1,'float'); % Latitude
+        SWIFT.lon                = fread(fid, 1,'float'); % Longitude
+        AccConfig                = fread(fid, 1,'bit8'); % neeed to read as bit field, see doc
+        AccThreshold             = fread(fid, 1,'uint16'); % wake-on-shake threshold
+        ActivityCount            = fread(fid, 1,'uint8'); % events required to trigger wake-on-shake
+        Offsets                  = fread(fid, 3,'int16'); % three-axis offests for wake-on-shake
+        Status1                  = fread(fid, 1,'bit4');  % times wake-on-shake triggered since last cycle,  
+        Status2                  = fread(fid, 1,'bit4');  % not yet used 
+        SWIFT.acc_mean           = fread(fid, 3,'uint16');  % three-axis mean accelerations (in counts) 
+        SWIFT.acc_min            = fread(fid, 3,'uint16');  % three-axis min accelerations (in counts) 
+        SWIFT.acc_max            = fread(fid, 3,'uint16');  % three-axis max accelerations (in counts) 
+        SWIFT.accspectra.x       = half.typecast(fread(fid,48,'*uint16')).double; % spectral energy density of acceleration
+        SWIFT.accspectra.y       = half.typecast(fread(fid,48,'*uint16')).double; % spectral energy density of accelerations
+        SWIFT.accspectra.z       = half.typecast(fread(fid,48,'*uint16')).double; % spectral energy density of accelerations
+        fmin                     = half.typecast(fread(fid, 1,'*uint16')).double; 
+        fmax                     = half.typecast(fread(fid, 1,'*uint16')).double; 
+        fstep                    = (fmax - fmin) / (length(SWIFT.accspectra.x)- 1);
+        SWIFT.accspectra.freq    = [fmin:fstep:fmax]'; % frequency
+        checksum                 = fread(fid, 1,'uint16');
 
     elseif type == 100   %  Lufft WS700 wind speed and dir
         disp('reading Lufft wind speeds')
