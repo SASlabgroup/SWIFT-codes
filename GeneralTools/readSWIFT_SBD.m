@@ -452,6 +452,10 @@ while 1
         disp('reading microSWIFT NEDwaves (payload 52)')
         firmwareasunit8 = port; % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
+        if exist('fi','file') == 0
+            disp('Fixed-Point Designer Toolbox is not installed, message type 52 cannot be read.  Go to "Add-Ons" and install this first.')
+            return
+        end
         SWIFT.sigwaveheight      = half.typecast(fread(fid, 1,'*uint16')).double; % sig wave height
         SWIFT.peakwaveperiod     = half.typecast(fread(fid, 1,'*uint16')).double; % dominant period
         SWIFT.peakwavedirT       = half.typecast(fread(fid, 1,'*uint16')).double; % dominant wave direction

@@ -30,15 +30,15 @@ pcflag = ispc; % binary flag to determine if a Windows PC (use different command
 
 if  size(IDs,2) == 2 && ischar(IDs), % enforce two digit strings for SWIFT IDs
     
-    SWIFTtype = 'v3v4s'
+    SWIFTtype = 'v3v4s';
     allbatterylevels = NaN(1,size(IDs,1)); % initialize battery array
     lasttime =  NaN(1,size(IDs,1)); % initialize time array
     lastlat = NaN(1,size(IDs,1)); % initialize
     lastlon = NaN(1,size(IDs,1)); % initialize
     
-elseif  size(IDs,2) == 3 && ischar(IDs), % enforce three digit strings for microSWIFT IDs
+elseif  size(IDs,2) == 3 && ischar(IDs) % enforce three digit strings for microSWIFT IDs
     
-    SWIFTtype = 'micro'
+    SWIFTtype = 'micro';
     allbatterylevels = NaN(1,size(IDs,1)); % initialize battery array
     lasttime =  NaN(1,size(IDs,1)); % initialize time array
     lastlat = NaN(1,size(IDs,1)); % initialize
@@ -59,8 +59,9 @@ end
 
 %% loop thru pulling SBDs for each SWIFT ID
 
-for si=1:size(IDs,1),
+for si=1:size(IDs,1)
     
+    disp(['******* pulling ' IDs(si,:) ' ************'])
     baseurl = 'http://swiftserver.apl.washington.edu/services/buoy?action=get_data&buoy_name=';
     
     if SWIFTtype =='v3v4s'
@@ -71,7 +72,7 @@ for si=1:size(IDs,1),
     end
     
     zipFile = ['SWIFT' IDs(si,:) '.zip'];
-    out = websave(zipFile,[baseurl buoy  '&start=' starttime '&end=' endtime '&format=zip'],options)
+    out = websave(zipFile,[baseurl buoy  '&start=' starttime '&end=' endtime '&format=zip'],options);
 
     % unzip returns the list of extracted files; empty means the zip had no
     % entries (no data for the requested buoy/time range).

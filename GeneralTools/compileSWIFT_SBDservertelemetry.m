@@ -35,7 +35,8 @@ fixspectra = false; % binary flag to redact low freq wave spectra, note this als
 fixpositions = false; % binary flag to use "filloutliers" to fix spurious positions.   Use with care. 
 
 disp('-------------------------------------')
-disp('Currently using default (weak) QC cutoffs')
+disp('Currently using default (weak) QC cutoffs, run SWIFT_QC.m in output directory to apply stricter limits')
+disp('-------------------------------------')
 
 minwaveheight = 0; % minimum wave height in data screening
 
@@ -46,9 +47,6 @@ maxdriftspd = 10;  % m/s, this is applied to telemetry drift speed, but reported
 maxwindspd = 40; % m/s for malfunctioning Airmars
 
 minairtemp = -50; % min airtemp
-disp('-------------------------------------')
-disp('run SWIFT_QC.m in same directory to apply stricter limits')
-disp('-------------------------------------')
 
 wd = pwd;
 wdi = find(wd == '/',1,'last');
@@ -282,8 +280,7 @@ end
 % but that sensor is not always available or included
 % (so simpler to just calculate it from differencing positions)
 
-if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
-    
+if length(SWIFT) > 3 && exist('worldmap','file') ~= 0 % check for mapping toolbox (needed for deg2km)
     time = [SWIFT.time];%[time tinds ] = sort(time);
     lat = [SWIFT.lat]; %lat = lat(tinds);
     lon = [SWIFT.lon]; %lon = lon(tinds);
@@ -320,7 +317,8 @@ if length(SWIFT) > 3 %&& ~isfield(SWIFT,'driftspd')
     %         battery( length(SWIFT) ) = [];
     %     end
     
-elseif length(SWIFT) <= 3 %&& ~isfield(SWIFT,'driftspd')
+else %length(SWIFT) <= 3 %&& ~isfield(SWIFT,'driftspd')
+    disp('Drift speeds not calculated (either record is too short, or mapping toolbox is not installed')
     for si = 1:length(SWIFT)
         SWIFT(si).driftspd = NaN;
         SWIFT(si).driftdirT = NaN;
