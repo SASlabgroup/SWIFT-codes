@@ -527,13 +527,19 @@ while 1
         for sw = 1:3 % usually three sampling windows in each OpenOBS sensor message
             startlat = fread(fid,1,'int32') * 1e-7;
             startlon = fread(fid,1,'int32') * 1e-7;
-            endlat = fread(fid,1,'int32') * 1e-7;
+            endlat = fread(fid,1,'int32') * 1e-7
             endlon = fread(fid,1,'int32') * 1e-7;
             starttime = fread(fid,1,'uint32');
             endtime = fread(fid,1,'uint32');
-            SWIFT(sw).lat = endlat;
-            SWIFT(sw).lon = endlon;
-            SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            if endlat == 0  % deal with firmware bug from Apr 2026, use starttime
+                SWIFT(sw).lat = startlat;
+                SWIFT(sw).lon = startlon;
+                SWIFT(sw).time = datenum ( datetime(starttime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            else % otherwise prefer end time
+                SWIFT(sw).lat = endlat;
+                SWIFT(sw).lon = endlon;
+                SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            end
             SWIFT(sw).OBSbackscatter = fread(fid,17,'*uint16');
             SWIFT(sw).OBSambient = fread(fid,17,'*uint16');
             SWIFT(sw).OBSserialnum =  OpenOBSserialnumber; 
@@ -548,9 +554,15 @@ while 1
             endlon = fread(fid,1,'int32') * 1e-7;
             starttime = fread(fid,1,'uint32');
             endtime = fread(fid,1,'uint32');
-            SWIFT(sw).lat = endlat;
-            SWIFT(sw).lon = endlon;
-            SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            if endlat == 0  % deal with firmware bug from Apr 2026, use starttime
+                SWIFT(sw).lat = startlat;
+                SWIFT(sw).lon = startlon;
+                SWIFT(sw).time = datenum ( datetime(starttime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            else % otherwise prefer end time
+                SWIFT(sw).lat = endlat;
+                SWIFT(sw).lon = endlon;
+                SWIFT(sw).time = datenum ( datetime(endtime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC') );
+            end
             SWIFT(sw).lightmax = fread(fid,1,'uint16');
             SWIFT(sw).lightmin = fread(fid,1,'uint16');
             SWIFT(sw).lightchannels = fread(fid,11,'uint16');
