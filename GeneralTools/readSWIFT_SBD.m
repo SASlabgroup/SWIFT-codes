@@ -449,7 +449,7 @@ while 1
         second = fread(fid,1,'uint32'); % seconds
         SWIFT.time = datenum( year, month, day, hour, minute, second); % time at end of burst
         
-    elseif type == 52 & size >= 327, % microSWIFT, size should be 327 bytes for v2.1, or 331 bytes for v2.2
+    elseif type == 52 & size >= 327 % microSWIFT, size should be 327 bytes for v2.1, or 331 bytes for v2.2
         disp('reading microSWIFT NEDwaves (payload 52)')
         firmwareasunit8 = port; % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
@@ -550,7 +550,7 @@ while 1
             SWIFT(sw).OBSserialnum =  OpenOBSserialnumber; 
         end
 
-    elseif type == 54 & size == 303 % microSWIFT light sensor, size usually 303
+    elseif type == 54 & size >= 303 % microSWIFT light sensor, size either 303 bytes (legacy) or 329 (Apr 2026)
         disp('reading microSWIFT light sensor (payload 54)')
         for sw = 1:6 % usually six sampling windows with each light sensor message
             startlat = fread(fid,1,'int32') * 1e-7;
@@ -571,10 +571,16 @@ while 1
             SWIFT(sw).lightmax = fread(fid,1,'uint16');
             SWIFT(sw).lightmin = fread(fid,1,'uint16');
             SWIFT(sw).lightchannels = fread(fid,11,'uint16');
+            if size == 329  % expanded from original 303 bytes in Apr 2026 to track number of samples
+                SWIFT(sw).lightsamples_valid = fread(fid,1,'uint16');
+                SWIFT(sw).lightsamples_failed = fread(fid,1,'uint16');
+            end
             SWIFT(sw).ID = SWIFT.ID;
         end
+        checksum  = fread(fid, 1,'uint16');
 
-        elseif type == 55 && size == 340 % microSWIFT accelerometer, intended size 340
+
+        elseif type == 55 & size == 340 % microSWIFT accelerometer, intended size 340
         disp('reading microSWIFT accelerometer spectra (payload 55)')
         %firmwareasunit8 = port; % microSWIFT specific
         % !! note that these half-float precision values require the Matlab "Fixed-Point Designer" toolbox 
