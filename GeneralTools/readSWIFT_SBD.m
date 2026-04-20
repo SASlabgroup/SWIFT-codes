@@ -66,6 +66,7 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %   J. Thomson, 3/2025 add Lufft WS700 sensor (payload types 100-104)
 %   J. Thomson, 9/2025 add microSWIFT OpenOBS sensor (payload type 53)
 %   J. Thomson, 4/2026 add microSWIFT accelerometer (type 55)
+%   J. Thomson, 4/2026 add extra bytes to microSWIFT light sensor (type 54)
 
 recip = true; % binary flag to change wave direction to FROM
 errorfile = false; % initialize
@@ -571,10 +572,10 @@ while 1
             SWIFT(sw).lightmax = fread(fid,1,'uint16');
             SWIFT(sw).lightmin = fread(fid,1,'uint16');
             SWIFT(sw).lightchannels = fread(fid,11,'uint16');
-            if size == 329  % expanded from original 303 bytes in Apr 2026 to track number of samples
+            %if size == 329  % expanded from original 303 bytes in Apr 2026 to track number of samples
                 SWIFT(sw).lightsamples_valid = fread(fid,1,'uint16');
                 SWIFT(sw).lightsamples_failed = fread(fid,1,'uint16');
-            end
+            %end
             SWIFT(sw).ID = SWIFT.ID;
         end
         checksum  = fread(fid, 1,'uint16');
