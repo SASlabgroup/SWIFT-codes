@@ -145,6 +145,7 @@ if dstab > 0.5
     disp('!unstable CFL condition for diffusion!')
     pause
 end
+
 % output space
 pwp_output = table();
 pwp_output.dt = dt;
