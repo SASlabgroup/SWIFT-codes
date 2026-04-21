@@ -76,6 +76,7 @@ SWIFT.lon = [];
 PBlat = NaN;
 PBlon = NaN;
 
+finfo = dir(fname); % get basic information, especially finfo.bytes to compare is size (later)
 fid = fopen(fname); % open file for reading
 BatteryVoltage = NaN; % placeholder
 SWIFTversion = NaN; % placeholder
@@ -572,14 +573,13 @@ while 1
             SWIFT(sw).lightmax = fread(fid,1,'uint16');
             SWIFT(sw).lightmin = fread(fid,1,'uint16');
             SWIFT(sw).lightchannels = fread(fid,11,'uint16');
-            %if size == 329  % expanded from original 303 bytes in Apr 2026 to track number of samples
-                SWIFT(sw).lightsamples_valid = fread(fid,1,'uint16');
-                SWIFT(sw).lightsamples_failed = fread(fid,1,'uint16');
-            %end
+            if finfo.bytes== 329 | size == 329  % expanded from original 303 bytes in Apr 2026 to track number of samples
+                    SWIFT(sw).lightsamples_valid = fread(fid,1,'uint16');
+                    SWIFT(sw).lightsamples_failed = fread(fid,1,'uint16');
+            end
             SWIFT(sw).ID = SWIFT.ID;
         end
-        checksum  = fread(fid, 1,'uint16');
-
+        checksum  = fread(fid, 1,'uint16'); % usually empty
 
         elseif type == 55 & size == 340 % microSWIFT accelerometer, intended size 340
         disp('reading microSWIFT accelerometer spectra (payload 55)')
