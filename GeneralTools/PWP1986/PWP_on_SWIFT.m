@@ -1,9 +1,14 @@
-%-------------------------------------------------------)-------------------
+%---------------------------------------------------------------------------
 % MATLAB implementation of the Price Weller Pinkel mixed layer model
 % 20 4 2026
 % Michael James
 % University of Washington
 % Civil and Environmental Engineering
+%--------------------------------------------------------------------------
+%
+% This version is tweaked based on the matlab code by Byron Kilbourne (2011),
+% provided by Earle Wilson - https://github.com/earlew/pwp_python_00
+% 
 %--------------------------------------------------------------------------
 % input (.mat format)
 % met_input_file -> path and file name for MET forcing
@@ -43,11 +48,8 @@
 %   - https://www.teos-10.org/software.htm
 % SEAWATER Library 
 %   - https://www.cmar.csiro.au/datacentre/ext_docs/seawater.html
+%--------------------------------------------------------------------------
 % 
-%--------------------------------------------------------------------------
-% This version is tweaked based on the matlab code by Byron Kilbourne (2011) - 
-% https://github.com/earlew/pwp_python_00
-%--------------------------------------------------------------------------
 % this code has sections
 % 1) set parameters
 % 2) read in forcing data
@@ -71,17 +73,17 @@ tic % log runtime
 % set parameters
 
 % % Hard code inputs
-met_input_file = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO\SWIFT24_21Jun2024_L5_rad_COAREfluxes.mat'
-profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\WW1stcastV2.mat"
-pwp_output_file = 'test.mat'
+met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\TestMET_6_23_2024_no_wind.mat"
+profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\toy_profile20m.mat"
+pwp_output_file = 'toytestJun23.mat'
 
 
-dt			= 3600*1;;          %time-step increment (seconds)
-dz			= 0.5;           %depth increment (meters)
+dt			= 3600*1/2;          %time-step increment (seconds)
+dz			= 0.1;           %depth increment (meters)
 %days 		= 1;           %the number of days to run (max time grid)
 depth		= 50;          %the depth to run (max depth grid)
 dt_save     = 1;            %time-step increment for saving to file (multiples of dt)
-lat 		= 55.32;        %latitude (degrees)
+lat 		= 55.35;        %latitude (degrees)
 g			= 9.81;          %gravity (9.8 m/s^2)
 cpw			= 4183.3;       %specific heat of water (4183.3 J/kgC)
 rb			= 0.65;         %critical bulk richardson number (0.65)
@@ -101,20 +103,20 @@ dtd = dt/86400; % time step days
 
 % Setup a structure of defaults
 if ~isfield(SWIFT, 'time') | ~isfield(profile, 'z');
-    error('No time or z data in in met or profile file, cannot continue. Please check file structure')
+    error('No time or z data in met or profile file, cannot continue. Please check file structure')
 end
 % vars in time
-in.winddirT = repmat(0, length(SWIFT),1);
-in.sw_net = repmat(0, length(SWIFT),1);
-in.lw_net = repmat(0, length(SWIFT),1);
-in.hsb = repmat(0, length(SWIFT),1);
-in.hlb = repmat(0, length(SWIFT),1);
-in.tau = repmat(0, length(SWIFT),1);
-in.rain = repmat(0, length(SWIFT),1);
+pwp_input.winddirT = repmat(0, length(SWIFT),1);
+pwp_input.sw_net = repmat(0, length(SWIFT),1);
+pwp_input.lw_net = repmat(0, length(SWIFT),1);
+pwp_input.hsb = repmat(0, length(SWIFT),1);
+pwp_input.hlb = repmat(0, length(SWIFT),1);
+pwp_input.tau = repmat(0, length(SWIFT),1);
+pwp_input.rain = repmat(0, length(SWIFT),1);
 
 % vars in depth
-in.t = repmat(15, length(profile.z),1);
-in.s = repmat(30, length(profile.z),1);
+pwp_input.t = [15.5; repmat(15, length(profile.z)-1,1)]; % fake gradient to prevent error for flat profile and help define mld
+pwp_input.s = repmat(30, length(profile.z),1);
 
 % Check vars in each array and assign
 
@@ -128,8 +130,8 @@ for i = 1:length(inputs);
 
     for ii = 1:length(present{i})
         if i == 1 | ~any(ismember(horzcat(present{1:i-1}), present{i}{ii}));
-            eval(['in.(present{i}{ii}) = vertcat(', inputs{i},'.', present{i}{ii},');']);
-            in.(present{i}{ii}) = fillmissing(in.(present{i}{ii}),"nearest");
+            eval(['pwp_input.(present{i}{ii}) = vertcat(', inputs{i},'.', present{i}{ii},');']);
+            pwp_input.(present{i}{ii}) = fillmissing(pwp_input.(present{i}{ii}),"nearest");
             fprintf('Assigning %s and filling NaN with nearest value\n', present{i}{ii});
         else
             warning(sprintf('Conflicting input vars across met and profile structure, ignoring %s value in %s input', present{i}{ii}, inputs{i}));
@@ -143,23 +145,23 @@ counts = accumarray(idx,1);
 missing = ans(counts == 3);
 
 if ~isempty(missing)
-    warning(sprintf('Missing %s from inputs, keeping default vals established in header', string(missing)))
+    warning(sprintf('Missing %s from inputs, keeping default vals established in header\n', string(missing)))
 end
 
 
 
 % Setting up vars for model run
 
-time = in.time(1):dtd:in.time(end);
+time = pwp_input.time(1):dtd:pwp_input.time(end);
 nmet = length(time);
 clear dtd
-qi = interp1([in.time],in.sw_net,time); 
-qo = interp1([in.time],(in.lw_net + in.hlb + in.hsb),time); 
+qi = interp1([pwp_input.time],pwp_input.sw_net,time); 
+qo = interp1([pwp_input.time],(pwp_input.lw_net + pwp_input.hlb + pwp_input.hsb),time); 
 
 
-tx = interp1([in.time],in.tau.*sind(in.winddirT),time);
-ty = interp1([in.time],in.tau.*sind(in.winddirT),time);
-precip = interp1([in.time],in.rain,time);
+tx = interp1([pwp_input.time],pwp_input.tau.*sind(pwp_input.winddirT),time);
+ty = interp1([pwp_input.time],pwp_input.tau.*sind(pwp_input.winddirT),time);
+precip = interp1([pwp_input.time],pwp_input.rain,time);
 % make depth grid
 zmax = max(profile.z);
 if zmax < depth
@@ -170,7 +172,7 @@ clear zmax
 z = 0:dz:depth;
 nz = length(z);
 % Check the depth-resolution of the profile file
-profile_increment = (in.z(end)-in.z(1))/(length(in.z)-1);
+profile_increment = (pwp_input.z(end)-pwp_input.z(1))/(length(pwp_input.z)-1);
 if dz < profile_increment/5
     yorn = input('Depth increment, dz, is much smaller than profile resolution. Is this okay? (y/n)','s');
     if yorn == 'n'
@@ -179,11 +181,11 @@ if dz < profile_increment/5
 end
 t = zeros(nz,nmet);
 s = zeros(nz,nmet);
-t(:,1)	= interp1(in.z,in.t,z.','linear','extrap');
-s(:,1)	= interp1(in.z,in.s,z.','linear','extrap');
+t(:,1)	= interp1(pwp_input.z,pwp_input.t,z.','linear','extrap');
+s(:,1)	= interp1(pwp_input.z,pwp_input.s,z.','linear','extrap');
 d	= sw_dens0(s(:,1),t(:,1));
 % Interpolate evaporation minus precipitaion at dt resolution
-evap = (0.03456/(86400*1000))*interp1(in.time,in.hlb,floor(time),'nearest');
+evap = (0.03456/(86400*1000))*interp1(pwp_input.time,pwp_input.hlb,floor(time),'nearest');
 emp	= evap - precip;
 emp(isnan(emp)) = 0;
 
@@ -312,7 +314,7 @@ pwp_output.time = time(:,1:dt_save:end);
 mld(1)=mld(2);
 pwp_output.mld = mld(:,1:dt_save:end);
 
-save(pwp_output_file,'pwp_output')
+save(pwp_output_file,'pwp_output', 'pwp_input')
 toc
 % PWP driver routine
 %--------------------------------------------------------------------------
