@@ -7,16 +7,17 @@
 %--------------------------------------------------------------------------
 % input (.mat format)
 % met_input_file -> path and file name for MET forcing
-%   - format -> fluxes table from runCOARE3_6onSWIFT.m (uses COARE naming)
+%   - format -> SWIFT structure and fluxes table from runCOARE3_6onSWIFT.m (uses COARE naming)
 %       - time: time [days] (positive vector)
-%       - sw: net shortwave radiation [W/m2] (vector)
-%       - lw: net longwave radiation [W/m2] (vector)
-%       - qlat: latent heat flux [W/m2] (vector)
-%       - qsens: sensible heat flux [W/m2] (vector)
+%       - sw_net: net shortwave radiation [W/m2] (vector)
+%       - lw_net: net longwave radiation [W/m2] (vector)
+%       - hlb: latent heat flux [W/m2] (vector)
+%       - hsb: sensible heat flux [W/m2] (vector)
 %       - tau: wind stress [N/m2] (positive vector)
-%       - precip: precipitation rate [m/s]  (positive vector)
+%       - rain: precipitation rate [m/s]  (positive vector)
 % profile_input_file -> path and file name for intial density profile
-%   - format -> single cast of CTD
+%   - format -> single cast of CTD as structure array or table
+%       - **time is assumed at start of met time**
 %       - z: depth [m] (positive vector)
 %       - t: temperature [deg C] (vector)
 %       - s: salinity [PSU] (vector)
@@ -70,9 +71,9 @@ tic % log runtime
 % set parameters
 
 % % Hard code inputs
-% met_input_file = 'SWIFT20metV2.mat'
-% profile_input_file = 'WW1stcastV2.mat'
-% pwp_output_file = 'test.mat'
+met_input_file = 'SWIFT24_21Jun2024_L5_rad_COAREfluxes.mat'
+profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\WW1stcastV2.mat"
+pwp_output_file = 'test.mat'
 
 
 dt			= 3600*1;;          %time-step increment (seconds)
@@ -97,15 +98,66 @@ ucon = (.1*abs(f));         %coefficient of inertial-internal wave dissipation (
 load(met_input_file)
 load(profile_input_file)
 dtd = dt/86400; % time step days
-% days parameter deprecated
-time = met.time(1):dtd:met.time(end);
+
+% Setup a structure of defaults
+if ~isfield(SWIFT, 'time') | ~isfield(profile, 'z');
+    error('No time or z data in in met or profile file, cannot continue. Please check file structure')
+end
+% vars in time
+in.winddirT = repmat(0, length(SWIFT),1);
+in.sw_net = repmat(0, length(SWIFT),1);
+in.lw_net = repmat(0, length(SWIFT),1);
+in.hsb = repmat(0, length(SWIFT),1);
+in.hlb = repmat(0, length(SWIFT),1);
+in.tau = repmat(0, length(SWIFT),1);
+in.rain = repmat(0, length(SWIFT),1);
+
+% vars in depth
+in.t = repmat(15, length(profile.z),1);
+in.s = repmat(30, length(profile.z),1);
+
+% Check vars in each array and assign
+
+PWPvars = {'time', 'winddirT', 'sw_net', 'lw_net', 'hsb', 'hlb', 'tau', 'rain', 'z', 't','s'};
+inputs = {'SWIFT', 'fluxes','profile'};
+
+for i = 1:length(inputs);
+    eval(['missing{i} = setdiff(PWPvars, fieldnames(', inputs{i}, '));']);
+
+    present{i} = setdiff(PWPvars, missing{i});
+
+    for ii = 1:length(present{i})
+        if i == 1 | ~any(ismember(horzcat(present{1:i-1}), present{i}{ii}));
+            eval(['in.(present{i}{ii}) = vertcat(', inputs{i},'.', present{i}{ii},');']);
+        else
+            warning(sprintf('Conflicting input vars across met and profile structure, ignoring %s value in %s input', present{i}{ii}, inputs{i}));
+        end
+    end
+end
+
+horzcat(missing{:});
+[~, ~, idx] = unique(ans);
+counts = accumarray(idx,1);
+missing = ans(counts == 3);
+
+if ~isempty(missing)
+    warning(sprintf('Missing %s from inputs, keeping default vals established in header', string(missing)))
+end
+
+
+
+% Setting up vars for model run
+
+time = in.time(1):dtd:in.time(end);
 nmet = length(time);
 clear dtd
-qi = interp1(met.time,met.sw,time); 
-qo = interp1(met.time,(met.lw + met.qlat + met.qsens),time); 
-tx = interp1(met.time,met.tx,time);
-ty = interp1(met.time,met.ty,time);
-precip = interp1(met.time,met.precip,time);
+qi = interp1([in.time],in.sw_net,time); 
+qo = interp1([in.time],(in.lw_net + in.hlb + in.hsb),time); 
+
+
+tx = interp1([in.time],in.tau.*sind(in.winddirT),time);
+ty = interp1([in.time],in.tau.*sind(in.winddirT),time);
+precip = interp1([in.time],in.rain,time);
 % make depth grid
 zmax = max(profile.z);
 if zmax < depth
@@ -116,7 +168,7 @@ clear zmax
 z = 0:dz:depth;
 nz = length(z);
 % Check the depth-resolution of the profile file
-profile_increment = (profile.z(end)-profile.z(1))/(length(profile.z)-1);
+profile_increment = (in.z(end)-in.z(1))/(length(in.z)-1);
 if dz < profile_increment/5
     yorn = input('Depth increment, dz, is much smaller than profile resolution. Is this okay? (y/n)','s');
     if yorn == 'n'
@@ -125,13 +177,15 @@ if dz < profile_increment/5
 end
 t = zeros(nz,nmet);
 s = zeros(nz,nmet);
-t(:,1)	= interp1(profile.z,profile.t,z.','linear','extrap');
-s(:,1)	= interp1(profile.z,profile.s,z.','linear','extrap');
+t(:,1)	= interp1(in.z,in.t,z.','linear','extrap');
+s(:,1)	= interp1(in.z,in.s,z.','linear','extrap');
 d	= sw_dens0(s(:,1),t(:,1));
 % Interpolate evaporation minus precipitaion at dt resolution
-evap = (0.03456/(86400*1000))*interp1(met.time,met.qlat,floor(time),'nearest');
+evap = (0.03456/(86400*1000))*interp1(in.time,in.hlb,floor(time),'nearest');
 emp	= evap - precip;
 emp(isnan(emp)) = 0;
+
+
 %--------------------------------------------------------------------------
 % preallocate space
 u = zeros(nz,nmet); % east velocity m/s
