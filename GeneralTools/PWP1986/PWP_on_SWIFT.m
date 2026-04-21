@@ -71,7 +71,7 @@ tic % log runtime
 % set parameters
 
 % % Hard code inputs
-met_input_file = 'SWIFT24_21Jun2024_L5_rad_COAREfluxes.mat'
+met_input_file = 'C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\COARE_IO\SWIFT24_21Jun2024_L5_rad_COAREfluxes.mat'
 profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\WW1stcastV2.mat"
 pwp_output_file = 'test.mat'
 
@@ -129,6 +129,8 @@ for i = 1:length(inputs);
     for ii = 1:length(present{i})
         if i == 1 | ~any(ismember(horzcat(present{1:i-1}), present{i}{ii}));
             eval(['in.(present{i}{ii}) = vertcat(', inputs{i},'.', present{i}{ii},');']);
+            in.(present{i}{ii}) = fillmissing(in.(present{i}{ii}),"nearest");
+            fprintf('Assigning %s and filling NaN with nearest value\n', present{i}{ii});
         else
             warning(sprintf('Conflicting input vars across met and profile structure, ignoring %s value in %s input', present{i}{ii}, inputs{i}));
         end
@@ -201,7 +203,6 @@ if dstab > 0.5
 end
 
 % output space
-pwp_output = table();
 pwp_output.dt = dt;
 pwp_output.dz = dz;
 pwp_output.lat = lat;
@@ -313,7 +314,7 @@ pwp_output.mld = mld(:,1:dt_save:end);
 
 save(pwp_output_file,'pwp_output')
 toc
-end % PWP driver routine
+% PWP driver routine
 %--------------------------------------------------------------------------
 
 function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
