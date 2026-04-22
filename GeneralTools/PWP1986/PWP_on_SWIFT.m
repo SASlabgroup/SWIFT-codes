@@ -86,11 +86,11 @@ tic % log runtime
 % % Hard code inputs
 met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\TestMET_6_23_2024.mat"
 profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\testPROF_6_23_2024.mat"
-pwp_output_file = 'toytestJun23.mat'
+pwp_output_file = 'testJun23nosalinity.mat'
 
 
 dt			= 3600*1/2;          %time-step increment (seconds)
-dz			= 0.5;           %depth increment (meters)
+dz			= 0.1;           %depth increment (meters)
 %days 		= 1;           %the number of days to run (max time grid)
 depth		= 20;          %the depth to run (max depth grid)
 dt_save     = 1;            %time-step increment for saving to file (multiples of dt)
@@ -531,6 +531,7 @@ function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon)
     %  Richardson Number.
     
     rc 	= rg;
+    nmix = 0;
     
     %  Compute the gradient Richardson Number, taking care to avoid dividing by
     %  zero in the mixed layer.  The numerical values of the minimum allowable
@@ -541,33 +542,43 @@ function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon)
     j2 = nz-1;
     
     while 1
-        r = inf(size(j1:j2));
+        r = ones(size(1:j2)); % current grad richardson number up to j2
+        %% 
 	    for j = j1:j2
 		    if j <= 0
 			    keyboard
 		    end
-		    dd = (d(j+1)-d(j))/d(j);
-		    dv = (u(j+1)-u(j))^2+(v(j+1)-v(j))^2;
-		    if dv == 0
-			    r(j) = Inf;
-		    else
-			    r(j) = g*dz*dd/dv;
-		    end
+		    dd = (d(j+1)-d(j)); 
+            if dd < 1.0e-3
+                dv = 1e-3; % limit density difference.
+            end   
+            dv = (u(j+1)-u(j))^2+(v(j+1)-v(j))^2;
+            if dv < 1.0e-6
+                dv = 1e-6; % remove divide by 0;
+            end             
+            r(j) = g*dz*dd/dv/d(j); % allocate gradient richardson numbers
 	    end
     
 	    %  Find the smallest value of r in profile
 	    [rs js] = min(r);
-	    %js = find(r==rs,1,'first');
     
 	    %  Check to see whether the smallest r is critical or not.
 	    if rs > rc
+            fprintf('Gradient mixed %g times\n', nmix);
 		    return
-	    end
+        end
+
+        % Check for infinite loop
+        infloop = 1e9
+        if nmix > infloop
+            error(sprintf('Infinite loop limit exceeds %g times\n', infloop));
+        end
     
-        	    %  Mix the cells js and js+1 that had the smallest Richardson Number
-	    [t s d u v] = stir(t,s,d,u,v,rc,r,j,z,lat,lon);
+        %  Mix the cells js and js+1 that had the smallest Richardson Number
+	    [t s d u v] = stir(t,s,d,u,v,rc,r,js,z,lat,lon);
     
-	    %  Recompute the Richardson Number over the part of the profile that has changed
+	    %  Recompute the Richardson Number over the part of the profile
+        %  that has changed (fixed at 5 entries)
 	    j1 = js-2;
 	    if j1 < 1
 		     j1 = 1;
@@ -575,13 +586,13 @@ function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon)
 	    j2 = js+2;
 	    if j2 > nz-1
 		     j2 = nz-1;
-	    end
+        end
+        nmix = nmix +1;
     end
-
 end % grad_mix
 
 %--------------------------------------------------------------------------
-function [t s d u v] = stir(t,s,d,u,v,rc,r,j,z,lat,lon)
+function [t s d u v] = stir(t,s,d,u,v,rc,r,js,z,lat,lon)
     
     %  This subroutine mixes cells j and j+1 just enough so that
     %  the Richardson number after the mixing is brought up to
@@ -597,20 +608,24 @@ function [t s d u v] = stir(t,s,d,u,v,rc,r,j,z,lat,lon)
     
     rcon 			= 0.02+(rc-r)/2;
     rnew 			= rc+rcon/5;
-    f 				= 1-r(isfinite(r))/rnew(isfinite(rnew));
-    dt				= (t(j+1)-t(j))*f/2;
-    t(j+1)		= t(j+1)-dt;
-    t(j) 			= t(j)+dt;
-    ds				= (s(j+1)-s(j))*f/2;
-    s(j+1)		= s(j+1)-ds;
-    s(j) 			= s(j)+ds;
-    d(j:j+1) = calc_seawater_density(s(j:j+1),t(j:j+1), gsw_p_from_z(-z(j:j+1)',lat), lon, lat);
-    du				= (u(j+1)-u(j))*f/2;
-    u(j+1)		= u(j+1)-du;
-    u(j) 			= u(j)+du;
-    dv				= (v(j+1)-v(j))*f/2;
-    v(j+1)		= v(j+1)-dv;
-    v(j) 			= v(j)+dv;
+    f 				= 1-r(js)/rnew(js); % only apply to mixing boundary
+    % Mix temperature
+    dt				= (t(js+1)-t(js))*f/2;
+    t(js+1)		= t(js+1)-dt;
+    t(js) 			= t(js)+dt;
+    % Mix salinity
+    ds				= (s(js+1)-s(js))*f/2;
+    s(js+1)		= s(js+1)-ds;
+    s(js) 			= s(js)+ds;
+    % find new density
+    d(js:js+1) = calc_seawater_density(s(js:js+1),t(js:js+1), gsw_p_from_z(-z(js:js+1)',lat), lon, lat);
+    % Mix velocity
+    du				= (u(js+1)-u(js))*f/2;
+    u(js+1)		= u(js+1)-du;
+    u(js) 			= u(js)+du;
+    dv				= (v(js+1)-v(js))*f/2;
+    v(js+1)		= v(js+1)-dv;
+    v(js) 			= v(js)+dv;
 
 end % stir
 
