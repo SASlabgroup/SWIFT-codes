@@ -87,10 +87,44 @@ if isfield(SWIFT,'wavespectra')
         specsize(si) = length(SWIFT(si).wavespectra.freq);
         checkcheck(si) = ~isfield(SWIFT(si).wavespectra,'check');
     end
-    if all(specsize ~= 42 | checkcheck)
-        SWIFT=rmfield(SWIFT,'wavespectra');
-    else
-        SWIFT( specsize ~= 42 | checkcheck) = [];
+    % WORKAROUND: reprocess_IMU / reprocess_GPS currently emit variable-
+    % length wavespectra across bursts (42 onboard vs ~85 post-processed,
+    % and sometimes other lengths). The downstream NetCDF write needs a
+    % single freq dimension, and the old code "fixed" this by deleting
+    % every burst that didn't match — which silently dropped valid
+    % signature/CT/met data and made fields like profile.east all NaN.
+    %
+    % TODO: fix the reprocessing so it always outputs consistent freq
+    % vectors; then this truncate block can go away.
+    %
+    % For now: truncate any burst with >42 freq bins down to 42 (onboard
+    % size, f<=0.5 Hz). Match orientation of a known-good 42-bin burst so
+    % the downstream size check doesn't trip on [42 1] vs [1 42].
+    long = specsize > 42;
+    ref42 = find(specsize == 42, 1);
+    for si = find(long)
+        nfreq = specsize(si);  % original freq length for this burst
+        wsfields = fieldnames(SWIFT(si).wavespectra);
+        for f = 1:numel(wsfields)
+            v = SWIFT(si).wavespectra.(wsfields{f});
+            % Only trim spectral fields (freq, energy, a1, b1, a2, b2,
+            % check, ...) — i.e. those that share the freq length. Skip
+            % scalars and any field of a different size.
+            if isnumeric(v) && numel(v) == nfreq
+                v = v(1:42);
+                if ~isempty(ref42) && isfield(SWIFT(ref42).wavespectra, wsfields{f})
+                    refshape = size(SWIFT(ref42).wavespectra.(wsfields{f}));
+                    if numel(v) == prod(refshape)
+                        v = reshape(v, refshape);
+                    end
+                end
+                SWIFT(si).wavespectra.(wsfields{f}) = v;
+            end
+        end
+        specsize(si) = 42;
+    end
+    if any(specsize ~= 42 | checkcheck)
+        SWIFT = rmfield(SWIFT,'wavespectra');
     end
 end
 
