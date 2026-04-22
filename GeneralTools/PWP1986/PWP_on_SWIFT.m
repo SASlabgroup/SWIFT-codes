@@ -77,14 +77,14 @@ tic % log runtime
 
 % % Hard code inputs
 met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\TestMET_6_23_2024.mat"
-profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\toy_profile20m.mat"
+profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\testPROF_6_23_2024.mat"
 pwp_output_file = 'toytestJun23.mat'
 
 
 dt			= 3600*1/2;          %time-step increment (seconds)
-dz			= 0.1;           %depth increment (meters)
+dz			= 0.5;           %depth increment (meters)
 %days 		= 1;           %the number of days to run (max time grid)
-depth		= 50;          %the depth to run (max depth grid)
+depth		= 20;          %the depth to run (max depth grid)
 dt_save     = 1;            %time-step increment for saving to file (multiples of dt)
 lat 		= 55.35;        %latitude (degrees)
 lon         = -131.65       %longitude (degrees)
@@ -331,7 +331,11 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     t(1) = t(1) + (qi*absrb(1)-qo)*dt./(dz*d(1)*cpw); 
     s(1) = s(1)/(1-emp*dt/dz); 
     
-    Tf = sw_fp(s_old,1);
+
+    % TEOS-10
+    SA_old  = gsw_SA_from_SP(s_old,gsw_p_from_z(-z(1),lat) , lon, lat);   % convert salinity first
+    Tf  = gsw_t_freezing(SA_old, gsw_p_from_z(-z(1),lat), 1);  
+
     if t(1) < Tf;
         t(1) = Tf;
     end
