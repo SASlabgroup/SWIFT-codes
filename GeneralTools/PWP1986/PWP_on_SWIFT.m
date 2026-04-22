@@ -62,6 +62,9 @@
 % 5) save results to output file
 
 %--------------------------------------------------------------------------
+clear, clc, close all;
+
+%--------------------------------------------------------------------------
 % diagnostic plots
 % 0 -> no plots
 % 1 -> shows depth integrated KE and momentum and current,T, and S profiles
@@ -73,7 +76,7 @@ tic % log runtime
 % set parameters
 
 % % Hard code inputs
-met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\TestMET_6_23_2024_no_wind.mat"
+met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\TestMET_6_23_2024.mat"
 profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\toy_profile20m.mat"
 pwp_output_file = 'toytestJun23.mat'
 
@@ -84,6 +87,7 @@ dz			= 0.1;           %depth increment (meters)
 depth		= 50;          %the depth to run (max depth grid)
 dt_save     = 1;            %time-step increment for saving to file (multiples of dt)
 lat 		= 55.35;        %latitude (degrees)
+lon         = -131.65       %longitude (degrees)
 g			= 9.81;          %gravity (9.8 m/s^2)
 cpw			= 4183.3;       %specific heat of water (4183.3 J/kgC)
 rb			= 0.65;         %critical bulk richardson number (0.65)
@@ -183,7 +187,7 @@ t = zeros(nz,nmet);
 s = zeros(nz,nmet);
 t(:,1)	= interp1(pwp_input.z,pwp_input.t,z.','linear','extrap');
 s(:,1)	= interp1(pwp_input.z,pwp_input.s,z.','linear','extrap');
-d	= sw_dens0(s(:,1),t(:,1));
+d	= calc_seawater_density(s(:,1),t(:,1), gsw_p_from_z(-z(:),lat), lon, lat);
 % Interpolate evaporation minus precipitaion at dt resolution
 evap = (0.03456/(86400*1000))*interp1(pwp_input.time,pwp_input.hlb,floor(time),'nearest');
 emp	= evap - precip;
@@ -224,13 +228,13 @@ for n = 2:nmet
      fprintf('loop iter. %2d, %g%% done\n', n, (n/nmet*100));
     % pwpgo function does the "math" for fluxes and vel
     [s(:,n), t(:,n), u(:,n), v(:,n), mld(n)] = pwpgo(qi(n-1),qo(n-1),emp(n-1),tx(n-1),ty(n-1), ...
-        dt,dz,g,cpw,rb,rg,nz,z,t(:,n-1),s(:,n-1),d,u(:,n-1),v(:,n-1),absrb,f,ucon,n);
+        dt,dz,g,cpw,rb,rg,nz,z,t(:,n-1),s(:,n-1),d,u(:,n-1),v(:,n-1),absrb,f,ucon,n,lat,lon);
     
     % vertical (diapycnal) diffusion
     if rkz > 0
         diffus(dstab,t);
         diffus(dstab,s);
-        d = sw_dens0(s,t);
+        d = calc_seawater_density(s,t, gsw_p_from_z(-z(:),lat), lon, lat);
         diffus(dstab,u);
         diffus(dstab,v);
     end % diffusion
@@ -308,7 +312,7 @@ pwp_output.s = s(:,1:dt_save:end);
 pwp_output.t = t(:,1:dt_save:end);
 pwp_output.u = u(:,1:dt_save:end);
 pwp_output.v = v(:,1:dt_save:end);
-pwp_output.d = sw_dens0(pwp_output.s,pwp_output.t);
+pwp_output.d = calc_seawater_density(pwp_output.s,pwp_output.t, gsw_p_from_z(-z(:).*ones(size(pwp_output.s)), lat), lon, lat);
 time = repmat(time,nz,1);
 pwp_output.time = time(:,1:dt_save:end);
 mld(1)=mld(2);
@@ -320,7 +324,7 @@ toc
 %--------------------------------------------------------------------------
 
 function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
-    d,u,v,absrb,f,ucon,n)
+    d,u,v,absrb,f,ucon,n, lat,lon)
     % pwpgo is the part of the model where all the dynamics "happen"
       
     t_old = t(1); s_old = s(1); 
@@ -339,8 +343,8 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
         t(2:nz) = t(2:nz)+(qi*absrb(2:nz)*dt)./(dz*d(2:nz)*cpw);
     end
     
-    d = sw_dens0(s,t);
-    [t s d u v] = remove_si(t,s,d,u,v); %relieve static instability
+    d = calc_seawater_density(s,t, gsw_p_from_z(-z(:).*ones(size(s)),lat), lon, lat); 
+    [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon); %relieve static instability
     
     % original ml_index criteria
     ml_index = find(diff(d)>1E-4,1,'first'); %1E
@@ -383,12 +387,12 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     
     % Bulk Richardson number instability form of mixing (as in PWP).
     if rb > 1E-5
-	    [t s d u v] = bulk_mix(t,s,d,u,v,g,rb,nz,z,ml_index);
+	    [t s d u v] = bulk_mix(t,s,d,u,v,g,rb,nz,z,ml_index,lat, lon);
     end
     
     % Do the gradient Richardson number instability form of mixing.
     if rg > 0
-	    [t,s,~,u,v] = grad_mix(t,s,d,u,v,dz,g,rg,nz);
+	    [t,s,~,u,v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon);
     end
     
     % Debugging plots
@@ -440,7 +444,7 @@ end % absorb
 
 %--------------------------------------------------------------------------
 
-function [t s d u v] = remove_si(t,s,d,u,v)
+function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon)
     % Find and relieve static instability that may occur in the
     % density array d. This simulates free convection.
     % ml_index is the index of the depth of the surface mixed layer after adjustment,
@@ -455,7 +459,7 @@ function [t s d u v] = remove_si(t,s,d,u,v)
         clf
         plot(d,'b-')
         hold on
-	    [t s d u v] = mix5(t,s,d,u,v,ml_index+1);
+	    [t s d u v] = mix5(t,s,d,u,v,ml_index+1,z,lat,lon);
         plot(d,'r-')
         %pause
         %}
@@ -466,11 +470,11 @@ function [t s d u v] = remove_si(t,s,d,u,v)
 end % remove_si
 %--------------------------------------------------------------------------
 
-function [t s d u v] = mix5(t,s,d,u,v,j)
+function [t s d u v] = mix5(t,s,d,u,v,j,z,lat,lon)
     %  This subroutine mixes the arrays t, s, u, v down to level j.
     t(1:j) = mean(t(1:j));
     s(1:j) = mean(s(1:j));
-    d(1:j) = sw_dens0(s(1:j),t(1:j));
+    d(1:j) = calc_seawater_density(s(1:j),t(1:j), gsw_p_from_z(-z(1:j)',lat), lon, lat); 
     u(1:j) = mean(u(1:j));
     v(1:j) = mean(v(1:j));
     end % mix5
@@ -486,7 +490,7 @@ function [t s d u v] = mix5(t,s,d,u,v,j)
     end %rot
     %--------------------------------------------------------------------------
     
-    function [t s d u v] = bulk_mix(t,s,d,u,v,g,rb,nz,z,ml_index)
+    function [t s d u v] = bulk_mix(t,s,d,u,v,g,rb,nz,z,ml_index,lat, lon)
     
     rvc = rb;
     for j = ml_index+1:nz
@@ -501,14 +505,14 @@ function [t s d u v] = mix5(t,s,d,u,v,j)
 	    if rv > rvc
 		    break
 	    else
-		    [t s d u v] = mix5(t,s,d,u,v,j);
+		    [t s d u v] = mix5(t,s,d,u,v,j,z,lat,lon);
 	    end
     end
 
 end % bulk_mix
 %--------------------------------------------------------------------------
 
-function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz)
+function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon)
 
     %  This function performs the gradeint Richardson Number relaxation
     %  by mixing adjacent cells just enough to bring them to a new
@@ -548,8 +552,8 @@ function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz)
 		    return
 	    end
     
-	    %  Mix the cells js and js+1 that had the smallest Richardson Number
-	    [t s d u v] = stir(t,s,d,u,v,rc,rs,js);
+        	    %  Mix the cells js and js+1 that had the smallest Richardson Number
+	    [t s d u v] = stir(t,s,d,u,v,rc,r,j,z,lat,lon);
     
 	    %  Recompute the Richardson Number over the part of the profile that has changed
 	    j1 = js-2;
@@ -565,7 +569,7 @@ function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz)
 end % grad_mix
 
 %--------------------------------------------------------------------------
-function [t s d u v] = stir(t,s,d,u,v,rc,r,j)
+function [t s d u v] = stir(t,s,d,u,v,rc,r,j,z,lat,lon)
     
     %  This subroutine mixes cells j and j+1 just enough so that
     %  the Richardson number after the mixing is brought up to
@@ -588,7 +592,7 @@ function [t s d u v] = stir(t,s,d,u,v,rc,r,j)
     ds				= (s(j+1)-s(j))*f/2;
     s(j+1)		= s(j+1)-ds;
     s(j) 			= s(j)+ds;
-    d(j:j+1)	= sw_dens0(s(j:j+1),t(j:j+1));
+    d(j:j+1) = calc_seawater_density(s(j:j+1),t(j:j+1), gsw_p_from_z(-z(j:j+1)',lat), lon, lat);
     du				= (u(j+1)-u(j))*f/2;
     u(j+1)		= u(j+1)-du;
     u(j) 			= u(j)+du;
@@ -597,3 +601,89 @@ function [t s d u v] = stir(t,s,d,u,v,rc,r,j)
     v(j) 			= v(j)+dv;
 
 end % stir
+
+%--------------------------------------------------------------------------
+function [rho, rho_anomaly] = calc_seawater_density(SP, t, p, lon, lat)
+% CALC_SEAWATER_DENSITY  Compute in-situ seawater density using TEOS-10.
+%
+% USAGE:
+%   [rho, rho_anomaly] = calc_seawater_density(SP, t, p, lon, lat)
+%
+% INPUTS:
+%   SP   - Practical Salinity          [PSU / PSS-78]   (scalar or array)
+%   t    - In-situ temperature         [°C, ITS-90]     (same size as SP)
+%   p    - Sea pressure                [dbar]           (same size as SP, or scalar)
+%   lon  - Longitude                   [decimal degrees East, 0 – 360 or ±180]
+%   lat  - Latitude                    [decimal degrees North, ±90]
+%
+% OUTPUTS:
+%   rho         - In-situ density      [kg m⁻³]
+%   rho_anomaly - Density anomaly      [kg m⁻³]  (rho - 1000)
+%
+% NOTES:
+%   * Requires the GSW Toolbox  (https://www.teos-10.org/software.htm).
+%     Verify installation with: gsw_check_functions
+%
+%
+% REFERENCES:
+%   IOC, SCOR & IAPSO (2010). The international thermodynamic equation of
+%   seawater – 2010 (TEOS-10). Intergovernmental Oceanographic Commission,
+%   Manuals and Guides No. 56. UNESCO.
+
+    %  0. Input validation 
+
+    narginchk(5, 5);
+
+    if ~isnumeric(SP) || ~isnumeric(t) || ~isnumeric(p) || ...
+       ~isnumeric(lon) || ~isnumeric(lat)
+        error('calc_seawater_density:badInput', ...
+              'All inputs must be numeric.');
+    end
+
+    % Broadcast scalar pressure to the size of SP if needed
+    if isscalar(p)
+        p = p .* ones(size(SP));
+    end
+
+    if ~isequal(size(SP), size(t), size(p))
+        error('calc_seawater_density:sizeMismatch', ...
+              'SP, t, and p must be the same size (or p may be scalar).');
+    end
+
+    % Soft range checks (warn, but do not error – GSW handles NaN masking)
+    if any(SP(:) < 0 | SP(:) > 42, 'all')
+        warning('calc_seawater_density:SPrange', ...
+                'Some SP values are outside the typical range 0–42 PSU.');
+    end
+    if any(t(:) < -2 | t(:) > 40, 'all')
+        warning('calc_seawater_density:Trange', ...
+                'Some temperature values are outside the range -2–40 °C.');
+    end
+    if any(p(:) < 0 | p(:) > 12000, 'all')
+        warning('calc_seawater_density:Prange', ...
+                'Some pressure values are outside the range 0–12000 dbar.');
+    end
+
+    %  1. Check GSW toolbox availability
+
+    if ~exist('gsw_SA_from_SP', 'file')
+        error('calc_seawater_density:noGSW', ...
+              ['GSW Toolbox not found on the MATLAB path.\n' ...
+               'Download it from https://www.teos-10.org/software.htm ' ...
+               'and add it to your path.']);
+    end
+
+    %  2. Practical Salinity  →  Absolute Salinity  (SA, g kg⁻¹)
+    SA = gsw_SA_from_SP(SP, p, lon, lat);
+
+    %  3. In-situ temperature  →  Conservative Temperature  (CT, °C)
+    CT = gsw_CT_from_t(SA, t, p);
+
+
+    %  4. Compute in-situ density  (kg m⁻³)
+    rho = gsw_rho(SA, CT, p);
+
+    %  5. Potential Density  (sigma, kg m⁻³)
+    rho_anomaly = rho - 1000;
+
+end
