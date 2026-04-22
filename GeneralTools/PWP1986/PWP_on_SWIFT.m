@@ -28,6 +28,7 @@
 %       - hsb: sensible heat flux [W/m2] (vector)
 %       - tau: wind stress [N/m2] (positive vector)
 %       - rain: precipitation rate [m/s]  (positive vector)
+%       - winddirT: Wind Direction [deg] (positive vector)
 % profile_input_file -> path and file name for intial density profile (1
 % VARIABLE)
 %   - format -> single cast of CTD as structure array or table
@@ -85,9 +86,9 @@ tic % log runtime
 % set parameters
 
 % % Hard code inputs
-met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\TestMET_6_25_2024.mat"
-profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\testPROF_6_23_2024.mat"
-pwp_output_file = 'testJun23nosalinity.mat'
+met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\toy_profile20m.mat"
+profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\toy_met.mat"
+pwp_output_file = 'testtoycase.mat'
 
 
 dt			= 3600*1/2;          %time-step increment (seconds)
@@ -119,13 +120,13 @@ if ~isfield(SWIFT, 'time') | ~isfield(profile, 'z');
     error('No time or z data in met or profile file, cannot continue. Please check file structure')
 end
 % vars in time
-pwp_input.winddirT = repmat(0, length(SWIFT),1);
-pwp_input.sw_net = repmat(0, length(SWIFT),1);
-pwp_input.lw_net = repmat(0, length(SWIFT),1);
-pwp_input.hsb = repmat(0, length(SWIFT),1);
-pwp_input.hlb = repmat(0, length(SWIFT),1);
-pwp_input.tau = repmat(0, length(SWIFT),1);
-pwp_input.rain = repmat(0, length(SWIFT),1);
+pwp_input.winddirT = repmat(0, length([SWIFT.time]),1);
+pwp_input.sw_net = repmat(0, length([SWIFT.time]),1);
+pwp_input.lw_net = repmat(0, length([SWIFT.time]),1);
+pwp_input.hsb = repmat(0, length([SWIFT.time]),1);
+pwp_input.hlb = repmat(0, length([SWIFT.time]),1);
+pwp_input.tau = repmat(0, length([SWIFT.time]),1);
+pwp_input.rain = repmat(0, length([SWIFT.time]),1);
 
 % vars in depth
 pwp_input.t = [15.5; repmat(15, length(profile.z)-1,1)]; % fake gradient to prevent error for flat profile and help define mld
