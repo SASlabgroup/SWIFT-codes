@@ -306,6 +306,45 @@ if isfield(SWIFT, 'OBS_calibratedNTU')
 end
 
 
+% WORKAROUND: Nortek Signature velocity components sometimes contain
+% bad/sentinel values (e.g. ~1e32 instead of NaN, or otherwise wildly
+% out-of-range numbers) that slip through ~isnan checks and blow up
+% downstream plots, statistics, and the NetCDF output. Reject any
+% velocity outside a physically reasonable range (|u| > 10 m/s) and
+% replace with NaN.
+%
+% TODO: this belongs in the signature processing pipeline (the
+% Nortek/Signature reader and reprocess_* steps), not here. The
+% reader should convert sentinel values to NaN at ingest and apply
+% any range/QC limits there, so by the time data reaches SWIFT2NC
+% the velocity fields are already clean. Once that is fixed upstream,
+% delete this block.
+if isfield(SWIFT,'signature')
+    velfields = {'east','north','w','u','v'};
+    sub = {'profile','HRprofile'};
+    for s = 1:numel(sub)
+        if ~isfield(SWIFT(1).signature, sub{s}), continue; end
+        sn = sub{s};
+        for t = 1:length(SWIFT)
+            if ~isfield(SWIFT(t).signature, sn) || isempty(SWIFT(t).signature.(sn))
+                continue
+            end
+            for f = 1:numel(velfields)
+                if ~isfield(SWIFT(t).signature.(sn), velfields{f}), continue; end
+                v = SWIFT(t).signature.(sn).(velfields{f});
+                if isnumeric(v) && ~isempty(v)
+                    bad = abs(v) > 10;  % m/s — anything larger isn't a real ocean current
+                    if any(bad(:))
+                        v(bad) = NaN;
+                        SWIFT(t).signature.(sn).(velfields{f}) = v;
+                    end
+                end
+            end
+        end
+    end
+end
+
+
 j=1;
 for i=1:length(full_names)
     %if ~strcmp(full_names{i},'ID')
