@@ -7,7 +7,15 @@
 %--------------------------------------------------------------------------
 %
 % This version is tweaked based on the matlab code by Byron Kilbourne (2011),
-% provided by Earle Wilson - https://github.com/earlew/pwp_python_00
+% provided by Earle Wilson 
+%    https://github.com/earlew/pwp_python_00
+% 
+% Original Fortran written by Jim Price, WHOI, April 27, 1989.
+%    https://www.whoi.edu/science/PO/people/jprice/PWP/welcome.html
+% 
+% References:
+%    Price, Weller, Pinkel (1986), JGR 91(C7), 8411-8427.
+%    Price, Mooers, Van Leer (1978), JPO 8(4), 582-599.
 % 
 %--------------------------------------------------------------------------
 % input (.mat format)
@@ -524,16 +532,16 @@ function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon)
     
     rc 	= rg;
     
-    %  Compute the gradeint Richardson Number, taking care to avoid dividing by
+    %  Compute the gradient Richardson Number, taking care to avoid dividing by
     %  zero in the mixed layer.  The numerical values of the minimum allowable
     %  density and velocity differences are entirely arbitrary, and should not
-    %  effect the calculations (except that on some occasions they evidnetly have!)
+    %  affect the calculations (except that on some occasions they evidently have!)
     
     j1 = 1;
     j2 = nz-1;
     
     while 1
-        r = zeros(size(j1:j2));
+        r = inf(size(j1:j2));
 	    for j = j1:j2
 		    if j <= 0
 			    keyboard
@@ -589,7 +597,7 @@ function [t s d u v] = stir(t,s,d,u,v,rc,r,j,z,lat,lon)
     
     rcon 			= 0.02+(rc-r)/2;
     rnew 			= rc+rcon/5;
-    f 				= 1-r/rnew;
+    f 				= 1-r(isfinite(r))/rnew(isfinite(rnew));
     dt				= (t(j+1)-t(j))*f/2;
     t(j+1)		= t(j+1)-dt;
     t(j) 			= t(j)+dt;
