@@ -20,7 +20,7 @@
 %--------------------------------------------------------------------------
 % input (.mat format)
 % met_input_file -> path and file name for MET forcing
-%   - format -> SWIFT structure and fluxes table from runCOARE3_6onSWIFT.m (uses COARE naming)
+%   - format -> SWIFT structure and fluxes table (2 VARIABLES) from runCOARE3_6onSWIFT.m (uses COARE naming)
 %       - time: time [days] (positive vector)
 %       - sw_net: net shortwave radiation [W/m2] (vector)
 %       - lw_net: net longwave radiation [W/m2] (vector)
@@ -28,7 +28,8 @@
 %       - hsb: sensible heat flux [W/m2] (vector)
 %       - tau: wind stress [N/m2] (positive vector)
 %       - rain: precipitation rate [m/s]  (positive vector)
-% profile_input_file -> path and file name for intial density profile
+% profile_input_file -> path and file name for intial density profile (1
+% VARIABLE)
 %   - format -> single cast of CTD as structure array or table
 %       - **time is assumed at start of met time**
 %       - z: depth [m] (positive vector)
@@ -84,7 +85,7 @@ tic % log runtime
 % set parameters
 
 % % Hard code inputs
-met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\TestMET_6_23_2024.mat"
+met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\TestMET_6_25_2024.mat"
 profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\testPROF_6_23_2024.mat"
 pwp_output_file = 'testJun23nosalinity.mat'
 
@@ -569,7 +570,7 @@ function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon)
         end
 
         % Check for infinite loop
-        infloop = 1e9
+        infloop = 1e9;
         if nmix > infloop
             error(sprintf('Infinite loop limit exceeds %g times\n', infloop));
         end
