@@ -539,707 +539,748 @@ netcdf.close(ncid)
 
 %% units and descriptions
 
-ncwriteatt(filename,'trajectory','trajectory_id',SWIFT(1).ID)
+% Open the file once and stay in define mode for the whole attribute
+% section. ncwriteatt reopens/redefs/closes per call, which is ~dozens
+% of seconds per variable for a classic netcdf3 file.
+ncid_attr = netcdf.open(filename, 'WRITE');
+netcdf.reDef(ncid_attr);
+putAtt(ncid_attr, '__reset__');  % ncids get reused across files in batch
+
+putAtt(ncid_attr, 'trajectory', 'trajectory_id', SWIFT(1).ID);
 
 for i=1:length(names)
     if strcmp(names{i},'OBS_uncalibrated')
-        ncwriteatt(filename,'OBS_uncalibrated','units','digital count')
-        ncwriteatt(filename,'OBS_uncalibrated','long_name','Raw optical back scatter sensor count')
-        ncwriteatt(filename,'OBS_uncalibrated','instrument','OpenOBS')
+        putAtt(ncid_attr,'OBS_uncalibrated','units','digital count')
+        putAtt(ncid_attr,'OBS_uncalibrated','long_name','Raw optical back scatter sensor count')
+        putAtt(ncid_attr,'OBS_uncalibrated','instrument','OpenOBS')
     elseif strcmp(names{i},'OBS_ambient')
-        ncwriteatt(filename,'OBS_ambient','units','digital count')
-        ncwriteatt(filename,'OBS_ambient','long_name','Raw optical back scatter sensor count (ambient)')
-        ncwriteatt(filename,'OBS_ambient','instrument','OpenOBS')
+        putAtt(ncid_attr,'OBS_ambient','units','digital count')
+        putAtt(ncid_attr,'OBS_ambient','long_name','Raw optical back scatter sensor count (ambient)')
+        putAtt(ncid_attr,'OBS_ambient','instrument','OpenOBS')
     elseif strcmp(names{i},'OBS_calibratedNTU')
-        ncwriteatt(filename,'OBS_calibratedNTU','units','Nephelometric Turbidity Uni')
-        ncwriteatt(filename,'OBS_calibratedNTU','long_name','Calibrated NTU from optical back scatter')
-        ncwriteatt(filename,'OBS_calibratedNTU','instrument','openOBS')
-        ncwriteatt(filename,'OBS_calibratedNTU','method','Optical backscatter as shown in Eidem et al. Limnology and Oceanography: Methods, 2022')
+        putAtt(ncid_attr,'OBS_calibratedNTU','units','Nephelometric Turbidity Uni')
+        putAtt(ncid_attr,'OBS_calibratedNTU','long_name','Calibrated NTU from optical back scatter')
+        putAtt(ncid_attr,'OBS_calibratedNTU','instrument','openOBS')
+        putAtt(ncid_attr,'OBS_calibratedNTU','method','Optical backscatter as shown in Eidem et al. Limnology and Oceanography: Methods, 2022')
     elseif strcmp(names{i},'wavespectra')
         for j=1:length(spec_names)
             if strcmp(spec_names(j),'a1')
-                ncwriteatt(filename,'a1','units',' ')
-                ncwriteatt(filename,'a1','long_name','normalized spectral directional moment (positive east)')
+                putAtt(ncid_attr,'a1','units',' ')
+                putAtt(ncid_attr,'a1','long_name','normalized spectral directional moment (positive east)')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'a1','instrument','Microstrain 3DM-GX3-35/AHRS')
+                    putAtt(ncid_attr,'a1','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'a1','instrument','SBG Ellipse/AHRS')
+                    putAtt(ncid_attr,'a1','instrument','SBG Ellipse/AHRS')
                 elseif micro % microSWIFT
-                    ncwriteatt(filename,'a1','instrument','GPSWaves / NEDwaves')
+                    putAtt(ncid_attr,'a1','instrument','GPSWaves / NEDwaves')
                 end
-                ncwriteatt(filename,'a1','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
+                putAtt(ncid_attr,'a1','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
             if strcmp(spec_names(j),'b1')
-                ncwriteatt(filename,'b1','units',' ')
-                ncwriteatt(filename,'b1','long_name','normalized spectral directional moment (positive north)')
+                putAtt(ncid_attr,'b1','units',' ')
+                putAtt(ncid_attr,'b1','long_name','normalized spectral directional moment (positive north)')
                 if swiftnum < 18 && ~micro%v3 SWIFT
-                    ncwriteatt(filename,'b1','instrument','Microstrain 3DM-GX3-35/AHRS')
+                    putAtt(ncid_attr,'b1','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'b1','instrument','SBG Ellipse/AHRS')
+                    putAtt(ncid_attr,'b1','instrument','SBG Ellipse/AHRS')
                 elseif micro % microSWIFT
-                    ncwriteatt(filename,'b1','instrument','GGPSWaves / NEDwaves')
+                    putAtt(ncid_attr,'b1','instrument','GGPSWaves / NEDwaves')
                 end
-                ncwriteatt(filename,'b1','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
+                putAtt(ncid_attr,'b1','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
             if strcmp(spec_names(j),'a2')
-                ncwriteatt(filename,'a2','units',' ')
-                ncwriteatt(filename,'a2','long_name','normalized spectral directional moment (east-west)')
+                putAtt(ncid_attr,'a2','units',' ')
+                putAtt(ncid_attr,'a2','long_name','normalized spectral directional moment (east-west)')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'a2','instrument','Microstrain 3DM-GX3-35/AHRS')
+                    putAtt(ncid_attr,'a2','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'a2','instrument','SBG Ellipse/AHRS')
+                    putAtt(ncid_attr,'a2','instrument','SBG Ellipse/AHRS')
                 elseif micro % microSWIFT
-                    ncwriteatt(filename,'a2','instrument','GPSWaves / NEDwaves')
+                    putAtt(ncid_attr,'a2','instrument','GPSWaves / NEDwaves')
                 end
-                ncwriteatt(filename,'a2','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
+                putAtt(ncid_attr,'a2','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
             if strcmp(spec_names(j),'b2')
-                ncwriteatt(filename,'b2','units',' ')
-                ncwriteatt(filename,'b2','long_name','normalized spectral directional moment (north-south)')
+                putAtt(ncid_attr,'b2','units',' ')
+                putAtt(ncid_attr,'b2','long_name','normalized spectral directional moment (north-south)')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'b2','instrument','Microstrain 3DM-GX3-35/AHRS')
+                    putAtt(ncid_attr,'b2','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'b2','instrument','SBG Ellipse/AHRS')
+                    putAtt(ncid_attr,'b2','instrument','SBG Ellipse/AHRS')
                 elseif micro % microSWIFT
-                    ncwriteatt(filename,'b2','instrument','GPSWaves / NEDwaves')
+                    putAtt(ncid_attr,'b2','instrument','GPSWaves / NEDwaves')
                 end
-                ncwriteatt(filename,'b2','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
+                putAtt(ncid_attr,'b2','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
             if strcmp(spec_names(j),'energy')
-                ncwriteatt(filename,'energy','units','m^2/Hz')
-                ncwriteatt(filename,'energy','long_name','wave energy spectral density as a function of frequency')
-                ncwriteatt(filename,'energy','standard_name','sea_surface_wave_variance_spectral_density')
+                putAtt(ncid_attr,'energy','units','m^2/Hz')
+                putAtt(ncid_attr,'energy','long_name','wave energy spectral density as a function of frequency')
+                putAtt(ncid_attr,'energy','standard_name','sea_surface_wave_variance_spectral_density')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'energy','instrument','Microstrain 3DM-GX3-35/AHRS')
+                    putAtt(ncid_attr,'energy','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'energy','instrument','SBG Ellipse/AHRS')
+                    putAtt(ncid_attr,'energy','instrument','SBG Ellipse/AHRS')
                 elseif micro % microSWIFT
-                    ncwriteatt(filename,'energy','instrument','GPSWaves / NEDwaves')
+                    putAtt(ncid_attr,'energy','instrument','GPSWaves / NEDwaves')
                 end
-                ncwriteatt(filename,'energy','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
+                putAtt(ncid_attr,'energy','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
             if strcmp(spec_names(j),'freq')
-                ncwriteatt(filename,'freq','units','Hz')
-                ncwriteatt(filename,'freq','long_name','spectral frequencies')
-                ncwriteatt(filename,'freq','standard_name','wave_frequency')
+                putAtt(ncid_attr,'freq','units','Hz')
+                putAtt(ncid_attr,'freq','long_name','spectral frequencies')
+                putAtt(ncid_attr,'freq','standard_name','wave_frequency')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'freq','instrument','Microstrain 3DM-GX3-35/AHRS')
+                    putAtt(ncid_attr,'freq','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'freq','instrument','SBG Ellipse/AHRS')
+                    putAtt(ncid_attr,'freq','instrument','SBG Ellipse/AHRS')
                 elseif micro % microSWIFT
-                    ncwriteatt(filename,'freq','instrument','GPSWaves / NEDwaves')
+                    putAtt(ncid_attr,'freq','instrument','GPSWaves / NEDwaves')
                 end
-                ncwriteatt(filename,'freq','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
+                putAtt(ncid_attr,'freq','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
             if strcmp(spec_names(j),'check')
-                ncwriteatt(filename,'check','units',' ')
-                ncwriteatt(filename,'check','long_name','spectral check factor')
-                %ncwriteatt(filename,'check','standard_name','wave_check factor')
+                putAtt(ncid_attr,'check','units',' ')
+                putAtt(ncid_attr,'check','long_name','spectral check factor')
+                %putAtt(ncid_attr,'check','standard_name','wave_check factor')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'freq','instrument','Microstrain 3DM-GX3-35/AHRS')
+                    putAtt(ncid_attr,'freq','instrument','Microstrain 3DM-GX3-35/AHRS')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'freq','instrument','SBG Ellipse/AHRS')
+                    putAtt(ncid_attr,'freq','instrument','SBG Ellipse/AHRS')
                 elseif micro % microSWIFT
-                    ncwriteatt(filename,'freq','instrument','GPSWaves / NEDwaves')
+                    putAtt(ncid_attr,'freq','instrument','GPSWaves / NEDwaves')
                 end
-                ncwriteatt(filename,'check','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
+                putAtt(ncid_attr,'check','method','Wave spectral processing as shown in Thomson et al., JTech, 2018.')
             end
         end
 
     elseif strcmp(names{i},'uplooking')
         for j=1:length(z_names)
             if strcmp(z_names(j),'tkedissipationrate')
-                ncwriteatt(filename,'tkedissipationrate','units','W/kg')
-                ncwriteatt(filename,'tkedissipationrate','long_name','vertical profiles of turbulent dissipation rate beneath the wave-following free surface')
-                ncwriteatt(filename,'tkedissipationrate','standard_name','specific_turbulent_kinetic_energy_dissipation_in_sea_water')
+                putAtt(ncid_attr,'tkedissipationrate','units','W/kg')
+                putAtt(ncid_attr,'tkedissipationrate','long_name','vertical profiles of turbulent dissipation rate beneath the wave-following free surface')
+                putAtt(ncid_attr,'tkedissipationrate','standard_name','specific_turbulent_kinetic_energy_dissipation_in_sea_water')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'tkedissipationrate','instrument','Nortek Aquadopp ADCP')
+                    putAtt(ncid_attr,'tkedissipationrate','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'tkedissipationrate','instrument','Nortek Signature 1000 ADCP with AHRS')
-                    ncwriteatt(filename,'tkedissipationrate','comments','Initial examination of these data suggest that these data are questionable as calculated dissipation rates do not decrease with depth. Use with caution.')
+                    putAtt(ncid_attr,'tkedissipationrate','instrument','Nortek Signature 1000 ADCP with AHRS')
+                    putAtt(ncid_attr,'tkedissipationrate','comments','Initial examination of these data suggest that these data are questionable as calculated dissipation rates do not decrease with depth. Use with caution.')
                 end
             end
             if strcmp(z_names(j),'z')
-                ncwriteatt(filename,'z','units','m')
-                ncwriteatt(filename,'z','long_name','depth bins for the tke dissipation rate profiles')
-                ncwriteatt(filename,'z','standard_name','depth')
+                putAtt(ncid_attr,'z','units','m')
+                putAtt(ncid_attr,'z','long_name','depth bins for the tke dissipation rate profiles')
+                putAtt(ncid_attr,'z','standard_name','depth')
             end
         end
     elseif strcmp(names{i},'downlooking')
         for j=1:length(z_names)
             if strcmp(z_names(j),'velocityprofile')
-                ncwriteatt(filename,'velocityprofile','units','m/s')
-                ncwriteatt(filename,'velocityprofile','long_name','vertical profiles of horizontal velocity magnitude relative to the float (not corrected for drift)')
+                putAtt(ncid_attr,'velocityprofile','units','m/s')
+                putAtt(ncid_attr,'velocityprofile','long_name','vertical profiles of horizontal velocity magnitude relative to the float (not corrected for drift)')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'velocityprofile','instrument','Nortek Aquadopp ADCP')
+                    putAtt(ncid_attr,'velocityprofile','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'velocityprofile','instrument','Nortek Signature 1000 ADCP with AHRS')
+                    putAtt(ncid_attr,'velocityprofile','instrument','Nortek Signature 1000 ADCP with AHRS')
                 elseif swiftnum >=100 %WG
-                    ncwriteatt(filename,'velocityprofile','instrument','RDI Workhorse Monitor 300 kHz ADCP')
+                    putAtt(ncid_attr,'velocityprofile','instrument','RDI Workhorse Monitor 300 kHz ADCP')
                 end
             end
             if strcmp(z_names(j),'z')
-                ncwriteatt(filename,'z','units','m')
-                ncwriteatt(filename,'z','long_name','depth bins for the velocity rate profiles')
-                ncwriteatt(filename,'z','standard_name','depth')
+                putAtt(ncid_attr,'z','units','m')
+                putAtt(ncid_attr,'z','long_name','depth bins for the velocity rate profiles')
+                putAtt(ncid_attr,'z','standard_name','depth')
             end
         end
     elseif strcmp(names{i},'signature')
         for j=1:length(z_names)
             if strcmp(z_names(j),'tkedissipationrate')
-                ncwriteatt(filename,'tkedissipationrate','units','W/kg')
-                ncwriteatt(filename,'tkedissipationrate','long_name','turbulent dissipation rate')
-                ncwriteatt(filename,'tkedissipationrate','standard_name','specific_turbulent_kinetic_energy_dissipation_in_sea_water')
+                putAtt(ncid_attr,'tkedissipationrate','units','W/kg')
+                putAtt(ncid_attr,'tkedissipationrate','long_name','turbulent dissipation rate')
+                putAtt(ncid_attr,'tkedissipationrate','standard_name','specific_turbulent_kinetic_energy_dissipation_in_sea_water')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'tkedissipationrate','instrument','Nortek Aquadopp ADCP')
+                    putAtt(ncid_attr,'tkedissipationrate','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'tkedissipationrate','instrument','Nortek Signature 1000 ADCP with AHRS')
+                    putAtt(ncid_attr,'tkedissipationrate','instrument','Nortek Signature 1000 ADCP with AHRS')
                 end
             end
             if strcmp(z_names(j),'z')
-                ncwriteatt(filename,'z','units','m')
-                ncwriteatt(filename,'z','long_name','depth bins for currents')
-                ncwriteatt(filename,'z','standard_name','depth')
+                putAtt(ncid_attr,'z','units','m')
+                putAtt(ncid_attr,'z','long_name','depth bins for currents')
+                putAtt(ncid_attr,'z','standard_name','depth')
             end
             if strcmp(z_names(j),'east')
-                ncwriteatt(filename,'east','units','m/s')
-                ncwriteatt(filename,'east','long_name','eastward currents')
-                ncwriteatt(filename,'east','standard_name','eastward_sea_water_velocity')
+                putAtt(ncid_attr,'east','units','m/s')
+                putAtt(ncid_attr,'east','long_name','eastward currents')
+                putAtt(ncid_attr,'east','standard_name','eastward_sea_water_velocity')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'east','instrument','Nortek Aquadopp ADCP')
+                    putAtt(ncid_attr,'east','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'east','instrument','Nortek Signature 1000 ADCP with AHRS')
+                    putAtt(ncid_attr,'east','instrument','Nortek Signature 1000 ADCP with AHRS')
                 elseif swiftnum >=100 %WG
-                    ncwriteatt(filename,'east','instrument','RDI Workhorse Monitor 300 kHz ADCP')
+                    putAtt(ncid_attr,'east','instrument','RDI Workhorse Monitor 300 kHz ADCP')
                 end
             end
             if strcmp(z_names(j),'north')
-                ncwriteatt(filename,'north','units','m/s')
-                ncwriteatt(filename,'north','long_name','northward currents')
-                ncwriteatt(filename,'north','standard_name','northward_sea_water_velocity')
+                putAtt(ncid_attr,'north','units','m/s')
+                putAtt(ncid_attr,'north','long_name','northward currents')
+                putAtt(ncid_attr,'north','standard_name','northward_sea_water_velocity')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'north','instrument','Nortek Aquadopp ADCP')
+                    putAtt(ncid_attr,'north','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'north','instrument','Nortek Signature 1000 ADCP with AHRS')
+                    putAtt(ncid_attr,'north','instrument','Nortek Signature 1000 ADCP with AHRS')
                 elseif swiftnum >=100 %WG
-                    ncwriteatt(filename,'north','instrument','RDI Workhorse Monitor 300 kHz ADCP')
+                    putAtt(ncid_attr,'north','instrument','RDI Workhorse Monitor 300 kHz ADCP')
                 end
             end
         end
         for j=1:length(zHR_names)
             if strcmp(zHR_names(j),'tkedissipationrate')
-                ncwriteatt(filename,'tkedissipationrateHR','units','W/kg')
-                ncwriteatt(filename,'tkedissipationrateHR','long_name','turbulent dissipation rate from HR signature')
-                ncwriteatt(filename,'tkedissipationrateHR','standard_name','specific_turbulent_kinetic_energy_dissipation_in_sea_water')
+                putAtt(ncid_attr,'tkedissipationrateHR','units','W/kg')
+                putAtt(ncid_attr,'tkedissipationrateHR','long_name','turbulent dissipation rate from HR signature')
+                putAtt(ncid_attr,'tkedissipationrateHR','standard_name','specific_turbulent_kinetic_energy_dissipation_in_sea_water')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'tkedissipationrateHR','instrument','Nortek Aquadopp ADCP')
+                    putAtt(ncid_attr,'tkedissipationrateHR','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'tkedissipationrateHR','instrument','Nortek Signature 1000 ADCP with AHRS')
-                    ncwriteatt(filename,'tkedissipationrateHR','comments','Use with caution.  Check with Jim')
+                    putAtt(ncid_attr,'tkedissipationrateHR','instrument','Nortek Signature 1000 ADCP with AHRS')
+                    putAtt(ncid_attr,'tkedissipationrateHR','comments','Use with caution.  Check with Jim')
                 end
             end
             if strcmp(zHR_names(j),'east')
-                ncwriteatt(filename,'east','units','m/s')
-                ncwriteatt(filename,'east','long_name','eastward currents')
-                ncwriteatt(filename,'east','standard_name','eastward_sea_water_velocity')
+                putAtt(ncid_attr,'east','units','m/s')
+                putAtt(ncid_attr,'east','long_name','eastward currents')
+                putAtt(ncid_attr,'east','standard_name','eastward_sea_water_velocity')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'east','instrument','Nortek Aquadopp ADCP')
+                    putAtt(ncid_attr,'east','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'east','instrument','Nortek Signature 1000 ADCP with AHRS')
+                    putAtt(ncid_attr,'east','instrument','Nortek Signature 1000 ADCP with AHRS')
                 elseif swiftnum >=100 %WG
-                    ncwriteatt(filename,'east','instrument','RDI Workhorse Monitor 300 kHz ADCP')
+                    putAtt(ncid_attr,'east','instrument','RDI Workhorse Monitor 300 kHz ADCP')
                 end
             end
             if strcmp(zHR_names(j),'north')
-                ncwriteatt(filename,'north','units','m/s')
-                ncwriteatt(filename,'north','long_name','northward currents')
-                ncwriteatt(filename,'north','standard_name','northward_sea_water_velocity')
+                putAtt(ncid_attr,'north','units','m/s')
+                putAtt(ncid_attr,'north','long_name','northward currents')
+                putAtt(ncid_attr,'north','standard_name','northward_sea_water_velocity')
                 if swiftnum < 18 && ~micro %v3 SWIFT
-                    ncwriteatt(filename,'north','instrument','Nortek Aquadopp ADCP')
+                    putAtt(ncid_attr,'north','instrument','Nortek Aquadopp ADCP')
                 elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                    ncwriteatt(filename,'north','instrument','Nortek Signature 1000 ADCP with AHRS')
+                    putAtt(ncid_attr,'north','instrument','Nortek Signature 1000 ADCP with AHRS')
                 elseif swiftnum >=100 %WG
-                    ncwriteatt(filename,'north','instrument','RDI Workhorse Monitor 300 kHz ADCP')
+                    putAtt(ncid_attr,'north','instrument','RDI Workhorse Monitor 300 kHz ADCP')
                 end
             end
             if strcmp(zHR_names(j),'z')
-                ncwriteatt(filename,'zHR','units','m')
-                ncwriteatt(filename,'zHR','long_name','depth bins for turbulent dissipation rate')
-                ncwriteatt(filename,'zHR','standard_name','depth')
+                putAtt(ncid_attr,'zHR','units','m')
+                putAtt(ncid_attr,'zHR','long_name','depth bins for turbulent dissipation rate')
+                putAtt(ncid_attr,'zHR','standard_name','depth')
             end
         end
         if has_echo
-            ncwriteatt(filename,'echo','units','dB')
-            ncwriteatt(filename,'echo','long_name','acoustic echo intensity profile')
-            ncwriteatt(filename,'echo','instrument','Nortek Signature 1000 ADCP with AHRS')
-            ncwriteatt(filename,'echoz','units','m')
-            ncwriteatt(filename,'echoz','long_name','depth bins for echo intensity profile')
-            ncwriteatt(filename,'echoz','standard_name','depth')
-            ncwriteatt(filename,'echoz','instrument','Nortek Signature 1000 ADCP with AHRS')
+            putAtt(ncid_attr,'echo','units','dB')
+            putAtt(ncid_attr,'echo','long_name','acoustic echo intensity profile')
+            putAtt(ncid_attr,'echo','instrument','Nortek Signature 1000 ADCP with AHRS')
+            putAtt(ncid_attr,'echoz','units','m')
+            putAtt(ncid_attr,'echoz','long_name','depth bins for echo intensity profile')
+            putAtt(ncid_attr,'echoz','standard_name','depth')
+            putAtt(ncid_attr,'echoz','instrument','Nortek Signature 1000 ADCP with AHRS')
         end
         if has_altimeter
-            ncwriteatt(filename,'altimeter','units','m')
-            ncwriteatt(filename,'altimeter','long_name','altimeter range to seabed or target')
-            ncwriteatt(filename,'altimeter','instrument','Nortek Signature 1000 ADCP with AHRS')
+            putAtt(ncid_attr,'altimeter','units','m')
+            putAtt(ncid_attr,'altimeter','long_name','altimeter range to seabed or target')
+            putAtt(ncid_attr,'altimeter','instrument','Nortek Signature 1000 ADCP with AHRS')
         end
     elseif ~strcmp(names{i},'ID')
         if strcmp(names(i),'time')
-            ncwriteatt(filename,'time','units','days since 1970-01-01 00:00:00');
-            ncwriteatt(filename,'time','long_name','Days since 1 January 1970');
-            ncwriteatt(filename,'time','standard_name','time')
+            putAtt(ncid_attr,'time','units','days since 1970-01-01 00:00:00');
+            putAtt(ncid_attr,'time','long_name','Days since 1 January 1970');
+            putAtt(ncid_attr,'time','standard_name','time')
         end
         if strcmp(names(i),'lat')
-            ncwriteatt(filename,'lat','units','degree_north')
-            ncwriteatt(filename,'lat','long_name','latitude')
-            ncwriteatt(filename,'lat','standard_name','latitude')
-            ncwriteatt(filename,'lat','instrument','GPS')
+            putAtt(ncid_attr,'lat','units','degree_north')
+            putAtt(ncid_attr,'lat','long_name','latitude')
+            putAtt(ncid_attr,'lat','standard_name','latitude')
+            putAtt(ncid_attr,'lat','instrument','GPS')
         end
         if strcmp(names(i),'lon')
-            ncwriteatt(filename,'lon','units','degree_east')
-            ncwriteatt(filename,'lon','long_name','longitude')
-            ncwriteatt(filename,'lon','standard_name','longitude')
-            ncwriteatt(filename,'lon','instrument','GPS')
+            putAtt(ncid_attr,'lon','units','degree_east')
+            putAtt(ncid_attr,'lon','long_name','longitude')
+            putAtt(ncid_attr,'lon','standard_name','longitude')
+            putAtt(ncid_attr,'lon','instrument','GPS')
         end
         if strcmp(names(i),'watertemp')
-            ncwriteatt(filename,'sea_water_temperature','units','degree_C')
+            putAtt(ncid_attr,'sea_water_temperature','units','degree_C')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'sea_water_temperature','long_name','sea water temperature at 0.5 m depth')
+                putAtt(ncid_attr,'sea_water_temperature','long_name','sea water temperature at 0.5 m depth')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'sea_water_temperature','long_name','sea water temperature at 0.3 m depth')
+                putAtt(ncid_attr,'sea_water_temperature','long_name','sea water temperature at 0.3 m depth')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'sea_water_temperature','long_name','sea water temperature at 0.5 m depth')
+                putAtt(ncid_attr,'sea_water_temperature','long_name','sea water temperature at 0.5 m depth')
             end
-            ncwriteatt(filename,'sea_water_temperature','standard_name','sea_water_temperature')
-            ncwriteatt(filename,'sea_water_temperature','instrument','Aanderaa 4319')
-            %ncwriteatt(filename,'sea_water_temperature','ancillary_variables','flag_values_watertemp')
-            %ncwriteatt(filename,'sea_water_temperature','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-            %ncwriteatt(filename,'sea_water_temperature','_FillValue',-999)
+            putAtt(ncid_attr,'sea_water_temperature','standard_name','sea_water_temperature')
+            putAtt(ncid_attr,'sea_water_temperature','instrument','Aanderaa 4319')
+            %putAtt(ncid_attr,'sea_water_temperature','ancillary_variables','flag_values_watertemp')
+            %putAtt(ncid_attr,'sea_water_temperature','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+            %putAtt(ncid_attr,'sea_water_temperature','_FillValue',-999)
         end
         if strcmp(names(i),'watertemp_d2')
-            ncwriteatt(filename,'sea_water_temperature_at_depth','units','degree_C')
+            putAtt(ncid_attr,'sea_water_temperature_at_depth','units','degree_C')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'sea_water_temperature_at_depth','long_name','sea water temperature at 1.0 m depth')
-                ncwriteatt(filename,'sea_water_temperature_at_depth','instrument','Aanderaa 4319')
+                putAtt(ncid_attr,'sea_water_temperature_at_depth','long_name','sea water temperature at 1.0 m depth')
+                putAtt(ncid_attr,'sea_water_temperature_at_depth','instrument','Aanderaa 4319')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'sea_water_temperature_at_depth','long_name','sea water temperature at 0.5 m depth')
-                ncwriteatt(filename,'sea_water_temperature_at_depth','instrument','Aanderaa 4319')
+                putAtt(ncid_attr,'sea_water_temperature_at_depth','long_name','sea water temperature at 0.5 m depth')
+                putAtt(ncid_attr,'sea_water_temperature_at_depth','instrument','Aanderaa 4319')
 
             end
-            ncwriteatt(filename,'sea_water_temperature_at_depth','standard_name','sea_water_temperature')
-%             ncwriteatt(filename,'sea_water_temperature_at_depth','ancillary_variables','flag_values_watertemp')
-%             ncwriteatt(filename,'sea_water_temperature_at_depth','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'sea_water_temperature_at_depth','_FillValue',-999)
+            putAtt(ncid_attr,'sea_water_temperature_at_depth','standard_name','sea_water_temperature')
+%             putAtt(ncid_attr,'sea_water_temperature_at_depth','ancillary_variables','flag_values_watertemp')
+%             putAtt(ncid_attr,'sea_water_temperature_at_depth','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'sea_water_temperature_at_depth','_FillValue',-999)
         end
         if strcmp(names(i),'qsea')
-            ncwriteatt(filename,'sea_surface_saturation_specific_humidity','units','grams_per_kilogram')
+            putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','units','grams_per_kilogram')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.5 m depth')
+                putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.5 m depth')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.3 m depth')
+                putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.3 m depth')
             elseif micro %microSWIFT
-                ncwriteatt(filename,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.24 m depth')
+                putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','long_name','sea_surface saturation specific humidity from sea water temperature at 0.24 m depth')
             end
-            ncwriteatt(filename,'sea_surface_saturation_specific_humidity','standard_name','surface_specific_humidity')
-%             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','method','calculated from sea water temperature')
-%             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','ancillary_variables','flag_values_watertemp')
-%             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'sea_surface_saturation_specific_humidity','_FillValue',-999)
+            putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','standard_name','surface_specific_humidity')
+%             putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','method','calculated from sea water temperature')
+%             putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','ancillary_variables','flag_values_watertemp')
+%             putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'sea_surface_saturation_specific_humidity','_FillValue',-999)
         end
         if strcmp(names(i),'sigwaveheight')
-            ncwriteatt(filename,'significant_wave_height','units','m')
-            ncwriteatt(filename,'significant_wave_height','long_name','significant wave height')
-            ncwriteatt(filename,'significant_wave_height','standard_name','sea_surface_wave_significant_height')
+            putAtt(ncid_attr,'significant_wave_height','units','m')
+            putAtt(ncid_attr,'significant_wave_height','long_name','significant wave height')
+            putAtt(ncid_attr,'significant_wave_height','standard_name','sea_surface_wave_significant_height')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'significant_wave_height','instrument','Microstrain 3DM-GX3-35/AHRS')
+                putAtt(ncid_attr,'significant_wave_height','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'significant_wave_height','instrument','SBG Ellipse/AHRS')
+                putAtt(ncid_attr,'significant_wave_height','instrument','SBG Ellipse/AHRS')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'significant_wave_height','instrument','GPSWaves / NEDwaves')
+                putAtt(ncid_attr,'significant_wave_height','instrument','GPSWaves / NEDwaves')
             end
         end
         if strcmp(names(i),'peakwaveperiod')
-            ncwriteatt(filename,'peak_wave_period','units','s')
-            ncwriteatt(filename,'peak_wave_period','long_name','peak of period orbital velocity spectra')
-            ncwriteatt(filename,'peak_wave_period','standard_name','peak_wave_period')
+            putAtt(ncid_attr,'peak_wave_period','units','s')
+            putAtt(ncid_attr,'peak_wave_period','long_name','peak of period orbital velocity spectra')
+            putAtt(ncid_attr,'peak_wave_period','standard_name','peak_wave_period')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'peak_wave_period','instrument','Microstrain 3DM-GX3-35/AHRS')
+                putAtt(ncid_attr,'peak_wave_period','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'peak_wave_period','instrument','SBG Ellipse/AHRS')
+                putAtt(ncid_attr,'peak_wave_period','instrument','SBG Ellipse/AHRS')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'peak_wave_period','instrument','GPSWaves / NEDwaves')
+                putAtt(ncid_attr,'peak_wave_period','instrument','GPSWaves / NEDwaves')
             end
         end
         if strcmp(names(i),'centroidwaveperiod')
-            ncwriteatt(filename,'mean_wave_period','units','s')
-            ncwriteatt(filename,'mean_wave_period','long_name','centroid (mean) period orbital velocity spectra')
-            ncwriteatt(filename,'mean_wave_period','standard_name','sea_surface_wave_mean_period')
-            ncwriteatt(filename,'mean_wave_period','description','energy-weighted wave period calculated from the ratio of the zeroth moment and first moment of the sea surface wave variance spectral density')
+            putAtt(ncid_attr,'mean_wave_period','units','s')
+            putAtt(ncid_attr,'mean_wave_period','long_name','centroid (mean) period orbital velocity spectra')
+            putAtt(ncid_attr,'mean_wave_period','standard_name','sea_surface_wave_mean_period')
+            putAtt(ncid_attr,'mean_wave_period','description','energy-weighted wave period calculated from the ratio of the zeroth moment and first moment of the sea surface wave variance spectral density')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'mean_wave_period','instrument','Microstrain 3DM-GX3-35/AHRS')
+                putAtt(ncid_attr,'mean_wave_period','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'mean_wave_period','instrument','SBG Ellipse/AHRS')
+                putAtt(ncid_attr,'mean_wave_period','instrument','SBG Ellipse/AHRS')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'mean_wave_period','instrument','GPSWaves / NEDwaves')
+                putAtt(ncid_attr,'mean_wave_period','instrument','GPSWaves / NEDwaves')
             end
         end
 %         if strcmp(names(i),'mss')
-%             ncwriteatt(filename,'wave_mean_square_slope','units','s')
-%             ncwriteatt(filename,'wave_mean_square_slope','long_name','wave_mean_square_slope_normalized_by_frequency_width of 0.15 (0.25 to 0.4 1/s frequency range). Multiply by frequency width to get unnormalized value.')
-%             ncwriteatt(filename,'wave_mean_square_slope','standard_name','sea_surface_wave_mean_square_slope_normalized_by_frequency_width')
+%             putAtt(ncid_attr,'wave_mean_square_slope','units','s')
+%             putAtt(ncid_attr,'wave_mean_square_slope','long_name','wave_mean_square_slope_normalized_by_frequency_width of 0.15 (0.25 to 0.4 1/s frequency range). Multiply by frequency width to get unnormalized value.')
+%             putAtt(ncid_attr,'wave_mean_square_slope','standard_name','sea_surface_wave_mean_square_slope_normalized_by_frequency_width')
 %             if swiftnum < 18 && ~micro %v3 SWIFT
-%                 ncwriteatt(filename,'wave_mean_square_slope','instrument','Microstrain 3DM-GX3-35/AHRS')
+%                 putAtt(ncid_attr,'wave_mean_square_slope','instrument','Microstrain 3DM-GX3-35/AHRS')
 %             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-%                 ncwriteatt(filename,'wave_mean_square_slope','instrument','SBG Ellipse/AHRS')
+%                 putAtt(ncid_attr,'wave_mean_square_slope','instrument','SBG Ellipse/AHRS')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'wave_mean_square_slope','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+%                 putAtt(ncid_attr,'wave_mean_square_slope','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
 %             end
-%             ncwriteatt(filename,'wave_mean_square_slope','method','Calculated with equation 4 in Iyer et al., JGR Oceans, 2022.')
+%             putAtt(ncid_attr,'wave_mean_square_slope','method','Calculated with equation 4 in Iyer et al., JGR Oceans, 2022.')
 %         end
 %         if strcmp(names(i),'ustar')
-%             ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','units','m/s')
-%             ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','long_name','friction_velocity_in_air_from_wave_spectra calculated using 0.25 to 0.4 1/s frequency range')
-%             ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','standard_name','friction_velocity_in_air')
+%             putAtt(ncid_attr,'friction_velocity_in_air_from_wave_spectra','units','m/s')
+%             putAtt(ncid_attr,'friction_velocity_in_air_from_wave_spectra','long_name','friction_velocity_in_air_from_wave_spectra calculated using 0.25 to 0.4 1/s frequency range')
+%             putAtt(ncid_attr,'friction_velocity_in_air_from_wave_spectra','standard_name','friction_velocity_in_air')
 %             if swiftnum < 18 && ~micro %v3 SWIFT
-%                 ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','Microstrain 3DM-GX3-35/AHRS')
+%                 putAtt(ncid_attr,'friction_velocity_in_air_from_wave_spectra','instrument','Microstrain 3DM-GX3-35/AHRS')
 %             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-%                 ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','SBG Ellipse/AHRS')
+%                 putAtt(ncid_attr,'friction_velocity_in_air_from_wave_spectra','instrument','SBG Ellipse/AHRS')
 %             elseif micro %microSWIFT
-%                 ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
+%                 putAtt(ncid_attr,'friction_velocity_in_air_from_wave_spectra','instrument','GPSWaves/Microstrain 3DM-GX3-35/AHRS')
 %             end
-%             ncwriteatt(filename,'friction_velocity_in_air_from_wave_spectra','method','Calculated with equation 3 in Iyer et al., JGR Oceans, 2022.')
+%             putAtt(ncid_attr,'friction_velocity_in_air_from_wave_spectra','method','Calculated with equation 3 in Iyer et al., JGR Oceans, 2022.')
 %         end
         if strcmp(names(i),'salinity')
-            ncwriteatt(filename,'sea_water_salinity','units','psu')
+            putAtt(ncid_attr,'sea_water_salinity','units','psu')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'sea_water_salinity','long_name','sea water salinity at 0.5 m depth')
+                putAtt(ncid_attr,'sea_water_salinity','long_name','sea water salinity at 0.5 m depth')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'sea_water_salinity','long_name','sea water salinity at 0.3 m depth')
+                putAtt(ncid_attr,'sea_water_salinity','long_name','sea water salinity at 0.3 m depth')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'sea_water_salinity','long_name','sea water salinity at 0.5 m depth')
+                putAtt(ncid_attr,'sea_water_salinity','long_name','sea water salinity at 0.5 m depth')
             end
-            ncwriteatt(filename,'sea_water_salinity','standard_name','sea_water_salinity')
-            ncwriteatt(filename,'sea_water_salinity','instrument','Aanderaa 4319')
-%             ncwriteatt(filename,'sea_water_salinity','ancillary_variables','flag_values_salinity')
-%             ncwriteatt(filename,'sea_water_salinity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'sea_water_salinity','_FillValue',-999)
+            putAtt(ncid_attr,'sea_water_salinity','standard_name','sea_water_salinity')
+            putAtt(ncid_attr,'sea_water_salinity','instrument','Aanderaa 4319')
+%             putAtt(ncid_attr,'sea_water_salinity','ancillary_variables','flag_values_salinity')
+%             putAtt(ncid_attr,'sea_water_salinity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'sea_water_salinity','_FillValue',-999)
         end
         if strcmp(names(i),'salinity_d2')
-            ncwriteatt(filename,'sea_water_salinity_at_depth','units','psu')
+            putAtt(ncid_attr,'sea_water_salinity_at_depth','units','psu')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'sea_water_salinity_at_depth','long_name','sea water salinity at 1.0 m depth')
-                ncwriteatt(filename,'sea_water_salinity_at_depth','instrument','Aanderaa 4319')
+                putAtt(ncid_attr,'sea_water_salinity_at_depth','long_name','sea water salinity at 1.0 m depth')
+                putAtt(ncid_attr,'sea_water_salinity_at_depth','instrument','Aanderaa 4319')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'sea_water_salinity_at_depth','long_name','sea water salinity at 0.5 m depth')
-                ncwriteatt(filename,'sea_water_salinity_at_depth','instrument','Aanderaa 4319')
+                putAtt(ncid_attr,'sea_water_salinity_at_depth','long_name','sea water salinity at 0.5 m depth')
+                putAtt(ncid_attr,'sea_water_salinity_at_depth','instrument','Aanderaa 4319')
             end
-            ncwriteatt(filename,'sea_water_salinity_at_depth','standard_name','sea_water_salinity')
-%             ncwriteatt(filename,'sea_water_salinity_at_depth','ancillary_variables','flag_values_salinity')
-%             ncwriteatt(filename,'sea_water_salinity_at_depth','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'sea_water_salinity_at_depth','_FillValue',-999)
+            putAtt(ncid_attr,'sea_water_salinity_at_depth','standard_name','sea_water_salinity')
+%             putAtt(ncid_attr,'sea_water_salinity_at_depth','ancillary_variables','flag_values_salinity')
+%             putAtt(ncid_attr,'sea_water_salinity_at_depth','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'sea_water_salinity_at_depth','_FillValue',-999)
         end
         if strcmp(names(i),'peakwavedirT')
-            ncwriteatt(filename,'peak_wave_direction','units','degree')
-            ncwriteatt(filename,'peak_wave_direction','long_name','wave direction at spectral peak, direction from north')
-            ncwriteatt(filename,'peak_wave_direction','standard_name','sea_surface_wave_from_direction_at_variance_spectral_density_maximum')
+            putAtt(ncid_attr,'peak_wave_direction','units','degree')
+            putAtt(ncid_attr,'peak_wave_direction','long_name','wave direction at spectral peak, direction from north')
+            putAtt(ncid_attr,'peak_wave_direction','standard_name','sea_surface_wave_from_direction_at_variance_spectral_density_maximum')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'peak_wave_direction','instrument','Microstrain 3DM-GX3-35/AHRS')
+                putAtt(ncid_attr,'peak_wave_direction','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'peak_wave_direction','instrument','SBG Ellipse/AHRS')
+                putAtt(ncid_attr,'peak_wave_direction','instrument','SBG Ellipse/AHRS')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'peak_wave_direction','instrument','GPSWaves / NEDwaves')
+                putAtt(ncid_attr,'peak_wave_direction','instrument','GPSWaves / NEDwaves')
             end
-            ncwriteatt(filename,'peak_wave_direction','method','Wave spectral processing as described by Thomson et al., JTech, 2018.')
+            putAtt(ncid_attr,'peak_wave_direction','method','Wave spectral processing as described by Thomson et al., JTech, 2018.')
         end
         if strcmp(names(i),'peakwaveperiod')
-            ncwriteatt(filename,'peak_wave_period','units','s')
-            ncwriteatt(filename,'peak_wave_period','long_name','peak of period orbital velocity spectra')
-            ncwriteatt(filename,'peak_wave_period','standard_name','sea_surface_wave_period_at_variance_spectral_density_maximum')
+            putAtt(ncid_attr,'peak_wave_period','units','s')
+            putAtt(ncid_attr,'peak_wave_period','long_name','peak of period orbital velocity spectra')
+            putAtt(ncid_attr,'peak_wave_period','standard_name','sea_surface_wave_period_at_variance_spectral_density_maximum')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'peak_wave_period','instrument','Microstrain 3DM-GX3-35/AHRS')
+                putAtt(ncid_attr,'peak_wave_period','instrument','Microstrain 3DM-GX3-35/AHRS')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'peak_wave_period','instrument','SBG Ellipse/AHRS')
+                putAtt(ncid_attr,'peak_wave_period','instrument','SBG Ellipse/AHRS')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'peak_wave_period','instrument','GPSWaves / NEDwaves')
+                putAtt(ncid_attr,'peak_wave_period','instrument','GPSWaves / NEDwaves')
             end
-            ncwriteatt(filename,'peak_wave_period','method','Wave spectral processing as described by Thomson et al., JTech, 2018.')
+            putAtt(ncid_attr,'peak_wave_period','method','Wave spectral processing as described by Thomson et al., JTech, 2018.')
         end
         if strcmp(names(i),'winddirT')
-            ncwriteatt(filename,'wind_direction','units','degree')
+            putAtt(ncid_attr,'wind_direction','units','degree')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'wind_direction','long_name','true wind direction at 0.8 m height above the wave-following surface, direction from north')
-                ncwriteatt(filename,'wind_direction','standard_name','wind_from_direction')
-                ncwriteatt(filename,'wind_direction','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'wind_direction','long_name','true wind direction at 0.8 m height above the wave-following surface, direction from north')
+                putAtt(ncid_attr,'wind_direction','standard_name','wind_from_direction')
+                putAtt(ncid_attr,'wind_direction','instrument','Airmar 200WX')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'wind_direction','long_name','true wind direction at 0.5 m height above the wave-following surface, direction from north')
-                ncwriteatt(filename,'wind_direction','standard_name','wind_from_direction')
-                ncwriteatt(filename,'wind_direction','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'wind_direction','long_name','true wind direction at 0.5 m height above the wave-following surface, direction from north')
+                putAtt(ncid_attr,'wind_direction','standard_name','wind_from_direction')
+                putAtt(ncid_attr,'wind_direction','instrument','Vaisala WXT530')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'wind_direction','long_name','true wind direction at 1.0 m height above the wave-following surface, direction from north')
-%                 ncwriteatt(filename,'wind_direction','standard_name','wind_from_direction')
-%                 ncwriteatt(filename,'wind_direction','instrument','Airmar 200WX')
+%                 putAtt(ncid_attr,'wind_direction','long_name','true wind direction at 1.0 m height above the wave-following surface, direction from north')
+%                 putAtt(ncid_attr,'wind_direction','standard_name','wind_from_direction')
+%                 putAtt(ncid_attr,'wind_direction','instrument','Airmar 200WX')
             end
         end
         if strcmp(names(i),'winddirTstddev')
-            ncwriteatt(filename,'wind_direction_stddev','units','degree')
+            putAtt(ncid_attr,'wind_direction_stddev','units','degree')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'wind_direction_stddev','long_name','standard deviation of true wind direction at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_direction_stddev','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'wind_direction_stddev','long_name','standard deviation of true wind direction at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'wind_direction_stddev','instrument','Airmar 200WX')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'wind_direction_stddev','long_name','standard deviation of true wind direction at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_direction_stddev','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'wind_direction_stddev','long_name','standard deviation of true wind direction at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'wind_direction_stddev','instrument','Vaisala WXT530')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'wind_direction_stddev','long_name','standard deviation of true wind direction at 1.0 m height above the wave-following surface')
-%                 ncwriteatt(filename,'wind_direction_stddev','instrument','Airmar 200WX')
+%                 putAtt(ncid_attr,'wind_direction_stddev','long_name','standard deviation of true wind direction at 1.0 m height above the wave-following surface')
+%                 putAtt(ncid_attr,'wind_direction_stddev','instrument','Airmar 200WX')
             end
         end
         if strcmp(names(i),'windspd')
-            ncwriteatt(filename,'wind_speed','units','m/s')
+            putAtt(ncid_attr,'wind_speed','units','m/s')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'wind_speed','long_name','true wind speed at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_speed','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'wind_speed','long_name','true wind speed at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'wind_speed','instrument','Airmar 200WX')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'wind_speed','long_name','true wind speed at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_speed','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'wind_speed','long_name','true wind speed at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'wind_speed','instrument','Vaisala WXT530')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'wind_speed','long_name','true wind speed at 1.0 m height above the wave-following surface')
-%                 ncwriteatt(filename,'wind_speed','instrument','Airmar 200WX')
+%                 putAtt(ncid_attr,'wind_speed','long_name','true wind speed at 1.0 m height above the wave-following surface')
+%                 putAtt(ncid_attr,'wind_speed','instrument','Airmar 200WX')
             end
-            ncwriteatt(filename,'wind_speed','standard_name','wind_speed')
-%             ncwriteatt(filename,'wind_speed','ancillary_variables','flag_values_windspd')
-%             ncwriteatt(filename,'wind_speed','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'wind_speed','_FillValue',-999)
+            putAtt(ncid_attr,'wind_speed','standard_name','wind_speed')
+%             putAtt(ncid_attr,'wind_speed','ancillary_variables','flag_values_windspd')
+%             putAtt(ncid_attr,'wind_speed','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'wind_speed','_FillValue',-999)
         end
         if strcmp(names(i),'windspdstddev')
-            ncwriteatt(filename,'wind_speed_stddev','units','m/s')
+            putAtt(ncid_attr,'wind_speed_stddev','units','m/s')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'wind_speed_stddev','long_name','standard deviation of true wind speed at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_speed','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'wind_speed_stddev','long_name','standard deviation of true wind speed at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'wind_speed','instrument','Airmar 200WX')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'wind_speed_stddev','long_name','standard deviation of true wind speed at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'wind_speed_stddev','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'wind_speed_stddev','long_name','standard deviation of true wind speed at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'wind_speed_stddev','instrument','Vaisala WXT530')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'wind_speed_stddev','long_name','standard deviation of true wind speed at 1.0 m height above the wave-following surface')
-%                 ncwriteatt(filename,'wind_speed_stddev','instrument','Airmar 200WX')
+%                 putAtt(ncid_attr,'wind_speed_stddev','long_name','standard deviation of true wind speed at 1.0 m height above the wave-following surface')
+%                 putAtt(ncid_attr,'wind_speed_stddev','instrument','Airmar 200WX')
             end
-%             ncwriteatt(filename,'wind_speed_stddev','ancillary_variables','flag_values_windspd')
-%             ncwriteatt(filename,'wind_speed_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'wind_speed_stddev','ancillary_variables','flag_values_windspd')
+%             putAtt(ncid_attr,'wind_speed_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
         end
         if strcmp(names(i),'airtemp')
-            ncwriteatt(filename,'air_temperature','units','degree_C')
+            putAtt(ncid_attr,'air_temperature','units','degree_C')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'air_temperature','long_name','air temperature at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'air_temperature','instrument','Airmar 200WX')
-                ncwriteatt(filename,'air_temperature','note','Daytime data (10:00-21:00 UTC) have been replaced with NaNs, because of diurnal heating of the sensor. Additional corrections were made to Airmar air temperature data to correct for unrealistically low values in high wind conditions due to sea spray. This involved applying a 2-hour maximum filter (take the maximum data point every 2 hours). Remaining unrealistic data were removed manually. Because of this processing step, air temperature data should be treated as if the time resolution is 2 hours.');
+                putAtt(ncid_attr,'air_temperature','long_name','air temperature at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_temperature','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'air_temperature','note','Daytime data (10:00-21:00 UTC) have been replaced with NaNs, because of diurnal heating of the sensor. Additional corrections were made to Airmar air temperature data to correct for unrealistically low values in high wind conditions due to sea spray. This involved applying a 2-hour maximum filter (take the maximum data point every 2 hours). Remaining unrealistic data were removed manually. Because of this processing step, air temperature data should be treated as if the time resolution is 2 hours.');
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'air_temperature','long_name','air temperature at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'air_temperature','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'air_temperature','long_name','air temperature at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_temperature','instrument','Vaisala WXT530')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'air_temperature','long_name','air temperature at 1.0 m height above the wave-following surface')
-%                 ncwriteatt(filename,'air_temperature','instrument','Airmar 200WX')
-%                 ncwriteatt(filename,'air_temperature','note','Daytime data (10:00-21:00 UTC) have been replaced with NaNs, because of diurnal heating of the sensor. Additional corrections were made to Airmar air temperature data to correct for unrealistically low values in high wind conditions due to sea spray. This involved applying a 2-hour maximum filter (take the maximum data point every 2 hours). Remaining unrealistic data were removed manually. Because of this processing step, air temperature data should be treated as if the time resolution is 2 hours.');
+%                 putAtt(ncid_attr,'air_temperature','long_name','air temperature at 1.0 m height above the wave-following surface')
+%                 putAtt(ncid_attr,'air_temperature','instrument','Airmar 200WX')
+%                 putAtt(ncid_attr,'air_temperature','note','Daytime data (10:00-21:00 UTC) have been replaced with NaNs, because of diurnal heating of the sensor. Additional corrections were made to Airmar air temperature data to correct for unrealistically low values in high wind conditions due to sea spray. This involved applying a 2-hour maximum filter (take the maximum data point every 2 hours). Remaining unrealistic data were removed manually. Because of this processing step, air temperature data should be treated as if the time resolution is 2 hours.');
             end
-            ncwriteatt(filename,'air_temperature','standard_name','air_temperature')
-%             ncwriteatt(filename,'air_temperature','ancillary_variables','flag_values_airtemp')
-%             ncwriteatt(filename,'air_temperature','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'air_temperature','_FillValue',-999)
+            putAtt(ncid_attr,'air_temperature','standard_name','air_temperature')
+%             putAtt(ncid_attr,'air_temperature','ancillary_variables','flag_values_airtemp')
+%             putAtt(ncid_attr,'air_temperature','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'air_temperature','_FillValue',-999)
 
         end
         if strcmp(names(i),'airtempstddev')
-            ncwriteatt(filename,'air_temperature_stddev','units','deg C')
+            putAtt(ncid_attr,'air_temperature_stddev','units','deg C')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'air_temperature_stddev','long_name','standard deviation of air temperature at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'air_temperature_stddev','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'air_temperature_stddev','long_name','standard deviation of air temperature at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_temperature_stddev','instrument','Airmar 200WX')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'air_temperature_stddev','long_name','standard deviation of air temperature at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'air_temperature_stddev','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'air_temperature_stddev','long_name','standard deviation of air temperature at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_temperature_stddev','instrument','Vaisala WXT530')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'air_temperature_stddev','long_name','standard deviation of air temperature at 1.0 m height above the wave-following surface')
-%                 ncwriteatt(filename,'air_temperature_stddev','instrument','Airmar 200WX')
+%                 putAtt(ncid_attr,'air_temperature_stddev','long_name','standard deviation of air temperature at 1.0 m height above the wave-following surface')
+%                 putAtt(ncid_attr,'air_temperature_stddev','instrument','Airmar 200WX')
             end
-%             ncwriteatt(filename,'air_temperature_stddev','ancillary_variables','flag_values_airtemp')
-%             ncwriteatt(filename,'air_temperature_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'air_temperature_stddev','_FillValue',-999)
+%             putAtt(ncid_attr,'air_temperature_stddev','ancillary_variables','flag_values_airtemp')
+%             putAtt(ncid_attr,'air_temperature_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'air_temperature_stddev','_FillValue',-999)
         end
         if strcmp(names(i),'relhumidity')
-            ncwriteatt(filename,'relative_humidity','units','%')
+            putAtt(ncid_attr,'relative_humidity','units','%')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'relative_humidity','long_name','relative_humidity at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'relative_humidity','standard_name','relative_humidity')
+                putAtt(ncid_attr,'relative_humidity','long_name','relative_humidity at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'relative_humidity','standard_name','relative_humidity')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'relative_humidity','long_name','relative_humidity at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'relative_humidity','instrument','Vaisala WXT530')
-                ncwriteatt(filename,'relative_humidity','standard_name','relative_humidity')
+                putAtt(ncid_attr,'relative_humidity','long_name','relative_humidity at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'relative_humidity','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'relative_humidity','standard_name','relative_humidity')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'relative_humidity','long_name','relative_humidity at 1.0 m height above the wave-following surface')
-%                 ncwriteatt(filename,'relative_humidity','standard_name','relative_humidity')
+%                 putAtt(ncid_attr,'relative_humidity','long_name','relative_humidity at 1.0 m height above the wave-following surface')
+%                 putAtt(ncid_attr,'relative_humidity','standard_name','relative_humidity')
             end
-%             ncwriteatt(filename,'relative_humidity','ancillary_variables','flag_values_humidity')
-%             ncwriteatt(filename,'relative_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'relative_humidity','_FillValue',-999)
+%             putAtt(ncid_attr,'relative_humidity','ancillary_variables','flag_values_humidity')
+%             putAtt(ncid_attr,'relative_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'relative_humidity','_FillValue',-999)
         end
         if strcmp(names(i),'qair')
-            ncwriteatt(filename,'specific_humidity','units','grams_per_kilogram')
+            putAtt(ncid_attr,'specific_humidity','units','grams_per_kilogram')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'specific_humidity','standard_name','specific_humidity')
+                putAtt(ncid_attr,'specific_humidity','long_name','specific_humidity at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'specific_humidity','standard_name','specific_humidity')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'specific_humidity','standard_name','specific_humidity')
+                putAtt(ncid_attr,'specific_humidity','long_name','specific_humidity at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'specific_humidity','standard_name','specific_humidity')
 %             elseif micro % microSWIFT
-%                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 1.0 m height above the wave-following surface')
-%                 ncwriteatt(filename,'specific_humidity','standard_name','specific_humidity')
+%                 putAtt(ncid_attr,'specific_humidity','long_name','specific_humidity at 1.0 m height above the wave-following surface')
+%                 putAtt(ncid_attr,'specific_humidity','standard_name','specific_humidity')
             end
-            ncwriteatt(filename,'specific_humidity','method','calculated from air temperature, air pressure, and relative humidity')
-%             ncwriteatt(filename,'specific_humidity','ancillary_variables','flag_values_humidity')
-%             ncwriteatt(filename,'specific_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'specific_humidity','_FillValue',-999)
+            putAtt(ncid_attr,'specific_humidity','method','calculated from air temperature, air pressure, and relative humidity')
+%             putAtt(ncid_attr,'specific_humidity','ancillary_variables','flag_values_humidity')
+%             putAtt(ncid_attr,'specific_humidity','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'specific_humidity','_FillValue',-999)
         end
         if strcmp(names(i),'relhumiditystddev')
-            ncwriteatt(filename,'relative_humidity_stddev','units','')
+            putAtt(ncid_attr,'relative_humidity_stddev','units','')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'relative_humidity_stddev','long_name','standard deviation of relative_humidity at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'relative_humidity_stddev','long_name','standard deviation of relative_humidity at 0.8 m height above the wave-following surface')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'relative_humidity_stddev','long_name','standard deviation of relative_humidity at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'relative_humidity_stddev','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'relative_humidity_stddev','long_name','standard deviation of relative_humidity at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'relative_humidity_stddev','instrument','Vaisala WXT530')
             elseif micro %microSWIFT
-                ncwriteatt(filename,'relative_humidity_stddev','long_name','standard deviation of relative_humidity at 1.0 m height above the wave-following surface')
+                putAtt(ncid_attr,'relative_humidity_stddev','long_name','standard deviation of relative_humidity at 1.0 m height above the wave-following surface')
             end
-%             ncwriteatt(filename,'relative_humidity_stddev','ancillary_variables','flag_values_humidity')
-%             ncwriteatt(filename,'relative_humidity_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
-%             ncwriteatt(filename,'relative_humidity_stddev','_FillValue',-999)
+%             putAtt(ncid_attr,'relative_humidity_stddev','ancillary_variables','flag_values_humidity')
+%             putAtt(ncid_attr,'relative_humidity_stddev','comment','Data flagged in the variable specified in the "ancillary_variables" attribute. 0 = Data are reasonable, 1 = Data are questionable, 2 = Data are unreasonable')
+%             putAtt(ncid_attr,'relative_humidity_stddev','_FillValue',-999)
         end
         if strcmp(names(i),'airpres')
-            ncwriteatt(filename,'air_pressure','units','bar')
+            putAtt(ncid_attr,'air_pressure','units','bar')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'air_pressure','long_name','air pressure at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'air_pressure','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'air_pressure','long_name','air pressure at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_pressure','instrument','Airmar 200WX')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'air_pressure','long_name','air pressure at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'air_pressure','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'air_pressure','long_name','air pressure at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_pressure','instrument','Vaisala WXT530')
             elseif micro % microSWIFT
-                ncwriteatt(filename,'air_pressure','long_name','air pressure at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'air_pressure','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'air_pressure','long_name','air pressure at 1.0 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_pressure','instrument','Airmar 200WX')
             end
-            ncwriteatt(filename,'air_pressure','standard_name','air_pressure')
-%             ncwriteatt(filename,'air_pressure','ancillary_variables','flag_values_airtemp')
-%             ncwriteatt(filename,'air_pressure','_FillValue',-999)
+            putAtt(ncid_attr,'air_pressure','standard_name','air_pressure')
+%             putAtt(ncid_attr,'air_pressure','ancillary_variables','flag_values_airtemp')
+%             putAtt(ncid_attr,'air_pressure','_FillValue',-999)
         end
         if strcmp(names(i),'airpresstddev')
-            ncwriteatt(filename,'air_pressure_stddev','units','bar')
+            putAtt(ncid_attr,'air_pressure_stddev','units','bar')
             if swiftnum < 18 && ~micro %v3 SWIFT
-                ncwriteatt(filename,'air_pressure_stddev','long_name','standard deviation of air pressure at 0.8 m height above the wave-following surface')
-                ncwriteatt(filename,'air_pressure_stddev','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'air_pressure_stddev','long_name','standard deviation of air pressure at 0.8 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_pressure_stddev','instrument','Airmar 200WX')
             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-                ncwriteatt(filename,'air_pressure_stddev','long_name','standard deviation of air pressure at 0.5 m height above the wave-following surface')
-                ncwriteatt(filename,'air_pressure_stddev','instrument','Vaisala WXT530')
+                putAtt(ncid_attr,'air_pressure_stddev','long_name','standard deviation of air pressure at 0.5 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_pressure_stddev','instrument','Vaisala WXT530')
             elseif micro %microSWIFT
-                ncwriteatt(filename,'air_pressure_stddev','long_name','standard deviation of air pressure at 1.0 m height above the wave-following surface')
-                ncwriteatt(filename,'air_pressure_stddev','instrument','Airmar 200WX')
+                putAtt(ncid_attr,'air_pressure_stddev','long_name','standard deviation of air pressure at 1.0 m height above the wave-following surface')
+                putAtt(ncid_attr,'air_pressure_stddev','instrument','Airmar 200WX')
             end
-%             ncwriteatt(filename,'air_pressure_stddev','ancillary_variables','flag_values_airtemp')
-%             ncwriteatt(filename,'air_pressure_stddev','_FillValue',-999)
+%             putAtt(ncid_attr,'air_pressure_stddev','ancillary_variables','flag_values_airtemp')
+%             putAtt(ncid_attr,'air_pressure_stddev','_FillValue',-999)
         end
         if strcmp(names(i),'flag_values_watertemp')
-            ncwriteatt(filename,'flag_values_watertemp','description','flags')
-            ncwriteatt(filename,'flag_values_watertemp','long_name','flag_values_for_sea_water_temperature_variable')
-            ncwriteatt(filename,'flag_values_watertemp','comment','flag values for sea water temperature: 0 = reasonable, 1 = questionable data, 2 = bad data')
-            ncwriteatt(filename,'flag_values_watertemp','ancillary_variables','sea_water_temperature')
+            putAtt(ncid_attr,'flag_values_watertemp','description','flags')
+            putAtt(ncid_attr,'flag_values_watertemp','long_name','flag_values_for_sea_water_temperature_variable')
+            putAtt(ncid_attr,'flag_values_watertemp','comment','flag values for sea water temperature: 0 = reasonable, 1 = questionable data, 2 = bad data')
+            putAtt(ncid_attr,'flag_values_watertemp','ancillary_variables','sea_water_temperature')
             if swiftnum > 244 & swiftnum < 246
-                ncwriteatt(filename,'flag_values_watertemp','comment','flag values for sea water temperature and sea water temperature at depth: 0 = reasonable, 1 = questionable data, 2 = bad data')
-                ncwriteatt(filename,'flag_values_watertemp','ancillary_variables','sea_water_temperature,sea_water_temperature_at_depth')
+                putAtt(ncid_attr,'flag_values_watertemp','comment','flag values for sea water temperature and sea water temperature at depth: 0 = reasonable, 1 = questionable data, 2 = bad data')
+                putAtt(ncid_attr,'flag_values_watertemp','ancillary_variables','sea_water_temperature,sea_water_temperature_at_depth')
             end
         end
         if strcmp(names(i),'flag_values_salinity')
-            ncwriteatt(filename,'flag_values_salinity','description','flags')
-            ncwriteatt(filename,'flag_values_salinity','long_name','flag_values_for_sea_water_salinity_variable')
-            ncwriteatt(filename,'flag_values_salinity','comment','flag values for sea water salinity: 0 = reasonable, 1 = questionable data, 2 = bad data')
-            ncwriteatt(filename,'flag_values_salinity','ancillary_variables','sea_water_salinity')
+            putAtt(ncid_attr,'flag_values_salinity','description','flags')
+            putAtt(ncid_attr,'flag_values_salinity','long_name','flag_values_for_sea_water_salinity_variable')
+            putAtt(ncid_attr,'flag_values_salinity','comment','flag values for sea water salinity: 0 = reasonable, 1 = questionable data, 2 = bad data')
+            putAtt(ncid_attr,'flag_values_salinity','ancillary_variables','sea_water_salinity')
             if swiftnum > 244 & swiftnum < 246
-                ncwriteatt(filename,'flag_values_salinity','comment','flag values for sea water salinity and sea water salinity at depth: 0 = reasonable, 1 = questionable data, 2 = bad data')
-                ncwriteatt(filename,'flag_values_salinity','ancillary_variables','sea_water_salinity,sea_water_salinity_at_depth')
+                putAtt(ncid_attr,'flag_values_salinity','comment','flag values for sea water salinity and sea water salinity at depth: 0 = reasonable, 1 = questionable data, 2 = bad data')
+                putAtt(ncid_attr,'flag_values_salinity','ancillary_variables','sea_water_salinity,sea_water_salinity_at_depth')
             end
         end
         if strcmp(names(i),'flag_values_airtemp')
-            ncwriteatt(filename,'flag_values_airtemp','description','flags')
-            ncwriteatt(filename,'flag_values_airtemp','long_name','flag_values_for_air_temperature_variable')
-            ncwriteatt(filename,'flag_values_airtemp','comment','flag values for air temperature (and air pressure): 0 = reasonable, 1 = questionable data, 2 = bad data')
+            putAtt(ncid_attr,'flag_values_airtemp','description','flags')
+            putAtt(ncid_attr,'flag_values_airtemp','long_name','flag_values_for_air_temperature_variable')
+            putAtt(ncid_attr,'flag_values_airtemp','comment','flag values for air temperature (and air pressure): 0 = reasonable, 1 = questionable data, 2 = bad data')
             if ~micro
-                ncwriteatt(filename,'flag_values_airtemp','comment2','Questionable data (=1) are usually rapid decreases that likely correspond to atmospheric cold pools, but the artificial influence of sea spray cannot be ruled out')
+                putAtt(ncid_attr,'flag_values_airtemp','comment2','Questionable data (=1) are usually rapid decreases that likely correspond to atmospheric cold pools, but the artificial influence of sea spray cannot be ruled out')
             end
             if micro
-                ncwriteatt(filename,'flag_values_airtemp','comment2','Questionable data (=1) are usually rapid decreases that correspond to either atmospheric cold pools or the artificial influence of sea spray')
+                putAtt(ncid_attr,'flag_values_airtemp','comment2','Questionable data (=1) are usually rapid decreases that correspond to either atmospheric cold pools or the artificial influence of sea spray')
             end
-            ncwriteatt(filename,'flag_values_airtemp','ancillary_variables','air_temperature,air_pressure')
+            putAtt(ncid_attr,'flag_values_airtemp','ancillary_variables','air_temperature,air_pressure')
         end
         if strcmp(names(i),'flag_values_windspd')
-            ncwriteatt(filename,'flag_values_windspd','description','flags')
-            ncwriteatt(filename,'flag_values_windspd','long_name','flag_values_for_wind_speed_variable')
-            ncwriteatt(filename,'flag_values_windspd','comment','flag values for wind speed: 0 = reasonable, 1 = questionable data, 2 = bad data')
-            ncwriteatt(filename,'flag_values_windspd','ancillary_variables','wind_speed')
+            putAtt(ncid_attr,'flag_values_windspd','description','flags')
+            putAtt(ncid_attr,'flag_values_windspd','long_name','flag_values_for_wind_speed_variable')
+            putAtt(ncid_attr,'flag_values_windspd','comment','flag values for wind speed: 0 = reasonable, 1 = questionable data, 2 = bad data')
+            putAtt(ncid_attr,'flag_values_windspd','ancillary_variables','wind_speed')
         end
         if strcmp(names(i),'flag_values_humidity')
-            ncwriteatt(filename,'flag_values_humidity','description','flags')
-            ncwriteatt(filename,'flag_values_humidity','long_name','flag_values_for_relative_humidity_and_specific_humidity_variable')
-            ncwriteatt(filename,'flag_values_humidity','comment','flag values for relative and specific humidity: 0 = reasonable, 1 = questionable data, 2 = bad data')
+            putAtt(ncid_attr,'flag_values_humidity','description','flags')
+            putAtt(ncid_attr,'flag_values_humidity','long_name','flag_values_for_relative_humidity_and_specific_humidity_variable')
+            putAtt(ncid_attr,'flag_values_humidity','comment','flag values for relative and specific humidity: 0 = reasonable, 1 = questionable data, 2 = bad data')
             if ~micro
-                ncwriteatt(filename,'flag_values_humidity','comment2','Questionable data (=1) are usually rapid changes that likely correspond to atmospheric cold pools, but the artificial influence of sea spray cannot be ruled out')
+                putAtt(ncid_attr,'flag_values_humidity','comment2','Questionable data (=1) are usually rapid changes that likely correspond to atmospheric cold pools, but the artificial influence of sea spray cannot be ruled out')
             end
-            ncwriteatt(filename,'flag_values_humidity','ancillary_variables','relative_humidity,specific_humidity')
+            putAtt(ncid_attr,'flag_values_humidity','ancillary_variables','relative_humidity,specific_humidity')
         end
         %         if strcmp(names(i),'qa')
-        %             ncwriteatt(filename,'specific_humidity','units','g/kg')
+        %             putAtt(ncid_attr,'specific_humidity','units','g/kg')
         %             if swiftnum < 18 && ~micro %v3 SWIFT
-        %                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 0.8 m height above the wave-following surface')
+        %                 putAtt(ncid_attr,'specific_humidity','long_name','specific_humidity at 0.8 m height above the wave-following surface')
         %             elseif swiftnum >= 18 && ~micro %v4 SWIFT
-        %                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 0.5 m height above the wave-following surface')
+        %                 putAtt(ncid_attr,'specific_humidity','long_name','specific_humidity at 0.5 m height above the wave-following surface')
         %             elseif micro %microSWIFT
-        %                 ncwriteatt(filename,'specific_humidity','long_name','specific_humidity at 1.0 m height above the wave-following surface')
+        %                 putAtt(ncid_attr,'specific_humidity','long_name','specific_humidity at 1.0 m height above the wave-following surface')
         %             end
-        %             ncwriteatt(filename,'specific_humidity','standard_name','specific_humidity')
+        %             putAtt(ncid_attr,'specific_humidity','standard_name','specific_humidity')
         %         end
         if strcmp(names(i),'puck')
-            ncwriteatt(filename,'puck','units','')
-            ncwriteatt(filename,'puck','long_name','three color channels of a WetLabs puck fluorometer')
+            putAtt(ncid_attr,'puck','units','')
+            putAtt(ncid_attr,'puck','long_name','three color channels of a WetLabs puck fluorometer')
         end
         if strcmp(names(i),'driftdirT')
-            ncwriteatt(filename,'drift_direction','units','degree')
-            ncwriteatt(filename,'drift_direction','long_name','platform drift direction toward, in degrees to (equivalent to course over ground)')
-            ncwriteatt(filename,'drift_direction','standard_name','platform_course')
-            ncwriteatt(filename,'drift_direction','instrument','GPS')
+            putAtt(ncid_attr,'drift_direction','units','degree')
+            putAtt(ncid_attr,'drift_direction','long_name','platform drift direction toward, in degrees to (equivalent to course over ground)')
+            putAtt(ncid_attr,'drift_direction','standard_name','platform_course')
+            putAtt(ncid_attr,'drift_direction','instrument','GPS')
         end
         if strcmp(names(i),'driftspd')
-            ncwriteatt(filename,'drift_speed','units','m/s')
-            ncwriteatt(filename,'drift_speed','long_name','platform drift speed (equivalent to speed over ground)')
-            ncwriteatt(filename,'drift_speed','standard_name','platform_speed_wrt_ground')
-            ncwriteatt(filename,'drift_speed','instrument','GPS')
+            putAtt(ncid_attr,'drift_speed','units','m/s')
+            putAtt(ncid_attr,'drift_speed','long_name','platform drift speed (equivalent to speed over ground)')
+            putAtt(ncid_attr,'drift_speed','standard_name','platform_speed_wrt_ground')
+            putAtt(ncid_attr,'drift_speed','instrument','GPS')
         end
         if strcmp(names(i),'z')
-            ncwriteatt(filename,'z','units','m')
-            ncwriteatt(filename,'z','long_name','reconstruction (via post-processing IMU data) of vertical displacements at 25 Hz')
+            putAtt(ncid_attr,'z','units','m')
+            putAtt(ncid_attr,'z','long_name','reconstruction (via post-processing IMU data) of vertical displacements at 25 Hz')
         end
         if strcmp(names(i),'x')
-            ncwriteatt(filename,'x','units','m')
-            ncwriteatt(filename,'x','long_name','reconstruction (via post-processing IMU data) of horizontal east-west displacements at 25 Hz')
+            putAtt(ncid_attr,'x','units','m')
+            putAtt(ncid_attr,'x','long_name','reconstruction (via post-processing IMU data) of horizontal east-west displacements at 25 Hz')
         end
         if strcmp(names(i),'y')
-            ncwriteatt(filename,'y','units','m')
-            ncwriteatt(filename,'y','long_name','reconstruction (via post-processing IMU data) of horizontal north-south displacements at 25 Hz')
+            putAtt(ncid_attr,'y','units','m')
+            putAtt(ncid_attr,'y','long_name','reconstruction (via post-processing IMU data) of horizontal north-south displacements at 25 Hz')
         end
         if strcmp(names(i),'u')
-            ncwriteatt(filename,'u','units','m/s')
-            ncwriteatt(filename,'u','long_name','east-west GPS velocities at 4 Hz')
+            putAtt(ncid_attr,'u','units','m/s')
+            putAtt(ncid_attr,'u','long_name','east-west GPS velocities at 4 Hz')
         end
         if strcmp(names(i),'v')
-            ncwriteatt(filename,'v','units','m/s')
-            ncwriteatt(filename,'v','long_name','north-south GPS velocities at 4 Hz')
+            putAtt(ncid_attr,'v','units','m/s')
+            putAtt(ncid_attr,'v','long_name','north-south GPS velocities at 4 Hz')
         end
         if strcmp(names(i),'')
-            ncwriteatt(filename,'','units','')
-            ncwriteatt(filename,'','long_name','')
+            putAtt(ncid_attr,'','units','')
+            putAtt(ncid_attr,'','long_name','')
         end
     end
 end
+disp('Saving NC')
+netcdf.endDef(ncid_attr);
+netcdf.close(ncid_attr);
+
 end
 
+
+function putAtt(ncid, vname, aname, aval)
+% Batched replacement for ncwriteatt. Assumes the caller has opened the
+% file and entered define mode once; caches varids keyed by name.
+% Missing vars warn once and skip (attrs shouldn't abort the whole write).
+% Call putAtt(ncid, '__reset__') at the start of each file to clear the
+% cache — ncids get reused after close, so identity alone isn't enough.
+    persistent vids missing
+    if strcmp(vname, '__reset__')
+        vids = containers.Map;
+        missing = containers.Map;
+        return;
+    end
+    if isempty(vids)
+        vids = containers.Map;
+        missing = containers.Map;
+    end
+    if isKey(missing, vname), return; end
+    if ~isKey(vids, vname)
+        try
+            vids(vname) = netcdf.inqVarID(ncid, vname);
+        catch
+            missing(vname) = true;
+            warning('SWIFT2NC:missingVar', ...
+                'skipping attributes for undefined variable "%s"', vname);
+            return;
+        end
+    end
+    netcdf.putAtt(ncid, vids(vname), aname, aval);
+end
 
 
