@@ -475,9 +475,6 @@ function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon)
         hold on
 	    [t s d u v] = mix5(t,s,d,u,v,ml_index+1,z,lat,lon);
         plot(d,'r-')
-        %pause
-        %}
-	    %[t s d u v] = mix5(t,s,d,u,v,ml_index+1);
         
     end
 
@@ -491,20 +488,20 @@ function [t s d u v] = mix5(t,s,d,u,v,j,z,lat,lon)
     d(1:j) = calc_seawater_density(s(1:j),t(1:j), gsw_p_from_z(-z(1:j)',lat), lon, lat); 
     u(1:j) = mean(u(1:j));
     v(1:j) = mean(v(1:j));
-    end % mix5
+end % mix5
     
     %--------------------------------------------------------------------------
     
-    function [u v] = rot(u,v,ang)
-    %  This subroutine rotates the vector (u,v) through an angle, ang
-    r = (u+1i*v)*exp(1i*ang);
-    u = real(r);
-    v = imag(r);
-    
-    end %rot
+function [u v] = rot(u,v,ang)
+%  This subroutine rotates the vector (u,v) through an angle, ang
+r = (u+1i*v)*exp(1i*ang);
+u = real(r);
+v = imag(r);
+
+end %rot
     %--------------------------------------------------------------------------
     
-    function [t s d u v] = bulk_mix(t,s,d,u,v,g,rb,nz,z,ml_index,lat, lon)
+function [t s d u v] = bulk_mix(t,s,d,u,v,g,rb,nz,z,ml_index,lat, lon)
     
     rvc = rb;
     for j = ml_index+1:nz
@@ -517,6 +514,7 @@ function [t s d u v] = mix5(t,s,d,u,v,j,z,lat,lon)
 		    rv = g*h*dd/dv;
 	    end
 	    if rv > rvc
+            fprintf('Bulk mixed %g times\n', j-ml_index-1);
 		    break
 	    else
 		    [t s d u v] = mix5(t,s,d,u,v,j,z,lat,lon);
