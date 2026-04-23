@@ -6,7 +6,7 @@
 % Civil and Environmental Engineering
 %--------------------------------------------------------------------------
 %
-% This version is tweaked based on the matlab code by Byron Kilbourne (2011),
+% This version is adapted from the matlab code by Byron Kilbourne (2011),
 % provided by Earle Wilson 
 %    https://github.com/earlew/pwp_python_00
 % 
@@ -56,8 +56,6 @@
 % Dependencies:
 % TEOS-10 "Gibbs Seawater toolbox"
 %   - https://www.teos-10.org/software.htm
-% SEAWATER Library 
-%   - https://www.cmar.csiro.au/datacentre/ext_docs/seawater.html
 %--------------------------------------------------------------------------
 % 
 % this code has sections
@@ -86,9 +84,9 @@ tic % log runtime
 % set parameters
 
 % % Hard code inputs
-met_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\toy_profile20m.mat"
-profile_input_file = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\toy_met.mat"
-pwp_output_file = 'testtoycase.mat'
+met_input_file = ""
+profile_input_file = ""
+pwp_output_file = ""
 
 
 dt			= 3600*1/2;          %time-step increment (seconds)
@@ -509,10 +507,9 @@ function [t s d u v] = bulk_mix(t,s,d,u,v,g,rb,nz,z,ml_index,lat, lon)
 	    dd 	= (d(j)-d(1))/d(1);
 	    dv 	= (u(j)-u(1))^2+(v(j)-v(1))^2;
 	    if dv == 0
-		    rv = Inf;
-	    else
-		    rv = g*h*dd/dv;
-	    end
+		    dv = 1.0e-8;
+        end
+		rv = g*h*dd/dv;
 	    if rv > rvc
             fprintf('Bulk mixed %g times\n', j-ml_index-1);
 		    break
