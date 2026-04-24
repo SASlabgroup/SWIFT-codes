@@ -431,6 +431,6 @@ fluxes.Qnet = fluxes.netrad - fluxes.hsb - fluxes.hlb; % positive heating ocean;
 Qnet = fluxes.Qnet;
 
 %% plot key values as time series
-save(fullfile(cd, sprintf('%s_COAREfluxes',name)),'-v7.3');
+save(fullfile(cd, sprintf('%s_COAREfluxes',name)),'SWIFT', 'fluxes','-v7.3');
 
 plotCOAREfromSWIFT(SWIFT, fluxes, name); 
