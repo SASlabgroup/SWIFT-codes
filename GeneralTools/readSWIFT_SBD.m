@@ -589,7 +589,7 @@ while 1
             disp('Fixed-Point Designer Toolbox is not installed, message type 52 cannot be read.  Go to "Add-Ons" and install this first.')
             return
         end
-        epochTime                = fread(uint32, 1,'uint32'); % epoch time (seconds).  Is this float32 or uint32?
+        epochTime                = fread(fid, 1,'uint32'); % epoch time (seconds).  Is this float32 or uint32?
         asDatetime               = datetime(epochTime, 'ConvertFrom', 'posixtime', 'TimeZone','UTC');
         SWIFT.time               = datenum(asDatetime); % time at end of burst
         SWIFT.lat                = fread(fid, 1,'float'); % Latitude
