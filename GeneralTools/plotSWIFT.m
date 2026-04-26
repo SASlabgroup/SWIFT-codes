@@ -887,42 +887,50 @@ end
 
 if isfield(SWIFT,'accspectra')
 
-    f = SWIFT(1).accspectra.freq;
-
     for si=1:length(SWIFT)
-        acc_mean(si,:) = [SWIFT.acc_mean];
-        acc_min(si,:) = [SWIFT.acc_min];
-        acc_max(si,:) = [SWIFT.acc_max];
+        acc_mean(si,:) = [SWIFT(si).acc_mean]';
+        acc_min(si,:) = [SWIFT(si).acc_min]';
+        acc_max(si,:) = [SWIFT(si).acc_max]';
         accspectra_x(si,:) = SWIFT(si).accspectra.x;
         accspectra_y(si,:) = SWIFT(si).accspectra.y;
         accspectra_z(si,:) = SWIFT(si).accspectra.z;
+        if all(~isnan(SWIFT(si).accspectra.freq ))
+            f = SWIFT(si).accspectra.freq;
+        end
     end
+
     figure(16), clf
 
     subplot(2,1,1)
-    plot([SWIFT.time], acc_mean(:,ai), '-'), hold on
-    plot([SWIFT.time], acc_min(:,ai), ':')
-    plot([SWIFT.time], acc_max(:,ai), ':' )
-    legend('x','y','z')
-    set(gca,'YLim',[0 1.1])
+    for ai=1:3
+        thisline(ai) = plot([SWIFT.time], acc_mean(:,ai), '-x'); hold on
+    end
+    for ai=1:3
+        rgb = get(thisline(ai), 'Color');  
+        plot([SWIFT.time], acc_min(:,ai), ':','color',rgb) 
+        plot([SWIFT.time], acc_max(:,ai), ':','color',rgb)
+    end
+    set(gca,'YLim',[-1.5 1.5])
+    grid
     title('acceleration')
+    legend('x','y','z','Location','NortheastOutside')
     datetick
 
     subplot(2,3,4)
     loglog(f,accspectra_x,'b')
-    set(gca,'YLim',[1e-5 1e1])
+    set(gca,'YLim',[1e-9 1e1])
     xlabel('f [Hz]')
     ylabel('x psd')
 
     subplot(2,3,5)
     loglog(f,accspectra_y,'r')
-    set(gca,'YLim',[1e-5 1e1])
+    set(gca,'YLim',[1e-9 1e1])
     xlabel('f [Hz]')
     ylabel('y psd')
 
     subplot(2,3,6)
     loglog(f,accspectra_z,'y')
-    set(gca,'YLim',[1e-5 1e1])
+    set(gca,'YLim',[1e-9 1e1])
     xlabel('f [Hz]')
     ylabel('z psd')
 

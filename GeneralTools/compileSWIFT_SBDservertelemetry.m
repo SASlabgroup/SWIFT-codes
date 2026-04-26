@@ -188,11 +188,11 @@ for ai = 1:length(flist)
         allnames = [];
 
         % if payloads match, increment
-    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames) && ~lightsensor(ai)
+    elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames) && ~lightsensor(ai) && ~obssensor(ai) && ~accsensor(ai)
         SWIFT(ai) = oneSWIFT;
         
         % if additional payloads, favor that new structure (removing other)
-    elseif ai > 1 && length(onenames) > length(allnames) && ~lightsensor(ai)
+    elseif ai > 1 && length(onenames) > length(allnames) && ~lightsensor(ai) && ~obssensor(ai) && ~accsensor(ai)
         clear SWIFT
         badburst(ai-1) = true;
         SWIFT(ai) = oneSWIFT;
@@ -202,7 +202,7 @@ for ai = 1:length(flist)
         disp(allnames)
         
         % if fewer paylaods, skip that burst
-    elseif ai > 1 && length(onenames) < length(allnames) && ~lightsensor(ai) && ~obssensor(ai)
+    elseif ai > 1 && length(onenames) < length(allnames) && ~lightsensor(ai) && ~obssensor(ai) && ~accsensor(ai)
         disp('=================================')
         disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
         SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
@@ -435,7 +435,10 @@ if any(accsensor)
             SWIFT(si).acc_max = NaN(1,3);
             SWIFT(si).acc_mean = NaN(1,3);
             SWIFT(si).acc_min = NaN(1,3);
-            SWIFT(si).accspectra = [];
+            SWIFT(si).accspectra.freq = NaN(48,1);
+            SWIFT(si).accspectra.x = NaN(48,1);
+            SWIFT(si).accspectra.y = NaN(48,1);
+            SWIFT(si).accspectra.z = NaN(48,1);
         end
     end
 end
