@@ -426,7 +426,7 @@ if any(accsensor)
 
     for si=1:length(SWIFT)
         [tdiff bestmatch] = min( abs ( [SWIFT(si).time] - [SWIFTaccdata.time] ) );
-        if tdiff < 1/24 % find closest data within a one hour cutoff
+        if tdiff < 1/24 && length(SWIFTaccdata(bestmatch).acc_max)==3 % find closest data within a one hour cutoff
             SWIFT(si).acc_max = SWIFTaccdata(bestmatch).acc_max;
             SWIFT(si).acc_mean = SWIFTaccdata(bestmatch).acc_mean;
             SWIFT(si).acc_min = SWIFTaccdata(bestmatch).acc_min;
