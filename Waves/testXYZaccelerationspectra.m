@@ -6,13 +6,14 @@
 
 clear all
 
-fs=3.9; 
-dropbox_dir = '/Users/jthomson/Dropbox/engineering/SWIFT/microSWIFT_v2/Documentation/Accelerometer/20260406_ADXL355_data/';
+%fs=3.9; 
+fs=4000
+dropbox_dir = '/Users/jthomson/Dropbox/engineering/SWIFT/microSWIFT_v2/Documentation/Accelerometer/20260426_4khz_tabletop/';
 % dropbox_dir = '/Users/lindzey/Dropbox/microSWIFT_v2/Documentation/Accelerometer/20260406_ADXL355_data/';
 
 %% load data
 
-flist = dir([dropbox_dir '*.txt']);
+flist = dir([dropbox_dir '*data*.txt']);
 
 for fi = 1:length(flist)
     testdata = importdata([dropbox_dir flist(fi).name]);
@@ -21,6 +22,8 @@ for fi = 1:length(flist)
 %fs=3.9; testdata = importdata(dropbox_dir + "microSWIFT_v2/Documentation/Accelerometer/20251208_ADXL355_data/accel_data_0000.txt");
 %fs=4000; testdata = importdata(dropbox_dir + "microSWIFT_v2/Documentation/Accelerometer/20251001_ADXL355_data/table_quiet/accel_data_0004.txt");
 %fs=4000; testdata = importdata(dropbox_dir + "microSWIFT_v2/Documentation/Accelerometer/20251001_ADXL355_data/table_accelerations/accel_data_0002.txt");
+%fs=4000; testdata = importdata(dropbox_dir + "microSWIFT_v2/Documentation/Accelerometer/20260426_4khz_tabletop/");
+
 
 x = single( testdata(:,3)' * 9.8 ); % convert from g to m/s^2 and make row vector (1xM)
 y = single( testdata(:,4)' * 9.8 ); % convert from g to m/s^2 and make row vector (1xM)
