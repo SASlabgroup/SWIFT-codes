@@ -20,8 +20,8 @@
 %             7/2022    allow microSWIFT timestamps (not from filename)
 %             4/2025    save microSWIFT light sensor sbds alongside wave sbds (still need to merge)
 %             9/2025    save microSWIFT OpenOBS sensor sbds alongside wave sbds (still need to merge)
-%             10/2025   merge light sensor and OpenOBS data into main data
-%             structure
+%             10/2025   merge light sensor and OpenOBS data into main data structure
+%             4/2026   merge accelerometer
 clear all
 
 % Recover plotflag forwarded via temp file (set by pullSWIFTtelemetry)
@@ -57,13 +57,16 @@ flist = dir('*.sbd');
 
 lightsensorcounter = 0; % count light sensor reports
 OpenOBSsensorcounter = 0; % count OpenOBS sensor reports
+accsensorcounter = 0; % count OpenOBS sensor reports
+
 
 for ai = 1:length(flist)
     
     badburst(ai) = false;  % intialize bad burst flag
     lightsensor(ai) = false; % intialize light data
     obssensor(ai) = false; % intialize obs data
-    
+    accsensor(ai) = false; % intialize acc data
+
     [ oneSWIFT voltage ]= readSWIFT_SBD( flist(ai).name , 0);
 
     if voltage==9999 % error flag from SBD message
@@ -88,6 +91,13 @@ for ai = 1:length(flist)
         SWIFTobsdata(OpenOBSsensorcounter + [1:3]) = oneSWIFT;  clear oneSWIFT
         obssensor(ai) = true;
         OpenOBSsensorcounter = OpenOBSsensorcounter + 3;
+        oneSWIFT.lat = []; oneSWIFT.lon = []; oneSWIFT.time = NaN; % force removal of this index from primary structure
+    end
+
+    if isfield(oneSWIFT,'accspectra')
+        SWIFTaccdata(accsensorcounter + 1) = oneSWIFT;  clear oneSWIFT
+        accsensor(ai) = true;
+        accsensorcounter = accsensorcounter + 3;
         oneSWIFT.lat = []; oneSWIFT.lon = []; oneSWIFT.time = NaN; % force removal of this index from primary structure
     end
 
@@ -378,7 +388,7 @@ if isfield(SWIFT,'salinity') && all([SWIFT.salinity]==0)
     end
 end
 
-%% merge microSWIFT light and OBS data with main data structure
+%% merge microSWIFT light, OBS, or acc data with main data structure
 
 if any(lightsensor)
 
@@ -412,14 +422,33 @@ if any(obssensor)
     end
 end
 
+if any(accsensor)
+
+    for si=1:length(SWIFT)
+        [tdiff bestmatch] = min( abs ( [SWIFT(si).time] - [SWIFTaccdata.time] ) );
+        if tdiff < 1/24 % find closest data within a one hour cutoff
+            SWIFT(si).acc_max = SWIFTaccdata(bestmatch).acc_max;
+            SWIFT(si).acc_mean = SWIFTaccdata(bestmatch).acc_mean;
+            SWIFT(si).acc_min = SWIFTaccdata(bestmatch).acc_min;
+            SWIFT(si).accspectra = SWIFTaccdata(bestmatch).accspectra;
+        else
+            SWIFT(si).acc_max = NaN(1,3);
+            SWIFT(si).acc_mean = NaN(1,3);
+            SWIFT(si).acc_min = NaN(1,3);
+            SWIFT(si).accspectra = [];
+        end
+    end
+end
+
 %% save
 %save([ flist(ai).name(6:13) '.mat'], 'SWIFT')
 %save([ wd '.mat'], 'SWIFT')
-if micro
+if micro & isfield(SWIFT,'ID')
     save(['microSWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT*')
-elseif length([SWIFT.time]) > 1
+elseif length([SWIFT.time]) > 1 & isfield(SWIFT,'ID')
     save(['SWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT')
 else
+    save(['SWIFTXX_telemetry.mat'],'SWIFT')
 end
 
 
