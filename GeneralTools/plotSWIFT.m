@@ -33,6 +33,7 @@ function [] = plotSWIFT(SWIFT)
 %   figure 13: shortwave radiation and atmos pressure
 %   figure 14: microSWIFT light data
 %   figure 15: microSWIFT OBS data
+%   figure 16: microSWIFT accelerometer data
 
 if ispc
     slash = '\';
@@ -117,9 +118,11 @@ if isfield(SWIFT,'winddirT') && length([SWIFT.winddirT]) == length([SWIFT.time])
     %legend('Wind','Waves');
 end %if
 
-linkaxes(ax,'x')
-set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)] )
-print('-dpng',['SWIFT' wd  '_windandwaves.png'])
+if exist('ax')
+    linkaxes(ax,'x')
+    set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)] )
+    print('-dpng',['SWIFT' wd  '_windandwaves.png'])
+end
 
 
 
@@ -253,15 +256,15 @@ if isfield(SWIFT,'wavespectra')
             semilogy(SWIFT(ai).wavespectra.freq,SWIFT(ai).wavespectra.energy,'linewidth',2,'color',thiscolor);
             hold on
             if wcounter == 0
-               E(ai,:) = SWIFT(ai).wavespectra.energy;
-               f(ai,:) = SWIFT(ai).wavespectra.freq;
-               wcounter = 1;
-            elseif wcounter == 1 && length(SWIFT(ai).wavespectra.energy) == size(E,2) 
-               E(ai,:) = SWIFT(ai).wavespectra.energy;
-               f(ai,:) = SWIFT(ai).wavespectra.freq;
+                E(ai,:) = SWIFT(ai).wavespectra.energy;
+                f(ai,:) = SWIFT(ai).wavespectra.freq;
+                wcounter = 1;
+            elseif wcounter == 1 && length(SWIFT(ai).wavespectra.energy) == size(E,2)
+                E(ai,:) = SWIFT(ai).wavespectra.energy;
+                f(ai,:) = SWIFT(ai).wavespectra.freq;
             else
-               E(ai,:) = NaN;
-               f(ai,:) = NaN;
+                E(ai,:) = NaN;
+                f(ai,:) = NaN;
             end
             t(ai) = SWIFT(ai).time;
         else
@@ -841,7 +844,7 @@ end
 
 if isfield(SWIFT,'OBS_uncalibrated')
 
-    figure(14), clf
+    figure(15), clf
 
     for si=1:length(SWIFT)
         OBS_uncal(si,:) = SWIFT(si).OBS_uncalibrated;
@@ -877,5 +880,52 @@ if isfield(SWIFT,'OBS_uncalibrated')
     end
 
     print('-dpng',['SWIFT' wd '_OBSsensor.png'])
+
+end
+
+%%   figure 16: microSWIFT accelerometer
+
+if isfield(SWIFT,'accspectra')
+
+    f = SWIFT(1).accspectra.freq;
+
+    for si=1:length(SWIFT)
+        acc_mean(si,:) = [SWIFT.acc_mean];
+        acc_min(si,:) = [SWIFT.acc_min];
+        acc_max(si,:) = [SWIFT.acc_max];
+        accspectra_x(si,:) = SWIFT(si).accspectra.x;
+        accspectra_y(si,:) = SWIFT(si).accspectra.y;
+        accspectra_z(si,:) = SWIFT(si).accspectra.z;
+    end
+    figure(16), clf
+
+    subplot(2,1,1)
+    plot([SWIFT.time], acc_mean(:,ai), '-'), hold on
+    plot([SWIFT.time], acc_min(:,ai), ':')
+    plot([SWIFT.time], acc_max(:,ai), ':' )
+    legend('x','y','z')
+    set(gca,'YLim',[0 1.1])
+    title('acceleration')
+    datetick
+
+    subplot(2,3,4)
+    loglog(f,accspectra_x,'b')
+    set(gca,'YLim',[1e-5 1e1])
+    xlabel('f [Hz]')
+    ylabel('x psd')
+
+    subplot(2,3,5)
+    loglog(f,accspectra_y,'r')
+    set(gca,'YLim',[1e-5 1e1])
+    xlabel('f [Hz]')
+    ylabel('y psd')
+
+    subplot(2,3,6)
+    loglog(f,accspectra_z,'y')
+    set(gca,'YLim',[1e-5 1e1])
+    xlabel('f [Hz]')
+    ylabel('z psd')
+
+    print('-dpng',['SWIFT' wd '_acc.png'])
 
 end
