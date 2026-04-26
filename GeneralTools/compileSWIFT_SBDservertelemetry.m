@@ -97,7 +97,7 @@ for ai = 1:length(flist)
     if isfield(oneSWIFT,'accspectra')
         SWIFTaccdata(accsensorcounter + 1) = oneSWIFT;  clear oneSWIFT
         accsensor(ai) = true;
-        accsensorcounter = accsensorcounter + 3;
+        accsensorcounter = accsensorcounter + 1;
         oneSWIFT.lat = []; oneSWIFT.lon = []; oneSWIFT.time = NaN; % force removal of this index from primary structure
     end
 
@@ -431,6 +431,7 @@ if any(accsensor)
             SWIFT(si).acc_mean = SWIFTaccdata(bestmatch).acc_mean;
             SWIFT(si).acc_min = SWIFTaccdata(bestmatch).acc_min;
             SWIFT(si).accspectra = SWIFTaccdata(bestmatch).accspectra;
+            SWIFT(si).acctime  = SWIFTaccdata(bestmatch).time;
         else
             SWIFT(si).acc_max = NaN(1,3);
             SWIFT(si).acc_mean = NaN(1,3);
@@ -439,6 +440,7 @@ if any(accsensor)
             SWIFT(si).accspectra.x = NaN(48,1);
             SWIFT(si).accspectra.y = NaN(48,1);
             SWIFT(si).accspectra.z = NaN(48,1);
+            SWIFT(si).acctime  = [];
         end
     end
 end

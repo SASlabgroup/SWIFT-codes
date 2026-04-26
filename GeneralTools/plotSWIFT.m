@@ -917,19 +917,22 @@ if isfield(SWIFT,'accspectra')
     datetick
 
     subplot(2,3,4)
-    loglog(f,accspectra_x,'b')
+    rgb = get(thisline(1), 'Color');  
+    loglog(f,accspectra_x,'color',rgb)
     set(gca,'YLim',[1e-9 1e1])
     xlabel('f [Hz]')
     ylabel('x psd')
 
     subplot(2,3,5)
-    loglog(f,accspectra_y,'r')
+    rgb = get(thisline(2), 'Color');  
+    loglog(f,accspectra_y,'color',rgb)
     set(gca,'YLim',[1e-9 1e1])
     xlabel('f [Hz]')
     ylabel('y psd')
 
     subplot(2,3,6)
-    loglog(f,accspectra_z,'y')
+    rgb = get(thisline(3), 'Color');  
+    loglog(f,accspectra_z,'color',rgb)
     set(gca,'YLim',[1e-9 1e1])
     xlabel('f [Hz]')
     ylabel('z psd')
