@@ -140,6 +140,10 @@ savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 sectionname = 'airpressure';
 if isfield(SWIFT,'airpres') && any(~isnan([SWIFT.airpres])),
     P = [SWIFT.airpres];
+    if round(mode(P)) == 1
+        P = P.*1000; % conversion from bar to mbar
+        warning('Pressure found on order of 1 (bar/atm), converting to order of 1000 (mbar)')
+    end
 else
     P = NaN;
     warning('No pressure data')
