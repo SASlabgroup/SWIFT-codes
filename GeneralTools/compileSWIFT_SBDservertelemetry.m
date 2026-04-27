@@ -121,11 +121,19 @@ for ai = 1:length(flist)
         hr = flist(ai).name(nameoffset + [11:12]);
         minute = flist(ai).name(nameoffset + [13:14]);
         sec = flist(ai).name(nameoffset + [15:16]);
-        oneSWIFT.time = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+        filetime(ai) = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
+        oneSWIFT.time = filetime(ai);
         micro = false;
 
     elseif flist(ai).name(6)=='m' % microSWIFT
         nameoffset = 20;
+        day = flist(ai).name(nameoffset + [1:2]);
+        month = flist(ai).name(nameoffset + [3:5]);
+        year = flist(ai).name(nameoffset + [6:9]);
+        hr = flist(ai).name(nameoffset + [11:12]);
+        minute = flist(ai).name(nameoffset + [13:14]);
+        sec = flist(ai).name(nameoffset + [15:16]);
+        filetime(ai) = datenum([day ' ' month ' ' year ' ' hr ':' minute ':' sec]);
         micro = true;
         % use the time embedded within the payload 50 or 51 or 52 of the SBD file
         % which is the time at the end of the burst of raw data
@@ -398,10 +406,12 @@ if any(lightsensor)
             SWIFT(si).lightchannels_uncalibrated = SWIFTlightdata(bestmatch).lightchannels;
             SWIFT(si).lightmax_uncalibrated = SWIFTlightdata(bestmatch).lightmax;
             SWIFT(si).lightmin_uncalibrated = SWIFTlightdata(bestmatch).lightmin;
+            SWIFT(si).lighttime = SWIFTlightdata(bestmatch).time;
         else
             SWIFT(si).lightchannels_uncalibrated =  NaN(11,1);
             SWIFT(si).lightmax_uncalibrated = NaN;
             SWIFT(si).lightmin_uncalibrated = NaN;
+            SWIFT(si).lighttime = NaN;
         end
     end
 end
@@ -440,7 +450,7 @@ if any(accsensor)
             SWIFT(si).accspectra.x = NaN(48,1);
             SWIFT(si).accspectra.y = NaN(48,1);
             SWIFT(si).accspectra.z = NaN(48,1);
-            SWIFT(si).acctime  = [];
+            SWIFT(si).acctime  = NaN;
         end
     end
 end
@@ -476,6 +486,16 @@ if plotflag
         print('-dpng',[wd '_battery.png'])
     else
     end
+
+    % telemetry stats plot 
+    figure(30),
+    plot(filetime, str2num(SWIFT(1).ID)*ones(length(filetime),1),'bx'), hold on
+    plot([SWIFT.time], str2num(SWIFT(1).ID)*ones(length(SWIFT),1),'gs'), hold on
+    if any(obssensor), plot([SWIFT.lighttime], str2num(SWIFT(1).ID)*ones(length(SWIFT),1),'yo'), hold on, end
+    if any(accsensor), plot([SWIFT.acctime], str2num(SWIFT(1).ID)*ones(length(SWIFT),1),'rd'), hold on, end
+    datetick
+    legend('sbd received','NEDwaves','light senosor','acc sensor')
+
 
 %     % light sensor plot (commented-- putting in plotSWIFT.m)
 %     if any(lightsensor)
