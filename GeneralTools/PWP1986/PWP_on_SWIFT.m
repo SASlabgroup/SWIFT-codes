@@ -89,10 +89,10 @@ profile_input_file = ""
 pwp_output_file = ""
 
 
-dt			= 3600*1/2;          %time-step increment (seconds)
+dt			= 3600/2;          %time-step increment (seconds)
 dz			= 0.1;           %depth increment (meters)
 %days 		= 1;           %the number of days to run (max time grid)
-depth		= 20;          %the depth to run (max depth grid)
+depth		= 100;          %the depth to run (max depth grid)
 dt_save     = 1;            %time-step increment for saving to file (multiples of dt)
 lat 		= 55.35;        %latitude (degrees)
 lon         = -131.65       %longitude (degrees)
@@ -172,7 +172,7 @@ qo = interp1([pwp_input.time],(pwp_input.lw_net + pwp_input.hlb + pwp_input.hsb)
 
 
 tx = interp1([pwp_input.time],pwp_input.tau.*sind(pwp_input.winddirT),time);
-ty = interp1([pwp_input.time],pwp_input.tau.*sind(pwp_input.winddirT),time);
+ty = interp1([pwp_input.time],pwp_input.tau.*cosd(pwp_input.winddirT),time);
 precip = interp1([pwp_input.time],pwp_input.rain,time);
 % make depth grid
 zmax = max(profile.z);
