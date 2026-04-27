@@ -491,10 +491,20 @@ if plotflag
     figure(30),
     plot(filetime, str2num(SWIFT(1).ID)*ones(length(filetime),1),'bx'), hold on
     plot([SWIFT.time], str2num(SWIFT(1).ID)*ones(length(SWIFT),1),'gs'), hold on
-    if any(obssensor), plot([SWIFT.lighttime], str2num(SWIFT(1).ID)*ones(length(SWIFT),1),'yo'), hold on, end
-    if any(accsensor), plot([SWIFT.acctime], str2num(SWIFT(1).ID)*ones(length(SWIFT),1),'rd'), hold on, end
+    if any(lightsensor)
+        plot([SWIFT.lighttime], str2num(SWIFT(1).ID)*ones(length(SWIFT),1),'yo'), hold on, 
+    else
+        plot([SWIFT(1).time],0,'yo')
+    end
+    if any(accsensor)
+        plot([SWIFT.acctime], str2num(SWIFT(1).ID)*ones(length(SWIFT),1),'rd'), hold on, 
+    else
+        plot([SWIFT(1).time],0,'rd')
+    end
     datetick
     legend('sbd received','NEDwaves','light senosor','acc sensor')
+    axis([-inf inf 1 inf])
+    ylabel('buoy ID')
 
 
 %     % light sensor plot (commented-- putting in plotSWIFT.m)

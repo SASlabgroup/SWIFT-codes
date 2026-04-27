@@ -18,6 +18,8 @@ function [ allbatterylevels lasttime lastlat lastlon] = pullSWIFTtelemetry( IDs,
 %           5/2021 make compatible with microSWIFTs (three digit IDs)
 %           8/2022 make compatible with Winddows PCs
 
+close all
+
 global battery
 
 if nargin < 4 || isempty(plotflag)
