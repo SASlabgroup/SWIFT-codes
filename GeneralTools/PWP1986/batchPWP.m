@@ -22,12 +22,56 @@ path = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_tes
 runs = readtable(path);
 cd(fileparts(path));
 
-for i =1:height(runs)
-    met_input_file = runs.met{i};
-    profile_input_file = runs.prof{i};
-    pwp_output_file = runs.out{i};
+for row =1:height(runs)
+    met_input_file = runs.met{row};
+    profile_input_file = runs.prof{row};
+    pwp_output_file = runs.out{row};
 
     PWP_on_SWIFT;
+
+    % Hardcode plot flag
+    plt = true;
+
+    if plt == true
+        figure('Position',[50 50 750 500]);
+        tiledlayout('vertical')
+
+        nexttile(1);
+        yyaxis left
+        plot(pwp_input.time-8/24, pwp_input.tau)
+        ylabel('Q_n_e_t [W/m^2]')
+        yyaxis right
+        plot(pwp_input.time-8/24, pwp_input.sw_net+ pwp_input.lw_net- pwp_input.hsb -pwp_input.hlb)
+        ylabel('\tau [N/m^2]')
+        set(findall(gca,'Type','Line'), 'LineWidth', 2)
+        datetick
+
+        nexttile(2)
+        pcolor(pwp_output.time-8/24, pwp_output.z, pwp_output.t)
+        clim([15 17])
+        axis ij
+        datetick
+        shading flat
+        ylabel(colorbar,'T [\circC]')      
+        colormap(cmocean('thermal'))
+
+        if ~exist(fullfile(pwd, 'plots'), 'dir')
+            mkdir('plots'); disp('Making plots directory, changing dir...')
+        else
+            disp('plots directory exists, changing dir...')
+        end
+        cd plots
+
+        name = runs.out{row}(1:end-4);
+        sgtitle(name,'Interpreter', 'none');
+        savefig(name)
+        fprintf('Saved %s plot in %s\n', name, pwd);
+
+        cd ..
+
+        close;
+    end
+    clearvars -except rows runs
 end
 
     

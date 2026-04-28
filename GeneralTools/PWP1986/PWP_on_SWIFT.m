@@ -71,7 +71,6 @@
 
 %--------------------------------------------------------------------------
 clc, close all;
-clearvars -except runs met_input_file profile_input_file pwp_output_file
 
 %--------------------------------------------------------------------------
 % diagnostic plots
@@ -328,6 +327,7 @@ mld(1)=mld(2);
 pwp_output.mld = mld(:,1:dt_save:end);
 
 save(pwp_output_file,'pwp_output', 'pwp_input')
+fprintf('Saved %s in %s\n', pwp_output_file, pwd);
 toc
 % PWP driver routine
 %--------------------------------------------------------------------------
@@ -467,13 +467,8 @@ function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon)
 	    if isempty(ml_index)
 		    break
         end
-        %%{
-        figure(86)
-        clf
-        plot(d,'b-')
-        hold on
+        
 	    [t s d u v] = mix5(t,s,d,u,v,ml_index+1,z,lat,lon);
-        plot(d,'r-')
         
     end
 
