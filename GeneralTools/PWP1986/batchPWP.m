@@ -38,10 +38,10 @@ for row =1:height(runs)
 
         nexttile(1);
         yyaxis left
-        plot(pwp_input.time-8/24, pwp_input.tau)
+        plot(pwp_input.time-8/24, pwp_input.sw_net+ pwp_input.lw_net- pwp_input.hsb -pwp_input.hlb)
         ylabel('Q_n_e_t [W/m^2]')
         yyaxis right
-        plot(pwp_input.time-8/24, pwp_input.sw_net+ pwp_input.lw_net- pwp_input.hsb -pwp_input.hlb)
+        plot(pwp_input.time-8/24, pwp_input.tau)
         ylabel('\tau [N/m^2]')
         set(findall(gca,'Type','Line'), 'LineWidth', 2)
         datetick
