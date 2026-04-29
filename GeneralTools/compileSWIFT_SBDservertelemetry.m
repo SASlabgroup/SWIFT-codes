@@ -502,7 +502,7 @@ if plotflag
         plot([SWIFT(1).time],0,'rd')
     end
     datetick
-    legend('sbd received','NEDwaves','light senosor','acc sensor')
+    legend('sbd received','NEDwaves','light senosor','acc sensor','Location','NortheastOutside')
     axis([-inf inf 1 inf])
     ylabel('buoy ID')
 
