@@ -459,11 +459,11 @@ end
 %save([ flist(ai).name(6:13) '.mat'], 'SWIFT')
 %save([ wd '.mat'], 'SWIFT')
 if micro & isfield(SWIFT,'ID')
-    save(['microSWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT*')
+    save(['microSWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT*','battery')
 elseif length([SWIFT.time]) > 1 & isfield(SWIFT,'ID')
-    save(['SWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT')
+    save(['SWIFT' SWIFT(1).ID '_telemetry.mat'],'SWIFT','battery')
 else
-    save(['SWIFTXX_telemetry.mat'],'SWIFT')
+    save(['SWIFTXX_telemetry.mat'],'SWIFT','battery')
 end
 
 
@@ -480,10 +480,10 @@ if plotflag
     % battery plot
     if any(~isnan(battery))
         figure(7), clf,
-        plot([SWIFT.time],battery,'kx','linewidth',3)
+        plot([SWIFT.time],battery,'bx','linewidth',3)
         datetick, grid
         ylabel('Voltage')
-        print('-dpng',[wd '_battery.png'])
+        print('-dpng',[SWIFT(1).ID '_battery.png'])
     else
     end
 
