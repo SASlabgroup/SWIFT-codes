@@ -84,9 +84,9 @@ tic % log runtime
 % set parameters
 
 % % Hard code inputs
-% met_input_file = "TestMET_6_23_2024.mat"
-% profile_input_file = "testPROF_6_23_2024.mat"
-% pwp_output_file = "testJun23nosalinity.mat"
+% met_input_file = ""
+% profile_input_file = ""
+% pwp_output_file = ""
 
 
 dt			= 3600/2;          %time-step increment (seconds)

@@ -17,7 +17,7 @@
 
 clc, clear, close all;
 
-path = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\runtable.xlsx";
+path = "";
 
 runs = readtable(path);
 cd(fileparts(path));
