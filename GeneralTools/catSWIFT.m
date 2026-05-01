@@ -236,20 +236,20 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
             swift.relu(:,it) = SWIFT(it).signature.profile.east;
             swift.relv(:,it) = SWIFT(it).signature.profile.north;
             if isfield(SWIFT(it).signature.profile,'w')
-            swift.relw(:,it) = SWIFT(it).signature.profile.w;
+                swift.relw(:,it) = SWIFT(it).signature.profile.w;
             end
         elseif isfield(SWIFT(it).signature.profile,'u')  && ~isempty(SWIFT(it).signature.profile.u)
             swift.relu(:,it) = SWIFT(it).signature.profile.u;
             swift.relv(:,it) = SWIFT(it).signature.profile.v;
             swift.relw(:,it) = SWIFT(it).signature.profile.w;
             if isfield(SWIFT(it).signature.profile,'uvar')
-            swift.reluerr(:,it) = SWIFT(it).signature.profile.uvar;
-            swift.relverr(:,it) = SWIFT(it).signature.profile.vvar;
-            swift.relwerr(:,it) = SWIFT(it).signature.profile.wvar;
+                swift.reluerr(:,it) = SWIFT(it).signature.profile.uvar;
+                swift.relverr(:,it) = SWIFT(it).signature.profile.vvar;
+                swift.relwerr(:,it) = SWIFT(it).signature.profile.wvar;
             else
-            swift.reluerr(:,it) = SWIFT(it).signature.profile.uerr;
-            swift.relverr(:,it) = SWIFT(it).signature.profile.verr;
-            swift.relwerr(:,it) = SWIFT(it).signature.profile.werr;
+                swift.reluerr(:,it) = SWIFT(it).signature.profile.uerr;
+                swift.relverr(:,it) = SWIFT(it).signature.profile.verr;
+                swift.relwerr(:,it) = SWIFT(it).signature.profile.werr;
             end
         end
         if isfield(SWIFT(it).signature.profile,'spd_alt')
@@ -309,11 +309,11 @@ for it = 1:nt
     wavepower = SWIFT(it).wavespectra.energy;
     wavefreq = SWIFT(it).wavespectra.freq;
     if isfield(SWIFT(it).wavespectra,'check')
-    wavea1 = SWIFT(it).wavespectra.a1;
-    waveb1 = SWIFT(it).wavespectra.b1;
-    wavea2 = SWIFT(it).wavespectra.a2;
-    waveb2 = SWIFT(it).wavespectra.b2;
-    wavecheck = SWIFT(it).wavespectra.check;
+        wavea1 = SWIFT(it).wavespectra.a1;
+        waveb1 = SWIFT(it).wavespectra.b1;
+        wavea2 = SWIFT(it).wavespectra.a2;
+        waveb2 = SWIFT(it).wavespectra.b2;
+        wavecheck = SWIFT(it).wavespectra.check;
     else
         wavecheck = NaN(size(wavepower));
         wavea1 = NaN(size(wavepower));
@@ -338,13 +338,13 @@ for it = 1:nt
         swift.wavecheck(:,it) = 0;
         swift.wavefreq(:,it) = NaN;
     else
-     swift.wavepower(1:length(wavepower),it) = wavepower;
-     swift.wavea1(1:length(wavepower),it) = wavea1;
-     swift.waveb1(1:length(wavepower),it) = waveb1;
-     swift.wavea2(1:length(wavepower),it) = wavea2;
-     swift.waveb2(1:length(wavepower),it) = waveb2;
-     swift.wavecheck(1:length(wavepower),it) = wavecheck;
-     swift.wavefreq(1:length(wavepower),it) = wavefreq;
+        swift.wavepower(1:length(wavepower),it) = wavepower;
+        swift.wavea1(1:length(wavepower),it) = wavea1;
+        swift.waveb1(1:length(wavepower),it) = waveb1;
+        swift.wavea2(1:length(wavepower),it) = wavea2;
+        swift.waveb2(1:length(wavepower),it) = waveb2;
+        swift.wavecheck(1:length(wavepower),it) = wavecheck;
+        swift.wavefreq(1:length(wavepower),it) = wavefreq;
     end
 end
 swift.wavepower(swift.wavepower<0) = 0;
