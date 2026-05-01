@@ -460,16 +460,17 @@ end % absorb
 function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon)
     % Find and relieve static instability that may occur in the
     % density array d. This simulates free convection.
-    % ml_index is the index of the depth of the surface mixed layer after adjustment,
     
     while 1
-	    ml_index = find(diff(d)<0,1,'first');
+	    ml_index = find(diff(d)<0,1,'last')+1;
 	    if isempty(ml_index)
 		    break
         end
+
+        rise_index = find(d(1:ml_index-1)<d(ml_index),1,"last");
         
-	    [t s d u v] = mix5(t,s,d,u,v,ml_index+1,z,lat,lon);
-        
+	    idx = rise_index:ml_index;
+        [t(idx) s(idx) d(idx) u(idx) v(idx)] = mix5(t(idx),s(idx),d(idx),u(idx),v(idx),length(idx),z(idx),lat,lon);
     end
 
 end % remove_si
