@@ -483,7 +483,7 @@ if plotflag
         plot([SWIFT.time],battery,'bx','linewidth',3)
         datetick, grid
         ylabel('Voltage')
-        print('-dpng',[SWIFT(1).ID '_battery.png'])
+        print('-dpng',['SWIFT' SWIFT(1).ID '_battery.png'])
     else
     end
 

@@ -121,6 +121,7 @@ end %if
 if exist('ax')
     linkaxes(ax,'x')
     set(gca,'XLim',[(min([SWIFT.time])-1/24) (max([SWIFT.time])+1/24)] )
+    drawnow
     print('-dpng',['SWIFT' wd  '_windandwaves.png'])
 end
 
@@ -885,6 +886,8 @@ end
 
 %%   figure 16: microSWIFT accelerometer
 
+clear f
+
 if isfield(SWIFT,'accspectra')
 
     for si=1:length(SWIFT)
@@ -899,44 +902,48 @@ if isfield(SWIFT,'accspectra')
         end
     end
 
-    figure(16), clf
+    if exist('f')
 
-    subplot(2,1,1)
-    for ai=1:3
-        thisline(ai) = plot([SWIFT.time], acc_mean(:,ai), '-x'); hold on
+        figure(16), clf
+
+        subplot(2,1,1)
+        for ai=1:3
+            thisline(ai) = plot([SWIFT.time], acc_mean(:,ai), '-x'); hold on
+        end
+        for ai=1:3
+            rgb = get(thisline(ai), 'Color');
+            plot([SWIFT.time], acc_min(:,ai), ':','color',rgb)
+            plot([SWIFT.time], acc_max(:,ai), ':','color',rgb)
+        end
+        set(gca,'YLim',[-1.5 1.5])
+        grid
+        title('acceleration')
+        legend('x','y','z','Location','NortheastOutside')
+        datetick
+
+        subplot(2,3,4)
+        rgb = get(thisline(1), 'Color');
+        loglog(f,accspectra_x,'color',rgb)
+        set(gca,'YLim',[1e-9 1e1])
+        xlabel('f [Hz]')
+        ylabel('x psd')
+
+        subplot(2,3,5)
+        rgb = get(thisline(2), 'Color');
+        loglog(f,accspectra_y,'color',rgb)
+        set(gca,'YLim',[1e-9 1e1])
+        xlabel('f [Hz]')
+        ylabel('y psd')
+
+        subplot(2,3,6)
+        rgb = get(thisline(3), 'Color');
+        loglog(f,accspectra_z,'color',rgb)
+        set(gca,'YLim',[1e-9 1e1])
+        xlabel('f [Hz]')
+        ylabel('z psd')
+
+        print('-dpng',['SWIFT' wd '_acc.png'])
+
     end
-    for ai=1:3
-        rgb = get(thisline(ai), 'Color');  
-        plot([SWIFT.time], acc_min(:,ai), ':','color',rgb) 
-        plot([SWIFT.time], acc_max(:,ai), ':','color',rgb)
-    end
-    set(gca,'YLim',[-1.5 1.5])
-    grid
-    title('acceleration')
-    legend('x','y','z','Location','NortheastOutside')
-    datetick
-
-    subplot(2,3,4)
-    rgb = get(thisline(1), 'Color');  
-    loglog(f,accspectra_x,'color',rgb)
-    set(gca,'YLim',[1e-9 1e1])
-    xlabel('f [Hz]')
-    ylabel('x psd')
-
-    subplot(2,3,5)
-    rgb = get(thisline(2), 'Color');  
-    loglog(f,accspectra_y,'color',rgb)
-    set(gca,'YLim',[1e-9 1e1])
-    xlabel('f [Hz]')
-    ylabel('y psd')
-
-    subplot(2,3,6)
-    rgb = get(thisline(3), 'Color');  
-    loglog(f,accspectra_z,'color',rgb)
-    set(gca,'YLim',[1e-9 1e1])
-    xlabel('f [Hz]')
-    ylabel('z psd')
-
-    print('-dpng',['SWIFT' wd '_acc.png'])
 
 end
