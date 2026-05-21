@@ -4,8 +4,12 @@
 % L. Crews, 4 / 2025
 % 
 
-savedir = pwd;
-files = dir(['*.mat']);
+savedir = [pwd, '/light_data/'];
+if ~exist(savedir)
+    mkdir(savedir)
+end
+
+files = dir(['microSWIFT*telemetry.mat']);
 
 warning('off', 'all')
 disp(newline)

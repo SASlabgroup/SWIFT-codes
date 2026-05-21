@@ -142,6 +142,10 @@ if plotflag && exist('SWIFT','var') && ~isempty(SWIFT)
     end
 end
 
+%% Plot light data for all SWIFTs and export to .csv
+microSWIFT_lightdata_plotexport
+
+
 %clc,
 spaces(1:size(IDs,1)) = ' ';
 commas(1:size(IDs,1)) = ',';
