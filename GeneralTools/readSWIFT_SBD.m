@@ -73,8 +73,8 @@ errorfile = false; % initialize
 
 SWIFT.lat = [];
 SWIFT.lon = [];
-PBlat = NaN;
-PBlon = NaN;
+%PBlat = NaN;
+%PBlon = NaN;
 
 finfo = dir(fname); % get basic information, especially finfo.bytes to compare is size (later)
 fid = fopen(fname); % open file for reading
@@ -660,10 +660,14 @@ end
 fclose(fid);
 
 %% apply backup positions from Airmar PB200, if needed
-if ~isfield(SWIFT,'lat') % if no IMU, use this one
-    disp('No primary GPS position, using Airmar position')
+if ~isfield(SWIFT,'lat') || SWIFT.lat==0 % if no IMU, use this one
+    disp('No primary GPS position')
+    if exist('PBlat')
+        disp('    ... using Airmar position and voiding wave results')
         SWIFT.lat = PBlat;
         SWIFT.lon = PBlon;
+        SWIFT.sigwaveheight = NaN;
+    end
 end
 % if isfield(SWIFT,'lat') & ( SWIFT(1).lat == 0 | isempty(SWIFT(1).lat) ) % if IMU did not give position, use this one
 %     disp('No primary GPS position. ')
