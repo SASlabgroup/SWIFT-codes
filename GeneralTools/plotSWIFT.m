@@ -423,7 +423,7 @@ for ai = 1:length(SWIFT)
     end %if
 end %for
 % -------------------------------------------------------------------------
-vlims = [-2 2];
+vlims = [-0.5 0.5];
 % Plotting: ---------------------------------------------------------------
 if any(nansum([prof.east_vel]) ~= 0)  || any(nansum([prof.north_vel]) ~= 0)  % Separate east & north profiles
     figure(5); clf;
