@@ -54,6 +54,7 @@ R_AHRS(:,3,2) = avg.AHRS_M32;
 R_AHRS(:,3,3) = avg.AHRS_M33;
 
 % Step 1) Revert ENU velocities back to beam velocities -------------------
+T_AHRS_inv = inv(T_AHRS);
 velBEAM = NaN(size(velENU));
 velXYZ = NaN(size(velENU));
 for iping = 1:nping
@@ -65,11 +66,12 @@ for iping = 1:nping
           R(3,1) R(3,2) R(3,3)   0;
           R(3,1) R(3,2) 0        R(3,3)];
 
-    % ENU to Beam
-    for ibin = 1:nbin
-        velXYZ(iping,ibin,:) = inv(R)*squeeze(velENU(iping,ibin,:));
-        velBEAM(iping,ibin,:) = inv(T_AHRS)*squeeze(velXYZ(iping,ibin,:));
-    end
+    % ENU to Beam (batched over bins)
+    enu_p  = squeeze(velENU(iping,:,:)).';  % 4 x nbin
+    xyz_p  = R \ enu_p;
+    beam_p = T_AHRS_inv * xyz_p;
+    velXYZ(iping,:,:)  = xyz_p.';
+    velBEAM(iping,:,:) = beam_p.';
 
 end
 

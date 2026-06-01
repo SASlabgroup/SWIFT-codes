@@ -170,6 +170,8 @@ R_AHRS(:,3,1) = avg.AHRS_M31;
 R_AHRS(:,3,2) = avg.AHRS_M32;
 R_AHRS(:,3,3) = avg.AHRS_M33;
 
+T_AHRS_inv = inv(T_AHRS);
+
 % Step 1) Revert ENU velocities back to beam velocities
 velBEAM = NaN(size(velENU));
 for iping = 1:nping
@@ -178,11 +180,11 @@ for iping = 1:nping
                R(2,1) R(2,2) R(2,3)/2 R(2,3)/2;
                R(3,1) R(3,2) R(3,3)   0;
                R(3,1) R(3,2) 0        R(3,3)];
-    
-    for ibin = 1:nbin
-        velXYZ_temp = R_4beam \ squeeze(velENU(iping, ibin, :));
-        velBEAM(iping, ibin, :) = T_AHRS \ velXYZ_temp;
-    end
+
+    enu_p  = squeeze(velENU(iping, :, :)).';   % 4 x nbin
+    xyz_p  = R_4beam \ enu_p;
+    beam_p = T_AHRS_inv * xyz_p;
+    velBEAM(iping, :, :) = beam_p.';
 end
 
 % Step 2) Compute new ENU velocities using SBG orientation
@@ -205,17 +207,15 @@ for iping = 1:nping
     Rx = [1  0         0;
           0  cosd(rr) -sind(rr);
           0  sind(rr)  cosd(rr)];
-    
+
     R = Rz * Ry * Rx;
     R_4beam = [R(1,1) R(1,2) R(1,3)/2 R(1,3)/2;
                R(2,1) R(2,2) R(2,3)/2 R(2,3)/2;
                R(3,1) R(3,2) R(3,3)   0;
                R(3,1) R(3,2) 0        R(3,3)];
-    
-    for ibin = 1:nbin
-        velXYZ_temp = T * squeeze(velBEAM(iping, ibin, :));
-        velENU_new(iping, ibin, :) = R_4beam * velXYZ_temp;
-    end
+
+    beam_p = squeeze(velBEAM(iping, :, :)).';  % 4 x nbin
+    velENU_new(iping, :, :) = (R_4beam * (T * beam_p)).';
 end
 
 % Swap signs in ENU
