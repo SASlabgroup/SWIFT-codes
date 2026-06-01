@@ -224,6 +224,11 @@ if isfield(SWIFT,'signature') && isstruct(SWIFT(1).signature.profile)
            break
         end
     end
+    if nz <= 1 || any(isnan(swift.depth))
+        warning('No valid signature profile z found. Defaulting z to standard 40 ADCP bins.')
+        swift.depth = 0.35 + 0.5*(0:39); % standard ADCP profile bins: 0.35 ... 19.85 m
+        nz = length(swift.depth);
+    end
     swift.relu = NaN(nz,nt);
     swift.relv = NaN(nz,nt);
     swift.relw = NaN(nz,nt);
@@ -460,10 +465,15 @@ end
 if isfield(SWIFT,'signature')
     it = 1; nz = 0;
     swift.surfz = NaN;
-    while nz == 0 || any(isnan(swift.surfz))
+    while (nz == 0 || any(isnan(swift.surfz))) && it <= nt
         swift.surfz = SWIFT(it).signature.HRprofile.z';
         nz = length(swift.surfz);
         it = it + 1;
+    end
+    if nz == 0 || any(isnan(swift.surfz))
+        warning('No valid signature HR profile z found. Defaulting zHR to standard 128 HR bins.')
+        swift.surfz = 0.12 + 0.04*(0:127); % standard HR profile bins: 0.12 ... 5.20 m
+        nz = length(swift.surfz);
     end
     swift.surftke = NaN(nz,nt);
     swift.surfw = NaN(nz,nt);
@@ -496,7 +506,7 @@ if isfield(SWIFT,'signature')
 elseif isfield(SWIFT,'uplooking')
     it = 1; nz = 0;
     swift.surfz = NaN;
-    while nz == 0 || any(isnan(swift.surfz)) && it <= nt
+    while (nz == 0 || any(isnan(swift.surfz))) && it <= nt
         swift.surfz = SWIFT(it).uplooking.z';
         nz = length(swift.surfz);
         it = it + 1;
@@ -510,6 +520,8 @@ elseif isfield(SWIFT,'uplooking')
     end
     swift.surftke(1:4,:) = NaN;% Deepest three bins are bad 
 else
+    % TODO: reconcile zHR origin with the empty-signature default above (~line 475),
+    % which uses 0.12 + 0.04*(0:127). This fallback starts at 0.30 m instead of 0.12 m.
     swift.surfz = (0.1+0.2+0.04*(0:127));
     swift.surftke = NaN(128,nt);
 end
