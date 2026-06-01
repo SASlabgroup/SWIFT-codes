@@ -14,13 +14,13 @@ hastight = logical(exist('tight_subplot','file'));
 if hastight
     % https://www.mathworks.com/matlabcentral/fileexchange/27991-tight_subplot-nh-nw-gap-marg_h-marg_w
     h = tight_subplot(8,3,[0.035 0.05],[0.1 0.075],0.075);
+    % tight_subplot(Nh, Nw, [gap_h gap_w], [lower upper], [left right] )
 else
     h = gobjects(24,1);
     for ii = 1:24
         h(ii) = subplot(8,3,ii);
     end
 end
-% tight_subplot(Nh, Nw, [gap_h gap_w], [lower upper], [left right] )
 
 % Anemometer
 set(fh,'CurrentAxes',h(1))
