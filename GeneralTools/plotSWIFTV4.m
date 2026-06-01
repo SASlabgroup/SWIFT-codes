@@ -7,7 +7,7 @@ end
 lw = 2;
 nt = length(swift.time);
 
-fh = figure('color','w');
+fh = figure('color','w','Visible','off');  % build hidden, render once at the end
 MP = get(0,'monitorposition');
 set(fh,'outerposition',MP(1,:));
 hastight = logical(exist('tight_subplot','file'));
@@ -23,44 +23,44 @@ end
 % tight_subplot(Nh, Nw, [gap_h gap_w], [lower upper], [left right] )
 
 % Anemometer
-axes(h(1))
+set(fh,'CurrentAxes',h(1))
 plot(swift.time,swift.windu,'-rx','LineWidth',lw)
 ylabel('U [ms^{-1}]')
 title('Wind Speed')
 ylim([0 15])
 set(gca,'Clipping','off')
-axes(h(4))
+set(fh,'CurrentAxes',h(4))
 plot(swift.time,swift.tair,'-rx','LineWidth',lw)
 %ylim([10 20])
 ylabel('T_{air} [^{\circ}C]')
 title('Air Temperature')
 
 %IMU/GPS
-axes(h(7))
+set(fh,'CurrentAxes',h(7))
 plot(swift.time,swift.wavesigH,'-bx','LineWidth',lw)
 ylabel('H_s [m]')
 title('Significant Wave Height')
 ylim([0 5])
-axes(h(10))
+set(fh,'CurrentAxes',h(10))
 plot(swift.time,swift.wavepeakT,'-bx','LineWidth',lw)
 ylabel('T_p [s]')
 title('Peak Wave Period')
 ylim([0 10])
-axes(h(13))
+set(fh,'CurrentAxes',h(13))
 plot(swift.time,swift.wavepeakdir,'-bx','LineWidth',lw)
 ylabel('\Theta [^{\circ}]')
 title('Peak Wave Direction')
 ylim([0 360])
-axes(h(16))
+set(fh,'CurrentAxes',h(16))
 plot(swift.time,swift.tsea,'-bx','LineWidth',lw)
 ylabel('T_{sea} [^{\circ}C]')
 title('Sea Temperature')
-axes(h(19))
+set(fh,'CurrentAxes',h(19))
 plot(swift.time,swift.sal,'-bx','LineWidth',lw)
 ylabel('S [psu]')
 title('Salinity')
 
-axes(h(22))
+set(fh,'CurrentAxes',h(22))
 if isfield(swift,'battery')
 plot(swift.time,swift.battery,'-kx','linewidth',lw)
 else
@@ -101,7 +101,7 @@ else
 end
 
 % ADCP
-axes(h(5))
+set(fh,'CurrentAxes',h(5))
 set(h(5),'Position',pos.relu)
 pcolor(swift.time,-swift.depth,swift.relu);shading flat
 c = colorbar;
@@ -111,7 +111,7 @@ clim([-0.25 0.25])
 ylabel('Z [m]')
 title('Zonal Velocity (Relative)')
 
-axes(h(11))
+set(fh,'CurrentAxes',h(11))
 set(h(11),'Position',pos.relv)
 pcolor(swift.time,-swift.depth,swift.relv);shading flat
 c = colorbar;
@@ -121,7 +121,7 @@ clim([-0.25 0.25])
 ylabel('Z [m]')
 title('Merid. Velocity (Relative)')
 
-axes(h(23))
+set(fh,'CurrentAxes',h(23))
 set(h(23),'Position',pos.diss)
 if isfield(swift,'surftke')
 pcolor(swift.time,-swift.surfz,log10(swift.surftke));shading flat
@@ -139,7 +139,7 @@ ylabel('Z [m]')
 title('Dissipation Rate (0-5 m, Wave Biased)')
 
 % Trajectory
-axes(h(12))
+set(fh,'CurrentAxes',h(12))
 set(h(12),'Position',pos.traj)
 lonscale = mean(cos(swift.lat*pi/180),'omitnan');
 scatter(swift.lon(:),swift.lat(:),36,swift.time(:),'filled');
@@ -162,7 +162,7 @@ wmax    = 18;                % m/s, top of the wind-speed colour scale
 cwind   = cmocean('matter',18);
 ubin    = linspace(0,wmax,size(cwind,1)+1);  % uniform bins matching the colours
 
-axes(h(18))
+set(fh,'CurrentAxes',h(18))
 set(h(18),'Position',pos.wsp1)
 hold on   % keep every burst's spectrum, not just the last one
 for it = 1:length(swift.time)
@@ -188,7 +188,7 @@ ylabel('P [m^2Hz^{-1}]')
 title('Wave Spectra')
 set(gca,'YTick',10.^(-4:2:0))
 
-axes(h(24))
+set(fh,'CurrentAxes',h(24))
 set(h(24),'Position',pos.wsp2)
 pcolor(swift.time,swift.wavefreq,log10(swift.wavepower))
 shading flat
@@ -202,7 +202,6 @@ c.TickLabels = arrayfun(@(p) sprintf('10^{%d}',p), c.Ticks, 'UniformOutput', fal
 ylim(freqlim)
 set(gca,'YTick',[0.1 0.5 1])
 ylabel('F [Hz]')
-title('Wave Spectra')
 cmocean('thermal')
 
 delete(h([2 8 14 17 20  3 6 9 15 21]))
@@ -213,19 +212,22 @@ xlinked = h([1:3:end 2:3:end 24]);
 linkaxes(xlinked(isgraphics(xlinked)),'x')
 noxlbl = h([1:3:end-3 2:3:end-3]);
 set(noxlbl(isgraphics(noxlbl)),'XTickLabel',[])
-axes(h(1))
+set(fh,'CurrentAxes',h(1))
 xlim([min(swift.time) max(swift.time)])
-axes(h(22))
+set(fh,'CurrentAxes',h(22))
 datetick('x','KeepLimits')
 xlabel('Time')
-axes(h(23))
+set(fh,'CurrentAxes',h(23))
 datetick('x','KeepLimits')
 xlabel('Time')
-axes(h(24))
+set(fh,'CurrentAxes',h(24))
 datetick('x','KeepLimits')
 xlabel('Time')
 
 set(h(isgraphics(h)),'FontSize',12)
 %rmemptysub  % THIS BREAKS FOR JIM
+
+set(fh,'Visible','on')   % reveal and render the fully-built figure in one pass
+drawnow
 
 end
