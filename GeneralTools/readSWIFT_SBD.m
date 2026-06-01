@@ -660,7 +660,7 @@ end
 fclose(fid);
 
 %% apply backup positions from Airmar PB200, if needed
-if ~isfield(SWIFT,'lat') || SWIFT.lat==0 % if no IMU, use this one
+if ~isfield(SWIFT,'lat') || all([SWIFT.lat])==0 % if no IMU, use this one
     disp('No primary GPS position')
     if exist('PBlat')
         disp('    ... using Airmar position and voiding wave results')
