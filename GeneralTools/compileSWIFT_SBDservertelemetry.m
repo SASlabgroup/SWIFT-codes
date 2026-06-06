@@ -187,7 +187,7 @@ for ai = 1:length(flist)
     lengthofnames(ai) = length(onenames);
     
     % if first sbd, set the structure fields as the standard
-    if ai == 1 && voltage~=9999 && ~lightsensor(ai) && ~obssensor(ai)
+    if ai == 1 && voltage~=9999 && ~lightsensor(ai) && ~obssensor(ai) 
         SWIFT(ai) = oneSWIFT;
         allnames = string(fieldnames(SWIFT));
 
@@ -198,30 +198,46 @@ for ai = 1:length(flist)
         % if payloads match, increment
     elseif ai > 1 && all(size(onenames) == size(allnames)) && all(onenames == allnames) && ~lightsensor(ai) && ~obssensor(ai) && ~accsensor(ai)
         SWIFT(ai) = oneSWIFT;
+        disp('incrementing SWIFT structure with same payloads (fieldnames)')
         
-        % if additional payloads, favor that new structure (removing other)
+        % if additional payloads, back-fill the others
     elseif ai > 1 && length(onenames) > length(allnames) && ~lightsensor(ai) && ~obssensor(ai) && ~accsensor(ai)
-        clear SWIFT
-        badburst(ai-1) = true;
+        %clear SWIFT; badburst(ai-1) = true; % legacy approach was to simply remove smaller structures
+        fnBig   = fieldnames(oneSWIFT);
+        fnSmall = fieldnames(SWIFT);
+        newF    = setdiff(fnBig, fnSmall);
+        for si = 1:length(SWIFT)
+            for k = 1:numel(newF)
+                SWIFT(si).(newF{k}) = NaN;
+            end
+        end
         SWIFT(ai) = oneSWIFT;
-        allnames = string(fieldnames(oneSWIFT)); % reset the prefer field names
+        allnames = string(fieldnames(oneSWIFT)); % reset the full field names
         disp('=================================')
-        disp(['found extra payloads in file ' num2str(ai) ', including only sbd files with'])
-        disp(allnames)
+        disp(['found extra payloads in file ' num2str(ai) ', backfilling other entries with NaNs for these payloads'])
+        %disp(allnames)
         
         % if fewer paylaods, skip that burst
     elseif ai > 1 && length(onenames) < length(allnames) && ~lightsensor(ai) && ~obssensor(ai) && ~accsensor(ai)
+        fnBig   = fieldnames(SWIFT);
+        fnSmall = fieldnames(oneSWIFT);
+        newF    = setdiff(fnBig, fnSmall);
+        for k = 1:numel(newF)
+                oneSWIFT.(newF{k}) = NaN;
+        end
+        SWIFT(ai) = oneSWIFT;
         disp('=================================')
-        disp(['found fewer payloads in file ' num2str(ai) ', cannot include this file in SWIFT structure'])
-        SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
-        badburst(ai) = true;
+        disp(['found fewer payloads in file ' num2str(ai) ', filling missing entries with NaNs'])
+        %SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
+        %badburst(ai) = true;
 
     else
         SWIFT(ai) = SWIFT(ai-1); % placeholder, which will be removed when badburst applied
         badburst(ai) = true;
+        disp('file pruned, cause unknown')
     end
     
-    badburst( find(lengthofnames < length(allnames) ) ) = true;
+    %badburst( find(lengthofnames < length(allnames) ) ) = true;  % legacy
     
     %% screen the bad data (usually out of the water)
     
