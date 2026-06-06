@@ -5,7 +5,7 @@
 
 clear all, close all
 
-type='kml'
+type='txt'
 
 flist = dir('./*.mat');
 
@@ -23,7 +23,8 @@ time = datevec([SWIFT.time]);
 
 % scalars
 %METWaveoutput = [time [SWIFT.lat]' [SWIFT.lon]' [SWIFT.driftspd]' 	[SWIFT.driftdirT]'	[SWIFT.airpres]'	[SWIFT.airpresstddev]' 	[SWIFT.airtemp]' 	[SWIFT.airtempstddev]'	[SWIFT.windspd]'	[SWIFT.windspdstddev]'	[SWIFT.winddirT]'	[SWIFT.winddirTstddev]'	[SWIFT.sigwaveheight]'	[SWIFT.peakwaveperiod]'	[SWIFT.peakwavedirT]' ];
-METWaveoutput = [time [SWIFT.lat]' [SWIFT.lon]' [SWIFT.driftspd]' 	[SWIFT.driftdirT]'	[SWIFT.airtemp]' 	[SWIFT.windspd]'	[SWIFT.sigwaveheight]'	[SWIFT.peakwaveperiod]'	[SWIFT.peakwavedirT]' ];
+%METWaveoutput = [time [SWIFT.lat]' [SWIFT.lon]' [SWIFT.driftspd]' 	[SWIFT.driftdirT]'	[SWIFT.airtemp]' 	[SWIFT.windspd]'	[SWIFT.sigwaveheight]'	[SWIFT.peakwaveperiod]'	[SWIFT.peakwavedirT]' ];
+METWaveoutput = [time [SWIFT.lat]' [SWIFT.lon]' [SWIFT.driftspd]' 	[SWIFT.driftdirT]'  [SWIFT.sigwaveheight]'	[SWIFT.peakwaveperiod]'	[SWIFT.peakwavedirT]' ];
 %METWaveoutput = single(METWaveoutput);
 
 % solar option (Lufft WS700 sensor)
