@@ -62,7 +62,7 @@ for row =1:height(runs)
         end
         cd plots
 
-        name = runs.out{row}(1:end-4);
+        name = pwp_output_file(1:end-4);
         sgtitle(name,'Interpreter', 'none');
         savefig(name)
         fprintf('Saved %s plot in %s\n', name, pwd);
