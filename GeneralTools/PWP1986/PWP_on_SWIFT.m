@@ -29,6 +29,8 @@
 %       - tau: wind stress [N/m2] (positive vector)
 %       - rain: precipitation rate [m/s]  (positive vector)
 %       - winddirT: Wind Direction [deg] (positive vector)
+%   - sign convention is same as COARE 3.6, turbulent fluxes positive
+%   cooling ocean and radiative fluxes are positive heating ocean. 
 % profile_input_file -> path and file name for intial density profile (1
 % VARIABLE)
 %   - format -> single cast of CTD as structure array or table
