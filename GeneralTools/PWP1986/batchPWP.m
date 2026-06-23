@@ -17,7 +17,7 @@
 
 clc, clear, close all;
 
-path = "";
+path = "C:\Users\MichaelJames\Dropbox\mjames\Carson_COAREcomparision\PWP\PWP_test_cases\temp_runtable.xlsx";
 
 runs = readtable(path);
 cd(fileparts(path));
@@ -48,12 +48,25 @@ for row =1:height(runs)
 
         nexttile(2)
         pcolor(pwp_output.time-8/24, pwp_output.z, pwp_output.t)
-        clim([15 17])
+        clim auto
+        get(gca, 'CLim'); clim([ans(2)-2.5 ans(2)-0.5]);
         axis ij
         datetick
         shading flat
         ylabel(colorbar,'T [\circC]')      
         colormap(cmocean('thermal'))
+
+        % Add closure check and zero line
+        H = trapz(pwp_output.z',pwp_output.t,1);
+        Cp = 4183.3;
+        rho = mean(pwp_output.d,'all');
+        dHdt = diff(H)./diff(pwp_output.time(1,:))./86400.*Cp.*rho; % need some constant of int.
+        nexttile(1)
+        yyaxis left
+        hold on
+        plot(pwp_output.time(1,1:end-1)-8/24, dHdt)
+        yline(0,'k--');
+        legend('Q_n_e_t', '\rhoc_p(dH/dt)','location', 'best')
 
         if ~exist(fullfile(pwd, 'plots'), 'dir')
             mkdir('plots'); disp('Making plots directory, changing dir...')
