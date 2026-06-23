@@ -72,7 +72,7 @@
 % 5) save results to output file
 
 %--------------------------------------------------------------------------
-clc, close all;
+% clc, close all;
 
 %--------------------------------------------------------------------------
 % diagnostic plots
@@ -92,7 +92,7 @@ tic % log runtime
 
 
 dt			= 3600/2;          %time-step increment (seconds)
-dz			= 0.1;           %depth increment (meters)
+dz			= 0.2;           %depth increment (meters)
 %days 		= 1;           %the number of days to run (max time grid)
 depth		= 100;          %the depth to run (max depth grid)
 dt_save     = 1;            %time-step increment for saving to file (multiples of dt)
@@ -169,8 +169,8 @@ end
 time = pwp_input.time(1):dtd:pwp_input.time(end);
 nmet = length(time);
 clear dtd
-qi = interp1([pwp_input.time],pwp_input.sw_net,time); 
-qo = interp1([pwp_input.time],(pwp_input.lw_net + pwp_input.hlb + pwp_input.hsb),time); 
+qi = interp1([pwp_input.time],pwp_input.sw_net,time); % Heat for insolation (sw radiative) USED LATER in absorbtion functions for warming
+qo = interp1([pwp_input.time],(pwp_input.lw_net - pwp_input.hlb - pwp_input.hsb),time); % Heat other than insolation (turbulent, lw radiative)
 
 
 tx = interp1([pwp_input.time],pwp_input.tau.*sind(pwp_input.winddirT),time);
@@ -339,7 +339,7 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     % pwpgo is the part of the model where all the dynamics "happen"
       
     t_old = t(1); s_old = s(1); 
-    t(1) = t(1) + (qi*absrb(1)-qo)*dt./(dz*d(1)*cpw); 
+    t(1) = t(1) + (qi*absrb(1)+qo)*dt./(dz*d(1)*cpw); 
     s(1) = s(1)/(1-emp*dt/dz); 
     
 
