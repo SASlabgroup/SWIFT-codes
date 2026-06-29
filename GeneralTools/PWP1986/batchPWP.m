@@ -48,8 +48,7 @@ for row =1:height(runs)
 
         nexttile(2)
         pcolor(pwp_output.time-8/24, pwp_output.z, pwp_output.t)
-        clim auto
-        get(gca, 'CLim'); clim([ans(2)-2.5 ans(2)-0.5]);
+        clim(mean(pwp_output.t,'all') + [1 2].*std(pwp_output.t,1,'all'))
         axis ij
         datetick
         shading flat
@@ -59,7 +58,7 @@ for row =1:height(runs)
         % Add closure check and zero line
         H = trapz(pwp_output.z',pwp_output.t,1);
         Cp = 4183.3;
-        rho = mean(pwp_output.d,'all');
+        rho = mean(pwp_output.d,'all','omitnan');
         dHdt = diff(H)./diff(pwp_output.time(1,:))./86400.*Cp.*rho; % need some constant of int.
         nexttile(1)
         yyaxis left
