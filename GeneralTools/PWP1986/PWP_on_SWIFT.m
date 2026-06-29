@@ -91,7 +91,7 @@ tic % log runtime
 % pwp_output_file = ""
 
 
-dt			= 3600/2;          %time-step increment (seconds)
+dt			= 3600/5;          %time-step increment (seconds)
 dz			= 0.2;           %depth increment (meters)
 %days 		= 1;           %the number of days to run (max time grid)
 depth		= 100;          %the depth to run (max depth grid)
@@ -337,6 +337,7 @@ toc
 function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     d,u,v,absrb,f,ucon,n, lat,lon)
     % pwpgo is the part of the model where all the dynamics "happen"
+
       
     t_old = t(1); s_old = s(1); 
     t(1) = t(1) + (qi*absrb(1)+qo)*dt./(dz*d(1)*cpw); 
@@ -362,7 +363,8 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon); %relieve static instability
     
     % original ml_index criteria
-    ml_index = find(diff(d)>1E-4,1,'first'); %1E
+    [~, ml_index] = max(diff(d)); %1E
+    % ml_index = find(diff(d)>1E-4,1,'first'); %1E
     %ml_index = find(diff(d)>1E-3,1,'first');
     %ml_index = find( (d-d(1)) > 1e-4 ,1,'first');
     
