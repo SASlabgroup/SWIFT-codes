@@ -145,9 +145,9 @@ opt.avg.QCfish = true;% detects fish from highly skewed amplitude distributions 
 % QC Options (HR)
 opt.HR.mincorr = 40;% To ignore correlation, set to 0;
 opt.HR.QCbin = true;% QC entire bins with greater than opt.HR.pbadmax_bin perecent bad data (spikes & correlation)
-opt.HR.pbadmax_bin = 50;
+opt.HR.pbadmax_bin = 75;
 opt.HR.QCping = true;% QC entire bins with greater than opt.HR.pbadmax_ping perecent bad data (spikes & correlation)
-opt.HR.pbadmax_ping = 50;
+opt.HR.pbadmax_ping = 75;
 opt.HR.NaNbad = false;% NaN out bad data. Otherwise they are interpolated through.
 opt.HR.nsumeof = 3;
 
