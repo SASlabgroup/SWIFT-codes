@@ -94,7 +94,7 @@ title('COARE input');
 datetick
 ylabel('Wind [m/s]')
 
-savefig([cd '\' sprintf('%s_COAREinputwind',SWIFT(1).ID)])
+savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 
 %% air temp and height
 sectionname = 'airtemp';
@@ -331,10 +331,43 @@ savefig(fullfile(cd, sprintf('%s_%s_input',name, sectionname)));
 % ii=find(isnan(lw_dn)); lw_dn(ii)=400-1.6*abs(lat(ii)); num2cell(lw_dn);[SWIFT.LWrad] = deal(ans{:});% incident longwave radiation
 ii=find(isnan(zi)); zi(ii)=600;   % PBL height
 % ii=find(isnan(Ss)); Ss(ii)=35;    % Salinity
+% ii = find(isnan(cp)); cp(ii) = 9.8 * 2 ./ (2 * pi); % Wave speed (period of 2 s)
+
+%% Make sure all vars are column vars
+jd       = jd(:);
+u        = u(:);
+zu       = zu(:);
+t        = t(:);
+zt       = zt(:);
+rh       = rh(:);
+zq       = zq(:);
+P        = P(:);
+ts       = ts(:);
+sw_dn    = sw_dn(:);
+lw_dn    = lw_dn(:);
+lat      = lat(:);
+lon      = lon(:);
+zi       = zi(:);
+rain     = rain(:);
+ts_depth = ts_depth(:);
+Ss       = Ss(:);
+cp       = cp(:);
+sigH     = sigH(:);
+zrf_u    = zrf_u(:);
+zrf_t    = zrf_t(:);
+zrf_q    = zrf_q(:);
+
+zu = zu.*ones(size(SWIFT))';
+zi = zi.*ones(size(SWIFT))';
+zq = zq.*ones(size(SWIFT))';
+zt = zt.*ones(size(SWIFT))';
+zrf_q = zrf_q.*ones(size(SWIFT))';
+zrf_t = zrf_t.*ones(size(SWIFT))';
+zrf_u = zrf_u.*ones(size(SWIFT))';
 
 %% run COARE
 % Running Warm Layer inclusive script (other script commented out)
-fluxes = coare36vnWarm_et(jd',u',zu,t',zt,rh',zq,P',ts',sw_dn',lw_dn',lat',lon',zi,rain',ts_depth',Ss',cp',sigH',zrf_u,zrf_t,zrf_q);
+fluxes = coare36vnWarm_et(jd,u,zu,t,zt,rh,zq,P,ts,sw_dn,lw_dn,lat,lon,zi,rain,ts_depth,Ss,cp,sigH,zrf_u,zrf_t,zrf_q);
 validcolumns = find( nansum( fluxes, 1 ) ~= 0  & ~isnan(nansum( fluxes, 1 )) );
 
 % for "3.6 Warm"
@@ -424,14 +457,14 @@ fluxes = array2table(fluxes, ...
 % FLUXES Calculated within COARE 3.6, option for lat/lon and time/zenith angle specific albedo
 % according to Payne 1972 or constant
 
-fluxes.sw_up = sw_dn' - fluxes.sw_net; % positive heating ocean
+fluxes.sw_up = sw_dn(:) - fluxes.sw_net(:); % positive heating ocean
 
 % choose one below (based on interpretation of column 25)
-fluxes.lw_up = lw_dn' - fluxes.lw_net; %positive heating ocean
+fluxes.lw_up = lw_dn(:) - fluxes.lw_net(:); %positive heating ocean
 
 % calc net rad
-fluxes.netrad = fluxes.sw_net + fluxes.lw_net;
-fluxes.Qnet = fluxes.netrad - fluxes.hsb - fluxes.hlb; % positive heating ocean; Ta < Tskin; Ta < Tskin
+fluxes.netrad = fluxes.sw_net(:) + fluxes.lw_net(:);
+fluxes.Qnet = fluxes.netrad(:) - fluxes.hsb(:) - fluxes.hlb(:); % positive heating ocean; Ta < Tskin; Ta < Tskin
 Qnet = fluxes.Qnet;
 
 %% plot key values as time series
