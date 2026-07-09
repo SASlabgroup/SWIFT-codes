@@ -38,7 +38,7 @@ for row =1:height(runs)
 
         nexttile(1);
         yyaxis left
-        plot(pwp_input.time-8/24, pwp_input.sw_net+ pwp_input.lw_net- pwp_input.hsb -pwp_input.hlb)
+        plot(pwp_input.time-8/24, pwp_input.sw_net+ pwp_input.lw_net- pwp_input.hsb -pwp_input.hlb) % qi + qo
         ylabel('Q_n_e_t [W/m^2]')
         yyaxis right
         plot(pwp_input.time-8/24, pwp_input.tau)
@@ -54,6 +54,12 @@ for row =1:height(runs)
         shading flat
         ylabel(colorbar,'T [\circC]')      
         colormap(cmocean('thermal'))
+
+        hold on
+
+        plot(pwp_output.time(1,:)-8/24, pwp_output.mld,'r','LineWidth',1)
+        legend('','Mixed layer depth','location','best')
+
 
         % Add closure check and zero line
         H = trapz(pwp_output.z',pwp_output.t,1);
