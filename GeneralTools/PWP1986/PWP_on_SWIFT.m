@@ -176,6 +176,7 @@ qo = interp1([pwp_input.time],(pwp_input.lw_net - pwp_input.hlb - pwp_input.hsb)
 tx = interp1([pwp_input.time],pwp_input.tau.*sind(pwp_input.winddirT),time);
 ty = interp1([pwp_input.time],pwp_input.tau.*cosd(pwp_input.winddirT),time);
 precip = interp1([pwp_input.time],pwp_input.rain,time);
+
 % make depth grid
 zmax = max(profile.z);
 if zmax < depth
@@ -202,6 +203,23 @@ d	= calc_seawater_density(s(:,1),t(:,1), gsw_p_from_z(-z(:),lat), lon, lat);
 evap = (0.03456/(86400*1000))*interp1(pwp_input.time,pwp_input.hlb,floor(time),'nearest');
 emp	= evap - precip;
 emp(isnan(emp)) = 0;
+
+% plot met and profile vars as inputted into the model
+
+figure(ceil(rand(1).*100));
+tiledlayout('flow');
+nexttile;
+plot(qi,'k'); xlabel('idx'); title('qi');
+nexttile;
+plot(qo, 'k'); xlabel('idx'); title('qo');
+nexttile; 
+plot(tx, 'k'); xlabel('idx'); title('tx');
+nexttile;
+plot(ty, 'k'); xlabel('idx'); title('ty');
+nexttile; 
+plot(t(:,1), z); axis ij; ylabel('depth [m]'); title('t');
+nexttile;
+plot(s(:,1), z), axis ij; ylabel('depth [m]'); title('s');
 
 
 %--------------------------------------------------------------------------
@@ -255,11 +273,11 @@ for n = 2:nmet
             figure(1)
             subplot(211)
             plot(time(n)-time(1),trapz(z,.5.*d.*(u(:,n).^2+v(:,n).^2)),'b.')
+            title(sprintf('depth int. KE, step %g', n))
             if n == 2
                 set(gcf,'position',[1 400 700 400])
                 hold on
                 grid on
-                title('depth int. KE')
             end
             subplot(212)
             plot(time(n)-time(1),trapz(z,d.*sqrt(u(:,n).^2+v(:,n).^2)),'b.')
@@ -288,6 +306,8 @@ for n = 2:nmet
             axis ij
             grid on
             xlabel('salinity')
+
+            title(sprintf('Step %g', n))
             
             pause(.2)
         case 2
@@ -363,7 +383,7 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon); %relieve static instability
     
     % original ml_index criteria
-    [~, ml_index] = max(diff(d)); %1E
+    ml_index = find(diff(d)>1E-4,1,'first'); % mikes add
     % ml_index = find(diff(d)>1E-4,1,'first'); %1E
     %ml_index = find(diff(d)>1E-3,1,'first');
     %ml_index = find( (d-d(1)) > 1e-4 ,1,'first');
