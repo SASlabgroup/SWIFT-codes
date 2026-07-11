@@ -3,6 +3,8 @@
 %
 % J. Thomson, Jul 2026
 
+% need to try a gradient-based filter... no positive gradient for f < fe 
+
 clear all, close all
 
 flist = dir('*SWIFT*.mat');
@@ -15,7 +17,10 @@ checkcutoff_high = 5;
 
 spreadcutoff = 1;  % directional spread, in radians
 
-for fi = 15 %:length(flist) % test with fi = 1, 10
+standardf = linspace(0.0098,0.4902,42);
+noisefloor = 1e-5.*standardf.^-2; % static noise floor
+
+for fi = 10 %:length(flist) % test with fi = 1 (small waves), 10 (clean swell), 15 (challenge case)
 
     load(flist(fi).name)
 
@@ -28,8 +33,14 @@ for fi = 15 %:length(flist) % test with fi = 1, 10
         check(si,:) = SWIFT(si).wavespectra.check;
         Enew(si,:) = Eoriginal(si,:);
 
+        %% make corrections 
+
         % fixed freq cutoff
         Enew(si,f<fcutoff) = NaN;
+
+        % noise floor cutoff
+        toolow = Enew(si,:) < noisefloor;
+        Enew(si, toolow ) = NaN;
 
         % calc energy period
         fe(si) = nansum(Enew(si,:) .* f')...
@@ -38,7 +49,7 @@ for fi = 15 %:length(flist) % test with fi = 1, 10
         SWIFT(si).centroidwaveperiod = Te(si);
 
         % fe multiple cutoff
-        Enew(si,f<fe(si)*fcutoff_femultiple) = NaN;
+        %Enew(si,f<fe(si)*fcutoff_femultiple) = NaN;
 
         % check factor cutoffs 
         %Enew(si, check(si,:) < checkcutoff_low) = NaN;
@@ -50,14 +61,21 @@ for fi = 15 %:length(flist) % test with fi = 1, 10
         % conver to vertical with check factor
         %Enew(si,:) = Enew(si,:) .* check(si,:);
 
-        % directional spread
-        %dir1 = atan2(b1,a1) ;  % [rad], 4 quadrant
-        %dir2 = atan2(b2,a2)/2 ; % [rad], only 2 quadrant
+        % directional spread cutoff
         spread1(si,:) = sqrt( 2 * ( 1 - sqrt(SWIFT(si).wavespectra.a1.^2 + SWIFT(si).wavespectra.b1.^2) ) );
-        %spread2 = sqrt( abs( 0.5 - 0.5 .* ( a2.*cos(2.*dir2) + b2.*cos(2.*dir2) )  ));
+        spread1(si,:) = real( spread1(si,:) );
         Enew(si,spread1(si,:) > spreadcutoff) = NaN;
+        %Enew(si,spread1(si,:) > spreadcutoff & f'<fe(si)*fcutoff_femultiple ) = NaN;
 
-        % recalc Hs ** THE NANS WILL BIAS THIS LOW... NEED TO FILL SOMEHOW **
+        %% recalc bulk parameters
+
+        % backfill the NaNs and recalc Hs 
+        % (essential to fill the NaNs, since they would bias-low the integral energy
+        % good = ~isnan(Enew(si,:));
+        % if sum(good)>2
+        %     Enew(si,:) = interp1(f(good), Enew(si,good), f, 'linear','extrap');
+        % end
+        Enew(si, isnan(Enew(si,:)) ) = noisefloor( isnan(Enew(si,:)) );
         Hsnew(si) = 4.*sqrt(nansum(Enew(si,:) * (f(2)-f(1))));
 
         % recacl peak period
