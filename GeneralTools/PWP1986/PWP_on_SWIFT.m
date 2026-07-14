@@ -103,8 +103,8 @@ cpw			= 4183.3;       %specific heat of water (4183.3 J/kgC)
 rb			= 0.65;         %critical bulk richardson number (0.65)
 rg			= 0.3;         %critical gradient richardson number (0.25) set to 0.3 as fail safe as written in PWP1986
 rkz			= 0;            %background vertical diffusion (0) m^2/s
-beta1   	= 0.6;          %longwave extinction coefficient (0.6 m)
-beta2   	= 20;           %shortwave extinction coefficient (20 m)
+beta1   	= 1.4;          %longwave extinction coefficient (m)
+beta2   	= 7.9;           %shortwave extinction coefficient (m)
 
 f = gsw_f(lat);              %coriolis term (rad/s)
 ucon = (.1*abs(f));         %coefficient of inertial-internal wave dissipation (0) s^-1
@@ -478,7 +478,7 @@ function absrb = absorb(beta1,beta2,nz,dz)
     %  II   0.77 1.5   14
     %  III  0.78 1.4   7.9
     
-    rs1 = 0.6;
+    rs1 = 0.78; 
     rs2 = 1.0-rs1;
     %absrb = zeros(nz,1);
     z1 = (0:nz-1)*dz;
