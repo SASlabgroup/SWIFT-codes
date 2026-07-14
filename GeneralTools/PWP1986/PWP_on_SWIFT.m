@@ -466,6 +466,17 @@ function absrb = absorb(beta1,beta2,nz,dz)
     %  Subscript 1 is for red, non-penetrating light, and
     %  2 is for blue, penetrating light. rs1 is the fraction
     %  assumed to be red.
+    % 
+    %  Water Types are listed in Jerlov "Marine Optics" 1976
+    %  Paulson and Simpson 1977 eq (4) makes curves for different water
+    %  types...
+    %  TYPE rs1  beta1 beta2
+    %  I    0.58 0.35  23
+    %  1    0.68 1.2   28
+    %  IA   0.62 0.6   20
+    %  IB   0.67 1.0   17
+    %  II   0.77 1.5   14
+    %  III  0.78 1.4   7.9
     
     rs1 = 0.6;
     rs2 = 1.0-rs1;
