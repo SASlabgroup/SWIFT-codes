@@ -27,7 +27,7 @@ opts.DiffMinChange = 1e-10;
 opts.MaxFunEvals = 10000;
 opts.MaxIter = 10000;
 
-fitresults = fit(depth(~isnan(insolation_curve)), insolation_curve(~isnan(insolation_curve)), ft, opts)
+[fitresults, goodness] = fit(depth(~isnan(insolation_curve)), insolation_curve(~isnan(insolation_curve)), ft, opts)
 
 % show results
 figure;
@@ -41,3 +41,14 @@ hold on
 plot(fitresults(depth), depth, 'DisplayName', 'Double Exp Fit')
 
 legend('location', 'best')
+ylabel('depth [m]')
+xlabel('I/I_0')
+set(findall(gca,'Type','Line'), 'LineWidth', 2)
+set(findall(gcf,'-property','FontSize'),'FontSize',12)
+
+text(min(get(gca,'XLim')),depth(3), ...
+sprintf('R^2= %.2g, RMSE= %.2g', goodness.rsquare, goodness.rmse), ...
+'BackgroundColor','w', ...
+'EdgeColor','k', ...
+'Margin',5);
+
