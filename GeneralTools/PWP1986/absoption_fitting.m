@@ -14,7 +14,7 @@ insolation_curve = tbl.c1./100; % from a table, insolation ratio
 
 
 % FITTING
-ft = fittype('a*exp(-z/b) + (1-a)*exp(-z/c)', ...
+ft = fittype('R*exp(-z/zeta1) + (1-R)*exp(-z/zeta2)', ...
 'independent', 'z', 'dependent', 'ratio');
 
 opts = fitoptions(ft);
