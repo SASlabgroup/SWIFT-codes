@@ -103,8 +103,8 @@ cpw			= 4183.3;       %specific heat of water (4183.3 J/kgC)
 rb			= 0.65;         %critical bulk richardson number (0.65)
 rg			= 0.3;         %critical gradient richardson number (0.25) set to 0.3 as fail safe as written in PWP1986
 rkz			= 0;            %background vertical diffusion (0) m^2/s
-beta1   	= 0.7;          %longwave extinction coefficient (m)
-beta2   	= 7.017;           %shortwave extinction coefficient (m)
+beta1   	= 1.4;          %longwave extinction coefficient (m)
+beta2   	= 7.9;           %shortwave extinction coefficient (m)
 
 f = gsw_f(lat);              %coriolis term (rad/s)
 ucon = (.1*abs(f));         %coefficient of inertial-internal wave dissipation (0) s^-1
@@ -383,8 +383,8 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon); %relieve static instability
     
     % original ml_index criteria
-    ml_index = find(diff(d)>1E-4,1,'first'); % mikes add
-    % ml_index = find(diff(d)>1E-4,1,'first'); %1E
+    % ml_index = find(diff(d)>0.2.*dz,1,'first'); % mikes add
+    ml_index = find(diff(d)>1E-4,1,'first'); %1E
     %ml_index = find(diff(d)>1E-3,1,'first');
     %ml_index = find( (d-d(1)) > 1e-4 ,1,'first');
     
@@ -478,7 +478,7 @@ function absrb = absorb(beta1,beta2,nz,dz)
     %  II   0.77 1.5   14
     %  III  0.78 1.4   7.9
     
-    rs1 = 0.744; 
+    rs1 = 0.78; 
     rs2 = 1.0-rs1;
     %absrb = zeros(nz,1);
     z1 = (0:nz-1)*dz;
@@ -554,7 +554,7 @@ end % bulk_mix
 
 function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon)
 
-    %  This function performs the gradeint Richardson Number relaxation
+    %  This function performs the gradeint Richardson Number relaxationX
     %  by mixing adjacent cells just enough to bring them to a new
     %  Richardson Number.
     
@@ -576,15 +576,13 @@ function [t s d u v] = grad_mix(t,s,d,u,v,dz,g,rg,nz,z,lat,lon)
 		    if j <= 0
 			    keyboard
 		    end
-		    dd = (d(j+1)-d(j)); 
-            if dd < 1.0e-3
-                dv = 1e-3; % limit density difference.
-            end   
-            dv = (u(j+1)-u(j))^2+(v(j+1)-v(j))^2;
-            if dv < 1.0e-6
-                dv = 1e-6; % remove divide by 0;
-            end             
-            r(j) = g*dz*dd/dv/d(j); % allocate gradient richardson numbers
+		    dd = (d(j+1)-d(j))/d(j);
+		    dv = (u(j+1)-u(j))^2+(v(j+1)-v(j))^2;
+		    if dv == 0
+			    r(j) = Inf;
+		    else
+			    r(j) = g*dz*dd/dv;
+		    end
 	    end
     
 	    %  Find the smallest value of r in profile
