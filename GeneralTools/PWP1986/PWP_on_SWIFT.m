@@ -105,6 +105,7 @@ rg			= 0.3;         %critical gradient richardson number (0.25) set to 0.3 as fa
 rkz			= 0;            %background vertical diffusion (0) m^2/s
 beta1   	= 1.4;          %longwave extinction coefficient (m)
 beta2   	= 7.9;           %shortwave extinction coefficient (m)
+ml_ddens    = 0.1.*dz;
 
 f = gsw_f(lat);              %coriolis term (rad/s)
 ucon = (.1*abs(f));         %coefficient of inertial-internal wave dissipation (0) s^-1
@@ -256,7 +257,7 @@ for n = 2:nmet
      fprintf('loop iter. %2d, %g%% done\n', n, (n/nmet*100));
     % pwpgo function does the "math" for fluxes and vel
     [s(:,n), t(:,n), u(:,n), v(:,n), mld(n)] = pwpgo(qi(n-1),qo(n-1),emp(n-1),tx(n-1),ty(n-1), ...
-        dt,dz,g,cpw,rb,rg,nz,z,t(:,n-1),s(:,n-1),d,u(:,n-1),v(:,n-1),absrb,f,ucon,n,lat,lon);
+        dt,dz,g,cpw,rb,rg,nz,z,t(:,n-1),s(:,n-1),d,u(:,n-1),v(:,n-1),absrb,f,ucon,n,lat,lon, ml_ddens);
     
     % vertical (diapycnal) diffusion
     if rkz > 0
@@ -355,7 +356,7 @@ toc
 %--------------------------------------------------------------------------
 
 function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
-    d,u,v,absrb,f,ucon,n, lat,lon)
+    d,u,v,absrb,f,ucon,n, lat,lon, ml_ddens)
     % pwpgo is the part of the model where all the dynamics "happen"
 
       
@@ -380,10 +381,12 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     end
     
     d = calc_seawater_density(s,t, gsw_p_from_z(-z(:).*ones(size(s)),lat), lon, lat); 
-    [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon); %relieve static instability
+    [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon,ml_ddens); %relieve static instability
     
     % original ml_index criteria
-    ml_index = find(diff(d)>1E-4,1,'first'); % mikes add
+    ml_index = find_ml_index(d,z, ml_ddens); % mikes add
+    % ml_index = find(diff(d)>ml_ddens,1,'first'); %1E
+
     % ml_index = find(diff(d)>1E-4,1,'first'); %1E
     %ml_index = find(diff(d)>1E-3,1,'first');
     %ml_index = find( (d-d(1)) > 1e-4 ,1,'first');
@@ -492,17 +495,18 @@ end % absorb
 
 %--------------------------------------------------------------------------
 
-function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon)
+function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon,ml_ddens)
     % Find and relieve static instability that may occur in the
     % density array d. This simulates free convection.
     % ml_index is the index of the depth of the surface mixed layer after adjustment,
     
     while 1
-	    ml_index = find(diff(d)<0,1,'first');
-	    if isempty(ml_index)
+
+	    ml_index = find(diff(d)<0,1,'first'); % orginal
+	    if isempty(ml_index) % mikes change to locs
 		    break
         end
-        
+
 	    [t s d u v] = mix5(t,s,d,u,v,ml_index+1,z,lat,lon);
         
     end
@@ -740,5 +744,33 @@ function [rho, rho_anomaly] = calc_seawater_density(SP, t, p, lon, lat)
 
     %  5. Potential Density  (sigma, kg m⁻³)
     rho_anomaly = rho - 1000;
+
+end
+
+function [ml_index] = find_ml_index(d,z, ml_ddens)
+% FIND_ML_INDEX  finds the ml index using a find peaks function with tuning
+% towards PWP 1986 paramters
+%
+% USAGE:
+%   [ml_index] = find_mi_index(d,z)
+%
+% INPUTS:
+%   d   - density (rho)          [kg/m^3]   (vector)
+%   z   - depth (z)              [m]        (vector)
+% OUTPUTS:
+%   ml_index - z index where based of dwl is
+%
+
+
+[pks, locs] = findpeaks(diff(d(:))./diff(z(:)), z(1:end-1),'MinPeakHeight',ml_ddens,'MinPeakProminence',1e-4,'MinPeakDistance',1);
+
+
+if isempty(locs)
+    ml_index = [];
+else
+    ml_index = find(locs(1) == z,1,'first'); % mikes add
+end
+
+
 
 end
