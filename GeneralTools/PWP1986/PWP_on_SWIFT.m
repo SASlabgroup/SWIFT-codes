@@ -163,6 +163,23 @@ if ~isempty(missing)
     warning(sprintf('Missing %s from inputs, keeping default vals established in header\n', string(missing)))
 end
 
+% Make sure met inputs are averaged on same scale as dt to avoid aliasing
+win = dtd;   % in datenum units (days)
+
+fn = fieldnames(pwp_input);
+
+fprintf('Averaging all met inputs to moving average of %g hrs\n', dtd*24)
+for k = 1:numel(fn)
+    if strcmp(fn{k},'time') | strcmp(fn{k},'z') | strcmp(fn{k},'t') | strcmp(fn{k},'s')
+        continue
+    end
+
+    if isnumeric(pwp_input.(fn{k})) && numel(pwp_input.(fn{k})) == numel(pwp_input.time)
+        pwp_input.(fn{k}) = movmean(pwp_input.(fn{k}), win, ...
+            'omitnan',...
+            'SamplePoints', pwp_input.time);
+    end
+end; clear fn k;
 
 
 % Setting up vars for model run
@@ -381,13 +398,13 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     end
     
     d = calc_seawater_density(s,t, gsw_p_from_z(-z(:).*ones(size(s)),lat), lon, lat); 
-    [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon,ml_ddens); %relieve static instability
+    [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon); %relieve static instability
     
     % original ml_index criteria
-    ml_index = find_ml_index(d,z, ml_ddens); % mikes add
+    % ml_index = find_ml_index(d,z, ml_ddens); % mikes add
     % ml_index = find(diff(d)>ml_ddens,1,'first'); %1E
 
-    % ml_index = find(diff(d)>1E-4,1,'first'); %1E
+    ml_index = find(diff(d)>1E-4,1,'first'); %1E
     %ml_index = find(diff(d)>1E-3,1,'first');
     %ml_index = find( (d-d(1)) > 1e-4 ,1,'first');
     
@@ -495,7 +512,7 @@ end % absorb
 
 %--------------------------------------------------------------------------
 
-function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon,ml_ddens)
+function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon)
     % Find and relieve static instability that may occur in the
     % density array d. This simulates free convection.
     % ml_index is the index of the depth of the surface mixed layer after adjustment,
