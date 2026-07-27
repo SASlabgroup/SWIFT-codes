@@ -33,10 +33,10 @@ for row =1:height(runs)
     plt = true;
 
     if plt == true
-        figure('Position',[50 50 750 500]);
-        tiledlayout('vertical')
+        figure('Position',[50 50 1200 500]);
+        tiledlayout(2,4)
 
-        nexttile(1);
+        nexttile([1 2]);
         yyaxis left
         plot(pwp_input.time-8/24, pwp_input.sw_net+ pwp_input.lw_net- pwp_input.hsb -pwp_input.hlb) % qi + qo
         ylabel('Q_n_e_t [W/m^2]')
@@ -46,9 +46,26 @@ for row =1:height(runs)
         set(findall(gca,'Type','Line'), 'LineWidth', 2)
         datetick
 
-        nexttile(2)
+        nexttile([2 1])
+        plot(pwp_input.s, pwp_input.z,'LineWidth',2)
+        ylabel('depth [m]')
+        xlabel('S [PSU]')
+        axis ij
+        grid
+        title('initial profile')
+
+        nexttile([2 1])
+        plot(pwp_input.t, pwp_input.z,'r','LineWidth',2)
+        ylabel('depth [m]')
+        xlabel('T[\circC]')
+        axis ij
+        grid
+        title('initial profile')
+
+        nexttile([1 2]);
         pcolor(pwp_output.time-8/24, pwp_output.z, pwp_output.t)
-        clim(mean(pwp_output.t,'all') + [1 2].*std(pwp_output.t,1,'all'))
+        % clim(mean(pwp_output.t,'all') + [1 2].*std(pwp_output.t,1,'all'))
+        clim([12 17])
         axis ij
         datetick
         shading flat
