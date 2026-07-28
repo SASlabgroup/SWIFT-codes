@@ -46,7 +46,7 @@ for row =1:height(runs)
         set(findall(gca,'Type','Line'), 'LineWidth', 2)
         datetick
 
-        nexttile([2 1])
+        nexttile([1 1])
         plot(pwp_input.s, pwp_input.z,'LineWidth',2)
         ylabel('depth [m]')
         xlabel('S [PSU]')
@@ -55,9 +55,16 @@ for row =1:height(runs)
         title('initial profile')
 
         nexttile([2 1])
-        plot(pwp_input.t, pwp_input.z,'r','LineWidth',2)
+        lat 		= 55.35;        %latitude (degrees)
+        lon         = -131.65       %longitude (degrees)
+        SA = gsw_SA_from_SP(pwp_input.s, pwp_input.z, lon, lat);
+        CT = gsw_CT_from_t(SA, pwp_input.t, pwp_input.z);
+        rho = gsw_rho(SA, CT, pwp_input.z);
+
+
+        plot(rho, pwp_input.z,'k','LineWidth',2)
         ylabel('depth [m]')
-        xlabel('T[\circC]')
+        xlabel('\rho [kg/m^3]')
         axis ij
         grid
         title('initial profile')
@@ -76,6 +83,15 @@ for row =1:height(runs)
 
         plot(pwp_output.time(1,:)-8/24, pwp_output.mld,'r','LineWidth',1)
         legend('','Mixed layer depth','location','best')
+
+
+        nexttile([1 1])
+        plot(pwp_input.t, pwp_input.z,'r','LineWidth',2)
+        ylabel('depth [m]')
+        xlabel('T[\circC]')
+        axis ij
+        grid
+        title('initial profile')
 
 
         % Add closure check and zero line
