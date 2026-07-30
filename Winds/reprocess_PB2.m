@@ -166,7 +166,7 @@ for iburst = 1:length(bfiles)
             hold on
             plot(windspdR,'-x','color',rgb('grey'))
             plot(windspddsp,'-rx')
-            plot(windspdR,'-x','color',rgb('coral'))
+            plot(windspdRdsp,'-x','color',rgb('coral'))
             axis tight;title('Wind Speed');legend('True','Relative','T Despike','R Despiked')
             subplot(5,1,2)
             plot(winddirT,'-kx')

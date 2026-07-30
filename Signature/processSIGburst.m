@@ -1,4 +1,4 @@
-function [HRprofile,fh] = processSIGburst(burst,varargin)
+function [HRprofile,fh,wpeof] = processSIGburst(burst,varargin)
 % NOTE: Quality Control
 %   - remove worst pings to get good EOFs, then interpolate back in time
 %   - alternatively, could use *only* despiked data. This does not

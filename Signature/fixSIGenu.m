@@ -187,7 +187,7 @@ end
 
 % Step 2) Compute new ENU velocities using SBG orientation
 T = T_AHRS;
-T(2:4, :) = -T(2:4, :);
+T(2:4, :) = -T(2:4, :);% Nortek instructions for downlooking...
 
 velENU_new = NaN(size(velENU));
 
@@ -199,6 +199,7 @@ for iping = 1:nping
     Rz = [cosd(hh) -sind(hh) 0;
           sind(hh)  cosd(hh) 0;
           0         0        1];
+
     Ry = [cosd(pp)  0  sind(pp);
           0         1  0;
          -sind(pp)  0  cosd(pp)];
@@ -219,7 +220,7 @@ for iping = 1:nping
 end
 
 % Swap signs in ENU
-velENU_new(:, :, 2:4) = -velENU_new(:, :, 2:4);
+% velENU_new(:, :, 2:4) = -velENU_new(:, :, 2:4);
 
 %% Create output structure
 
