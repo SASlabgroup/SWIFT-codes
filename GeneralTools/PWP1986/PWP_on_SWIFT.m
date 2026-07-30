@@ -102,7 +102,7 @@ g			= 9.81;          %gravity (9.8 m/s^2)
 cpw			= 4183.3;       %specific heat of water (4183.3 J/kgC)
 rb			= 0.65;         %critical bulk richardson number (0.65)
 rg			= 0.3;         %critical gradient richardson number (0.25) set to 0.3 as fail safe as written in PWP1986
-rkz			= 0;            %background vertical diffusion (0) m^2/s
+rkz			= 0;            %background vertical diffusion (0) m^2/s "eddy diffusivity"
 beta1   	= 1.4;          %longwave extinction coefficient (m)
 beta2   	= 7.9;           %shortwave extinction coefficient (m)
 ml_ddens    = 0.1.*dz;
@@ -280,7 +280,7 @@ for n = 2:nmet
     if rkz > 0
         diffus(dstab,t);
         diffus(dstab,s);
-        d = calc_seawater_density(s,t, gsw_p_from_z(-z(:),lat), lon, lat);
+        d = calc_seawater_density(s,t, gsw_p_from_z(-z(:).*ones(size(s)),lat), lon, lat); 
         diffus(dstab,u);
         diffus(dstab,v);
     end % diffusion
@@ -790,4 +790,23 @@ end
 
 
 
+end
+
+function a = diffus(dstab, a)
+%DIFFUS  Apply one step of explicit 1-D diffusion to interior points.
+%
+%   a     = diffus(dstab, a)
+%
+%   dstab = dt*rkz/dz^2   (diffusive Courant number, must be <= 0.5)
+%   a     = column vector; endpoints a(1) and a(end) are left unchanged.
+%
+%   Explicit stability requires dstab <= 0.5.
+
+    % interior indices only — endpoints are Neumann (zero-flux) by omission
+    j = 2:length(a)-1;
+
+    % second-difference (Laplacian) scaled by dstab
+    work    = dstab .* (a(j-1) + a(j+1) - 2.*a(j));
+
+    a(j)    = a(j) + work;
 end
