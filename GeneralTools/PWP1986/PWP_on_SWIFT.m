@@ -402,9 +402,11 @@ function [s t u v mld] = pwpgo(qi,qo,emp,tx,ty,dt,dz,g,cpw,rb,rg,nz,z,t,s, ...
     
     % original ml_index criteria
     % ml_index = find_ml_index(d,z, ml_ddens); % mikes add
-    % ml_index = find(diff(d)>ml_ddens,1,'first'); %1E
+    % [~, ml_index] = max(diff(d(:))./diff(z(:))); %1E
 
-    ml_index = find(diff(d)>1E-4,1,'first'); %1E
+    [ml_index,cond] = find(diff(d(:))>[5e-3, 1e-3, 1e-4],1,'first'); % Adaptive threshold
+
+    % ml_index = find(diff(d)>1E-4,1,'first'); %1E
     %ml_index = find(diff(d)>1E-3,1,'first');
     %ml_index = find( (d-d(1)) > 1e-4 ,1,'first');
     
@@ -520,7 +522,7 @@ function [t s d u v] = remove_si(t,s,d,u,v,z,lat,lon)
     while 1
 
 	    ml_index = find(diff(d)<0,1,'first'); % orginal
-	    if isempty(ml_index) % mikes change to locs
+	    if isempty(ml_index) 
 		    break
         end
 
@@ -766,7 +768,7 @@ end
 
 function [ml_index] = find_ml_index(d,z, ml_ddens)
 % FIND_ML_INDEX  finds the ml index using a find peaks function with tuning
-% towards PWP 1986 paramters
+% towards PWP 1986 parameters
 %
 % USAGE:
 %   [ml_index] = find_mi_index(d,z)
