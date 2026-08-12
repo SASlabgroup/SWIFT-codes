@@ -1,6 +1,8 @@
 % script to plot and export as csv the microSWIFT light data 
 % which stored as a separate data structure
 %
+% Uses external colormap function linspecer for plotting
+%
 % L. Crews, 4 / 2025
 % 
 
@@ -131,6 +133,7 @@ function plot_lightchannel_timeseries(SWIFTlightdata_timeseries)
     % Corresponding labels
     labels = {'Clear','f1','f2','f3','f4','f5','f6','f7','f8','Dark','Near IR'};
 
+    % Calls external function to make colormap
     cmap = linspecer(length(labels)); %Unique color for each variable
 
     % Plot
