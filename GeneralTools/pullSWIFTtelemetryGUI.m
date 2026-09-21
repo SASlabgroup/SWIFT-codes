@@ -555,7 +555,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
                     appendLog(logArea, ['Skip (no SWIFT var): ' files{f}], 'warn');
                     continue
                 end
-                sw = S.SWIFT;
+                sw = attachBattery(S);
                 if isempty(sw), continue; end
 
                 % Guess ID from filename  e.g. "SWIFT16_telemetry.mat"
@@ -775,6 +775,7 @@ grid(axTS2, 'on');  box(axTS2, 'on');
             try
                 S = load(fpath);
                 if ~isfield(S, 'SWIFT') || isempty(S.SWIFT), continue; end
+                sw = attachBattery(S);
                 % Extract ID from filename (e.g. SWIFT16_telemetry.mat)
                 tok = regexp(hits(h).name, 'SWIFT\s*(\w+?)_', 'tokens');
                 id  = hits(h).name;  % fallback
@@ -782,9 +783,9 @@ grid(axTS2, 'on');  box(axTS2, 'on');
                 existing = find(strcmp(loadedIDs, id), 1);
                 if isempty(existing)
                     loadedIDs{end+1}   = id; %#ok<AGROW>
-                    loadedSWIFT{end+1} = S.SWIFT; %#ok<AGROW>
+                    loadedSWIFT{end+1} = sw; %#ok<AGROW>
                 else
-                    loadedSWIFT{existing} = S.SWIFT;
+                    loadedSWIFT{existing} = sw;
                 end
                 appendLog(logArea, sprintf('  %s  (%d records)', hits(h).name, numel(S.SWIFT)));
             catch ME2
@@ -987,6 +988,19 @@ function html = buildLogHTML()
     '  });' ...
     '}' ...
     '</script></body></html>'];
+end
+
+function sw = attachBattery(S)
+% pullSWIFTtelemetry saves battery voltage as a separate top-level variable
+% (1 x nRecords) alongside the SWIFT struct array rather than as a field of
+% it. Fold it back in as an [SWIFT.battery] field so extractField finds it.
+    sw = S.SWIFT;
+    if isfield(sw, 'battery'), return; end          % already present
+    if ~isfield(S, 'battery') || isempty(S.battery), return; end
+    batt = S.battery(:).';
+    if numel(batt) ~= numel(sw), return; end        % length mismatch — leave alone
+    bc = num2cell(batt);
+    [sw.battery] = bc{:};
 end
 
 function vals = extractField(sw, fieldname)
