@@ -14,7 +14,7 @@ function [flatSWIFT, skippedPaths] = flattenSWIFT(SWIFT)
 % Fields that are anything else (cell, matrix, struct array) or contain no
 % data at all are left out; their dotted paths are returned in skippedPaths.
 %
-% Pure reshaping: no renaming, unit changes or derived quantities
+% Only reshapes the data: no renaming, unit changes or derived quantities
 %
 % Oct 2026 by M. LeClair (using claude), based on catSWIFT
 
@@ -28,17 +28,17 @@ end
 end
 
 
-function [flatLevel, skippedPaths, raggedFields] = flattenLevel(burstStructs, path)
+function [flattened, skippedPaths, raggedFields] = flattenLevel(burstStructs, path)
 % Flatten one level of the tree, calling itself for each substruct.
 %   burstStructs  1 x nTimes cell: the struct at this level in each burst
 %                 ([] if the burst does not have it)
 %   path          dotted path of this level, e.g. 'signature.profile.'
-%   flatLevel     flattened struct for this level
+%   flattened     flattened struct for this level
 %   skippedPaths  dotted paths of fields left out
 %   raggedFields  rows of {path, fieldName, lengths} for NaN-padded fields
 
 nTimes = numel(burstStructs);
-flatLevel = struct();
+flattened = struct();
 skippedPaths = {};
 raggedFields = cell(0, 3);
 
@@ -79,7 +79,7 @@ for fieldIndex = 1:numel(fieldNames)
         % Substruct: recurse, keep it only if something survived
         [subLevel, subSkippedPaths, subRaggedFields] = flattenLevel(burstValues, [fieldPath '.']);
         if ~isempty(fieldnames(subLevel))
-            flatLevel.(fieldName) = subLevel;
+            flattened.(fieldName) = subLevel;
         end
         skippedPaths = [skippedPaths subSkippedPaths];
         raggedFields = [raggedFields; subRaggedFields];
@@ -95,7 +95,7 @@ for fieldIndex = 1:numel(fieldNames)
         if all(isnan(columns(:)))
             skippedPaths{end+1} = fieldPath;
         else
-            flatLevel.(fieldName) = columns;
+            flattened.(fieldName) = columns;
             distinctLengths = unique(lengths(lengths > 0));
             if numel(distinctLengths) > 1
                 raggedFields(end+1, :) = {path, fieldName, mat2str(distinctLengths)};
@@ -109,7 +109,7 @@ for fieldIndex = 1:numel(fieldNames)
         for burstIndex = find(cellfun(@isText, burstValues))
             textValues(burstIndex) = string(burstValues{burstIndex});
         end
-        flatLevel.(fieldName) = textValues;
+        flattened.(fieldName) = textValues;
 
     else
         % Other types, or no data in any burst
