@@ -13,16 +13,32 @@ else
     slash = '/';
 end
 
-expdir = 'S:\Willapa\Jun2025\MooredSWIFTs';
-% expdir = '/Volumes/Data/Willapa/Jun2025/MooredSWIFTs';
+if ~exist('expdir','var') || isempty(expdir)
+    if ispc
+        expdir = 'S:\Willapa\Jun2025\MooredSWIFTs';
+    else
+        expdir = '/Volumes/PortableSSD/MooredSWIFTS';
+    end
+end
+if ~exist('preserveswift24sig','var'); preserveswift24sig = false; end
+if ~exist('plotall','var'); plotall = true; end
 
-L3files = dir([expdir '\SWIFT*\SWIFT*L3.mat']);
+L3files = dir([expdir slash 'SWIFT*' slash 'SWIFT*L3.mat']);
+if exist('missionnames','var') && ~isempty(missionnames)
+    keep = false(size(L3files));
+    for im = 1:length(L3files)
+        [~,missionname] = fileparts(L3files(im).folder);
+        keep(im) = ismember(missionname,missionnames);
+    end
+    L3files = L3files(keep);
+end
 
 %%
 
 for im = 1:length(L3files)
 
     disp(['QCing ' L3files(im).name '...'])
+
     load([L3files(im).folder slash L3files(im).name])
 
     %%% QC Out-of-water bursts using ACS flags
@@ -30,9 +46,11 @@ for im = 1:length(L3files)
     iout = sinfo.postproc(iacs(end)).flags.outofwater;
     SWIFT = SWIFT(~iout);
 
-    %%% Crop in time (should only affect SWIFT 28)
-    iexp = [SWIFT.time] > datenum([2025 06 16]);
-    SWIFT = SWIFT(iexp);
+    %%% Remove predeployment SWIFT28 records (the stray 5 June bursts)
+    if strcmp(SWIFT(1).ID,'28')
+        iexp = [SWIFT.time] >= datenum([2025 06 20]);
+        SWIFT = SWIFT(iexp);
+    end
 
     %%% Trim Altimeter & Remove Bottom Reflections
     if isfield(SWIFT,'signature')
@@ -113,8 +131,9 @@ for im = 1:length(L3files)
         icut = [SWIFT.time] > datenum([2025 06 20 20 00 00]) & [SWIFT.time] < datenum([2025 06 21 06 00 00]);
         SWIFT = SWIFT(~icut);
 
-        itcutsig = find([SWIFT.time] > datenum([2025 06 17 14 45 00]));
-        for it = itcutsig
+        if ~preserveswift24sig
+            itcutsig = find([SWIFT.time] > datenum([2025 06 17 14 45 00]));
+            for it = itcutsig
         % HR
         SWIFT(it).signature.HRprofile.w = NaN(size(SWIFT(it).signature.HRprofile.w));
         SWIFT(it).signature.HRprofile.wvar = NaN(size(SWIFT(it).signature.HRprofile.w));
@@ -131,8 +150,18 @@ for im = 1:length(L3files)
         if isfield(SWIFT(it).signature,'echo')
             SWIFT(it).signature.echo = NaN(size(SWIFT(it).signature.echo));
         end
+            end
         end
 
+    end
+
+    % Remove isolated wave-energy spikes coherently from the L3 source used
+    % to make L4. This clears the bulk wave fields and all spectral fields
+    % while preserving the frequency coordinate.
+    [SWIFT,waveqc] = QC_isolatedWaveSpikes(SWIFT);
+    if any(waveqc.flag)
+        disp(['  removed ' num2str(nnz(waveqc.flag)) ...
+            ' isolated L3 wave spike(s)'])
     end
 
     % Log in sinfo
@@ -145,6 +174,8 @@ for im = 1:length(L3files)
     sinfo.postproc(ip).type = 'AdHocQC';
     sinfo.postproc(ip).usr = getenv('username');
     sinfo.postproc(ip).time = string(datetime('now'));
+    sinfo.postproc(ip).params = struct('waveSpikeQC',waveqc.params);
+    sinfo.postproc(ip).flags = struct('waveoutlier',waveqc.flag);
 
     % Save L4 product
     save([L3files(im).folder slash L3files(im).name(1:end-6) 'L4.mat'],'SWIFT','sinfo')
@@ -154,5 +185,7 @@ end
 
 %% Plot QCd data
 
-swift = allSWIFT(expdir,'L4',true);
+if plotall
+    swift = allSWIFT(expdir,'L4',true);
+end
 
