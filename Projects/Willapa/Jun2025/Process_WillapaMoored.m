@@ -41,7 +41,7 @@ missions = missions(~contains({missions.name},'directoffload'));
 
 %% Loop through missions and post process
 
-for im = length(missions)
+for im = 1:length(missions)
 
     missiondir = [missions(im).folder slash missions(im).name];
     cd(missiondir)
@@ -49,7 +49,7 @@ for im = length(missions)
     sname = missiondir(islash(end)+1:end);
 
     % Burst interval
-    acsfiles = dir([missiondir '\*\Raw\*\*ACS*.dat']);
+    acsfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*ACS*.dat']);
     burstind = NaN(length(acsfiles),1);
     for iburst = 1:length(acsfiles)
         burstind(iburst) = str2double(acsfiles(iburst).name(end-5:end-4));
@@ -65,8 +65,35 @@ for im = length(missions)
     % Prune out-of-water bursts
     [SWIFTL2,sinfoL2] = L2_pruneSWIFT(missiondir,plotflag,minwaveheight,minsalinity,maxdriftspd);
 
-    % Post-process
-    [SWIFTL3,sinfoL3] = L3_postprocessSWIFT(missiondir,'rpall','plotswift');
+    % Post-process all non-SBG sensors through the standard driver.
+    [SWIFTL3,sinfoL3] = L3_postprocessSWIFT(missiondir, ...
+        'rpWXT','rpPB2','rpY81','rpIMU','rpACS','rpACO', ...
+        'rpSIG','rpAQH','rpAQD','plotswift');
+
+    % SBG recovery decision (mounted-data audit, 8 Oct 2026): retain the
+    % established 256-second FFT so the full wave-frequency range is
+    % resolved; do not substitute 64/128/192-second windows. Only SWIFT26
+    % uses the 76-second lower crop. Inspection of its first 90 seconds found
+    % heave settling near 70--80 seconds, and tmin=76 recovers 18 additional
+    % existing L2 records. No other Willapa mission gains a record relative
+    % to the original 90-second crop, so those missions keep the default.
+    %
+    % SWIFT26 preview: 990 raw-SBG recoveries (888 three-window/18-DOF,
+    % 18 two-window/12-DOF, 84 one-window/6-DOF). reprocess_SBG stores DOF
+    % in wavespectra.dof, flags raw-SBG and reduced-DOF provenance in sinfo,
+    % and writes SBG_processing_report.txt with source availability/errors.
+    % A failed raw calculation remains missing: L2 wave values are not
+    % carried into MATLAB L3/L4/L5. Expected ten-minute slots absent from L2
+    % are reported but not inserted because they lack a vetted SWIFT record
+    % skeleton.
+    if strcmp(sname,'SWIFT26_16-27Jun2025')
+        [SWIFTL3,sinfoL3] = reprocess_SBG( ...
+            missiondir,false,false,false,true,90, ...
+            tmin=76,minimum_windows=1);
+    else
+        [SWIFTL3,sinfoL3] = reprocess_SBG( ...
+            missiondir,false,false,false,true,90);
+    end
 
     close all
 
