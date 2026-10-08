@@ -1,9 +1,10 @@
-function SWIFT2NC(SWIFT_in,filename)
+function SWIFT2NC(SWIFT_in,filename,varargin)
 %
 % creates a netCDF file using existing SWIFT structure and writes it into 'filename'
 % (must include .nc)
 %
 %   >> SWIFT2NC(SWIFT, filename)
+%   >> SWIFT2NC(SWIFT, filename, 'nfreq', 85)
 %
 % Use SIWFT ID to determine v3 or v4 (sensors at different depths) 
 % and skip substructures that are not supported yet
@@ -14,6 +15,11 @@ function SWIFT2NC(SWIFT_in,filename)
 %   Nov 2024 by J. Thomson to include microSWIFTs
 
 SWIFT = SWIFT_in;
+
+p = inputParser;
+addParameter(p,'nfreq',42,@(x) ismember(x,[42 85]));
+parse(p,varargin{:});
+nfreq = p.Results.nfreq;
 
 swiftnum = str2num(strrep(strrep(SWIFT(1).ID, 'SWIFT', ''), ' ', '') );
 
@@ -83,14 +89,106 @@ if isfield(SWIFT,'windspdkurt')
 end
 
 if isfield(SWIFT,'wavespectra')
-    for si=1:length(SWIFT)
-        specsize(si) = length(SWIFT(si).wavespectra.freq);
-        checkcheck(si) = ~isfield(SWIFT(si).wavespectra,'check');
+    ref42 = [];
+    ref85 = [];
+    for si = 1:length(SWIFT)
+        if isempty(SWIFT(si).wavespectra) || ...
+                ~isfield(SWIFT(si).wavespectra,'freq')
+            continue
+        end
+        f = SWIFT(si).wavespectra.freq(:);
+        if all(isfinite(f)) && all(diff(f) > 0)
+            if length(f) == 42 && isempty(ref42)
+                ref42 = f;
+            elseif length(f) == 85 && isempty(ref85)
+                ref85 = f;
+            end
+        end
     end
-    if all(specsize ~= 42 | checkcheck)
-        SWIFT=rmfield(SWIFT,'wavespectra');
+
+    if ~isempty(ref42) && ~isempty(ref85) && ...
+            any(abs(ref42-ref85(1:42)) > 1e-10)
+        error('The 42-bin frequencies do not match the first 42 bins of the 85-bin grid.')
+    end
+
+    if nfreq == 42
+        if ~isempty(ref42)
+            freqref = ref42;
+        elseif ~isempty(ref85)
+            freqref = ref85(1:42);
+        else
+            freqref = [];
+        end
     else
-        SWIFT( specsize ~= 42 | checkcheck) = [];
+        if isempty(ref85)
+            error('No valid 85-bin frequency vector is available.')
+        end
+        freqref = ref85;
+    end
+
+    if isempty(freqref)
+        SWIFT = rmfield(SWIFT,'wavespectra');
+    else
+        if ~isempty(ref85)
+            ispec = find(arrayfun(@(x) isfield(x.wavespectra,'freq') && ...
+                length(x.wavespectra.freq) == 85,SWIFT),1);
+        else
+            ispec = find(arrayfun(@(x) isfield(x.wavespectra,'freq') && ...
+                length(x.wavespectra.freq) == 42,SWIFT),1);
+        end
+        specfields = fieldnames(SWIFT(ispec).wavespectra);
+
+        for si = 1:length(SWIFT)
+            ws = SWIFT(si).wavespectra;
+            if isempty(ws) || ~isfield(ws,'freq')
+                nin = 0;
+                f = [];
+            else
+                f = ws.freq(:);
+                nin = length(f);
+            end
+
+            missingfreq = nin == 0 || all(isnan(f)) || all(f == 0);
+
+            if missingfreq
+                wsfields = fieldnames(ws);
+                for jf = 1:length(wsfields)
+                    value = ws.(wsfields{jf});
+                    if ~strcmp(wsfields{jf},'freq') && isnumeric(value) && ...
+                            any(isfinite(value(:)))
+                        error(['Spectral data have no valid frequency ' ...
+                            'vector at SWIFT index %d.'],si)
+                    end
+                end
+            else
+                if ~ismember(nin,[42 85]) || any(~isfinite(f)) || ...
+                        any(diff(f) <= 0)
+                    error('Invalid frequency vector at SWIFT index %d.',si)
+                end
+                ncompare = min(nin,nfreq);
+                if any(abs(f(1:ncompare)-freqref(1:ncompare)) > 1e-10)
+                    error('Frequency mismatch at SWIFT index %d.',si)
+                end
+            end
+
+            for jf = 1:length(specfields)
+                field = specfields{jf};
+                if strcmp(field,'freq')
+                    ws.freq = freqref;
+                    continue
+                end
+                out = NaN(nfreq,1);
+                if ~missingfreq && isfield(ws,field)
+                    value = ws.(field);
+                    if isnumeric(value) && numel(value) == nin
+                        nkeep = min(nin,nfreq);
+                        out(1:nkeep) = value(1:nkeep);
+                    end
+                end
+                ws.(field) = out;
+            end
+            SWIFT(si).wavespectra = ws;
+        end
     end
 end
 
@@ -195,19 +293,23 @@ j=1;
 for i=1:length(full_names)
     %if ~strcmp(full_names{i},'ID')
         if strcmp(full_names{i},'signature')
+            if isempty(z_names); nz_ref = 0; else; nz_ref = length(SWIFT(1).signature.profile.z); end
+            if isempty(zHR_names); nHR_ref = 0; else; nHR_ref = length(SWIFT(1).signature.HRprofile.z); end
             for t=1:length(SWIFT)
                 for iz=1:length(z_names)
-                    if ~isempty(SWIFT(t).signature.profile.(z_names{iz}))
-                        S.signature.profile.(z_names{iz})(t,:) = SWIFT(t).signature.profile.(z_names{iz})(:);
+                    value = SWIFT(t).signature.profile.(z_names{iz});
+                    if ~isempty(value) && numel(value) == nz_ref
+                        S.signature.profile.(z_names{iz})(t,:) = value(:);
                     else
-                        S.signature.profile.(z_names{iz})(t,:) = NaN(size(S.signature.profile.(z_names{iz})(1,:)));
+                        S.signature.profile.(z_names{iz})(t,:) = NaN(1,nz_ref);
                     end
                 end
                 for iz=1:length(zHR_names)
-                    if ~isempty(SWIFT(t).signature.HRprofile.(zHR_names{iz}))
-                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                    value = SWIFT(t).signature.HRprofile.(zHR_names{iz});
+                    if ~isempty(value) && numel(value) == nHR_ref
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = value(:);
                     else
-                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(size(S.signature.HRprofile.([zHR_names{iz} 'HR'])(1,:)));
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(1,nHR_ref);
                     end
                 end
             end
@@ -215,8 +317,40 @@ for i=1:length(full_names)
             S.time= [SWIFT.time]-datenum(1970,1,1,0,0,0);
         elseif strcmp(full_names{i},'ID')
             S.ID = ones(length(SWIFT),1) * swiftnum;
+        elseif any(strcmp(full_names{i},{'OBS_uncalibrated', ...
+                'OBS_ambient','OBS_calibratedNTU'}))
+            value = [SWIFT.(full_names{i})];
+            if isempty(value)
+                continue
+            end
+            S.(full_names{i}) = value;
+        elseif isstruct(SWIFT(1).(full_names{i}))
+            value = [SWIFT.(full_names{i})];
+            if isempty(value)
+                continue
+            end
+            S.(full_names{i}) = value;
         else
-            S.(full_names{i}) = [SWIFT.(full_names{i})]; % errors here if check factor in some but not all
+            % Preserve the time axis when a scalar field is empty in some
+            % records. Concatenation silently shortened these fields.
+            value = NaN(1,length(SWIFT));
+            hasvalue = false;
+            for t = 1:length(SWIFT)
+                current = SWIFT(t).(full_names{i});
+                if isempty(current)
+                    continue
+                elseif ~(isnumeric(current) || islogical(current)) || ...
+                        ~isscalar(current)
+                    error('Unsupported value in %s at SWIFT index %d.', ...
+                        full_names{i},t)
+                end
+                value(t) = current;
+                hasvalue = true;
+            end
+            if ~hasvalue
+                continue
+            end
+            S.(full_names{i}) = value;
         end
         names{j} = full_names{i};
         j = j+1;
@@ -351,6 +485,9 @@ netcdf.putAtt(ncid,varid,'please_acknowledge:','investigator above');
 netcdf.putAtt(ncid,varid,'institution','Applied Physics Laboratory at the University of Washington (APL-UW)');
 netcdf.putAtt(ncid,varid,'contact_email_1','jthomson@apl.washington.edu');
 netcdf.putAtt(ncid,varid,'id', swiftnum);
+if isfield(SWIFT,'wavespectra')
+    netcdf.putAtt(ncid,varid,'spectral_frequency_bins',nfreq);
+end
 %netcdf.putVar(ncid,varid,'trajectory', SWIFT(1).ID );
 
 if ~micro %2 digit input number = SWIFT
