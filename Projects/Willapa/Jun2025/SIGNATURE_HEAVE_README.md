@@ -127,6 +127,35 @@ spectra on the full non-overlapping native grid, and frequency-resolved bias.
 
 All processing and review code in this workflow is MATLAB.
 
+## Other missing-SBG candidates
+
+An archive-wide raw-file audit on 9 October 2026 compared vetted L2 burst IDs
+with the mounted SBG and Signature directories. Besides SWIFT25, **SWIFT26 has
+159 records with a Signature burst but no matching raw SBG file**:
+
+| Mooring mission | L2 records with Signature but no raw SBG |
+| --- | ---: |
+| SWIFT22, 17--26 June | 0 |
+| SWIFT23, 17--26 June | 0 |
+| SWIFT24, all three deployments | 0 |
+| SWIFT25, 16--27 June | 300 |
+| SWIFT26, 16--27 June | 159 |
+| SWIFT28, 20--21 June | 0 |
+
+The SWIFT26 candidates occur from 22 June 03:10 through 25 June 22:00 UTC:
+41 records on 22 June, 48 on 23 June, 43 on 24 June, and 27 on 25 June. All
+159 corresponding Signature files contain a continuous segment long enough
+for the 256-second estimator. Their sample rate is 4.00002 Hz, and their
+longest continuous segments range from 392 to 512 seconds (392 seconds at the
+median).
+
+These are **potential**, not approved, recoveries. They have not yet passed
+the spectral cross-mooring validation below, and `Process_WillapaMoored.m`
+continues to promote Signature waves only for SWIFT25. The table identifies
+missing raw SBG files; additional records whose SBG file exists but produces
+an invalid spectrum should be tracked separately through the SBG processing
+report.
+
 ## Additional validation plan
 
 The next step is to compare the estimator with the other Willapa moorings that
