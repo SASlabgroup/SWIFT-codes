@@ -266,6 +266,15 @@ for iburst = 1:length(bfiles)
     [newHs,newTp,newDp,newE,newf,newa1,newb1,newa2,newb2,newcheck] = ...
         SBGwaves(u,v,z,fs);
 
+    % Retain the native 0.05--2.5 Hz result separately from the interpolated
+    % telemetry grid. Signature-heave calibration uses this without changing
+    % the canonical wavespectra fields written below.
+    SWIFT(sindex).sbgwaves.sigwaveheight = newHs;
+    SWIFT(sindex).sbgwaves.peakwaveperiod = newTp;
+    SWIFT(sindex).sbgwaves.energy = newE;
+    SWIFT(sindex).sbgwaves.freq = newf;
+    SWIFT(sindex).sbgwaves.dof = nominal_dof(sindex);
+
     if ~any(~isnan(newE))
         warning('NaN Spectra from SBGwaves')
     end
