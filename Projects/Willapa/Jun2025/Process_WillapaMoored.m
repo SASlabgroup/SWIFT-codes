@@ -97,12 +97,17 @@ for im = 1:length(missions)
 
     % SWIFT25's SBG outage on 20--21 June is filled from the Signature
     % accelerometer after all available SBG records have been reprocessed.
-    % The recovery is scalar and limited to 0.10--0.50 Hz; directional
-    % moments and energy outside that band remain missing. reprocess_SIGheave
-    % records the empirical calibration and per-record provenance in sinfo.
+    % reprocess_SIGheave deliberately writes only separate signaturewaves
+    % variables. Promotion into the canonical fields is Willapa-specific:
+    % measured energy spans 0.05--2.0 Hz, an empirically normalized f^-4
+    % tail spans 2.0--2.5 Hz, and directional moments remain unavailable.
     if strcmp(sname,'SWIFT25_16-27Jun2025')
-        [SWIFTL3,sinfoL3] = reprocess_SIGheave(missiondir, ...
-            input_SWIFT=SWIFTL3,input_sinfo=sinfoL3);
+        [SWIFTL3,sinfoL3,signature_diagnostics] = reprocess_SIGheave( ...
+            missiondir,input_SWIFT=SWIFTL3,input_sinfo=sinfoL3, ...
+            save_product=false);
+        [SWIFTL3,sinfoL3] = fillWillapaSignatureWaves( ...
+            SWIFTL3,sinfoL3,signature_diagnostics.fill_candidate);
+        saveWillapaL3(missiondir,SWIFTL3,sinfoL3)
     end
 
     close all
@@ -116,4 +121,58 @@ end
 %% Plot Overview of all Missions
 plotall = true;
 swift = allSWIFT(expdir,'L3',plotall);
+
+function [SWIFT,sinfo] = fillWillapaSignatureWaves(SWIFT,sinfo,fill)
+
+for i = find(fill(:))'
+    fallback = SWIFT(i).signaturewaves;
+    output_frequency = SWIFT(i).wavespectra.freq;
+    output_size = size(output_frequency);
+    energy = interp1(fallback.freq,fallback.energy,output_frequency);
+
+    SWIFT(i).sigwaveheight = fallback.sigwaveheight;
+    SWIFT(i).peakwaveperiod = fallback.peakwaveperiod;
+    SWIFT(i).peakwavedirT = NaN;
+    SWIFT(i).wavespectra.energy = reshape(energy,output_size);
+    SWIFT(i).wavespectra.a1 = NaN(output_size);
+    SWIFT(i).wavespectra.b1 = NaN(output_size);
+    SWIFT(i).wavespectra.a2 = NaN(output_size);
+    SWIFT(i).wavespectra.b2 = NaN(output_size);
+    SWIFT(i).wavespectra.check = NaN(output_size);
+    SWIFT(i).wavespectra.dof = fallback.dof;
+    SWIFT(i).wavespectra.source = 'SignatureHeave';
+    finite_energy = isfinite(energy);
+    SWIFT(i).wavespectra.band = [min(output_frequency(finite_energy)) ...
+        max(output_frequency(finite_energy))];
+    SWIFT(i).wavespectra.hs_band = ...
+        [fallback.measured_band(1) fallback.tail_band(2)];
+    SWIFT(i).wavespectra.signature_tail_band = fallback.tail_band;
+end
+
+if isfield(sinfo,'postproc')
+    ip = length(sinfo.postproc)+1;
+else
+    sinfo.postproc = struct;
+    ip = 1;
+end
+sinfo.postproc(ip).type = 'WillapaSignatureHeaveFill';
+sinfo.postproc(ip).usr = getenv('username');
+sinfo.postproc(ip).time = string(datetime('now'));
+sinfo.postproc(ip).flags.filled = fill;
+sinfo.postproc(ip).params.measured_band = [0.05 2.00];
+sinfo.postproc(ip).params.tail_band = [2.00 2.50];
+
+end
+
+function saveWillapaL3(missiondir,SWIFT,sinfo)
+
+files = dir(fullfile(missiondir,'*SWIFT*L3.mat'));
+files = files(~startsWith({files.name},'._'));
+if isempty(files)
+    error('Process_WillapaMoored:MissingL3', ...
+        'No L3 product found in %s.',missiondir)
+end
+save(fullfile(files(1).folder,files(1).name),'SWIFT','sinfo')
+
+end
 

@@ -1,90 +1,118 @@
 # SWIFT25 Signature-accelerometer wave recovery
 
-This branch contains a recovery of scalar wave energy for missing or invalid
-SWIFT25 SBG records, including the 20--21 June 2025 outage. It is independent
-of any L2 feed-forward fallback.
+This branch estimates scalar wave energy from SWIFT25's Signature
+accelerometer for records with missing or invalid SBG wave products, including
+the 20--21 June 2025 SBG outage. It is independent of the L2 feed-forward
+fallback.
+
+## Product separation
+
+`Signature/reprocess_SIGheave.m` is deliberately non-destructive. It writes a
+separate `SWIFT(i).signaturewaves` product for every usable Signature burst and
+does not replace `sigwaveheight`, `peakwaveperiod`, or `wavespectra`. The
+separate product contains:
+
+- `sigwaveheight`, `peakwaveperiod`, and `energyperiod`;
+- native-grid `freq` and `energy` through 2.5 Hz;
+- `dof` and `source`;
+- the measured and extrapolated frequency bands;
+- a logical `tail_extrapolated` mask; and
+- the fraction of variance between 0.05 and 0.10 Hz, retained as a diagnostic
+  for possible low-frequency drift.
+
+The generic routine also records the transfer, tail calibration, source files,
+window count, nominal DOF, calibration mask, and fill-candidate mask in
+`sinfo.postproc`.
+
+`Process_WillapaMoored.m` makes the project-specific decision to promote only
+the 302 SWIFT25 fill candidates into the canonical fields. Directional moments
+remain `NaN`, and `wavespectra.source` is set to `SignatureHeave`. The full
+native fallback spectrum remains in `signaturewaves`; the canonical
+`wavespectra` field is interpolated only onto its existing telemetry frequency
+grid, which ends near 1 Hz. As with normal SBG processing, canonical Hs is
+calculated on the wider native grid rather than from the truncated telemetry
+spectrum.
 
 ## Method
 
-The Signature burst stream contains approximately 2,032 three-axis
-accelerometer samples over 508 seconds (4 Hz). SWIFT25's Signature AHRS is
-not reliable enough to rotate acceleration into earth coordinates. Instead,
-the estimator uses the rotation-invariant acceleration magnitude. For dynamic
-acceleration small relative to gravity,
+The Signature burst stream normally contains approximately 2,032 three-axis
+accelerometer samples over 508 seconds at 4 Hz. SWIFT25's Signature AHRS is not
+reliable enough to rotate acceleration into earth coordinates. For dynamic
+acceleration small relative to gravity, the rotation-invariant proxy
 
 ```text
 vertical acceleration proxy = norm(specific force) - g
 ```
 
-approximates acceleration parallel to gravity to first order. The script
-uses 16,384 accelerometer counts per g, computes a Welch spectrum with
-256-second Hann windows and 75% overlap, and converts acceleration spectral
-density to elevation spectral density by dividing by `(2*pi*f)^4`.
+approximates acceleration parallel to gravity to first order. The estimator
+uses 16,384 accelerometer counts per g, 256-second Hann windows with 75 percent
+overlap, and converts acceleration spectral density to elevation spectral
+density by dividing by `(2*pi*f)^4`.
 
-Only 0.10--0.50 Hz is retained. Lower frequencies contain excessive
-rotational/centripetal energy. A median frequency-dependent transfer function
-is estimated from every fifth valid, QC-passing L2 SBG record. Known isolated
-L2 spikes are excluded with the mission-specific `Hs < 0.5 m` validation
-limit. The remaining records are a disjoint holdout set.
+The recovery uses the same native frequency bins and 0.05--2.5 Hz Hs range as
+`SBGwaves`:
+
+1. Signature energy from 0.05 through 2.0 Hz is measured directly.
+2. A frequency-dependent median transfer is learned from every fifth valid
+   SBG/Signature overlap record. Native SBG spectra retained in `sbgwaves` are
+   used so calibration is not limited by the approximately 1 Hz telemetry
+   grid.
+3. The unavailable 2.0--2.5 Hz portion is extrapolated as an `f^-4` tail,
+   anchored to measured energy from 1.5--1.9 Hz.
+4. The tail amplitude is multiplied by 0.335774, the median native-SBG to raw
+   tail-variance ratio in the calibration records. This avoids the systematic
+   high bias of an unnormalized tail.
+5. Hs is calculated from the combined measured and extrapolated spectrum over
+   0.05--2.5 Hz, exactly as a spectral integral; there is no separate scalar Hs
+   correction.
+
+The isolated 23 June SBG spike and other reference values at or above 0.5 m
+are excluded from calibration. The remaining records form a disjoint holdout
+set.
 
 ## Validation
 
-The MATLAB review was run against the mounted SWIFT25 archive after a
-non-writing run of the canonical `reprocess_SBG` step. The 916-record
-holdout results for the calibrated 0.10--0.50 Hz band are:
+The complete MATLAB path was run against the mounted SWIFT25 archive after a
+non-writing run of canonical `reprocess_SBG`. For 916 holdout records, comparing
+the full 0.05--2.5 Hz estimate with native SBG Hs gives:
 
-- Hs correlation: 0.920;
-- Hs median bias: -0.0027 m;
-- Hs mean bias: -0.0014 m;
-- Hs median absolute error: 0.0077 m; and
-- Hs RMSE: 0.0155 m.
+- correlation: 0.926;
+- median bias: -0.0031 m;
+- mean bias: +0.0001 m;
+- median absolute error: 0.0094 m;
+- RMSE: 0.0199 m; and
+- median Hs ratio: 0.965.
 
-The Hs ratio is 0.947 at the median but 1.044 at the mean. Thus, the method
-is not uniformly high; a positive tail raises the mean. Across individual
-holdout spectral values in the recovery band, the median Signature-minus-SBG
-difference is -0.12 dB and the interquartile range is -1.86 to +1.97 dB.
-The median bias of each frequency bin ranges from -0.55 to +0.37 dB, while
-episodic positive differences reach +8.0 dB at the 95th percentile. This
-supports event-level contamination QC rather than a uniform amplitude
-rescaling.
+The extrapolated tail completes the spectrum but has negligible effect on Hs.
+Among the 302 fill candidates, adding 2.0--2.5 Hz changes Hs by 0.0000034 m at
+the median, 0.0000064 m at the mean, and at most 0.000027 m. Native SBG data
+independently show that omitting frequencies above 2 Hz produces a median Hs
+bias of only -0.004 percent; 99 percent of records lose less than 0.102 percent.
 
-The calibration uses 245 records; 230 valid SBG/Signature ratios are
-available in each recovered frequency bin after file and spectral QC.
-
-The integrated run recovers 302 existing SWIFT records: all 300 records with
-no raw SBG file, one record with too little usable SBG data, and the anomalous
-23 June SBG wave record. This includes all 269 L2 records in the continuous
-20--21 June SBG outage. Of the recovered Signature spectra, 295 use four
-overlapping Welch windows (nominal DOF 8), two use three windows (DOF 6),
-four use two windows (DOF 4), and one uses one window (DOF 2). Two records
-with empty raw SBG streams on 26 and 27 June have no Signature file and
-remain missing. Expected time slots absent from L2 are reported by the SBG
-audit but cannot be inserted without a vetted SWIFT record.
+The integrated run finds 302 recoverable existing SWIFT records: all 300
+records with no raw SBG file, one record with too little usable SBG data, and
+the anomalous 23 June SBG wave record. This includes all 269 L2 records in the
+continuous 20--21 June SBG outage. Two records with empty raw SBG streams on 26
+and 27 June have no Signature file and remain missing. Expected time slots
+absent from L2 cannot be inserted without a vetted SWIFT record skeleton.
 
 ## Limitations
 
-- Results are scalar and band limited, not complete wave products.
-- Directional moments cannot be recovered from this method.
-- Energy below 0.10 Hz remains missing.
-- The low-frequency correction is empirical and SWIFT25-specific.
-- Recovered `sigwaveheight` is the 0.10--0.50 Hz band Hs, not full-band Hs.
-- Two raw-empty SBG records have no Signature file and remain unrecoverable;
-  slots absent from L2 cannot be synthesized by this fallback.
+- This is a scalar estimate; directional moments cannot be recovered.
+- The acceleration-magnitude method contains orientation and centripetal
+  contamination. The 0.05--0.10 Hz variance fraction has a median of 0.069 and
+  a 95th percentile of 0.252 among fill candidates, so it is saved explicitly
+  for later drift QC.
+- The empirical spectral transfer and tail normalization are specific to
+  SWIFT25 and this deployment.
+- Frequencies above the 2 Hz Signature Nyquist limit are modeled, not measured.
+- The canonical telemetry spectrum ends near 1 Hz. Use `signaturewaves` when
+  the complete native 0.05--2.5 Hz fallback spectrum or tail provenance is
+  needed.
 
-## MATLAB processing
+## Review
 
-`Waves/SignatureHeaveWaves.m` implements the rotation-invariant acceleration
-estimator. `Signature/reprocess_SIGheave.m` finds full or partial Signature
-files, estimates a deployment-specific transfer function from every fifth
-valid SBG/Signature overlap record, and fills only records whose primary wave
-product is missing. It requires at least 20 calibration ratios in every
-frequency bin. Recovered spectra contain `NaN` outside 0.10--0.50 Hz, all
-directional moments remain `NaN`, and the spectrum is marked with
-`wavespectra.source = 'SignatureHeave'` and `wavespectra.band = [0.10 0.50]`.
-Recovery masks, calibration records, transfer values, and parameters are
-also stored in `sinfo.postproc`.
-
-For a non-writing review run:
+Run a non-writing review with:
 
 ```matlab
 [metrics,figures,diagnostics] = review_SIGheave(missiondir, ...
@@ -92,26 +120,9 @@ For a non-writing review run:
 ```
 
 The review writes `SWIFT25_signature_heave_validation.png`,
-`SWIFT25_signature_heave_effect.png`,
-`SWIFT25_signature_heave_spectral_difference.png`, and the non-writing SBG
-processing report into `plot_dir`. The effect plot uses shared time limits,
-leaves missing spectra blank, and explicitly labels the off-scale 23 June
-SBG outlier before showing its Signature replacement. The spectral-difference
-plot uses discrete, non-overlapping cells over the complete 0.0098--0.994 Hz
-SWIFT grid. Its full-grid Signature calibration is diagnostic only; dashed
-lines mark the 0.10--0.50 Hz band retained by production recovery.
+`SWIFT25_signature_heave_effect.png`, and
+`SWIFT25_signature_heave_spectral_difference.png`. The plots show the Hs
+holdout comparison, the 302 candidate fills, the measured and extrapolated
+spectra on the full non-overlapping native grid, and frequency-resolved bias.
 
-`Process_WillapaMoored.m` runs the fallback for SWIFT25 after normal L3/SBG
-processing so valid SBG records are available for calibration and only
-missing primary wave records are filled.
-
-To write the recovered records to the mission L3 product:
-
-```matlab
-[SWIFT,sinfo,diagnostics] = reprocess_SIGheave(missiondir);
-```
-
-All processing and review code on this branch is MATLAB. The validation
-statistics above come from the complete MATLAB path on the mounted archive.
-The MATLAB Welch calculation was also checked against the independently
-validated spectrum to machine precision.
+All processing and review code in this workflow is MATLAB.

@@ -2,8 +2,11 @@ function [SWIFT,sinfo,diagnostics] = reprocess_SIGheave(missiondir,opts)
 
 arguments
     missiondir {mustBeTextScalar} % SWIFT mission directory
-    opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.10 % Lowest recovered frequency, in Hz
-    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 0.50 % Highest recovered frequency, in Hz
+    opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.05 % Canonical Hs lower frequency, in Hz
+    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 2.00 % Highest measured Signature frequency, in Hz
+    opts.tail_fmax (1,1) double {mustBePositive,mustBeFinite} = 2.50 % Upper frequency of extrapolated tail, in Hz
+    opts.tail_anchor (1,2) double {mustBePositive,mustBeFinite} = [1.50 1.90] % Frequencies anchoring the tail, in Hz
+    opts.tail_exponent (1,1) double {mustBePositive,mustBeFinite} = 4 % Exponent in E(f) proportional to f^-tail_exponent
     opts.window_seconds (1,1) double {mustBePositive,mustBeFinite} = 256 % Welch window length, in seconds
     opts.accel_counts_per_g (1,1) double {mustBePositive,mustBeFinite} = 16384 % Accelerometer counts per g
     opts.max_reference_hs (1,1) double {mustBePositive,mustBeFinite} = 0.5 % Maximum SBG Hs used for calibration, in m
@@ -11,15 +14,19 @@ arguments
     opts.minimum_calibration_records (1,1) double {mustBeInteger,mustBePositive} = 20 % Required ratios per frequency bin
     opts.input_SWIFT struct = struct() % Optional in-memory product from preceding SBG reprocessing
     opts.input_sinfo struct = struct() % Provenance paired with input_SWIFT
-    opts.save_product (1,1) logical = true % Save the updated L3 product
+    opts.save_product (1,1) logical = true % Save the separate fallback variables to L3
 end
 
-% Recover scalar, band-limited wave spectra from Signature acceleration when
-% the primary SBG wave product is missing. The empirical transfer function
-% is deployment specific and is estimated from valid SBG/Signature overlap.
+% Calculate a Signature-accelerometer wave fallback without changing the
+% primary SWIFT wave variables. The frequency transfer and tail normalization
+% are estimated from a calibration subset of native SBG spectra. A project
+% driver must explicitly promote signaturewaves into the canonical fields.
 
-if opts.fmax <= opts.fmin
-    error('reprocess_SIGheave:InvalidBand','fmax must exceed fmin.')
+if opts.fmax <= opts.fmin || opts.tail_fmax <= opts.fmax || ...
+        opts.tail_anchor(1) >= opts.tail_anchor(2) || ...
+        opts.tail_anchor(1) <= opts.fmin || opts.tail_anchor(2) >= opts.fmax
+    error('reprocess_SIGheave:InvalidBand', ...
+        'Frequency and tail limits must be strictly increasing.')
 end
 
 missiondir = char(missiondir);
@@ -51,16 +58,17 @@ end
 nrecord = length(SWIFT);
 frequency = [];
 for i = 1:nrecord
-    if isfield(SWIFT(i),'wavespectra') && ...
-            isfield(SWIFT(i).wavespectra,'freq') && ...
-            length(SWIFT(i).wavespectra.freq) > 1
-        frequency = double(SWIFT(i).wavespectra.freq(:)');
+    if isfield(SWIFT(i),'sbgwaves') && ...
+            isfield(SWIFT(i).sbgwaves,'freq') && ...
+            length(SWIFT(i).sbgwaves.freq) > 1
+        frequency = double(SWIFT(i).sbgwaves.freq(:)');
         break
     end
 end
 if isempty(frequency)
-    error('reprocess_SIGheave:MissingFrequency', ...
-        'The source product has no wave-frequency grid.')
+    error('reprocess_SIGheave:MissingNativeSBG', ...
+        ['Native SBG spectra are required. Run the current reprocess_SBG ' ...
+        'before reprocess_SIGheave.'])
 end
 
 nfreq = length(frequency);
@@ -73,19 +81,20 @@ for i = 1:nrecord
         reference_hs(i) = double(SWIFT(i).sigwaveheight);
     end
     if isfield(SWIFT(i),'wavespectra') && ...
-            isfield(SWIFT(i).wavespectra,'freq') && ...
-            isfield(SWIFT(i).wavespectra,'energy')
-        if isfield(SWIFT(i).wavespectra,'source') && ...
-                strcmpi(string(SWIFT(i).wavespectra.source),'SignatureHeave')
-            reference_is_signature(i) = true;
-        end
-        this_frequency = double(SWIFT(i).wavespectra.freq(:)');
-        this_energy = double(SWIFT(i).wavespectra.energy(:)');
-        if length(this_frequency) == nfreq && length(this_energy) == nfreq && ...
-                all(abs(this_frequency-frequency) < 1e-8 | ...
-                (isnan(this_frequency) & isnan(frequency)))
-            reference_energy(i,:) = this_energy;
-        end
+            isfield(SWIFT(i).wavespectra,'source') && ...
+            strcmpi(string(SWIFT(i).wavespectra.source),'SignatureHeave')
+        reference_is_signature(i) = true;
+    end
+    if ~isfield(SWIFT(i),'sbgwaves') || ...
+            ~isfield(SWIFT(i).sbgwaves,'freq') || ...
+            ~isfield(SWIFT(i).sbgwaves,'energy')
+        continue
+    end
+    this_frequency = double(SWIFT(i).sbgwaves.freq(:)');
+    this_energy = double(SWIFT(i).sbgwaves.energy(:)');
+    if length(this_frequency) == nfreq && length(this_energy) == nfreq && ...
+            all(abs(this_frequency-frequency) < 1e-8)
+        reference_energy(i,:) = this_energy;
     end
 end
 
@@ -105,12 +114,8 @@ for i = 1:nrecord
     exact = find(endsWith(signames,"_SIG_"+burst_id+".mat"));
     partial = find(endsWith(signames,"_SIG_"+burst_id+"_partial.mat"));
     match = exact;
-    if isempty(match)
-        match = partial;
-    end
-    if isempty(match)
-        continue
-    end
+    if isempty(match); match = partial; end
+    if isempty(match); continue; end
     if length(match) > 1
         [~,largest] = max([sigfiles(match).bytes]);
         match = match(largest);
@@ -140,17 +145,20 @@ for i = 1:nrecord
     end
 end
 
-waveband = frequency > opts.fmin & frequency < opts.fmax;
+measured_band = frequency > opts.fmin & frequency < opts.fmax;
+tail_band = frequency >= opts.fmax & frequency < opts.tail_fmax;
+tail_anchor = frequency >= opts.tail_anchor(1) & ...
+    frequency <= opts.tail_anchor(2);
+full_band = measured_band | tail_band;
 reference_qc = ~reference_is_signature & isfinite(reference_hs) & ...
-    reference_hs > 0 & ...
-    reference_hs < opts.max_reference_hs & ...
-    sum(isfinite(reference_energy(:,waveband)),2) >= 2;
+    reference_hs > 0 & reference_hs < opts.max_reference_hs & ...
+    sum(isfinite(reference_energy(:,full_band)),2) >= 2;
 calibration_record = reference_qc & ...
     mod((0:nrecord-1)',opts.calibration_stride) == 0;
 
 transfer = NaN(1,nfreq);
 calibration_count = zeros(1,nfreq);
-for i = find(waveband)
+for i = find(measured_band)
     ratio = raw_energy(calibration_record,i)./ ...
         reference_energy(calibration_record,i);
     ratio = ratio(isfinite(ratio) & ratio > 0);
@@ -159,69 +167,90 @@ for i = find(waveband)
         transfer(i) = median(ratio);
     end
 end
-if ~all(isfinite(transfer(waveband)))
+if ~all(isfinite(transfer(measured_band)))
     error('reprocess_SIGheave:InsufficientCalibration', ...
-        'Too few valid SBG/Signature records to calibrate the full band.')
+        'Too few valid SBG/Signature records to calibrate the measured band.')
 end
 calibrated_energy = raw_energy./transfer;
 
-reference_missing = reference_is_signature | ~isfinite(reference_hs) | ...
-    reference_hs <= 0 | reference_hs >= 10 | ...
-    sum(isfinite(reference_energy(:,waveband)),2) < 2;
-recovered = false(nrecord,1);
-band_hs = NaN(nrecord,1);
+tail_template = NaN(nrecord,nfreq);
+for i = 1:nrecord
+    use = tail_anchor & isfinite(calibrated_energy(i,:)) & ...
+        calibrated_energy(i,:) > 0;
+    if nnz(use) < 2; continue; end
+    constant = median(calibrated_energy(i,use).* ...
+        frequency(use).^opts.tail_exponent);
+    tail_template(i,tail_band) = constant.* ...
+        frequency(tail_band).^(-opts.tail_exponent);
+end
+bandwidth = median(diff(frequency));
+actual_tail_variance = sum(reference_energy(:,tail_band),2,'omitnan')*bandwidth;
+template_tail_variance = sum(tail_template(:,tail_band),2,'omitnan')*bandwidth;
+tail_ratio = actual_tail_variance(calibration_record)./ ...
+    template_tail_variance(calibration_record);
+tail_ratio = tail_ratio(isfinite(tail_ratio) & tail_ratio > 0);
+if length(tail_ratio) < opts.minimum_calibration_records
+    error('reprocess_SIGheave:InsufficientTailCalibration', ...
+        'Too few valid SBG/Signature records to calibrate the tail.')
+end
+tail_scale = median(tail_ratio);
+
+signature_energy = NaN(nrecord,nfreq);
+signature_energy(:,measured_band) = calibrated_energy(:,measured_band);
+signature_energy(:,tail_band) = tail_scale*tail_template(:,tail_band);
+signature_hs = NaN(nrecord,1);
 energy_period = NaN(nrecord,1);
 peak_period = NaN(nrecord,1);
+low_frequency_fraction = NaN(nrecord,1);
+low_band = frequency > opts.fmin & frequency < 0.10;
 
 for i = 1:nrecord
-    use = waveband & isfinite(calibrated_energy(i,:)) & ...
-        calibrated_energy(i,:) >= 0;
-    if nnz(use) < 2
+    use = full_band & isfinite(signature_energy(i,:)) & ...
+        signature_energy(i,:) >= 0;
+    if nnz(use) < 2 || ~all(isfinite(signature_energy(i,measured_band)))
         continue
     end
-    variance = trapz(frequency(use),calibrated_energy(i,use));
-    if ~isfinite(variance) || variance <= 0
-        continue
-    end
-    band_hs(i) = 4*sqrt(variance);
-    mean_frequency = trapz(frequency(use), ...
-        frequency(use).*calibrated_energy(i,use))/variance;
+    variance = sum(signature_energy(i,use))*bandwidth;
+    if ~isfinite(variance) || variance <= 0; continue; end
+    signature_hs(i) = 4*sqrt(variance);
+    mean_frequency = sum(frequency(use).*signature_energy(i,use))/ ...
+        sum(signature_energy(i,use));
     energy_period(i) = 1/mean_frequency;
     band_frequency = frequency(use);
-    band_energy = calibrated_energy(i,use);
+    band_energy = signature_energy(i,use);
     [~,peak] = max(band_energy);
     peak_period(i) = 1/band_frequency(peak);
+    low_frequency_fraction(i) = ...
+        sum(signature_energy(i,low_band))*bandwidth/variance;
 end
 
-for i = find(reference_missing & isfinite(band_hs))'
-    use = waveband & isfinite(calibrated_energy(i,:)) & ...
-        calibrated_energy(i,:) >= 0;
-    if ~isfield(SWIFT(i),'wavespectra') || ...
-            ~isfield(SWIFT(i).wavespectra,'freq') || ...
-            length(SWIFT(i).wavespectra.freq) ~= nfreq
-        SWIFT(i).wavespectra.freq = frequency;
-    end
-    original_size = size(SWIFT(i).wavespectra.freq);
-    replacement_energy = NaN(size(frequency));
-    replacement_energy(use) = calibrated_energy(i,use);
-    SWIFT(i).sigwaveheight = band_hs(i);
-    SWIFT(i).peakwaveperiod = peak_period(i);
-    SWIFT(i).peakwavedirT = NaN;
-    SWIFT(i).wavespectra.energy = reshape(replacement_energy,original_size);
-    SWIFT(i).wavespectra.a1 = NaN(original_size);
-    SWIFT(i).wavespectra.b1 = NaN(original_size);
-    SWIFT(i).wavespectra.a2 = NaN(original_size);
-    SWIFT(i).wavespectra.b2 = NaN(original_size);
-    SWIFT(i).wavespectra.check = NaN(original_size);
-    SWIFT(i).wavespectra.dof = nominal_dof(i);
-    SWIFT(i).wavespectra.source = 'SignatureHeave';
-    SWIFT(i).wavespectra.band = [opts.fmin opts.fmax];
-    recovered(i) = true;
-    status(i) = "recovered";
+reference_missing = reference_is_signature | ~isfinite(reference_hs) | ...
+    reference_hs <= 0 | reference_hs >= 10 | ...
+    sum(isfinite(reference_energy(:,full_band)),2) < 2;
+fill_candidate = reference_missing & isfinite(signature_hs);
+for i = find(isfinite(signature_hs))'
+    SWIFT(i).signaturewaves.sigwaveheight = signature_hs(i);
+    SWIFT(i).signaturewaves.peakwaveperiod = peak_period(i);
+    SWIFT(i).signaturewaves.energyperiod = energy_period(i);
+    SWIFT(i).signaturewaves.energy = signature_energy(i,:);
+    SWIFT(i).signaturewaves.freq = frequency;
+    SWIFT(i).signaturewaves.dof = nominal_dof(i);
+    SWIFT(i).signaturewaves.measured_band = [opts.fmin opts.fmax];
+    SWIFT(i).signaturewaves.tail_band = [opts.fmax opts.tail_fmax];
+    SWIFT(i).signaturewaves.tail_extrapolated = tail_band;
+    SWIFT(i).signaturewaves.low_frequency_fraction = ...
+        low_frequency_fraction(i);
+    SWIFT(i).signaturewaves.source = 'SignatureHeave';
+    if fill_candidate(i); status(i) = "fill_candidate"; end
 end
 
 params.fmin = opts.fmin;
 params.fmax = opts.fmax;
+params.tail_fmax = opts.tail_fmax;
+params.tail_anchor = opts.tail_anchor;
+params.tail_exponent = opts.tail_exponent;
+params.tail_scale = tail_scale;
+params.tail_calibration_count = length(tail_ratio);
 params.window_seconds = opts.window_seconds;
 params.accel_counts_per_g = opts.accel_counts_per_g;
 params.max_reference_hs = opts.max_reference_hs;
@@ -241,7 +270,7 @@ sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).params = params;
 sinfo.postproc(ip).flags.status = status;
-sinfo.postproc(ip).flags.recovered = recovered;
+sinfo.postproc(ip).flags.fill_candidate = fill_candidate;
 sinfo.postproc(ip).flags.calibration_record = calibration_record;
 sinfo.postproc(ip).flags.source_file = source_file;
 sinfo.postproc(ip).flags.window_count = window_count;
@@ -250,6 +279,7 @@ sinfo.postproc(ip).flags.nominal_dof = nominal_dof;
 diagnostics.frequency = frequency;
 diagnostics.raw_energy = raw_energy;
 diagnostics.calibrated_energy = calibrated_energy;
+diagnostics.signature_energy = signature_energy;
 diagnostics.reference_energy = reference_energy;
 diagnostics.reference_hs = reference_hs;
 diagnostics.reference_is_signature = reference_is_signature;
@@ -257,10 +287,16 @@ diagnostics.reference_qc = reference_qc;
 diagnostics.calibration_record = calibration_record;
 diagnostics.transfer = transfer;
 diagnostics.calibration_count = calibration_count;
-diagnostics.recovered = recovered;
-diagnostics.band_hs = band_hs;
+diagnostics.tail_template = tail_template;
+diagnostics.tail_scale = tail_scale;
+diagnostics.fill_candidate = fill_candidate;
+diagnostics.recovered = fill_candidate;
+diagnostics.signature_hs = signature_hs;
+diagnostics.canonical_hs = signature_hs;
+diagnostics.band_hs = signature_hs;
 diagnostics.energy_period = energy_period;
 diagnostics.peak_period = peak_period;
+diagnostics.low_frequency_fraction = low_frequency_fraction;
 diagnostics.status = status;
 diagnostics.source_file = source_file;
 diagnostics.sample_count = sample_count;

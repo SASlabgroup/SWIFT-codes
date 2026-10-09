@@ -2,8 +2,9 @@ function [metrics,figures,diagnostics] = review_SIGheave(missiondir,opts)
 
 arguments
     missiondir {mustBeTextScalar} % SWIFT mission directory
-    opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.10 % Lowest recovered frequency, in Hz
-    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 0.50 % Highest recovered frequency, in Hz
+    opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.05 % Canonical Hs lower frequency, in Hz
+    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 2.00 % Highest measured Signature frequency, in Hz
+    opts.tail_fmax (1,1) double {mustBePositive,mustBeFinite} = 2.50 % Upper frequency of extrapolated tail, in Hz
     opts.window_seconds (1,1) double {mustBePositive,mustBeFinite} = 256 % Welch window length, in seconds
     opts.accel_counts_per_g (1,1) double {mustBePositive,mustBeFinite} = 16384 % Accelerometer counts per g
     opts.max_reference_hs (1,1) double {mustBePositive,mustBeFinite} = 0.5 % Maximum SBG Hs used for calibration, in m
@@ -28,7 +29,7 @@ if opts.reprocess_sbg
         missiondir,false,false,false,true,90, ...
         save_product=false,save_cache=false,report_file=report_file);
     [~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
-        fmin=opts.fmin,fmax=opts.fmax, ...
+        fmin=opts.fmin,fmax=opts.fmax,tail_fmax=opts.tail_fmax, ...
         window_seconds=opts.window_seconds, ...
         accel_counts_per_g=opts.accel_counts_per_g, ...
         max_reference_hs=opts.max_reference_hs, ...
@@ -38,7 +39,7 @@ if opts.reprocess_sbg
         save_product=false);
 else
     [~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
-        fmin=opts.fmin,fmax=opts.fmax, ...
+        fmin=opts.fmin,fmax=opts.fmax,tail_fmax=opts.tail_fmax, ...
         window_seconds=opts.window_seconds, ...
         accel_counts_per_g=opts.accel_counts_per_g, ...
         max_reference_hs=opts.max_reference_hs, ...
@@ -48,26 +49,14 @@ else
 end
 
 frequency = diagnostics.frequency;
-waveband = frequency > opts.fmin & frequency < opts.fmax;
-nrecord = length(diagnostics.time);
-reference_band_hs = NaN(nrecord,1);
-for i = 1:nrecord
-    use = waveband & isfinite(diagnostics.reference_energy(i,:)) & ...
-        diagnostics.reference_energy(i,:) >= 0;
-    if nnz(use) < 2
-        continue
-    end
-    variance = trapz(frequency(use),diagnostics.reference_energy(i,use));
-    if isfinite(variance) && variance > 0
-        reference_band_hs(i) = 4*sqrt(variance);
-    end
-end
+waveband = frequency > opts.fmin & frequency < opts.tail_fmax;
 
 holdout = diagnostics.reference_qc & ...
     ~diagnostics.calibration_record & ...
-    isfinite(reference_band_hs) & isfinite(diagnostics.band_hs);
-reference = reference_band_hs(holdout);
-estimate = diagnostics.band_hs(holdout);
+    isfinite(diagnostics.reference_hs) & ...
+    isfinite(diagnostics.canonical_hs);
+reference = diagnostics.reference_hs(holdout);
+estimate = diagnostics.canonical_hs(holdout);
 error = estimate-reference;
 
 metrics.records = nnz(holdout);
@@ -90,11 +79,11 @@ figures.validation = figure('Color','w');
 tiledlayout(3,1,'TileSpacing','compact','Padding','compact');
 
 ax_series = nexttile;
-plot(time,diagnostics.band_hs,'.','MarkerSize',5)
+plot(time,diagnostics.canonical_hs,'.','MarkerSize',5)
 hold on
 plot(time(diagnostics.reference_qc), ...
-    reference_band_hs(diagnostics.reference_qc),'.','MarkerSize',5)
-ylabel('Band H_s (m)')
+    diagnostics.reference_hs(diagnostics.reference_qc),'.','MarkerSize',5)
+ylabel('H_s (m)')
 legend('Signature','SBG','Location','best')
 title('Signature-heave validation')
 
@@ -103,8 +92,8 @@ plot(reference,estimate,'.')
 hold on
 limit = max([reference; estimate],[],'omitnan');
 plot([0 limit],[0 limit],'k-')
-xlabel('SBG band H_s (m)')
-ylabel('Signature band H_s (m)')
+xlabel('SBG H_s (m)')
+ylabel('Estimated H_s (m)')
 axis equal
 xlim([0 limit])
 ylim([0 limit])
@@ -119,17 +108,17 @@ ylabel('Signature - SBG (m)')
 
 linkaxes([ax_series ax_error],'x')
 
-diagnostics.reference_band_hs = reference_band_hs;
 diagnostics.holdout = holdout;
 
 % Show the spectral and bulk effect using a common time axis. Spectra are
 % plotted in log10 units with common color limits so the gap filling is
 % visually comparable without implying energy outside the recovered band.
-effect_hs = reference_band_hs;
-effect_hs(diagnostics.recovered) = diagnostics.band_hs(diagnostics.recovered);
+effect_hs = diagnostics.reference_hs;
+effect_hs(diagnostics.recovered) = ...
+    diagnostics.canonical_hs(diagnostics.recovered);
 time_number = diagnostics.time;
 reference_energy = diagnostics.reference_energy(:,waveband);
-signature_energy = diagnostics.calibrated_energy(:,waveband);
+signature_energy = diagnostics.signature_energy(:,waveband);
 reference_energy(reference_energy <= 0) = NaN;
 signature_energy(signature_energy <= 0) = NaN;
 reference_log_energy = log10(reference_energy);
@@ -162,11 +151,12 @@ title('Calibrated Signature band energy')
 colorbar
 
 ax_effect = nexttile;
-display_values = [reference_band_hs(reference_band_hs <= opts.max_reference_hs); ...
+display_values = [diagnostics.reference_hs( ...
+    diagnostics.reference_hs <= opts.max_reference_hs); ...
     effect_hs(isfinite(effect_hs))];
 display_ymax = 1.08*max(display_values,[],'omitnan');
-clipped_reference = reference_band_hs > display_ymax;
-reference_display = reference_band_hs;
+clipped_reference = diagnostics.reference_hs > display_ymax;
+reference_display = diagnostics.reference_hs;
 reference_display(clipped_reference) = display_ymax;
 plot(time_number,reference_display,'.','MarkerSize',5)
 hold on
@@ -177,11 +167,11 @@ plot(time_number(clipped_reference),reference_display(clipped_reference), ...
     'k^','MarkerFaceColor','k','MarkerSize',5)
 for i = find(clipped_reference)'
     text(time_number(i),0.97*display_ymax, ...
-        sprintf(' %.2f m',reference_band_hs(i)), ...
+        sprintf(' %.2f m',diagnostics.reference_hs(i)), ...
         'VerticalAlignment','top','HorizontalAlignment','center')
 end
 ylim([0 display_ymax])
-ylabel('Band H_s (m)')
+ylabel('Canonical H_s (m)')
 xlabel('Time (UTC)')
 legend('Before','After','Signature recovery','Off-scale before', ...
     'Location','best')
@@ -194,19 +184,9 @@ set([ax_reference ax_signature ax_effect],'XTick',time_ticks)
 set([ax_reference ax_signature],'XTickLabel',[])
 set(ax_effect,'XTickLabel',time_labels)
 
-% Diagnose spectral bias over the complete SWIFT frequency grid. This
-% full-grid transfer is for review only: production recovery remains limited
-% to opts.fmin--opts.fmax because low frequencies contain Signature drift.
-full_transfer = NaN(size(frequency));
-for i = 1:length(frequency)
-    ratio = diagnostics.raw_energy(diagnostics.calibration_record,i)./ ...
-        diagnostics.reference_energy(diagnostics.calibration_record,i);
-    ratio = ratio(isfinite(ratio) & ratio > 0);
-    if length(ratio) >= opts.minimum_calibration_records
-        full_transfer(i) = median(ratio);
-    end
-end
-full_signature_energy = diagnostics.raw_energy./full_transfer;
+% Diagnose the calibrated and extrapolated Signature spectrum over the same
+% native 0.05--2.5 Hz grid used by SBGwaves.
+full_signature_energy = diagnostics.signature_energy;
 spectral_difference_db = 10*log10(full_signature_energy./ ...
     diagnostics.reference_energy);
 spectral_difference_db(~holdout,:) = NaN;
@@ -243,15 +223,17 @@ title('SBG energy: full non-overlapping frequency grid')
 colorbar
 yline(opts.fmin,'w--')
 yline(opts.fmax,'w--')
+yline(opts.tail_fmax,'w--')
 
 ax_full_signature = nexttile;
 plotSpectralCells(ax_full_signature,time_number,frequency,signature_full_log)
 clim(full_color_limits)
 ylabel('Frequency (Hz)')
-title('Signature energy with review-only full-grid calibration')
+title('Signature energy: measured through 2 Hz, extrapolated tail above')
 colorbar
 yline(opts.fmin,'w--')
 yline(opts.fmax,'w--')
+yline(opts.tail_fmax,'w--')
 
 ax_difference = nexttile;
 plotSpectralCells(ax_difference,time_number,frequency,spectral_difference_db)
@@ -262,6 +244,7 @@ title('Holdout spectral difference: Signature - SBG (dB)')
 colorbar
 yline(opts.fmin,'k--')
 yline(opts.fmax,'k--')
+yline(opts.tail_fmax,'k--')
 
 nexttile
 plot(frequency,median_difference,'k-','LineWidth',1.2)
@@ -271,6 +254,7 @@ plot(frequency,upper_difference,'r-')
 yline(0,'k:')
 xline(opts.fmin,'k--')
 xline(opts.fmax,'k--')
+xline(opts.tail_fmax,'k--')
 xlim([frequency(1) frequency(end)])
 xlabel('Frequency (Hz)')
 ylabel('Difference (dB)')
@@ -287,7 +271,6 @@ set([ax_full_reference ax_full_signature ax_difference], ...
 set([ax_full_reference ax_full_signature],'XTickLabel',[])
 set(ax_difference,'XTickLabel',full_time_labels)
 
-diagnostics.review_full_transfer = full_transfer;
 diagnostics.spectral_difference_db = spectral_difference_db;
 
 if strlength(string(opts.plot_dir)) > 0
