@@ -1,7 +1,8 @@
 # SWIFT25 Signature-accelerometer wave recovery
 
-This branch contains a recovery of scalar wave energy during the 20--21 June
-2025 SWIFT25 SBG outage. It is independent of any L2 feed-forward fallback.
+This branch contains a recovery of scalar wave energy for missing or invalid
+SWIFT25 SBG records, including the 20--21 June 2025 outage. It is independent
+of any L2 feed-forward fallback.
 
 ## Method
 
@@ -28,24 +29,27 @@ limit. The remaining records are a disjoint holdout set.
 
 ## Validation
 
-The 913-record holdout results for the calibrated 0.10--0.50 Hz band are:
+The MATLAB review was run against the mounted SWIFT25 archive after a
+non-writing run of the canonical `reprocess_SBG` step. The 916-record
+holdout results for the calibrated 0.10--0.50 Hz band are:
 
-- Hs correlation: 0.922;
+- Hs correlation: 0.920;
 - Hs median bias: -0.0027 m;
-- Hs median absolute error: 0.0075 m;
-- Hs RMSE: 0.0154 m;
-- energy-period correlation: 0.816; and
-- energy-period median absolute error: 0.125 s.
+- Hs median absolute error: 0.0077 m; and
+- Hs RMSE: 0.0155 m.
 
-The response is stable across the outage. Calibrating only before the outage
-and validating after it gives Hs correlation 0.943 and median absolute error
-0.0068 m. Reversing the periods gives correlation 0.852 and median absolute
-error 0.0075 m.
+The calibration uses 245 records; 230 valid SBG/Signature ratios are
+available in each recovered frequency bin after file and spectral QC.
 
-Full and `_partial.mat` Signature files provide estimates for all 270
-existing outage records. The two entirely absent platform records cannot be
-recovered. Outage results have median band-limited Hs 0.097 m and median
-energy period 3.05 s.
+The integrated run recovers 302 existing SWIFT records: all 300 records with
+no raw SBG file, one record with too little usable SBG data, and the anomalous
+23 June SBG wave record. This includes all 269 L2 records in the continuous
+20--21 June SBG outage. Of the recovered Signature spectra, 295 use four
+overlapping Welch windows (nominal DOF 8), two use three windows (DOF 6),
+four use two windows (DOF 4), and one uses one window (DOF 2). Two records
+with empty raw SBG streams on 26 and 27 June have no Signature file and
+remain missing. Expected time slots absent from L2 are reported by the SBG
+audit but cannot be inserted without a vetted SWIFT record.
 
 ## Limitations
 
@@ -54,8 +58,8 @@ energy period 3.05 s.
 - Energy below 0.10 Hz remains missing.
 - The low-frequency correction is empirical and SWIFT25-specific.
 - Recovered `sigwaveheight` is the 0.10--0.50 Hz band Hs, not full-band Hs.
-- Two absent platform records have no SWIFT record or Signature file and
-  remain unrecoverable.
+- Two raw-empty SBG records have no Signature file and remain unrecoverable;
+  slots absent from L2 cannot be synthesized by this fallback.
 
 ## MATLAB processing
 
@@ -73,13 +77,19 @@ also stored in `sinfo.postproc`.
 For a non-writing review run:
 
 ```matlab
-[metrics,fh,diagnostics] = review_SIGheave(missiondir, ...
-    plot_file="SWIFT25_signature_heave.png");
+[metrics,figures,diagnostics] = review_SIGheave(missiondir, ...
+    plot_dir="signature_heave_review");
 ```
 
-The fallback remains opt-in while the MATLAB path is reviewed against the
-archive. Run it after normal L3/SBG processing so valid SBG records are
-available for calibration and only missing primary wave records are filled.
+The review writes `SWIFT25_signature_heave_validation.png`,
+`SWIFT25_signature_heave_effect.png`, and the non-writing SBG processing
+report into `plot_dir`. The effect plot uses shared time limits, leaves
+missing spectra blank, and explicitly labels the off-scale 23 June SBG
+outlier before showing its Signature replacement.
+
+`Process_WillapaMoored.m` runs the fallback for SWIFT25 after normal L3/SBG
+processing so valid SBG records are available for calibration and only
+missing primary wave records are filled.
 
 To write the recovered records to the mission L3 product:
 
@@ -88,6 +98,6 @@ To write the recovered records to the mission L3 product:
 ```
 
 All processing and review code on this branch is MATLAB. The validation
-statistics above were reproduced from the mounted archive before translating
-the estimator, and the MATLAB Welch calculation was checked against the
+statistics above come from the complete MATLAB path on the mounted archive.
+The MATLAB Welch calculation was also checked against the independently
 validated spectrum to machine precision.

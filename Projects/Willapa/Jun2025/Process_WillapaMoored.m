@@ -95,6 +95,16 @@ for im = 1:length(missions)
             missiondir,false,false,false,true,90);
     end
 
+    % SWIFT25's SBG outage on 20--21 June is filled from the Signature
+    % accelerometer after all available SBG records have been reprocessed.
+    % The recovery is scalar and limited to 0.10--0.50 Hz; directional
+    % moments and energy outside that band remain missing. reprocess_SIGheave
+    % records the empirical calibration and per-record provenance in sinfo.
+    if strcmp(sname,'SWIFT25_16-27Jun2025')
+        [SWIFTL3,sinfoL3] = reprocess_SIGheave(missiondir, ...
+            input_SWIFT=SWIFTL3,input_sinfo=sinfoL3);
+    end
+
     close all
 
 end

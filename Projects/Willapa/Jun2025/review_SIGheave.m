@@ -1,4 +1,4 @@
-function [metrics,fh,diagnostics] = review_SIGheave(missiondir,opts)
+function [metrics,figures,diagnostics] = review_SIGheave(missiondir,opts)
 
 arguments
     missiondir {mustBeTextScalar} % SWIFT mission directory
@@ -9,20 +9,43 @@ arguments
     opts.max_reference_hs (1,1) double {mustBePositive,mustBeFinite} = 0.5 % Maximum SBG Hs used for calibration, in m
     opts.calibration_stride (1,1) double {mustBeInteger,mustBePositive} = 5 % Record stride used for calibration
     opts.minimum_calibration_records (1,1) double {mustBeInteger,mustBePositive} = 20 % Required ratios per frequency bin
-    opts.plot_file {mustBeTextScalar} = "" % Optional output figure path
+    opts.reprocess_sbg (1,1) logical = true % Run the non-writing SBG step before Signature recovery
+    opts.plot_dir {mustBeTextScalar} = "" % Optional directory for validation and effect plots
 end
 
-% Run the complete Signature-heave recovery without writing a product, then
-% validate its band-limited Hs against SBG records excluded from calibration.
+% Run the complete recovery without writing a product, then validate its
+% band-limited Hs against SBG records excluded from calibration.
 
-[~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
-    fmin=opts.fmin,fmax=opts.fmax, ...
-    window_seconds=opts.window_seconds, ...
-    accel_counts_per_g=opts.accel_counts_per_g, ...
-    max_reference_hs=opts.max_reference_hs, ...
-    calibration_stride=opts.calibration_stride, ...
-    minimum_calibration_records=opts.minimum_calibration_records, ...
-    save_product=false);
+if opts.reprocess_sbg
+    if strlength(string(opts.plot_dir)) > 0
+        plot_dir = char(opts.plot_dir);
+        if ~exist(plot_dir,'dir'); mkdir(plot_dir); end
+        report_file = fullfile(plot_dir,'SBG_processing_report.txt');
+    else
+        report_file = [tempname '.txt'];
+    end
+    [input_SWIFT,input_sinfo] = reprocess_SBG( ...
+        missiondir,false,false,false,true,90, ...
+        save_product=false,save_cache=false,report_file=report_file);
+    [~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
+        fmin=opts.fmin,fmax=opts.fmax, ...
+        window_seconds=opts.window_seconds, ...
+        accel_counts_per_g=opts.accel_counts_per_g, ...
+        max_reference_hs=opts.max_reference_hs, ...
+        calibration_stride=opts.calibration_stride, ...
+        minimum_calibration_records=opts.minimum_calibration_records, ...
+        input_SWIFT=input_SWIFT,input_sinfo=input_sinfo, ...
+        save_product=false);
+else
+    [~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
+        fmin=opts.fmin,fmax=opts.fmax, ...
+        window_seconds=opts.window_seconds, ...
+        accel_counts_per_g=opts.accel_counts_per_g, ...
+        max_reference_hs=opts.max_reference_hs, ...
+        calibration_stride=opts.calibration_stride, ...
+        minimum_calibration_records=opts.minimum_calibration_records, ...
+        save_product=false);
+end
 
 frequency = diagnostics.frequency;
 waveband = frequency > opts.fmin & frequency < opts.fmax;
@@ -60,8 +83,8 @@ metrics.rmse = sqrt(mean(error.^2,'omitnan'));
 metrics.recovered = nnz(diagnostics.recovered);
 
 time = datetime(diagnostics.time,'ConvertFrom','datenum');
-fh = figure('Color','w');
-layout = tiledlayout(3,1,'TileSpacing','compact','Padding','compact');
+figures.validation = figure('Color','w');
+tiledlayout(3,1,'TileSpacing','compact','Padding','compact');
 
 ax_series = nexttile;
 plot(time,diagnostics.band_hs,'.','MarkerSize',5)
@@ -92,11 +115,89 @@ xlabel('Time')
 ylabel('Signature - SBG (m)')
 
 linkaxes([ax_series ax_error],'x')
-if strlength(string(opts.plot_file)) > 0
-    exportgraphics(fh,opts.plot_file,'Resolution',180)
-end
 
 diagnostics.reference_band_hs = reference_band_hs;
 diagnostics.holdout = holdout;
+
+% Show the spectral and bulk effect using a common time axis. Spectra are
+% plotted in log10 units with common color limits so the gap filling is
+% visually comparable without implying energy outside the recovered band.
+effect_hs = reference_band_hs;
+effect_hs(diagnostics.recovered) = diagnostics.band_hs(diagnostics.recovered);
+time_number = diagnostics.time;
+reference_energy = diagnostics.reference_energy(:,waveband);
+signature_energy = diagnostics.calibrated_energy(:,waveband);
+reference_energy(reference_energy <= 0) = NaN;
+signature_energy(signature_energy <= 0) = NaN;
+reference_log_energy = log10(reference_energy);
+signature_log_energy = log10(signature_energy);
+combined = [reference_log_energy(:); signature_log_energy(:)];
+combined = sort(combined(isfinite(combined)));
+color_index = max(1,round([0.02 0.98]*length(combined)));
+color_limits = combined(color_index);
+
+figures.effect = figure('Color','w');
+tiledlayout(3,1,'TileSpacing','compact','Padding','compact');
+ax_reference = nexttile;
+surf(time_number,frequency(waveband),reference_log_energy', ...
+    'EdgeColor','none')
+view(2)
+axis tight
+clim(color_limits)
+ylabel('Frequency (Hz)')
+title('SBG band energy before Signature recovery')
+colorbar
+
+ax_signature = nexttile;
+surf(time_number,frequency(waveband),signature_log_energy', ...
+    'EdgeColor','none')
+view(2)
+axis tight
+clim(color_limits)
+ylabel('Frequency (Hz)')
+title('Calibrated Signature band energy')
+colorbar
+
+ax_effect = nexttile;
+display_values = [reference_band_hs(reference_band_hs <= opts.max_reference_hs); ...
+    effect_hs(isfinite(effect_hs))];
+display_ymax = 1.08*max(display_values,[],'omitnan');
+clipped_reference = reference_band_hs > display_ymax;
+reference_display = reference_band_hs;
+reference_display(clipped_reference) = display_ymax;
+plot(time_number,reference_display,'.','MarkerSize',5)
+hold on
+plot(time_number,effect_hs,'.','MarkerSize',5)
+plot(time_number(diagnostics.recovered), ...
+    effect_hs(diagnostics.recovered),'r.','MarkerSize',7)
+plot(time_number(clipped_reference),reference_display(clipped_reference), ...
+    'k^','MarkerFaceColor','k','MarkerSize',5)
+for i = find(clipped_reference)'
+    text(time_number(i),0.97*display_ymax, ...
+        sprintf(' %.2f m',reference_band_hs(i)), ...
+        'VerticalAlignment','top','HorizontalAlignment','center')
+end
+ylim([0 display_ymax])
+ylabel('Band H_s (m)')
+xlabel('Time (UTC)')
+legend('Before','After','Signature recovery','Off-scale before', ...
+    'Location','best')
+title(sprintf('%d missing records recovered',metrics.recovered))
+linkaxes([ax_reference ax_signature ax_effect],'x')
+time_ticks = floor(min(time_number)):ceil(max(time_number));
+time_labels = cellstr(string(datetime(time_ticks, ...
+    'ConvertFrom','datenum'),'MMM dd'));
+set([ax_reference ax_signature ax_effect],'XTick',time_ticks)
+set([ax_reference ax_signature],'XTickLabel',[])
+set(ax_effect,'XTickLabel',time_labels)
+
+if strlength(string(opts.plot_dir)) > 0
+    plot_dir = char(opts.plot_dir);
+    if ~exist(plot_dir,'dir'); mkdir(plot_dir); end
+    exportgraphics(figures.validation,fullfile(plot_dir, ...
+        'SWIFT25_signature_heave_validation.png'),'Resolution',180)
+    exportgraphics(figures.effect,fullfile(plot_dir, ...
+        'SWIFT25_signature_heave_effect.png'),'Resolution',180)
+end
 
 end

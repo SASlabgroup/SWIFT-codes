@@ -9,6 +9,8 @@ arguments
     opts.max_reference_hs (1,1) double {mustBePositive,mustBeFinite} = 0.5 % Maximum SBG Hs used for calibration, in m
     opts.calibration_stride (1,1) double {mustBeInteger,mustBePositive} = 5 % Record stride used for calibration
     opts.minimum_calibration_records (1,1) double {mustBeInteger,mustBePositive} = 20 % Required ratios per frequency bin
+    opts.input_SWIFT struct = struct() % Optional in-memory product from preceding SBG reprocessing
+    opts.input_sinfo struct = struct() % Provenance paired with input_SWIFT
     opts.save_product (1,1) logical = true % Save the updated L3 product
 end
 
@@ -33,9 +35,18 @@ else
     error('reprocess_SIGheave:MissingProduct', ...
         'No L2 or L3 product found in %s.',missiondir)
 end
-loaded = load(fullfile(source.folder,source.name),'SWIFT','sinfo');
-SWIFT = loaded.SWIFT;
-sinfo = loaded.sinfo;
+if isempty(fieldnames(opts.input_SWIFT))
+    loaded = load(fullfile(source.folder,source.name),'SWIFT','sinfo');
+    SWIFT = loaded.SWIFT;
+    sinfo = loaded.sinfo;
+else
+    if isempty(fieldnames(opts.input_sinfo))
+        error('reprocess_SIGheave:MissingInputInfo', ...
+            'input_sinfo is required with input_SWIFT.')
+    end
+    SWIFT = opts.input_SWIFT;
+    sinfo = opts.input_sinfo;
+end
 
 nrecord = length(SWIFT);
 frequency = [];
@@ -232,6 +243,9 @@ sinfo.postproc(ip).params = params;
 sinfo.postproc(ip).flags.status = status;
 sinfo.postproc(ip).flags.recovered = recovered;
 sinfo.postproc(ip).flags.calibration_record = calibration_record;
+sinfo.postproc(ip).flags.source_file = source_file;
+sinfo.postproc(ip).flags.window_count = window_count;
+sinfo.postproc(ip).flags.nominal_dof = nominal_dof;
 
 diagnostics.frequency = frequency;
 diagnostics.raw_energy = raw_energy;
