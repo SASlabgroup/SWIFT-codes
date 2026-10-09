@@ -58,16 +58,24 @@ velBEAM = NaN(size(velENU));
 velXYZ = NaN(size(velENU));
 for iping = 1:nping
 
-    % Use onboard AHRS matrix & convert to 4-beam
-    R = squeeze(R_AHRS(iping,:,:));
-    R = [R(1,1) R(1,2) R(1,3)/2 R(1,3)/2;
-          R(2,1) R(2,2) R(2,3)/2 R(2,3)/2;
-          R(3,1) R(3,2) R(3,3)   0;
-          R(3,1) R(3,2) 0        R(3,3)];
+    % Expand the 3-D attitude rotation for [X Y Z1 Z2] velocities (XYZ4).
+    R_attitude = squeeze(R_AHRS(iping,:,:));
+    R_velocity4 = [R_attitude(1,1) R_attitude(1,2) R_attitude(1,3)/2 R_attitude(1,3)/2;
+                   R_attitude(2,1) R_attitude(2,2) R_attitude(2,3)/2 R_attitude(2,3)/2;
+                   R_attitude(3,1) R_attitude(3,2) R_attitude(3,3)                   0;
+                   R_attitude(3,1) R_attitude(3,2) 0                  R_attitude(3,3)];
 
-    % ENU to Beam
+    % Validate the matrix first
+    if any(~isfinite(R_attitude),'all') || ... % finite
+            rcond(R_velocity4) < 1e-8 || ... % invertible
+            abs(det(R_attitude)-1) > 0.1 || ... % non-scaling transform
+            norm(R_attitude*R_attitude'-eye(3),'fro') > 0.1 % orthogonal
+        continue
+    end
+
+    % ENU4 to XYZ4, then XYZ4 to beam coordinates.
     for ibin = 1:nbin
-        velXYZ(iping,ibin,:) = inv(R)*squeeze(velENU(iping,ibin,:));
+        velXYZ(iping,ibin,:) = inv(R_velocity4)*squeeze(velENU(iping,ibin,:));
         velBEAM(iping,ibin,:) = inv(T_AHRS)*squeeze(velXYZ(iping,ibin,:));
     end
 
