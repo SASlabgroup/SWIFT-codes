@@ -1,13 +1,21 @@
-function [avgout, cparams, fh] = fixSIGenu(avg, burst, sbgData, hoffgiven)
+function [avgout, cparams, fh] = fixSIGenu(avg, burst, sbgData, hoffgiven, plotburst, relativebursttime, forcedtimelag)
 % Recompute ENU velocity profiles from beam velocities using SBG Ellipse
 % motion sensor orientation data with automatic time-lag correction.
 % 
 % Inputs:
 %   avg             - Structure containing ADCP avg data from Signature 1000
 %   burst           - Structure containing ADCP burst data (for AHRS gyro)
-%   sbgData         - Structure containing SBG Ellipse motion sensor data
+%   sbgData         - SBG Ellipse structure, or a cell array of neighboring
+%                     structures. Records are combined on reconstructed UTC.
 %   heading_offset  - (Optional) Heading offset in degrees to add to SBG heading
 %                     If not provided or empty, will be auto-computed from data
+%   plotburst       - (Optional) Plot burst diagnostics (default true)
+%   relativebursttime - (Optional) Align the starts of an already matched
+%                     SIG/SBG burst pair before gyro cross-correlation.
+%                     This avoids reliance on SBG UTC (default false).
+%   forcedtimelag    - (Optional) Use this lag in seconds after calculating
+%                     xcorr diagnostics. Intended for a locally interpolated
+%                     lag when this burst's gyro correlation is weak.
 %
 % Outputs:
 %   avg_out  - Input structure with updated VelocityData (ENU velocities)
@@ -23,7 +31,16 @@ else
     compute_offset = false;
 end
 
-plotburst = true;
+if nargin < 5 || isempty(plotburst)
+    plotburst = true;
+end
+
+if nargin < 6
+    relativebursttime = false;
+end
+if nargin < 7
+    forcedtimelag = [];
+end
 
 %% ADCP AHRS gyroscope data
 
@@ -41,57 +58,61 @@ sigangv = sigangv(iu);
 
 %% SBG Euler + gyroscope data
 
-% Good timestamps
-[~,iuekf] = unique(sbgData.EkfEuler.time_stamp);
-[~,iuutc] = unique(sbgData.UtcTime.time_stamp);
-[~,iuimu] = unique(sbgData.ImuData.time_stamp);
+if iscell(sbgData)
+    nSBGrecords = length(sbgData);
+else
+    nSBGrecords = 1;
+end
+sbgInput = sbgData;
+usedrelativefallback = false;
+[sbgData,sbgtimeinfo] = mergeSBGdata(sbgInput,median(sigtime,'omitnan'));
+if (isempty(sbgData.ImuData.time) || isempty(sbgData.EkfEuler.time)) && ...
+        relativebursttime
+    if iscell(sbgInput); sbgInput = sbgInput{1}; end
+    [sbgData,sbgtimeinfo] = relativeSBGdata(sbgInput,min(sigtime));
+    usedrelativefallback = true;
+end
+if isempty(sbgData.ImuData.time) || isempty(sbgData.EkfEuler.time)
+    disp('No valid SBG UTC clock anchor...')
+    avgout = [];
+    cparams = [];
+    fh = [];
+    return
+end
 
-% Build SBG UTC time
-sbgtime = [sbgData.UtcTime.year(iuutc)' sbgData.UtcTime.month(iuutc)' sbgData.UtcTime.day(iuutc)'...
-    sbgData.UtcTime.hour(iuutc)' sbgData.UtcTime.min(iuutc)' sbgData.UtcTime.sec(iuutc)'];
-sbgtime = datenum(sbgtime);
-sbgtime = sbgtime' + sbgData.UtcTime.nanosec(iuutc)./((10^9)*60*60*24);
-
-% SBG orientation data (convert from radians to degrees)
-sbgpitch = interp1(sbgData.EkfEuler.time_stamp(iuekf), sbgData.EkfEuler.pitch(iuekf), ...
-                   sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
-sbgroll = interp1(sbgData.EkfEuler.time_stamp(iuekf), sbgData.EkfEuler.roll(iuekf), ...
-                  sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
-sbgyaw = interp1(sbgData.EkfEuler.time_stamp(iuekf), sbgData.EkfEuler.yaw(iuekf), ...
-                 sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
+sbgimutime = sbgData.ImuData.time;
+sbgekftime = sbgData.EkfEuler.time;
+sbgpitch = sbgData.EkfEuler.pitch * 180/pi;
+sbgroll = sbgData.EkfEuler.roll * 180/pi;
+sbgyaw = sbgData.EkfEuler.yaw * 180/pi;
 
 % Force SBG roll to 180 to match ADCP
 sbgroll = sbgroll + 180;
 sbgroll = wrapToPi(sbgroll*pi/180)*180/pi;
 
 % SBG gyroscope data (convert from radians/s to degrees/s)
-sbggyrox = interp1(sbgData.ImuData.time_stamp(iuimu), sbgData.ImuData.gyro_x(iuimu), ...
-                   sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
-sbggyroy = interp1(sbgData.ImuData.time_stamp(iuimu), sbgData.ImuData.gyro_y(iuimu), ...
-                   sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
-sbggyroz = interp1(sbgData.ImuData.time_stamp(iuimu), sbgData.ImuData.gyro_z(iuimu), ...
-                   sbgData.UtcTime.time_stamp(iuutc)) * 180/pi;
+sbggyrox = sbgData.ImuData.gyro_x * 180/pi;
+sbggyroy = sbgData.ImuData.gyro_y * 180/pi;
+sbggyroz = sbgData.ImuData.gyro_z * 180/pi;
 
 % Compute angular velocity
 sbgangv = sqrt(sbggyrox.^2 + sbggyroy.^2 + sbggyroz.^2);
 
 %% Fix SBG time
-sbgdt = (1/5)/(60*60*24);
-tmin = min(sigtime) - 1/24;
-tmax = max(sigtime) + 1/24;
-istart = find(sbgtime >= tmin & sbgtime <=tmax,1,'first');
-if isempty(istart)
-    disp('No timeseries overlap...')
-    avgout = [];
-    cparams = [];
-    fh = [];
-    return
+if usedrelativefallback
+    timesource = "relative_native_fallback";
+elseif relativebursttime && nSBGrecords == 1
+    % Backward-compatible fallback for a single already-matched record. Keep
+    % the native sample intervals; only align the starts of the two clocks.
+    shift = min(sigtime)-min(sbgimutime);
+    sbgimutime = sbgimutime+shift;
+    sbgekftime = sbgekftime+shift;
+    timesource = "relative_native";
+else
+    timesource = "utc_reconstructed";
 end
-sbgtime = sbgdt*((1:length(sbgtime))-istart) + sbgtime(istart);
-
-% Skip burst if times are way off...
-toff = min(sbgtime)-min(sigtime);
-if toff > 12/(24*60)
+toff = min(sbgimutime)-min(sigtime);
+if min(max(sbgimutime),max(sigtime))-max(min(sbgimutime),min(sigtime)) <= 0
     disp('No timeseries overlap...')
     avgout = [];
     cparams = [];
@@ -101,27 +122,45 @@ end
 
 %% Compute time lag via cross-correlation
 
-% Interpolate to high res time grid (10 Hz)
+% Interpolate to high res time grid (10 Hz), but never invent motion across
+% missing acquisition intervals.
 dt = (1/10)/(24*60*60); % days
-ctime = max([min(sbgtime) min(sigtime)]):dt:min([max(sbgtime) max(sigtime)]);
-csbgangv = interp1(sbgtime, sbgangv, ctime);
-csigangv = interp1(sigtime, sigangv, ctime);
+ctime = (max([min(sbgimutime) min(sigtime)]):dt: ...
+    min([max(sbgimutime) max(sigtime)]))';
+csbgangv = interpWithGaps(sbgimutime,sbgangv,ctime,1);
+csigangv = interpWithGaps(sigtime,sigangv,ctime,1);
 
-% Cross-correlate to find lag (max lag 100 s)
-[r,lags] = xcorr(csbgangv,csigangv,1000,'unbiased');
-[~, imaxr] = max(r);
+% Cross-correlate to find lag (max lag 100 s). Robust scaling prevents an
+% isolated corrupt gyro sample from controlling the match, while 'coeff'
+% avoids the edge preference of the original unbiased normalization.
+csbgangv_xc = robustXCsignal(csbgangv);
+csigangv_xc = robustXCsignal(csigangv);
+[r,lags,noverlap] = maskedXCorr(csbgangv_xc,csigangv_xc,1000,300);
+[~, imaxr] = max(r,[],'omitnan');
+if isempty(imaxr) || ~isfinite(r(imaxr))
+    disp('No usable gyro overlap...')
+    avgout = [];
+    cparams = [];
+    fh = [];
+    return
+end
 tlag = lags(imaxr) * dt; % days
+usedinterpolatedlag = false;
+if ~isempty(forcedtimelag)
+    tlag = forcedtimelag/(24*60*60);
+    usedinterpolatedlag = true;
+end
 
 % Apply time shift to SBG data
-sbgtime_corrected = sbgtime - tlag;
+sbgimutime_corrected = sbgimutime - tlag;
+sbgtime_corrected = sbgekftime - tlag;
 
 %% Interpolate SBG orientation to ADCP timestamps
 
 adcp_time = avg.time;
-heading = interp1(sbgtime_corrected, unwrap(sbgyaw*pi/180)*180/pi, adcp_time);
-heading = wrapToPi(heading*pi/180)*180/pi;
-pitch = interp1(sbgtime_corrected, sbgpitch, adcp_time);
-roll = interp1(sbgtime_corrected, sbgroll, adcp_time);
+heading = interpAngleWithGaps(sbgtime_corrected,sbgyaw,adcp_time,1);
+pitch = interpWithGaps(sbgtime_corrected,sbgpitch,adcp_time,1);
+roll = interpAngleWithGaps(sbgtime_corrected,sbgroll,adcp_time,1);
 
 %% Apply heading offset
 
@@ -244,7 +283,8 @@ fullscreen
 subplot(7,1,1)
 plot(lags * dt*24*60*60, r, 'b-', 'LineWidth', 1.5);
 hold on;
-plot(lags(imaxr) * dt*24*60*60, max(r), 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+plot(tlag*24*60*60, interp1(lags*dt,r,tlag,'linear','extrap'), ...
+    'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
 grid on;
 ylabel('XC');
 title(sprintf('Cross-correlation (lag = %.2f s)', tlag*24*60*60));
@@ -253,7 +293,7 @@ title(sprintf('Cross-correlation (lag = %.2f s)', tlag*24*60*60));
 subplot(7,1,2)
 plot(sigtime, sigangv, 'b-', 'LineWidth', 1);
 hold on;
-plot(sbgtime_corrected, sbgangv, 'r-', 'LineWidth', 1);
+plot(sbgimutime_corrected, sbgangv, 'r-', 'LineWidth', 1);
 grid on;
 ylabel('[\Omega [degs^{-1}]');
 legend('ADCP', 'SBG', 'Location', 'best');
@@ -338,4 +378,90 @@ end
 else
     fh = [];
 end
+end
+
+function y = robustXCsignal(x)
+% Center, scale, and clip only for timing correlation. The unmodified gyro
+% and orientation data continue through the rest of the calculation.
+x = double(x);
+missing = ~isfinite(x);
+xmedian = median(x,'omitnan');
+xscale = 1.4826*median(abs(x-xmedian),'omitnan');
+if ~isfinite(xscale) || xscale == 0
+    xscale = std(x,'omitnan');
+end
+if ~isfinite(xscale) || xscale == 0
+    y = zeros(size(x));
+    y(missing) = NaN;
+    return
+end
+y = min(max(x,xmedian-10*xscale),xmedian+10*xscale);
+y(missing) = NaN;
+y = y-mean(y,'omitnan');
+yscale = std(y,'omitnan');
+if isfinite(yscale) && yscale > 0
+    y = y/yscale;
+end
+end
+
+function y = interpWithGaps(time,x,newtime,maxgapseconds)
+% Linear interpolation within continuous records only.
+[time,iu] = unique(double(time(:)));
+x = double(x(:));
+x = x(iu);
+good = isfinite(time) & isfinite(x);
+time = time(good);
+x = x(good);
+y = NaN(size(newtime));
+if length(time) < 2; return; end
+y = interp1(time,x,newtime);
+gaps = find(diff(time)*86400 > maxgapseconds);
+for igap = gaps(:)'
+    y(newtime > time(igap) & newtime < time(igap+1)) = NaN;
+end
+end
+
+function angle = interpAngleWithGaps(time,angle,newtime,maxgapseconds)
+s = interpWithGaps(time,sind(angle),newtime,maxgapseconds);
+c = interpWithGaps(time,cosd(angle),newtime,maxgapseconds);
+angle = atan2d(s,c);
+end
+
+function [r,lags,n] = maskedXCorr(x,y,maxlag,minoverlap)
+% Pearson correlation at each lag using only real overlapping samples.
+mx = isfinite(x);
+my = isfinite(y);
+x(~mx) = 0;
+y(~my) = 0;
+lags = (-maxlag:maxlag)';
+n = xcorr(double(mx),double(my),maxlag);
+sx = xcorr(x,double(my),maxlag);
+sy = xcorr(double(mx),y,maxlag);
+sxx = xcorr(x.^2,double(my),maxlag);
+syy = xcorr(double(mx),y.^2,maxlag);
+sxy = xcorr(x,y,maxlag);
+covxy = sxy-sx.*sy./n;
+varx = sxx-sx.^2./n;
+vary = syy-sy.^2./n;
+r = covxy./sqrt(varx.*vary);
+r(n < minoverlap | varx <= 0 | vary <= 0) = NaN;
+end
+
+function [out,info] = relativeSBGdata(record,referencetime)
+% Preserve the legacy single-record fallback when no UTC anchor is usable.
+[stamp,iu] = unique(double(record.ImuData.time_stamp(:))/1e6);
+out.ImuData.time = referencetime+(stamp-stamp(1))/86400;
+out.ImuData.gyro_x = double(record.ImuData.gyro_x(iu));
+out.ImuData.gyro_y = double(record.ImuData.gyro_y(iu));
+out.ImuData.gyro_z = double(record.ImuData.gyro_z(iu));
+[stamp,iu] = unique(double(record.EkfEuler.time_stamp(:))/1e6);
+out.EkfEuler.time = referencetime+(stamp-stamp(1))/86400;
+out.EkfEuler.pitch = double(record.EkfEuler.pitch(iu));
+out.EkfEuler.roll = double(record.EkfEuler.roll(iu));
+out.EkfEuler.yaw = double(record.EkfEuler.yaw(iu));
+info.records = 1;
+info.recordsused = 1;
+info.anchorresidualseconds = NaN;
+info.imusamples = length(out.ImuData.time);
+info.ekfsamples = length(out.EkfEuler.time);
 end
