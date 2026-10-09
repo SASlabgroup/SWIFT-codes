@@ -126,3 +126,31 @@ holdout comparison, the 302 candidate fills, the measured and extrapolated
 spectra on the full non-overlapping native grid, and frequency-resolved bias.
 
 All processing and review code in this workflow is MATLAB.
+
+## Additional validation plan
+
+The next step is to compare the estimator with the other Willapa moorings that
+have simultaneous raw Signature and valid SBG bursts. This should be a
+cross-mooring validation rather than adding those moorings to the existing
+SWIFT25 calibration:
+
+1. Inventory each mooring's overlapping Signature/SBG records, sample rate,
+   burst duration, available Welch windows, and native SBG quality flags.
+2. Apply the frozen SWIFT25 frequency transfer and tail scale to each other
+   mooring without refitting. This is the primary test of whether the
+   calibration transfers between instruments.
+3. Separately fit a mooring-specific transfer and tail scale, using the same
+   every-fifth-record calibration split. Comparing this result with the frozen
+   SWIFT25 result will distinguish estimator error from instrument-specific
+   calibration differences.
+4. Report Hs correlation, median and mean bias, median absolute error, RMSE,
+   Hs ratio, and frequency-resolved spectral bias over the same 0.05--2.5 Hz
+   range. Also compare the 0.05--0.10 Hz variance fraction and fitted tail
+   scale between moorings.
+5. Plot time series, one-to-one Hs comparisons, and full-grid spectral
+   differences for every mooring using common limits. Stratify results by
+   wave height and record/window count so good aggregate statistics do not
+   hide failures in short records or energetic events.
+6. Keep production filling limited to SWIFT25 until the frozen calibration is
+   shown to transfer. If it does not, retain deployment-specific calibration
+   and document that requirement explicitly.

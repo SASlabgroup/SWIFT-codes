@@ -147,7 +147,7 @@ view(2)
 axis tight
 clim(color_limits)
 ylabel('Frequency (Hz)')
-title('Calibrated Signature band energy')
+title('Signature energy: calibrated 0.05--2 Hz, extrapolated 2--2.5 Hz')
 colorbar
 
 ax_effect = nexttile;
