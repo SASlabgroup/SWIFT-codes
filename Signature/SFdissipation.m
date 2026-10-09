@@ -82,8 +82,11 @@ else
             w = w';
             [nbin,~] = size(w);
         end
-        dW = repmat(w-mean(w,2,'omitnan'),1,1,nbin);
-        dW = permute(dW,[1 3 2])-permute(dW,[3 1 2]);
+        % All pair differences per ping: wd is nbin x 1 x nping and its
+        % transpose 1 x nbin x nping, so subtracting them expands to
+        % dW(i,j,:) = wd(i,:) - wd(j,:), size nbin x nbin x nping.
+        wd = permute(w-mean(w,2,'omitnan'),[1 3 2]);
+        dW = wd - permute(wd,[2 1 3]);
         dW(abs(dW) > 5*std(dW,[],3,'omitnan')) = NaN;
     elseif ndims(w) == 3
         dW = w;
