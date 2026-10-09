@@ -454,83 +454,23 @@ sinfo.postproc(ip).flags.SBGwaves_reduced_dof = ...
     (SWIFTreplaced(:) & window_count < 4)';
 sinfo.postproc(ip).params = params;
 
-% Record which source types were present for every expected burst.
-sbgfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SBG*.*']);
-sigfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SIG*.*']);
-imufiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*IMU*.*']);
-pb2files = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*PB2*.*']);
-sbg_present = false(length(SWIFT),1);
-sig_present = false(length(SWIFT),1);
-imu_present = false(length(SWIFT),1);
-pb2_present = false(length(SWIFT),1);
-for i = 1:length(SWIFT)
-    id = string(SWIFT(i).burstID);
-    sbg_present(i) = any(contains(string({sbgfiles.name}),id));
-    sig_present(i) = any(contains(string({sigfiles.name}),id));
-    imu_present(i) = any(contains(string({imufiles.name}),id));
-    pb2_present(i) = any(contains(string({pb2files.name}),id));
-end
-burst_id = string({SWIFT.burstID})';
-record_time = datetime([SWIFT.time]','ConvertFrom','datenum');
-sbg_reprocessed = SWIFTreplaced(:);
-reduced_dof = sbg_reprocessed & window_count < 4;
-
-fid = fopen(report_file,'w');
-if fid < 0
-    warning('reprocess_SBG:ReportOpenFailed', ...
-        'Could not open processing report: %s',report_file)
-else
-    report_cleanup = onCleanup(@() fclose(fid));
-    fprintf(fid,['burst_id\trecord_time\tstatus\terror_message\tsource_file' ...
-        '\tsbg_present\tsig_present\timu_present\tpb2_present' ...
-        '\tsbg_shipmotion\tsbg_gpsvel\tsbg_gpspos\tsbg_imu\tsbg_euler\tsbg_utc' ...
-        '\tcrop_seconds\twindow_count\tusable_points\tusable_seconds\tnominal_dof' ...
-        '\tsbg_reprocessed\treduced_dof\n']);
-    for i = 1:length(SWIFT)
-        fields = [burst_id(i),string(record_time(i),'yyyy-MM-dd HH:mm:ss'), ...
-            status(i),error_message(i),source_file(i), ...
-            string([sbg_present(i),sig_present(i),imu_present(i),pb2_present(i), ...
-            sbg_shipmotion(i),sbg_gpsvel(i),sbg_gpspos(i),sbg_imu(i), ...
-            sbg_euler(i),sbg_utc(i)]), ...
-            string([crop_seconds(i),window_count(i),usable_points(i), ...
-            usable_seconds(i),nominal_dof(i)]), ...
-            string([sbg_reprocessed(i),reduced_dof(i)])];
-        fields = replace(replace(fields,sprintf('\t'),' '),newline,' ');
-        fprintf(fid,'%s\n',char(join(fields,sprintf('\t'))));
-    end
-end
-
-% Add expected ten-minute slots absent from L2. Do not bridge breaks longer
-% than one day, which can separate deployments or expose stray old records.
-record_slot = unique(sort(round([SWIFT.time]'*24*6)));
-slot_gap = diff(record_slot);
-missing_slot = [];
-for igap = find(slot_gap > 1 & slot_gap <= 24*6)'
-    missing_slot = [missing_slot; ...
-        (record_slot(igap)+1:record_slot(igap+1)-1)']; %#ok<AGROW>
-end
-if ~isempty(missing_slot) && fid >= 0
-    missing_time = datetime(missing_slot/(24*6),'ConvertFrom','datenum');
-    for i = 1:length(missing_slot)
-        id = string(datestr(missing_time(i),'ddmmmyyyy')) + "_" + ...
-            sprintf('%02d',hour(missing_time(i))) + "_" + ...
-            sprintf('%02d',floor(minute(missing_time(i))/10)+1);
-        isbg = find(contains(string({sbgfiles.name}),id),1);
-        missing_source = "";
-        if ~isempty(isbg)
-            missing_source = string(fullfile( ...
-                sbgfiles(isbg).folder,sbgfiles(isbg).name));
-        end
-        fields = [id,string(missing_time(i),'yyyy-MM-dd HH:mm:ss'), ...
-            "no_l2_record","Expected ten-minute slot is absent from L2.", ...
-            missing_source,string([~isempty(isbg), ...
-            any(contains(string({sigfiles.name}),id)), ...
-            any(contains(string({imufiles.name}),id)), ...
-            any(contains(string({pb2files.name}),id)),false(1,6)]), ...
-            string(NaN(1,5)),string(false(1,2))];
-        fprintf(fid,'%s\n',char(join(fields,sprintf('\t'))));
-    end
-end
+report.status = status;
+report.error_message = error_message;
+report.source_file = source_file;
+report.sbg_shipmotion = sbg_shipmotion;
+report.sbg_gpsvel = sbg_gpsvel;
+report.sbg_gpspos = sbg_gpspos;
+report.sbg_imu = sbg_imu;
+report.sbg_euler = sbg_euler;
+report.sbg_utc = sbg_utc;
+report.crop_seconds = crop_seconds;
+report.window_count = window_count;
+report.usable_points = usable_points;
+report.usable_seconds = usable_seconds;
+report.nominal_dof = nominal_dof;
+report.sbg_reprocessed = SWIFTreplaced(:);
+report.reduced_dof = report.sbg_reprocessed & window_count < 4;
+writeSBGprocessingReport(missiondir,SWIFT,report_file,report)
 
 if opts.save_product
     save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')
