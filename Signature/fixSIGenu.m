@@ -209,30 +209,46 @@ R_AHRS(:,3,1) = avg.AHRS_M31;
 R_AHRS(:,3,2) = avg.AHRS_M32;
 R_AHRS(:,3,3) = avg.AHRS_M33;
 
+T_AHRS_inv = inv(T_AHRS);
+
 % Step 1) Revert ENU velocities back to beam velocities
 velBEAM = NaN(size(velENU));
+validmatrix = false(nping,1);
 for iping = 1:nping
     R = squeeze(R_AHRS(iping, :, :));
     R_4beam = [R(1,1) R(1,2) R(1,3)/2 R(1,3)/2;
                R(2,1) R(2,2) R(2,3)/2 R(2,3)/2;
                R(3,1) R(3,2) R(3,3)   0;
                R(3,1) R(3,2) 0        R(3,3)];
-    
-    for ibin = 1:nbin
-        velXYZ_temp = R_4beam \ squeeze(velENU(iping, ibin, :));
-        velBEAM(iping, ibin, :) = T_AHRS \ velXYZ_temp;
+
+    % A few affected files contain isolated corrupted matrices. Do not let
+    % an unstable inversion contaminate the burst-average profile.
+    if any(~isfinite(R),'all') || rcond(R_4beam) < 1e-8 || ...
+            abs(det(R)-1) > 0.1 || norm(R*R'-eye(3),'fro') > 0.1
+        continue
     end
+
+    enu_p  = squeeze(velENU(iping, :, :)).';   % 4 x nbin
+    xyz_p  = R_4beam \ enu_p;
+    beam_p = T_AHRS_inv * xyz_p;
+    velBEAM(iping, :, :) = beam_p.';
+    validmatrix(iping) = true;
 end
 
-% Step 2) Compute new ENU velocities using SBG orientation
+% Step 2) Compute new ENU velocities using SBG orientation. Down-looking
+% orientation is already represented by roll near 180 degrees. Reusing the
+% same beam transform makes this step a no-op when the replacement HPR is
+% identical to the onboard HPR.
 T = T_AHRS;
-T(2:4, :) = -T(2:4, :);% Nortek instructions for downlooking...
 
 velENU_new = NaN(size(velENU));
 
 for iping = 1:nping
-    hh = heading(iping);
-    pp = pitch(iping);
+    % Nortek's stored AHRS matrix uses heading clockwise from north and
+    % pitch with the opposite sign to a Cartesian y rotation. This identity
+    % reproduces the raw AHRS matrices to stored precision.
+    hh = 90 - heading(iping);
+    pp = -pitch(iping);
     rr = roll(iping);
     
     Rz = [cosd(hh) -sind(hh) 0;
@@ -251,11 +267,9 @@ for iping = 1:nping
                R(2,1) R(2,2) R(2,3)/2 R(2,3)/2;
                R(3,1) R(3,2) R(3,3)   0;
                R(3,1) R(3,2) 0        R(3,3)];
-    
-    for ibin = 1:nbin
-        velXYZ_temp = T * squeeze(velBEAM(iping, ibin, :));
-        velENU_new(iping, ibin, :) = R_4beam * velXYZ_temp;
-    end
+
+    beam_p = squeeze(velBEAM(iping, :, :)).';  % 4 x nbin
+    velENU_new(iping, :, :) = (R_4beam * (T * beam_p)).';
 end
 
 % Swap signs in ENU
@@ -269,10 +283,19 @@ avgout.VelocityData = velENU_new;
 %% Create diagnostics structure
 cparams.toff = toff;
 cparams.tlag = tlag;
+cparams.timesource = timesource;
+cparams.effectivetimeoffset = (toff-tlag)*24*60*60;
+cparams.lagcorrelation = r(imaxr);
+cparams.lagoverlapsamples = noverlap(imaxr);
+cparams.usedinterpolatedlag = usedinterpolatedlag;
+cparams.orientationcoverage = mean(isfinite(heading) & isfinite(pitch) & ...
+    isfinite(roll));
+cparams.sbgtimeinfo = sbgtimeinfo;
 cparams.hoff = hoffdata;
-cparams.mheading = meandir(sbgyaw);
-cparams.mpitch = meandir(sbgpitch);
-cparams.mroll = meandir(sbgroll);
+cparams.mheading = meandir(heading);
+cparams.mpitch = mean(pitch,'omitnan');
+cparams.mroll = meandir(roll);
+cparams.nbadmatrix = sum(~validmatrix);
 
 %% Plot diagnostics
 if plotburst
