@@ -58,14 +58,17 @@ ipoor = hrcorr < opt.HR.mincorr;
 % Bad Data
 ibad = ispike | ipoor;
 
-% Fill bad data with linear interpolation
-wclean = NaN(size(wraw));
-for iping = 1:nping    
-    igood = find(~ibad(:,iping));
-    if length(igood) > 3
-    wclean(:,iping) = interp1(igood,wraw(igood,iping),1:nbin,'linear','extrap'); 
-    end
-end
+% Fill bad data with linear interpolation (pings need more than 3 good bins)
+wclean = wraw;
+wclean(ibad) = NaN;
+% Interpolate and extrapolate along dim 1 (bins), within each ping
+wclean = fillmissing(wclean,'linear',1,'EndValues','extrap');
+% NaN where interp1 would propagate a NaN sample: a filled value is NaN if
+% either good bin it comes from is NaN, so fill an indicator the same way
+nanw = double(isnan(wraw));
+nanw(ibad) = NaN;
+wclean(fillmissing(nanw,'linear',1,'EndValues','extrap') ~= 0) = NaN;
+wclean(:,sum(~ibad,1) <= 3) = NaN;
 
 % NaN bad bins (percentage of bad data > opt.pbadmax_bin)
 pbad_bin = 100*(sum(ibad,2,'omitnan')./nping);
