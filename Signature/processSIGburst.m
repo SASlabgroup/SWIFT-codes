@@ -117,9 +117,9 @@ end
 
 warning('off','all')
 % No filter, no analytic wave fit (D ~ r^{-2/3})
-[epsNF,qualNF] = SFdissipation(wnf,z,rmin,2*rmax,nzfit,'linear','mean');
+[epsNF,qualNF,sfNF] = SFdissipation(wnf,z,rmin,2*rmax,nzfit,'linear','mean');
 % Analytic wave fit  (D ~ Ar^{-2/3} + Br^2)
-[epsWV,qualWV] = SFdissipation(wnf,z,rmin,2*rmax,nzfit,'cubic','mean');
+[epsWV,qualWV] = SFdissipation(wnf,z,rmin,2*rmax,nzfit,'cubic','mean',sfNF);
 % EOF filter (D ~ r^{-2/3})
 [epsEOF,qualEOF] = SFdissipation(wpeof,z,rmin,rmax,nzfit,'linear','mean');
 % High-pass filter (D ~ r^{-2/3})

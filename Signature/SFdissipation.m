@@ -1,12 +1,12 @@
-function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
-% This function applies Taylor cascade theory to estimate dissipation from 
-% the second order velocity structure function computed from vertical profiles 
+function [eps,qual,sfdata] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype,sfdata)
+% This function applies Taylor cascade theory to estimate dissipation from
+% the second order velocity structure function computed from vertical profiles
 % of turbulent velocity (see Wiles et al. 2006). SFdissipation was
 % formulated with data from the Nortek Signature 1000 ADCP operating in pulse-coherent
 % (HR) mode, but can be applied to any ensemble of velocity profiles.
-%       
+%
 %   in:     w (or dW)  nbin x nping ensemble of velocity profiles. Ensemble averaging
-%                           occurs across the 'ping' dimension. Can alternatively 
+%                           occurs across the 'ping' dimension. Can alternatively
 %                           input the velocity difference matrix (dW).
 %           z           1 x nbin
 %           rmin        minimum separation distance allowed in the fit
@@ -18,8 +18,8 @@ function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 %                       smoothing
 %           fittype     either 'linear' or 'cubic', determines whether the
 %                           structure function is fit to a theoretical curve which is
-%                           linear or cubic in R^(2/3). The latter should be used if 
-%                           there is likely significant profile-scale shear in the profiles, 
+%                           linear or cubic in R^(2/3). The latter should be used if
+%                           there is likely significant profile-scale shear in the profiles,
 %                           such as surface waves (Scannell et al. 2017)
 %                           12/2022: Added 'log', which does the linear fit
 %                           in log space instead. Assumes noise term is
@@ -29,20 +29,41 @@ function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 %           avgtype     either 'mean','logmean' or 'median', determines whether the
 %                           mean of squares, mean of the log of squares, or median of squares
 %                           is taken to determine the expected value of the squared velocity difference
+%           sfdata      optional preprocessing structure returned by an
+%                       earlier fit to the same velocity field and avgtype
 %
 %   out:    eps         1 x nbin profile of dissipation
 %           qual        structure with metrics for evaluating quality of eps including:
-%                       - mean square percent error of the fit (mspe), 
-%                       - propagated error of the fit (epserr), 
-%                       - ADCP error inferred from the SF intercept (N), 
-%                       - slope of the SF (slope), 
+%                       - mean square percent error of the fit (mspe),
+%                       - propagated error of the fit (epserr),
+%                       - ADCP error inferred from the SF intercept (N),
+%                       - slope of the SF (slope),
 %                       - wave term coefficient (B, if modified r^2 fit used).
+%           sfdata      reusable structure-function mean and standard error
+%                       for fitting the same velocity field a second time.
 
 %           K.Zeiden Summer/Fall 2022
 
-% Return control to calling function/script if all NaN data
+arguments
+    w
+    z
+    rmin
+    rmax
+    nzfit
+    fittype {mustBeMember(fittype,{'linear','cubic'})}
+    avgtype {mustBeMember(avgtype,{'mean','logmean','median'})}
+    sfdata = []
+end
+
 nz = length(z);
-if ~any(~isnan(w(:)))
+if ~isempty(sfdata)
+    if ~all(isfield(sfdata,{'D','Derr','avgtype'})) || ...
+            ~strcmp(sfdata.avgtype,avgtype)
+        error('Invalid SFdissipation preprocessing structure.')
+    end
+    D = sfdata.D;
+    Derr = sfdata.Derr;
+elseif ~any(~isnan(w(:)))
     eps = NaN(1,nz);
     qual.mspe = NaN(1,nz);
     qual.slope = NaN(1,nz);
@@ -51,28 +72,19 @@ if ~any(~isnan(w(:)))
     qual.B = NaN(1,nz);
     qual.N = NaN(1,nz);
     return
-end
+else
 
-% Matrices of all possible data pair separation distances (R), and
-% corresponding mean vertical position (Z0)
-z = z(:)';
-dz = median(diff(z));
-R = z-z';
-R = round(R,2);
-[Z1,Z2] = meshgrid(z);
-Z0 = (Z1+Z2)/2;
-
-% Matrices of all possible data pair velocity differences for each ping.
-%   Points greater than +/- 5 standard deviation are removed from each dist.
-if ismatrix(w)
-    [nbin,~] = size(w);
-    if nbin ~= length(z)
-        w = w';
+    % Matrices of all possible data pair velocity differences for each ping.
+    % Points greater than +/- 5 standard deviation are removed from each dist.
+    if ismatrix(w)
         [nbin,~] = size(w);
-    end
-    dW = repmat(w-mean(w,2,'omitnan'),1,1,nbin);
-    dW = permute(dW,[1 3 2])-permute(dW,[3 1 2]);
-    dW(abs(dW) > 5*std(dW,[],3,'omitnan')) = NaN;
+        if nbin ~= length(z)
+            w = w';
+            [nbin,~] = size(w);
+        end
+        dW = repmat(w-mean(w,2,'omitnan'),1,1,nbin);
+        dW = permute(dW,[1 3 2])-permute(dW,[3 1 2]);
+        dW(abs(dW) > 5*std(dW,[],3,'omitnan')) = NaN;
     elseif ndims(w) == 3
         dW = w;
         [nbin,nbin2,~] = size(dW);
@@ -81,21 +93,34 @@ if ismatrix(w)
         end
     else
         error('Check dimensions of ''w''')
-end
+    end
 
-% Take mean (or median, or mean-of-the-logs) squared velocity difference to get D(z,r)
-if strcmp(avgtype,'mean')
-    D = mean(dW.^2,3,'omitnan');
+    % Take mean (or median, or mean-of-the-logs) squared velocity difference.
+    dW2 = dW.^2;
+    if strcmp(avgtype,'mean')
+        D = mean(dW2,3,'omitnan');
     elseif strcmp(avgtype,'logmean')
-        D = 10.^(mean(log10(dW.^2),3,'omitnan'));
+        D = 10.^(mean(log10(dW2),3,'omitnan'));
     elseif strcmp(avgtype,'median')
-        D = median(dW.^2,3,'omitnan');
+        D = median(dW2,3,'omitnan');
     else
         error('Average estimator must be ''mean'', ''logmean'' or ''median''.')
+    end
+
+    % Standard error on the mean. Return both fields for a second fit to the
+    % same velocity field without rebuilding the large difference array.
+    Derr = sqrt(var(dW2,[],3,'omitnan')./sum(~isnan(dW),3));
+    sfdata.D = D;
+    sfdata.Derr = Derr;
+    sfdata.avgtype = avgtype;
 end
 
-% Standard Error on the mean
-Derr = sqrt(var(dW.^2,[],3,'omitnan')./sum(~isnan(dW),3));
+% Matrices of all possible separation distances and mean vertical positions.
+z = z(:)';
+dz = median(diff(z));
+R = round(z-z',2);
+[Z1,Z2] = meshgrid(z);
+Z0 = (Z1+Z2)/2;
 
 % Fit structure function to theoretical curve
 Cv2 = 2.1;
@@ -119,11 +144,11 @@ for ibin = 1:length(z)
     Dierr = Dierr(isort);
 
     % Select points within specified separation scale range
-    ifit = Ri <= rmax & Ri >= rmin; 
+    ifit = Ri <= rmax & Ri >= rmin;
     nfit = sum(ifit);
     if nfit < 3 % Must contain more than 3 points
         continue
-        
+
     end
     xN = ones(nfit,1);
     x1 = Ri(ifit);
@@ -131,7 +156,7 @@ for ibin = 1:length(z)
     x2 = x23.^3;
     d = Di(ifit);
     derr = mean(Dierr(ifit),'omitnan');
-    
+
     % Best-fit power-law to the structure function
     ilog = x1 > 0 & d > 0;% log(0) = -Inf
     x1log = log10(x1(ilog));
@@ -140,18 +165,18 @@ for ibin = 1:length(z)
     G = [x1log(:) xNlog(:)];
     Gg = (G'*G)\G';
     m = Gg*dlog(:);
-    slope(ibin) = m(1);  
-    
-    %Fit Structure function to theoretical curves
+    slope(ibin) = m(1);
+
+    % Fit structure function to theoretical curves
     if strcmp(fittype,'cubic')
-        
+
         % Fit structure function to D(z,r) = Br^2 + Ar^(2/3) + N
         G = [x2(:) x23(:) xN(:)];
         Gg = (G'*G)\G';
         m = Gg*d(:);
         B(ibin) = m(1);
         A(ibin) = m(2);
-        
+
         % Remove model shear term & fit Ar^(2/3) to residual (to get mspe)
         dmod = d-B(ibin)*x2;
         G = [x23(:) xN(:)];
@@ -163,7 +188,7 @@ for ibin = 1:length(z)
         N(ibin) = m(2);
         merr = sqrt(diag(derr.^2*((G'*G)^(-1))));
         Aerr(ibin) = merr(1);
-        
+
         % update w/slope of residual structure function
         ilog = x1 > 0 & dmod > 0;% log(0) = -Inf
         x1log = log10(x1(ilog));
@@ -172,28 +197,28 @@ for ibin = 1:length(z)
         G = [x1log(:) xNlog(:)];
         Gg = (G'*G)\G';
         m = Gg*dlog(:);
-        slope(ibin) = m(1);      
-        
+        slope(ibin) = m(1);
+
     elseif strcmp(fittype,'linear')
-        
-            % Fit structure function to D(z,r) = Ar^(2/3) + N
-            G = [x23(:) xN(:)];
-            Gg = (G'*G)\G';
-            m = Gg*d(:);
-            dm = G*m;
-            imse = abs(dm) > 10^(-8);
-            mspe(ibin) =  mean(((dm(imse)-d(imse))./dm(imse)).^2);
-            A(ibin) = m(1);
-            N(ibin) = m(2);
-            merr = sqrt(diag(derr.^2*((G'*G)^(-1))));
-            Aerr(ibin) = merr(1);
-            
+
+        % Fit structure function to D(z,r) = Ar^(2/3) + N
+        G = [x23(:) xN(:)];
+        Gg = (G'*G)\G';
+        m = Gg*d(:);
+        dm = G*m;
+        imse = abs(dm) > 10^(-8);
+        mspe(ibin) =  mean(((dm(imse)-d(imse))./dm(imse)).^2);
+        A(ibin) = m(1);
+        N(ibin) = m(2);
+        merr = sqrt(diag(derr.^2*((G'*G)^(-1))));
+        Aerr(ibin) = merr(1);
+
     else
         error('Fit type must be ''linear'' or ''cubic''')
     end
     eps(ibin) = (A(ibin)./Cv2).^(3/2);
     epserr(ibin) = Aerr(ibin)*(3/2)*eps(ibin)./A(ibin);
-      
+
 end
 
 % Remove unphysical values
