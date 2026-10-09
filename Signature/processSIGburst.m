@@ -50,7 +50,7 @@ F0 = 10^6; % Hz, pulse carrier frequency (1 MHz for Sig 1000)
 cs = mean(burst.SoundSpeed,'omitnan'); % m/s, sound speed
 Vr = cs.^2./(4*F0*L);% m/s
 nfilt = round(1/dz);% 1 m
-[~,ispike] = despikeSIG(wraw,nfilt,Vr/2);
+[~,ispike] = despikeSIG(wraw,nfilt,Vr/2,'none');
 
 % Identify poor quality (low correlation) data
 ipoor = hrcorr < opt.HR.mincorr;

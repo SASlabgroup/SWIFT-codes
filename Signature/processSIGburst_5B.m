@@ -71,7 +71,7 @@ end
 % Identify Spikes (phase-shift threshold, Shcherbina 2018)
 ispike = false(size(wraw));
 for ibeam = 1:nbeam
-    [~,ispikeibeam] = despikeSIG(squeeze(wraw(:,:,ibeam))',nfilt,Vr/2);
+    [~,ispikeibeam] = despikeSIG(squeeze(wraw(:,:,ibeam))',nfilt,Vr/2,'none');
     ispike(:,:,ibeam) = ispikeibeam';
 end
 
