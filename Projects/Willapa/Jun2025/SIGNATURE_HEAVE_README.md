@@ -35,8 +35,18 @@ holdout results for the calibrated 0.10--0.50 Hz band are:
 
 - Hs correlation: 0.920;
 - Hs median bias: -0.0027 m;
+- Hs mean bias: -0.0014 m;
 - Hs median absolute error: 0.0077 m; and
 - Hs RMSE: 0.0155 m.
+
+The Hs ratio is 0.947 at the median but 1.044 at the mean. Thus, the method
+is not uniformly high; a positive tail raises the mean. Across individual
+holdout spectral values in the recovery band, the median Signature-minus-SBG
+difference is -0.12 dB and the interquartile range is -1.86 to +1.97 dB.
+The median bias of each frequency bin ranges from -0.55 to +0.37 dB, while
+episodic positive differences reach +8.0 dB at the 95th percentile. This
+supports event-level contamination QC rather than a uniform amplitude
+rescaling.
 
 The calibration uses 245 records; 230 valid SBG/Signature ratios are
 available in each recovered frequency bin after file and spectral QC.
@@ -82,10 +92,14 @@ For a non-writing review run:
 ```
 
 The review writes `SWIFT25_signature_heave_validation.png`,
-`SWIFT25_signature_heave_effect.png`, and the non-writing SBG processing
-report into `plot_dir`. The effect plot uses shared time limits, leaves
-missing spectra blank, and explicitly labels the off-scale 23 June SBG
-outlier before showing its Signature replacement.
+`SWIFT25_signature_heave_effect.png`,
+`SWIFT25_signature_heave_spectral_difference.png`, and the non-writing SBG
+processing report into `plot_dir`. The effect plot uses shared time limits,
+leaves missing spectra blank, and explicitly labels the off-scale 23 June
+SBG outlier before showing its Signature replacement. The spectral-difference
+plot uses discrete, non-overlapping cells over the complete 0.0098--0.994 Hz
+SWIFT grid. Its full-grid Signature calibration is diagnostic only; dashed
+lines mark the 0.10--0.50 Hz band retained by production recovery.
 
 `Process_WillapaMoored.m` runs the fallback for SWIFT25 after normal L3/SBG
 processing so valid SBG records are available for calibration and only

@@ -78,8 +78,11 @@ else
     metrics.correlation = NaN;
 end
 metrics.median_bias = median(error,'omitnan');
+metrics.mean_bias = mean(error,'omitnan');
 metrics.median_absolute_error = median(abs(error),'omitnan');
 metrics.rmse = sqrt(mean(error.^2,'omitnan'));
+metrics.median_hs_ratio = median(estimate./reference,'omitnan');
+metrics.mean_hs_ratio = mean(estimate./reference,'omitnan');
 metrics.recovered = nnz(diagnostics.recovered);
 
 time = datetime(diagnostics.time,'ConvertFrom','datenum');
@@ -191,6 +194,102 @@ set([ax_reference ax_signature ax_effect],'XTick',time_ticks)
 set([ax_reference ax_signature],'XTickLabel',[])
 set(ax_effect,'XTickLabel',time_labels)
 
+% Diagnose spectral bias over the complete SWIFT frequency grid. This
+% full-grid transfer is for review only: production recovery remains limited
+% to opts.fmin--opts.fmax because low frequencies contain Signature drift.
+full_transfer = NaN(size(frequency));
+for i = 1:length(frequency)
+    ratio = diagnostics.raw_energy(diagnostics.calibration_record,i)./ ...
+        diagnostics.reference_energy(diagnostics.calibration_record,i);
+    ratio = ratio(isfinite(ratio) & ratio > 0);
+    if length(ratio) >= opts.minimum_calibration_records
+        full_transfer(i) = median(ratio);
+    end
+end
+full_signature_energy = diagnostics.raw_energy./full_transfer;
+spectral_difference_db = 10*log10(full_signature_energy./ ...
+    diagnostics.reference_energy);
+spectral_difference_db(~holdout,:) = NaN;
+spectral_difference_db(~isfinite(spectral_difference_db)) = NaN;
+
+reference_full_log = log10(diagnostics.reference_energy);
+signature_full_log = log10(full_signature_energy);
+reference_full_log(~isfinite(reference_full_log)) = NaN;
+signature_full_log(~isfinite(signature_full_log)) = NaN;
+full_combined = sort([reference_full_log(:); signature_full_log(:)]);
+full_combined = full_combined(isfinite(full_combined));
+full_color_index = max(1,round([0.02 0.98]*length(full_combined)));
+full_color_limits = full_combined(full_color_index);
+
+median_difference = NaN(size(frequency));
+lower_difference = NaN(size(frequency));
+upper_difference = NaN(size(frequency));
+for i = 1:length(frequency)
+    values = sort(spectral_difference_db(:,i));
+    values = values(isfinite(values));
+    if isempty(values); continue; end
+    median_difference(i) = median(values);
+    lower_difference(i) = values(max(1,round(0.25*length(values))));
+    upper_difference(i) = values(max(1,round(0.75*length(values))));
+end
+
+figures.spectral_difference = figure('Color','w');
+tiledlayout(4,1,'TileSpacing','compact','Padding','compact');
+ax_full_reference = nexttile;
+plotSpectralCells(ax_full_reference,time_number,frequency,reference_full_log)
+clim(full_color_limits)
+ylabel('Frequency (Hz)')
+title('SBG energy: full non-overlapping frequency grid')
+colorbar
+yline(opts.fmin,'w--')
+yline(opts.fmax,'w--')
+
+ax_full_signature = nexttile;
+plotSpectralCells(ax_full_signature,time_number,frequency,signature_full_log)
+clim(full_color_limits)
+ylabel('Frequency (Hz)')
+title('Signature energy with review-only full-grid calibration')
+colorbar
+yline(opts.fmin,'w--')
+yline(opts.fmax,'w--')
+
+ax_difference = nexttile;
+plotSpectralCells(ax_difference,time_number,frequency,spectral_difference_db)
+clim([-10 10])
+colormap(ax_difference,differenceColormap(256))
+ylabel('Frequency (Hz)')
+title('Holdout spectral difference: Signature - SBG (dB)')
+colorbar
+yline(opts.fmin,'k--')
+yline(opts.fmax,'k--')
+
+nexttile
+plot(frequency,median_difference,'k-','LineWidth',1.2)
+hold on
+plot(frequency,lower_difference,'b-')
+plot(frequency,upper_difference,'r-')
+yline(0,'k:')
+xline(opts.fmin,'k--')
+xline(opts.fmax,'k--')
+xlim([frequency(1) frequency(end)])
+xlabel('Frequency (Hz)')
+ylabel('Difference (dB)')
+legend('Median','25th percentile','75th percentile', ...
+    'Location','best')
+title('Frequency-resolved holdout bias')
+
+linkaxes([ax_full_reference ax_full_signature ax_difference],'x')
+full_time_ticks = floor(min(time_number)):ceil(max(time_number));
+full_time_labels = cellstr(string(datetime(full_time_ticks, ...
+    'ConvertFrom','datenum'),'MMM dd'));
+set([ax_full_reference ax_full_signature ax_difference], ...
+    'XTick',full_time_ticks)
+set([ax_full_reference ax_full_signature],'XTickLabel',[])
+set(ax_difference,'XTickLabel',full_time_labels)
+
+diagnostics.review_full_transfer = full_transfer;
+diagnostics.spectral_difference_db = spectral_difference_db;
+
 if strlength(string(opts.plot_dir)) > 0
     plot_dir = char(opts.plot_dir);
     if ~exist(plot_dir,'dir'); mkdir(plot_dir); end
@@ -198,6 +297,42 @@ if strlength(string(opts.plot_dir)) > 0
         'SWIFT25_signature_heave_validation.png'),'Resolution',180)
     exportgraphics(figures.effect,fullfile(plot_dir, ...
         'SWIFT25_signature_heave_effect.png'),'Resolution',180)
+    exportgraphics(figures.spectral_difference,fullfile(plot_dir, ...
+        'SWIFT25_signature_heave_spectral_difference.png'),'Resolution',180)
 end
+
+end
+
+function plotSpectralCells(ax,time,frequency,values)
+
+% Put records on the regular ten-minute grid before imagesc so each time and
+% frequency bin is a discrete, non-overlapping cell and data gaps stay blank.
+time = time(:);
+time_step = median(diff(unique(time)),'omitnan');
+time_grid = (min(time):time_step:max(time))';
+grid_values = NaN(length(time_grid),length(frequency));
+slot = round((time-min(time))/time_step)+1;
+grid_values(slot,:) = values;
+image_handle = imagesc(ax,time_grid,frequency,grid_values');
+set(image_handle,'AlphaData',isfinite(grid_values'))
+set(ax,'YDir','normal')
+axis(ax,'tight')
+
+end
+
+function map = differenceColormap(count)
+
+half = floor(count/2);
+blue = [0.230 0.299 0.754];
+white = [1 1 1];
+red = [0.706 0.016 0.150];
+lower = [linspace(blue(1),white(1),half)', ...
+    linspace(blue(2),white(2),half)', ...
+    linspace(blue(3),white(3),half)'];
+upper_count = count-half;
+upper = [linspace(white(1),red(1),upper_count)', ...
+    linspace(white(2),red(2),upper_count)', ...
+    linspace(white(3),red(3),upper_count)'];
+map = [lower; upper];
 
 end
