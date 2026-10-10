@@ -25,8 +25,7 @@ T_AHRS = [1.1831         0   -1.1831         0;
 
 % Assume burst-averaged pitch = 0, roll = 180 if not provided
 if length(hh) == 3
-    pp = hh(2);
-    rr = hh(3);
+    [hh,pp,rr] = deal(hh(1),hh(2),hh(3));
 elseif length(hh) == 1
     pp = 0;
     rr = 180;
