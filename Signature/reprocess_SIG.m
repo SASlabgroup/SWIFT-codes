@@ -97,6 +97,12 @@ function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst)
 % traps due to the periodic oscillations which make the mean value
 % reasonable. So far only known to have happened on SWIFT 22, LC-DRI Exp.
 
+arguments
+    missiondir
+    readraw
+    plotburst
+end
+
 if ispc
     slash = '\';
 else
