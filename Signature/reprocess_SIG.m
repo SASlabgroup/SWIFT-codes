@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst)
+function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst,opts)
 
 % Reprocess SWIFT v4 signature velocities from burst data
 %   Loops through burst MAT or DAT files for a given SWIFT deployment,
@@ -6,6 +6,8 @@ function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst)
 %   mean profiles of velocity, 3) compute dissipation from the HR beam 4)
 %   replace signature data in original SWIFT structure with new values 5)
 %   save detailed signature data in a separate SIG structure
+%   Name-value option FastDissipation uses SFdissipation_fast, equal to
+%   SFdissipation within floating-point tolerance.
 
 %      J. Thomson, Sept 2017 (modified from AQH reprocessing)
 %       7/2018, fix bug in the burst time stamp applied 4/2019, apply
@@ -101,6 +103,7 @@ arguments
     missiondir
     readraw
     plotburst
+    opts.FastDissipation (1,1) logical = false
 end
 
 if ispc
@@ -136,6 +139,8 @@ opt.plotburst = plotburst; % generate plots for each burst
 opt.saveSIG = true; % save detailed sig data in separate SIG structure
 opt.plotsig = false;
 opt.saveplots = true; % save generated plots
+
+opt.fastdissipation = opts.FastDissipation;
 
 % Out of water correlation
 opt.outcorr = 35;
