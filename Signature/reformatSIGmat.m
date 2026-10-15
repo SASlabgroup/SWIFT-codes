@@ -5,6 +5,7 @@ function reformatSIGmat(missiondir)
 % M.LeClair April 2026 - parallel & fix
 
 bfiles = dir(fullfile(missiondir, '**', '*.mat'));
+bfiles = bfiles(~endsWith({bfiles.name},'_reformat.mat'));
 
 if isempty(bfiles)
     disp('No burst mat files found.')
@@ -12,6 +13,7 @@ if isempty(bfiles)
 end
 nburst = length(bfiles);
 
+% With Parallel Computing Toolbox, use "parfor iburst = 1:nburst" here.
 for iburst = 1:nburst
 
     % Initialize variables
@@ -297,6 +299,30 @@ for iburst = 1:nburst
         end
 
     end
+
+    % Echogram Data
+    if Config.echo_enable
+        datafields = fieldnames(Data);
+        itime = find(startsWith(datafields,'Echo1') & ...
+            endsWith(datafields,'_MatlabTimeStamp'),1);
+        if ~isempty(itime)
+            ename = extractBefore(datafields{itime},'_MatlabTimeStamp');
+            iamp = find(startsWith(datafields,[ename '_Amp']),1);
+
+            echo.time = Data.([ename '_MatlabTimeStamp']);
+            echo.SoundSpeed = Data.([ename '_SpeedOfSound']);
+            echo.Temperature = Data.([ename '_WaterTemperature']);
+            echo.Pressure = Data.([ename '_Pressure']);
+            echo.Heading = Data.([ename '_Heading']);
+            echo.Pitch = Data.([ename '_Pitch']);
+            echo.Roll = Data.([ename '_Roll']);
+            echo.CellSize = Config.echo_binSize;
+            echo.Blanking = Config.echo_blanking;
+            echo.Magnetometer = Data.([ename '_Magnetometer']);
+            echo.Accelerometer = Data.([ename '_Accelerometer']);
+            echo.EchoSounder = Data.(datafields{iamp});
+        end
+    end
     end
 
     %% Save
@@ -309,9 +335,6 @@ for iburst = 1:nburst
         save(outname, 'avg');
     end
  
-    %% Clear structures
-    clearvars  avg burst echo
-
 % End file loop
 end
 

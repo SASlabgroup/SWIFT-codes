@@ -54,7 +54,7 @@ if nargin<3 || isempty(swiftname)
 end
 
 burstDur = burstMin/1440; % days
-avgBuf = []; burstBuf = []; echoMeta = [];
+avgBuf = []; burstBuf = []; echoBuf = []; echoMeta = [];
 curStart = [];
 
 for i = 1:length(files)
@@ -62,10 +62,16 @@ for i = 1:length(files)
     S = load(fullfile(files(i).folder, files(i).name));
     if isfield(S,'avg')   && ~isempty(S.avg),   avgBuf   = catStruct(avgBuf,   S.avg);   end
     if isfield(S,'burst') && ~isempty(S.burst), burstBuf = catStruct(burstBuf, S.burst); end
-    if isfield(S,'echo'),  echoMeta = S.echo; end
+    if isfield(S,'echo') && ~isempty(S.echo)
+        if isfield(S.echo,'time')
+            echoBuf = catStruct(echoBuf, S.echo);
+        else
+            echoMeta = S.echo;
+        end
+    end
 
     if isempty(curStart)
-        t0 = earliest(avgBuf, burstBuf);
+        t0 = earliest(avgBuf, burstBuf, echoBuf);
         if isempty(t0), continue; end
         dv = datevec(t0);
         dv(5) = floor(dv(5)/burstMin)*burstMin; dv(6) = 0;
@@ -76,7 +82,7 @@ for i = 1:length(files)
 
     while true
         burstEnd = curStart + burstDur;
-        tmax = latest(avgBuf, burstBuf);
+        tmax = latest(avgBuf, burstBuf, echoBuf);
         if isempty(tmax), break; end
         if ~isLast && tmax < burstEnd, break; end
         if tmax < curStart
@@ -84,13 +90,16 @@ for i = 1:length(files)
         end
         avgOut   = sliceStruct(avgBuf,   curStart, burstEnd);
         burstOut = sliceStruct(burstBuf, curStart, burstEnd);
-        if ~isempty(avgOut) || ~isempty(burstOut)
-            saveBurst(outdir, swiftname, curStart, avgOut, burstOut, echoMeta, burstMin);
+        echoOut  = sliceStruct(echoBuf,  curStart, burstEnd);
+        if isempty(echoOut), echoOut = echoMeta; end
+        if ~isempty(avgOut) || ~isempty(burstOut) || ~isempty(echoOut)
+            saveBurst(outdir, swiftname, curStart, avgOut, burstOut, echoOut, burstMin);
         end
         avgBuf   = dropBefore(avgBuf,   burstEnd);
         burstBuf = dropBefore(burstBuf, burstEnd);
+        echoBuf  = dropBefore(echoBuf,  burstEnd);
         curStart = burstEnd;
-        if isLast && isempty(latest(avgBuf, burstBuf)), break; end
+        if isLast && isempty(latest(avgBuf, burstBuf, echoBuf)), break; end
     end
 end
 end
@@ -110,17 +119,19 @@ for k = 1:numel(fn)
 end
 end
 
-function t = earliest(a, b)
+function t = earliest(a, b, c)
 t = [];
 if ~isempty(a) && ~isempty(a.time), t(end+1,1) = a.time(1); end
 if ~isempty(b) && ~isempty(b.time), t(end+1,1) = b.time(1); end
+if ~isempty(c) && ~isempty(c.time), t(end+1,1) = c.time(1); end
 if ~isempty(t), t = min(t); end
 end
 
-function t = latest(a, b)
+function t = latest(a, b, c)
 t = [];
 if ~isempty(a) && ~isempty(a.time), t(end+1,1) = a.time(end); end
 if ~isempty(b) && ~isempty(b.time), t(end+1,1) = b.time(end); end
+if ~isempty(c) && ~isempty(c.time), t(end+1,1) = c.time(end); end
 if ~isempty(t), t = max(t); end
 end
 
