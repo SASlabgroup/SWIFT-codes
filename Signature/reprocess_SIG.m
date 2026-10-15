@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst)
+function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst,opts)
 
 % Reprocess SWIFT v4 signature velocities from burst data
 %   Loops through burst MAT or DAT files for a given SWIFT deployment,
@@ -6,6 +6,9 @@ function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst)
 %   mean profiles of velocity, 3) compute dissipation from the HR beam 4)
 %   replace signature data in original SWIFT structure with new values 5)
 %   save detailed signature data in a separate SIG structure
+%   Name-value option FastDissipation uses SFdissipation_fast, equal to
+%   SFdissipation within floating-point tolerance.
+%   Name-value option ParallelBursts enables burst-level parallel processing.
 
 %      J. Thomson, Sept 2017 (modified from AQH reprocessing)
 %       7/2018, fix bug in the burst time stamp applied 4/2019, apply
@@ -97,6 +100,14 @@ function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst)
 % traps due to the periodic oscillations which make the mean value
 % reasonable. So far only known to have happened on SWIFT 22, LC-DRI Exp.
 
+arguments
+    missiondir
+    readraw
+    plotburst
+    opts.FastDissipation (1,1) logical = false
+    opts.ParallelBursts (1,1) logical = false
+end
+
 if ispc
     slash = '\';
 else
@@ -130,6 +141,10 @@ opt.plotburst = plotburst; % generate plots for each burst
 opt.saveSIG = true; % save detailed sig data in separate SIG structure
 opt.plotsig = false;
 opt.saveplots = true; % save generated plots
+
+opt.fastdissipation = opts.FastDissipation;
+opt.parallelbursts = opts.ParallelBursts;
+opt.parallelworkers = 8;
 
 % Out of water correlation
 opt.outcorr = 35;
@@ -188,6 +203,12 @@ for iburst = 1:length(partburst)
 end
 bfiles(partburst(rmpart)) = [];
 nburst = length(bfiles);
+
+% Optionally compute HR profiles on a thread pool; the loop below uses them
+HRprofiles = cell(nburst,1);
+if opt.parallelbursts
+    HRprofiles = processSIGfiles_parallel(bfiles,opt,slash);
+end
 
 %% Loop through burst files and reprocess signature data
 for iburst = 1:nburst
@@ -296,7 +317,10 @@ for iburst = 1:nburst
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
     
     % Determine whether single or 5-beam data
-    if ismatrix(burst.VelocityData)
+    if ~isempty(HRprofiles{iburst})
+        HRprofile = HRprofiles{iburst};
+        fh = [];
+    elseif ismatrix(burst.VelocityData)
         [HRprofile,fh] = processSIGburst(burst,opt);
     elseif ndims(burst.VelocityData) == 3
         [HRprofile,fh] = processSIGburst_5B(burst);
