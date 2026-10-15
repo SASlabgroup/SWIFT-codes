@@ -38,7 +38,19 @@ function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 %                       - slope of the SF (slope), 
 %                       - wave term coefficient (B, if modified r^2 fit used).
 
+% Changelog:
 %           K.Zeiden Summer/Fall 2022
+% M. LeClair w/ claude, Oct 2026: input validation
+
+arguments
+    w
+    z
+    rmin
+    rmax
+    nzfit
+    fittype {mustBeMember(fittype,{'linear','cubic'})}
+    avgtype {mustBeMember(avgtype,{'mean','logmean','median'})}
+end
 
 % Return control to calling function/script if all NaN data
 nz = length(z);
