@@ -4,6 +4,8 @@ function [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw,plotburst)
 % loop thru raw data for a given SWIFT deployment, then
 % replace values in the SWIFT data structure of results
 % (assuming concatSWIFTv3_processed.m has already been run.
+% Missing primary positions are filled with the median valid PB2 GPS
+% position for the matching burst. Existing primary positions are retained.
 
 % K. Zeiden 03/2025 based on reprocess_WXT
 % plotburst = false;
@@ -33,6 +35,7 @@ end
 %% Loop through raw burst files and reprocess
 SWIFTreplaced = false(length(SWIFT),1);
 relwind = false(length(SWIFT),1);
+pb2positionfallback = false(length(SWIFT),1);
 
 bfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*PB2*.dat']);
 disp(['Found ' num2str(length(bfiles)) ' burst files...'])
@@ -56,8 +59,10 @@ for iburst = 1:length(bfiles)
         end
 
         % Read mat file or load raw data
+        lat = NaN;
+        lon = NaN;
         if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'])) || readraw
-            [~,windspd,winddirT,airtemp,airpres,~,~,~,~,pitch,roll,relhumidity,windspdR,winddirR] = ...
+            [~,windspd,winddirT,airtemp,airpres,lat,lon,~,~,pitch,roll,relhumidity,windspdR,winddirR] = ...
                 readSWIFTv3_PB2([bfiles(iburst).folder slash bfiles(iburst).name]);
         else
             load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']), %#ok<LOAD>
@@ -84,6 +89,38 @@ for iburst = 1:length(bfiles)
             else
                 relhumidity = NaN(size(windspd));
             end
+        end
+
+        % Use PB2 GPS only when the primary burst position is missing or
+        % invalid. Require paired, finite, geographically valid samples;
+        % PB2 reports [0, 0] when it has no GPS fix.
+        lat = lat(:);
+        lon = lon(:);
+        nposition = min(length(lat),length(lon));
+        lat = lat(1:nposition);
+        lon = lon(1:nposition);
+        validPB2position = ~isnan(lat) & ~isinf(lat) & ...
+            ~isnan(lon) & ~isinf(lon) & ...
+            abs(lat) <= 90 & abs(lon) <= 180 & ...
+            ~(lat == 0 & lon == 0);
+
+        primaryPositionValid = false;
+        if isfield(SWIFT,'lat') && isfield(SWIFT,'lon')
+            primaryLat = SWIFT(sindex).lat;
+            primaryLon = SWIFT(sindex).lon;
+            primaryPositionValid = isnumeric(primaryLat) && ...
+                isnumeric(primaryLon) && isscalar(primaryLat) && ...
+                isscalar(primaryLon) && ~isnan(primaryLat) && ...
+                ~isinf(primaryLat) && ~isnan(primaryLon) && ...
+                ~isinf(primaryLon) && abs(primaryLat) <= 90 && ...
+                abs(primaryLon) <= 180 && ...
+                ~(primaryLat == 0 && primaryLon == 0);
+        end
+
+        if ~primaryPositionValid && any(validPB2position)
+            SWIFT(sindex).lat = median(lat(validPB2position));
+            SWIFT(sindex).lon = median(lon(validPB2position));
+            pb2positionfallback(sindex) = true;
         end
 
         % Check for zero-d data
@@ -283,7 +320,9 @@ sinfo.postproc(ip).type = 'PB2';
 sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).flags.relwind = relwind;
-sinfo.postproc(ip).params = [];
+sinfo.postproc(ip).flags.pb2positionfallback = pb2positionfallback;
+sinfo.postproc(ip).params = struct('positionfallback', ...
+    'Median paired PB2 GPS position, used only when primary position is invalid');
 
 save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')
 
