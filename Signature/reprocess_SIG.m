@@ -8,6 +8,7 @@ function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst,opts)
 %   save detailed signature data in a separate SIG structure
 %   Name-value option FastDissipation uses SFdissipation_fast, equal to
 %   SFdissipation within floating-point tolerance.
+%   Name-value option ParallelBursts enables burst-level parallel processing.
 
 % Changelog:
 %      J. Thomson, Sept 2017 (modified from AQH reprocessing)
@@ -92,7 +93,8 @@ function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst,opts)
 %           Update QC to enable removal of bad bins first, prevents entire
 %           pings being tossed if e.g. the bottom 10% of data is bad but
 %           the rest of the profile is fine. Both in HR and BB processing.
-% M. LeClair w/ claude, Oct 2026: FastDissipation option
+% M. LeClair w/ claude, Oct 2026: FastDissipation and ParallelBursts
+%   options (processSIGfiles_parallel)
 
 % NOTE: Known issue -- sometimes the ADCP 'sputters' and for a few minutes
 % will record perfectly periodic ping-ping oscillations in correlation,
@@ -106,6 +108,7 @@ arguments
     readraw
     plotburst
     opts.FastDissipation (1,1) logical = false
+    opts.ParallelBursts (1,1) logical = false
 end
 
 if ispc
@@ -143,6 +146,8 @@ opt.plotsig = true;
 opt.saveplots = true; % save generated plots
 
 opt.fastdissipation = opts.FastDissipation;
+opt.parallelbursts = opts.ParallelBursts;
+opt.parallelworkers = 8;
 
 % Out of water correlation
 opt.outcorr = 35;
@@ -201,6 +206,12 @@ for iburst = 1:length(partburst)
 end
 bfiles(partburst(rmpart)) = [];
 nburst = length(bfiles);
+
+% Optionally compute HR profiles on a thread pool; the loop below uses them
+HRprofiles = cell(nburst,1);
+if opt.parallelbursts
+    HRprofiles = processSIGfiles_parallel(bfiles,opt,slash);
+end
 
 %% Loop through burst files and reprocess signature data
 for iburst = 1:nburst
@@ -309,7 +320,10 @@ for iburst = 1:nburst
     %%%%%%% Process HR velocity data ('burst' structure) %%%%%%
     
     % Determine whether single or 5-beam data
-    if ismatrix(burst.VelocityData)
+    if ~isempty(HRprofiles{iburst})
+        HRprofile = HRprofiles{iburst};
+        fh = [];
+    elseif ismatrix(burst.VelocityData)
         [HRprofile,fh] = processSIGburst(burst,opt);
     elseif ndims(burst.VelocityData) == 3
         [HRprofile,fh] = processSIGburst_5B(burst);
