@@ -1,5 +1,13 @@
 function [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,interpf,tstart)
 
+arguments
+    missiondir {mustBeTextScalar} % SWIFT mission directory
+    plotburst (1,1) logical % Plot each processed burst
+    saveraw (1,1) logical % Save cropped raw SBG measurements in SWIFT
+    useGPS (1,1) logical % Calculate alternative energy from GPS positions
+    interpf (1,1) logical % Interpolate spectra onto the existing frequency bands
+    tstart (1,1) double {mustBeNonnegative,mustBeFinite} % Nominal crop start, in seconds
+end
 
 % Batch Matlab read-in and reprocess of SWIFT v4 SBG wave data
 %   reprocessing is necessary to fix a bug in directional momements
@@ -17,6 +25,8 @@ function [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,inter
 %   running between bursts is timed correctly
 
 % Changed to fixed start (tstart, in seconds)
+
+missiondir = char(missiondir);
 
 if ispc 
     slash = '\';
