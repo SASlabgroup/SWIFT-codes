@@ -3,6 +3,9 @@ function [HRprofile,fh,wpeof] = processSIGburst(burst,varargin)
 %   - remove worst pings to get good EOFs, then interpolate back in time
 %   - alternatively, could use *only* despiked data. This does not
 %       work well when data are very noisy/poor quality
+% Changelog:
+% M. LeClair w/ claude, Oct 2026: bad-data fill vectorized with
+%   fillmissing
 
 if nargin < 2
     opt.xz = 0.2;
@@ -50,7 +53,7 @@ F0 = 10^6; % Hz, pulse carrier frequency (1 MHz for Sig 1000)
 cs = mean(burst.SoundSpeed,'omitnan'); % m/s, sound speed
 Vr = cs.^2./(4*F0*L);% m/s
 nfilt = round(1/dz);% 1 m
-[~,ispike] = despikeSIG(wraw,nfilt,Vr/2);
+[~,ispike] = despikeSIG(wraw,nfilt,Vr/2,'none');
 
 % Identify poor quality (low correlation) data
 ipoor = hrcorr < opt.HR.mincorr;
@@ -58,14 +61,17 @@ ipoor = hrcorr < opt.HR.mincorr;
 % Bad Data
 ibad = ispike | ipoor;
 
-% Fill bad data with linear interpolation
-wclean = NaN(size(wraw));
-for iping = 1:nping    
-    igood = find(~ibad(:,iping));
-    if length(igood) > 3
-    wclean(:,iping) = interp1(igood,wraw(igood,iping),1:nbin,'linear','extrap'); 
-    end
-end
+% Fill bad data with linear interpolation (pings need more than 3 good bins)
+wclean = wraw;
+wclean(ibad) = NaN;
+% Interpolate and extrapolate along dim 1 (bins), within each ping
+wclean = fillmissing(wclean,'linear',1,'EndValues','extrap');
+% NaN where interp1 would propagate a NaN sample: a filled value is NaN if
+% either good bin it comes from is NaN, so fill an indicator the same way
+nanw = double(isnan(wraw));
+nanw(ibad) = NaN;
+wclean(fillmissing(nanw,'linear',1,'EndValues','extrap') ~= 0) = NaN;
+wclean(:,sum(~ibad,1) <= 3) = NaN;
 
 % NaN bad bins (percentage of bad data > opt.pbadmax_bin)
 pbad_bin = 100*(sum(ibad,2,'omitnan')./nping);
