@@ -1,7 +1,10 @@
 % Fit watch circle of each SWIFT mooring over its final deployment period.
 % Mask to t >= start of final deployment (set per buoy in header), project to
-% local ENU about the median, Kasa circle fit, plot points + circle + center
-% with a position table; print positions to the command window.
+% local ENU about the median, drop GPS spikes farther than max_distance_m from
+% the median position, Kasa circle fit, plot points + circle + center with a
+% position table; print positions to the command window. The Kasa fit is not
+% robust: a few spikes hundreds of metres out turn a 30-80 m watch circle into
+% a km-scale circle (seen on the June 2025 Willapa moorings).
 
 % --- edit for each deployment | this should have multiple swift mat files in it ---
 data_dir = '/tmp/SWIFT_25_24_23_22_20261005T000000_now';
@@ -12,6 +15,9 @@ deploy_start = containers.Map( ...
     {'SWIFT22', 'SWIFT23', 'SWIFT24', 'SWIFT25'}, ...
     {datenum(2026,10,6,19,27,50), datenum(2026,10,8,17,57,57), ...
      datenum(2026,10,6,20,30,3),  datenum(2026,10,8,19,28,5)});
+
+% drop fixes farther than this from the median position (GPS spikes)
+max_distance_m = 200;
 
 % --------------------------------
 
@@ -43,8 +49,11 @@ for i = 1:n_swift
 
     ref_lat = median(lat); ref_lon = median(lon);
     [east, north] = geodetic2enu(lat, lon, 0, ref_lat, ref_lon, 0, wgs84);
+    near = hypot(east - median(east), north - median(north)) <= max_distance_m;
+    lat = lat(near); lon = lon(near); east = east(near); north = north(near);
+    n_used(i) = sum(near);
     % Fit the center of the circle, it this is noisy you could do ransac, or if dragging break up the records  
-    circle = fit_circle_kasa(east, north);
+    circle = fitCircleKasa(east, north);
     radius_m(i) = circle(3);
     rms_residual(i) = sqrt(mean((hypot(east - circle(1), north - circle(2)) - circle(3)).^2));
 
@@ -82,13 +91,6 @@ annotation('textbox', [0.14 0.12 0.4 0.12], 'String', table_text, 'FontName', 'C
 fprintf('%-8s %11s %12s %8s %8s %-17s %6s %6s\n', 'SWIFT', 'lat', 'lon', 'r_m', 'rms_m', 'start_utc', 'used', 'total');
 for i = 1:n_swift
     fprintf('%-8s %11.6f %12.6f %8.1f %8.1f %-17s %6d %6d\n', swift_id(i), center_lat(i), center_lon(i), radius_m(i), rms_residual(i), start_str(i), n_used(i), n_total(i));
-end
-
-function m = fit_circle_kasa(x, y)
-% x^2 + y^2 + D x + E y + F = 0  ->  [xc yc r]
-coef = [x y ones(size(x))] \ -(x.^2 + y.^2);
-xc = -coef(1)/2; yc = -coef(2)/2;
-m = [xc yc sqrt(xc^2 + yc^2 - coef(3))];
 end
 
 function s = deg_decmin(deg, pos, neg)
