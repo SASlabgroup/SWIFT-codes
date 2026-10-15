@@ -1,4 +1,4 @@
-function [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,interpf,tstart)
+function [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,interpf,tstart,opts)
 
 arguments
     missiondir {mustBeTextScalar} % SWIFT mission directory
@@ -7,6 +7,8 @@ arguments
     useGPS (1,1) logical % Calculate alternative energy from GPS positions
     interpf (1,1) logical % Interpolate spectra onto the existing frequency bands
     tstart (1,1) double {mustBeNonnegative,mustBeFinite} % Nominal crop start, in seconds
+    opts.tmin (1,1) double {mustBeNonnegative,mustBeFinite} = tstart % Earliest allowed crop, in seconds
+    opts.minimum_windows (1,1) double {mustBeInteger,mustBePositive} = 1 % Required overlapping spectral windows
 end
 
 % Batch Matlab read-in and reprocess of SWIFT v4 SBG wave data
@@ -23,8 +25,18 @@ end
 %   Turned into function with mission directory as input
 
 % Changed to fixed start (tstart, in seconds)
+% tmin < tstart lets a record that is too short for the nominal crop start
+% earlier (where its heave has already settled). The 256-second window is
+% kept to preserve frequency resolution; minimum_windows=1 accepts short
+% records at a lower nominal DOF.
 
 missiondir = char(missiondir);
+tmin = opts.tmin;
+minimum_windows = opts.minimum_windows;
+if tmin > tstart
+    error('reprocess_SBG:InvalidCrop', ...
+        'Minimum crop must not exceed tstart.')
+end
 
 if ispc 
     slash = '\';
@@ -51,7 +63,8 @@ end
 %% Length of raw burst data to process, from end of burst (must be > 1536/5 = 307.2 s)
 % tproc = 475;% seconds
 % Moved to input, changed to fixed start, K. Zeiden 05/22/2025
-% M. LeClair w/ claude, Oct 2026: native-grid spectra kept in sbgwaves
+% M. LeClair w/ claude, Oct 2026: tmin/minimum_windows crop options to
+%   recover short records; native-grid spectra kept in sbgwaves
 
 %% Sampling Rate
 fs = 5; % should be 5 Hz for standard SBG settings
@@ -59,6 +72,11 @@ fs = 5; % should be 5 Hz for standard SBG settings
 %% Flag bad wave data
 badwaves = false(1,length(SWIFT));
 SWIFTreplaced = false(1,length(SWIFT));
+crop_seconds = NaN(length(SWIFT),1);
+window_count = NaN(length(SWIFT),1);
+usable_points = NaN(length(SWIFT),1);
+usable_seconds = NaN(length(SWIFT),1);
+nominal_dof = NaN(length(SWIFT),1);
 
 %% Loop through raw burst files and reprocess
 
@@ -85,12 +103,6 @@ for iburst = 1:length(bfiles)
     if isempty(sindex)
         disp('No matching SWIFT index. Skipping...')
         continue
-    end
-
-    % If not enough data to work with, skip burst
-    if length(sbgData.ShipMotion.heave)-tstart*5 < 256*fs
-            disp('Not enough data. Skipping...')
-            continue
     end
 
     % IMU Motion
@@ -128,6 +140,34 @@ for iburst = 1:length(bfiles)
     x = interp1(ztime(igood),x(igood),gpstime);
     y = interp1(ztime(igood),y(igood),gpstime);
 
+    % Select the latest allowed crop supporting the requested number of
+    % 256-second windows used by the unchanged SBGwaves implementation.
+    finite = isfinite(z+x+y+u+v+lat+lon);
+    imin = max(1,round(tmin*fs));
+    if imin <= length(finite)
+        usable_points(sindex) = nnz(finite(imin:end));
+        usable_seconds(sindex) = usable_points(sindex)/fs;
+    end
+    w = round(fs*256);
+    required = ceil((minimum_windows+3)*w/4);
+    for candidate = tstart:-1:tmin
+        % Match the original tstart*fs:end indexing.
+        istart = max(1,round(candidate*fs));
+        if istart <= length(finite) && nnz(finite(istart:end)) >= required
+            crop_seconds(sindex) = candidate;
+            window_count(sindex) = floor(4*(nnz(finite(istart:end))/w-1)+1);
+            usable_points(sindex) = nnz(finite(istart:end));
+            usable_seconds(sindex) = usable_points(sindex)/fs;
+            % SBGwaves merges three bands: nominal DOF = 2*nwin*merge.
+            nominal_dof(sindex) = 2*window_count(sindex)*3;
+            break
+        end
+    end
+    if ~isfinite(crop_seconds(sindex))
+        disp('Not enough data. Skipping...')
+        continue
+    end
+
     if plotburst
 
             figure('color','w')
@@ -138,7 +178,7 @@ for iburst = 1:length(bfiles)
             hold on;
             plot(gpstime,filloutliers(z,'linear'),'-rx')
             ylabel('\eta [m]');ylim([-2 2])
-            plot(tstart*[1 1],ylim,':k','LineWidth',2)
+            plot(crop_seconds(sindex)*[1 1],ylim,':k','LineWidth',2)
             legend('Raw','Despiked','Start')
             title(bname,'interpreter','none')
         
@@ -147,7 +187,7 @@ for iburst = 1:length(bfiles)
             hold on;
             plot(gpstime,filloutliers(u,'linear'),'-rx')
             ylabel('u [ms^{-2}]');ylim([-2 2])
-            plot(tstart*[1 1],ylim,':k','LineWidth',2)
+            plot(crop_seconds(sindex)*[1 1],ylim,':k','LineWidth',2)
         
             subplot(3,1,3)
             plot(gpstime,v,'-kx')
@@ -155,7 +195,7 @@ for iburst = 1:length(bfiles)
             plot(gpstime,filloutliers(v,'linear'),'-rx')
             xlabel('Time [s]');
             ylabel('v [ms^{-2}]');ylim([-2 2])
-            plot(tstart*[1 1],ylim,':k','LineWidth',2)
+            plot(crop_seconds(sindex)*[1 1],ylim,':k','LineWidth',2)
 
             h = findall(gcf,'Type','Axes');
             linkaxes(h,'x');
@@ -166,13 +206,13 @@ for iburst = 1:length(bfiles)
     end
 
     % Crop and despike data
-    z = filloutliers(z(tstart*5:end),'linear');
-    x = filloutliers(x(tstart*5:end),'linear');
-    y = filloutliers(y(tstart*5:end),'linear');
-    lat = filloutliers(lat(tstart*5:end), 'linear');
-    lon = filloutliers(lon(tstart*5:end), 'linear');
-    u = filloutliers(u(tstart*5:end),'linear');
-    v = filloutliers(v(tstart*5:end),'linear');
+    z = filloutliers(z(istart:end),'linear');
+    x = filloutliers(x(istart:end),'linear');
+    y = filloutliers(y(istart:end),'linear');
+    lat = filloutliers(lat(istart:end), 'linear');
+    lon = filloutliers(lon(istart:end), 'linear');
+    u = filloutliers(u(istart:end),'linear');
+    v = filloutliers(v(istart:end),'linear');
 
     % Remove NaNs?
     ibad = isnan(z + x + y + u + v + lat + lon);
@@ -191,6 +231,7 @@ for iburst = 1:length(bfiles)
     SWIFT(sindex).sbgwaves.peakwaveperiod = newTp;
     SWIFT(sindex).sbgwaves.energy = newE;
     SWIFT(sindex).sbgwaves.freq = newf;
+    SWIFT(sindex).sbgwaves.dof = nominal_dof(sindex);
 
     if ~any(~isnan(newE))
         warning('NaN Spectra from SBGwaves')
@@ -251,6 +292,7 @@ for iburst = 1:length(bfiles)
         SWIFT(sindex).wavespectra.a2 = a2;
         SWIFT(sindex).wavespectra.b2 = b2;
         SWIFT(sindex).wavespectra.check = check;
+        SWIFT(sindex).wavespectra.dof = nominal_dof(sindex);
         if useGPS
            SWIFT(sindex).wavespectra.energy_alt = altE;
            SWIFT(sindex).peakwaveperiod_alt = altTp;
@@ -325,6 +367,7 @@ if any(~SWIFTreplaced)
             SWIFT(sindex).wavespectra.a2 = NaN(size(f));
             SWIFT(sindex).wavespectra.b2 = NaN(size(f));
             SWIFT(sindex).wavespectra.check = NaN(size(f));
+            SWIFT(sindex).wavespectra.dof = NaN;
             if useGPS
                 SWIFT(sindex).wavespectra.energy_alt = NaN(size(f));
                 SWIFT(sindex).sigwaveheight_alt = NaN;
@@ -340,6 +383,13 @@ params.useGPS = useGPS;
 params.saveraw = saveraw;
 params.interpf = interpf;
 params.tstart = tstart;
+params.tmin = tmin;
+params.minimum_windows = minimum_windows;
+params.crop_seconds = crop_seconds;
+params.window_count = window_count;
+params.usable_points = usable_points;
+params.usable_seconds = usable_seconds;
+params.nominal_dof = nominal_dof;
 
 if isfield(sinfo,'postproc')
 ip = length(sinfo.postproc)+1; 
@@ -351,6 +401,8 @@ sinfo.postproc(ip).type = 'SBG';
 sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).flags.badwaves = badwaves;
+sinfo.postproc(ip).flags.SBGwaves_reduced_dof = ...
+    (SWIFTreplaced(:) & window_count < 4)';
 sinfo.postproc(ip).params = params;
 
 save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')
