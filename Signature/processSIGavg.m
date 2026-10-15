@@ -1,4 +1,7 @@
 function [profile,fh] = processSIGavg(avg,opt)
+% Changelog:
+% M. LeClair w/ claude, Oct 2026: fish flag uses each beam's own
+%   amplitude (was beam 1 for every beam)
 
 %    Check to make sure dimensions correct
     if size(avg.VelocityData,3) ~= 4
@@ -41,7 +44,7 @@ function [profile,fh] = processSIGavg(avg,opt)
                 [~,j] = max(a);
                 if j == 1
                     ampfloor = b(1)+5;
-                    ifish(:,ibin,ibeam) = amp(:,ibin) > ampfloor;
+                    ifish(:,ibin,ibeam) = amp(:,ibin,ibeam) > ampfloor;
                 end
             end
         end
