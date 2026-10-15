@@ -5,7 +5,10 @@ function [HRprofile,fh] = processSIGburst_5B(burst,varargin)
 % Currently no depth correction is made, so there will be depth smearing
 % with increasing severity towards the base of the profile.
 
+% Changelog:
 % K. Zeiden January 2026
+% M. LeClair w/ claude, Oct 2026: despikeSIG called with 'none' (spike
+%   mask only)
 
 %% Development %%
 % missiondir = 'S:\RRF\HR5Beam\20260108\RRF_FieldTest_Jan2026\SWIFT23_08Jan2026';
@@ -71,7 +74,7 @@ end
 % Identify Spikes (phase-shift threshold, Shcherbina 2018)
 ispike = false(size(wraw));
 for ibeam = 1:nbeam
-    [~,ispikeibeam] = despikeSIG(squeeze(wraw(:,:,ibeam))',nfilt,Vr/2);
+    [~,ispikeibeam] = despikeSIG(squeeze(wraw(:,:,ibeam))',nfilt,Vr/2,'none');
     ispike(:,:,ibeam) = ispikeibeam';
 end
 
