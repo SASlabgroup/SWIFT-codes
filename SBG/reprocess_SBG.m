@@ -9,6 +9,9 @@ arguments
     tstart (1,1) double {mustBeNonnegative,mustBeFinite} % Nominal crop start, in seconds
     opts.tmin (1,1) double {mustBeNonnegative,mustBeFinite} = tstart % Earliest allowed crop, in seconds
     opts.minimum_windows (1,1) double {mustBeInteger,mustBePositive} = 1 % Required overlapping spectral windows
+    opts.save_product (1,1) logical = true % Save the L3 product
+    opts.save_cache (1,1) logical = true % Cache converted raw SBG files
+    opts.report_file {mustBeTextScalar} = "" % Processing report path; default is the mission directory
 end
 
 % Batch Matlab read-in and reprocess of SWIFT v4 SBG wave data
@@ -33,6 +36,10 @@ end
 missiondir = char(missiondir);
 tmin = opts.tmin;
 minimum_windows = opts.minimum_windows;
+report_file = string(opts.report_file);
+if strlength(report_file) == 0
+    report_file = fullfile(missiondir,'SBG_processing_report.txt');
+end
 if tmin > tstart
     error('reprocess_SBG:InvalidCrop', ...
         'Minimum crop must not exceed tstart.')
@@ -64,7 +71,9 @@ end
 % tproc = 475;% seconds
 % Moved to input, changed to fixed start, K. Zeiden 05/22/2025
 % M. LeClair w/ claude, Oct 2026: tmin/minimum_windows crop options to
-%   recover short records; native-grid spectra kept in sbgwaves
+%   recover short records; per-record processing report
+%   (writeSBGprocessingReport); save_product, save_cache and report_file
+%   options; native-grid spectra kept in sbgwaves
 
 %% Sampling Rate
 fs = 5; % should be 5 Hz for standard SBG settings
@@ -72,11 +81,22 @@ fs = 5; % should be 5 Hz for standard SBG settings
 %% Flag bad wave data
 badwaves = false(1,length(SWIFT));
 SWIFTreplaced = false(1,length(SWIFT));
+
+% Compact per-record processing report
+status = repmat("no_raw_sbg",length(SWIFT),1);
+error_message = strings(length(SWIFT),1);
+source_file = strings(length(SWIFT),1);
 crop_seconds = NaN(length(SWIFT),1);
 window_count = NaN(length(SWIFT),1);
 usable_points = NaN(length(SWIFT),1);
 usable_seconds = NaN(length(SWIFT),1);
 nominal_dof = NaN(length(SWIFT),1);
+sbg_shipmotion = false(length(SWIFT),1);
+sbg_gpsvel = false(length(SWIFT),1);
+sbg_gpspos = false(length(SWIFT),1);
+sbg_imu = false(length(SWIFT),1);
+sbg_euler = false(length(SWIFT),1);
+sbg_utc = false(length(SWIFT),1);
 
 %% Loop through raw burst files and reprocess
 
@@ -85,24 +105,50 @@ bfiles = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SBG*.dat']);
 for iburst = 1:length(bfiles)
 
     bname = bfiles(iburst).name(1:end-4);
-
-   disp(['Burst ' num2str(iburst) ' : ' bname])
-
-   % Read or load raw IMU data
-    if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']))
-        disp('Reading raw SBG data...')
-        sbgData = sbgBinaryToMatlab([bfiles(iburst).folder slash bfiles(iburst).name]);
-        save([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'],'sbgData'),
-    else
-        load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'],'sbgData')
-    end
-
-    % Find burst index in the existing SWIFT structure
-    burstID = bfiles(iburst).name(13:end-4);
+    burstID = extractAfter(bname,'_SBG_');
     sindex = find(strcmp(burstID,{SWIFT.burstID}'));
     if isempty(sindex)
         disp('No matching SWIFT index. Skipping...')
         continue
+    end
+
+   disp(['Burst ' num2str(iburst) ' : ' bname])
+    source_file(sindex) = string(fullfile(bfiles(iburst).folder,bfiles(iburst).name));
+    status(sindex) = "processing_error";
+
+    try
+   % Read or load raw IMU data
+    clear sbgData
+    if isempty(dir([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat']))
+        disp('Reading raw SBG data...')
+        if bfiles(iburst).bytes == 0
+            error('reprocess_SBG:RawEmpty','Raw SBG file is empty.')
+        end
+        sbgData = sbgBinaryToMatlab([bfiles(iburst).folder slash bfiles(iburst).name]);
+        if opts.save_cache
+            save([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'],'sbgData'),
+        end
+    else
+        load([bfiles(iburst).folder slash bfiles(iburst).name(1:end-4) '.mat'],'sbgData')
+    end
+    if isempty(sbgData)
+        error('reprocess_SBG:RawEmpty','SBG data are empty.')
+    end
+    sbg_shipmotion(sindex) = isfield(sbgData,'ShipMotion');
+    sbg_gpsvel(sindex) = isfield(sbgData,'GpsVel');
+    sbg_gpspos(sindex) = isfield(sbgData,'GpsPos');
+    sbg_imu(sindex) = isfield(sbgData,'ImuData');
+    sbg_euler(sindex) = isfield(sbgData,'EkfEuler');
+    sbg_utc(sindex) = isfield(sbgData,'UtcTime');
+    if ~sbg_shipmotion(sindex) || ~sbg_gpsvel(sindex) || ...
+            ~sbg_gpspos(sindex)
+        error('reprocess_SBG:MissingRequiredStream', ...
+            'ShipMotion, GpsVel, or GpsPos is missing.')
+    end
+    if isempty(sbgData.ShipMotion.heave) || ...
+            isempty(sbgData.GpsVel.vel_e) || isempty(sbgData.GpsPos.lat)
+        error('reprocess_SBG:RawEmpty', ...
+            'Required SBG streams contain no samples.')
     end
 
     % IMU Motion
@@ -164,7 +210,8 @@ for iburst = 1:length(bfiles)
         end
     end
     if ~isfinite(crop_seconds(sindex))
-        disp('Not enough data. Skipping...')
+        status(sindex) = "insufficient_usable_data";
+        error_message(sindex) = "Too few usable spectral windows.";
         continue
     end
 
@@ -299,6 +346,7 @@ for iburst = 1:length(bfiles)
            SWIFT(sindex).sigwaveheight_alt = altHs;
         end
         SWIFTreplaced(sindex) = true;
+        status(sindex) = "reprocessed_256s";
 
         % Save raw displacements (5 Hz) if specified
         if saveraw 
@@ -324,13 +372,16 @@ for iburst = 1:length(bfiles)
             badwaves(sindex) = true;
         end
 
-        if newHs == 9999
-            disp('wave processing gave 9999 for Hs')
+        if newHs == 9999 || ~isfinite(newHs) || ~isfinite(newTp) || ...
+                ~any(isfinite(E))
+            disp('wave processing gave an invalid spectrum')
             SWIFT(sindex).sigwaveheight = NaN;
             SWIFT(sindex).peakwaveperiod = NaN;
             SWIFT(sindex).peakwaveperiod = NaN;
             SWIFT(sindex).peakwavedirT = NaN;
             badwaves(sindex) = true;
+            SWIFTreplaced(sindex) = false;
+            status(sindex) = "invalid_spectrum";
         end
 
         if altHs == 9999
@@ -342,9 +393,17 @@ for iburst = 1:length(bfiles)
             SWIFT(sindex).peakwavedirT = NaN;
         end
 
-        if sum(E) < 1
-            badwaves(sindex) = true;
-        end
+catch ME
+    if strcmp(ME.identifier,'reprocess_SBG:RawEmpty')
+        status(sindex) = "raw_empty";
+    elseif strcmp(ME.identifier,'reprocess_SBG:MissingRequiredStream')
+        status(sindex) = "missing_required_stream";
+    else
+        status(sindex) = "processing_error";
+    end
+    error_message(sindex) = string(ME.identifier) + ": " + string(ME.message);
+    warning('reprocess_SBG:RecordFailed','%s: %s',burstID,ME.message)
+end
 
 % End file loop
 end
@@ -390,6 +449,8 @@ params.window_count = window_count;
 params.usable_points = usable_points;
 params.usable_seconds = usable_seconds;
 params.nominal_dof = nominal_dof;
+params.save_product = opts.save_product;
+params.save_cache = opts.save_cache;
 
 if isfield(sinfo,'postproc')
 ip = length(sinfo.postproc)+1; 
@@ -401,11 +462,33 @@ sinfo.postproc(ip).type = 'SBG';
 sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).flags.badwaves = badwaves;
+sinfo.postproc(ip).flags.status = status;
+sinfo.postproc(ip).flags.SBGwaves_reprocessed = SWIFTreplaced;
 sinfo.postproc(ip).flags.SBGwaves_reduced_dof = ...
     (SWIFTreplaced(:) & window_count < 4)';
 sinfo.postproc(ip).params = params;
 
-save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')
+report.status = status;
+report.error_message = error_message;
+report.source_file = source_file;
+report.sbg_shipmotion = sbg_shipmotion;
+report.sbg_gpsvel = sbg_gpsvel;
+report.sbg_gpspos = sbg_gpspos;
+report.sbg_imu = sbg_imu;
+report.sbg_euler = sbg_euler;
+report.sbg_utc = sbg_utc;
+report.crop_seconds = crop_seconds;
+report.window_count = window_count;
+report.usable_points = usable_points;
+report.usable_seconds = usable_seconds;
+report.nominal_dof = nominal_dof;
+report.sbg_reprocessed = SWIFTreplaced(:);
+report.reduced_dof = report.sbg_reprocessed & window_count < 4;
+writeSBGprocessingReport(missiondir,SWIFT,report_file,report)
+
+if opts.save_product
+    save([sfile.folder slash sfile.name(1:end-6) 'L3.mat'],'SWIFT','sinfo')
+end
 
 %% End function
 end
