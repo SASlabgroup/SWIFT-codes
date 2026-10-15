@@ -1,9 +1,14 @@
 % Fit watch circle of each SWIFT mooring over its final deployment period.
 % Mask to t >= start of final deployment (set per buoy in header), project to
-% local ENU about the median, Kasa circle fit, plot points + circle + center
-% with a position table; print positions to the command window.
+% local ENU about the median, drop GPS spikes farther than max_distance_m from
+% the median position, Kasa circle fit, plot points + circle + center with a
+% position table; print positions to the command window. The Kasa fit is not
+% robust: a few spikes hundreds of metres out turn a 30-80 m watch circle into
+% a km-scale circle (seen on the June 2025 Willapa moorings).
 % Changelog:
-% M. LeClair w/ claude, Oct 2026: Kasa fit moved to fitCircleKasa
+% M. LeClair w/ claude, Oct 2026: drops GPS fixes farther than
+%   max_distance_m from the median before the fit; Kasa fit moved to
+%   fitCircleKasa
 
 % --- edit for each deployment | this should have multiple swift mat files in it ---
 data_dir = '/tmp/SWIFT_25_24_23_22_20261005T000000_now';
@@ -14,6 +19,9 @@ deploy_start = containers.Map( ...
     {'SWIFT22', 'SWIFT23', 'SWIFT24', 'SWIFT25'}, ...
     {datenum(2026,10,6,19,27,50), datenum(2026,10,8,17,57,57), ...
      datenum(2026,10,6,20,30,3),  datenum(2026,10,8,19,28,5)});
+
+% drop fixes farther than this from the median position (GPS spikes)
+max_distance_m = 200;
 
 % --------------------------------
 
@@ -45,6 +53,9 @@ for i = 1:n_swift
 
     ref_lat = median(lat); ref_lon = median(lon);
     [east, north] = geodetic2enu(lat, lon, 0, ref_lat, ref_lon, 0, wgs84);
+    near = hypot(east - median(east), north - median(north)) <= max_distance_m;
+    lat = lat(near); lon = lon(near); east = east(near); north = north(near);
+    n_used(i) = sum(near);
     % Fit the center of the circle, it this is noisy you could do ransac, or if dragging break up the records  
     circle = fitCircleKasa(east, north);
     radius_m(i) = circle(3);
