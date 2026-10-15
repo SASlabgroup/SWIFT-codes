@@ -16,6 +16,7 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %
 %       [SWIFT BatteryVoltage ] = readSWIFT_SBD( fname , plotflag );
 %
+% Changelog:
 % J. Thomson, 7/2013
 %             4/2014, revised for v3.1 Sutron output
 %             12/2014, revised for v3.2, includes SOG, COG, and Air press
@@ -67,6 +68,9 @@ function [SWIFT, BatteryVoltage ] = readSWIFT_SBD( fname , plotflag )
 %   J. Thomson, 9/2025 add microSWIFT OpenOBS sensor (payload type 53)
 %   J. Thomson, 4/2026 add microSWIFT accelerometer (type 55)
 %   J. Thomson, 4/2026 add extra bytes to microSWIFT light sensor (type 54)
+% M. LeClair w/ claude, Nov 2026: Airmar backup position also used when the
+%   primary position is missing (NaN or empty), and only when the Airmar
+%   position is valid; no error when there is no IMU wave payload
 
 recip = true; % binary flag to change wave direction to FROM
 errorfile = false; % initialize
@@ -660,9 +664,9 @@ end
 fclose(fid);
 
 %% apply backup positions from Airmar PB200, if needed
-if ~isfield(SWIFT,'lat') || all([SWIFT.lat])==0 % if no IMU, use this one
+if (~isfield(SWIFT,'lat') || isempty([SWIFT.lat]) || any(isnan([SWIFT.lat])) || all([SWIFT.lat])==0) % if no IMU, use this one
     disp('No primary GPS position')
-    if exist('PBlat')
+    if exist('PBlat') && isfinite(PBlat) && isfinite(PBlon) && ~(PBlat==0 && PBlon==0)
         disp('    ... using Airmar position and voiding wave results')
         SWIFT.lat = PBlat;
         SWIFT.lon = PBlon;
@@ -758,7 +762,7 @@ if isfield(SWIFT,'sigwaveheight'),
         SWIFT.sigwaveheight = NaN;
         SWIFT.peakwaveperiod = NaN;
         SWIFT.peakwavedirT = NaN;
-    elseif SWIFT.peakwavedirT == 9999,  % sometimes only the directional estimate fails
+    elseif isfield(SWIFT,'peakwavedirT') && SWIFT.peakwavedirT == 9999,  % sometimes only the directional estimate fails
         SWIFT.peakwavedirT = NaN;
     end
 else
