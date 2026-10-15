@@ -25,8 +25,7 @@ T_AHRS = [1.1831         0   -1.1831         0;
 
 % Assume burst-averaged pitch = 0, roll = 180 if not provided
 if length(hh) == 3
-    pp = hh(2);
-    rr = hh(3);
+    [hh,pp,rr] = deal(hh(1),hh(2),hh(3));
 elseif length(hh) == 1
     pp = 0;
     rr = 180;
@@ -56,20 +55,35 @@ R_AHRS(:,3,3) = avg.AHRS_M33;
 % Step 1) Revert ENU velocities back to beam velocities -------------------
 velBEAM = NaN(size(velENU));
 velXYZ = NaN(size(velENU));
+invT_AHRS = inv(T_AHRS); % XYZ4 to beam; constant, so inverted once
 for iping = 1:nping
 
-    % Use onboard AHRS matrix & convert to 4-beam
-    R = squeeze(R_AHRS(iping,:,:));
-    R = [R(1,1) R(1,2) R(1,3)/2 R(1,3)/2;
-          R(2,1) R(2,2) R(2,3)/2 R(2,3)/2;
-          R(3,1) R(3,2) R(3,3)   0;
-          R(3,1) R(3,2) 0        R(3,3)];
+    % Expand the 3-D attitude rotation for [X Y Z1 Z2] velocities (XYZ4).
+    R_attitude = squeeze(R_AHRS(iping,:,:));
+    R_velocity4 = [R_attitude(1,1) R_attitude(1,2) R_attitude(1,3)/2 R_attitude(1,3)/2;
+                   R_attitude(2,1) R_attitude(2,2) R_attitude(2,3)/2 R_attitude(2,3)/2;
+                   R_attitude(3,1) R_attitude(3,2) R_attitude(3,3)                   0;
+                   R_attitude(3,1) R_attitude(3,2) 0                  R_attitude(3,3)];
 
-    % ENU to Beam
-    for ibin = 1:nbin
-        velXYZ(iping,ibin,:) = inv(R)*squeeze(velENU(iping,ibin,:));
-        velBEAM(iping,ibin,:) = inv(T_AHRS)*squeeze(velXYZ(iping,ibin,:));
+    % Validate the matrix first
+    if any(~isfinite(R_attitude),'all') || ... % finite
+            rcond(R_velocity4) < 1e-8 || ... % invertible
+            abs(det(R_attitude)-1) > 0.1 || ... % non-scaling transform
+            norm(R_attitude*R_attitude'-eye(3),'fro') > 0.1 % orthogonal
+        continue
     end
+
+    % ENU4 to XYZ4, then XYZ4 to beam coordinates.
+    %   ENU4 = [E N U1 U2] and XYZ4 = [X Y Z1 Z2] carry two vertical
+    %   components, one per beam pair: Z1 from beams 1 & 3, Z2 from beams
+    %   2 & 4 (rows 3-4 of T_AHRS).
+    %   Here each ping is nbin x 4 with bins as rows, so the same transforms
+    %   are right-multiplies by the transposed inverses, vectorized over bins
+    pingENU4 = reshape(velENU(iping,:,:),nbin,4); % nbin x [E N U1 U2]
+    pingXYZ4 = pingENU4*inv(R_velocity4)';         % nbin x [X Y Z1 Z2]
+    pingBEAM = pingXYZ4*invT_AHRS';                % nbin x [B1 B2 B3 B4]
+    velXYZ(iping,:,:) = reshape(pingXYZ4,1,nbin,4);
+    velBEAM(iping,:,:) = reshape(pingBEAM,1,nbin,4);
 
 end
 
@@ -100,10 +114,9 @@ R = [R(1,1) R(1,2) R(1,3)/2 R(1,3)/2;
      R(3,1) R(3,2) 0        R(3,3)];
 
 % Step 4) Rotate burst-averaged beam velocities to ENU ------------------
-bavgvelENU_alt = NaN(size(bavgvelBEAM));
-for ibin = 1:nbin
-    bavgvelENU_alt(ibin,:) = R*T*bavgvelBEAM(ibin,:)';
-end
+%   For one bin as a column vector, enu4 = R*T*beam. bavgvelBEAM is
+%   nbin x [B1 B2 B3 B4] with bins as rows, so right-multiply by (R*T)'.
+bavgvelENU_alt = bavgvelBEAM*(R*T)'; % nbin x [E N U1 U2]
 
 % Swap signs in ENU
 bavgvelENU_alt(:,2:4) = -bavgvelENU_alt(:,2:4);

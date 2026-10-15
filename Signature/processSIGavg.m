@@ -41,7 +41,7 @@ function [profile,fh] = processSIGavg(avg,opt)
                 [~,j] = max(a);
                 if j == 1
                     ampfloor = b(1)+5;
-                    ifish(:,ibin,ibeam) = amp(:,ibin) > ampfloor;
+                    ifish(:,ibin,ibeam) = amp(:,ibin,ibeam) > ampfloor;
                 end
             end
         end
