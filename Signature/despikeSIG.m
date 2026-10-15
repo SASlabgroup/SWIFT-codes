@@ -10,6 +10,13 @@ function [wclean,ispike] = despikeSIG(wraw,nfilt,dspikemax,filltype)
 %               wclean      de-spiked data
 %               ispike      indices of spikes that were filled
 
+arguments
+    wraw
+    nfilt
+    dspikemax
+    filltype {mustBeMember(filltype,{'none','interp'})} = 'interp'
+end
+
 [nbin,nping] = size(wraw);
 wclean = NaN(size(wraw));
 
