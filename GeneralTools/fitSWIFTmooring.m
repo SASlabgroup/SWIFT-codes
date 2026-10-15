@@ -7,6 +7,9 @@ function fitSWIFTmooring(data_dir)
 %   fitSWIFTmooring('/tmp/SWIFT_22_23_24_20261001T000001_now')
 %
 % data_dir holds SWIFTxx_telemetry.mat files (see pullfitSWIFTmooring.m)
+%
+% Changelog:
+% M. LeClair w/ claude, Oct 2026: Kasa fit moved to fitCircleKasa
 
 % --- edit for each deployment ---
 % first fix of final deployment (UTC)
@@ -49,7 +52,7 @@ for i = 1:n_swift
     ref_lat = median(lat); ref_lon = median(lon);
     [east, north] = geodetic2enu(lat, lon, 0, ref_lat, ref_lon, 0, wgs84);
     % Fit the center of the circle, it this is noisy you could do ransac, or if dragging break up the records  
-    circle = fit_circle_kasa(east, north);
+    circle = fitCircleKasa(east, north);
     radius_m(i) = circle(3);
     rms_residual(i) = sqrt(mean((hypot(east - circle(1), north - circle(2)) - circle(3)).^2));
 
@@ -103,13 +106,6 @@ end
 function tf = is_stale(fix_time)
 % last fix more than 2 hr before now (telemetry times are UTC datenum)
 tf = datenum(datetime('now', 'TimeZone', 'UTC')) - fix_time > 2/24;
-end
-
-function m = fit_circle_kasa(x, y)
-% x^2 + y^2 + D x + E y + F = 0  ->  [xc yc r]
-coef = [x y ones(size(x))] \ -(x.^2 + y.^2);
-xc = -coef(1)/2; yc = -coef(2)/2;
-m = [xc yc sqrt(xc^2 + yc^2 - coef(3))];
 end
 
 function s = deg_decmin(deg, pos, neg)
