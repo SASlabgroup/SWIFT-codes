@@ -153,51 +153,52 @@ full_band = measured_band | tail_band;
 reference_qc = ~reference_is_signature & isfinite(reference_hs) & ...
     reference_hs > 0 & reference_hs < opts.max_reference_hs & ...
     sum(isfinite(reference_energy(:,full_band)),2) >= 2;
-calibration_record = reference_qc & ...
-    mod((0:nrecord-1)',opts.calibration_stride) == 0;
+% SBG transfer calibration and f^-4 tail disabled while comparing spectral methods.
+% calibration_record = reference_qc & ...
+%     mod((0:nrecord-1)',opts.calibration_stride) == 0;
 
-transfer = NaN(1,nfreq);
-calibration_count = zeros(1,nfreq);
-for i = find(measured_band)
-    ratio = raw_energy(calibration_record,i)./ ...
-        reference_energy(calibration_record,i);
-    ratio = ratio(isfinite(ratio) & ratio > 0);
-    calibration_count(i) = length(ratio);
-    if calibration_count(i) >= opts.minimum_calibration_records
-        transfer(i) = median(ratio);
-    end
-end
-if ~all(isfinite(transfer(measured_band)))
-    error('reprocess_SIGheave:InsufficientCalibration', ...
-        'Too few valid SBG/Signature records to calibrate the measured band.')
-end
-calibrated_energy = raw_energy./transfer;
+% transfer = NaN(1,nfreq);
+% calibration_count = zeros(1,nfreq);
+% for i = find(measured_band)
+%     ratio = raw_energy(calibration_record,i)./ ...
+%         reference_energy(calibration_record,i);
+%     ratio = ratio(isfinite(ratio) & ratio > 0);
+%     calibration_count(i) = length(ratio);
+%     if calibration_count(i) >= opts.minimum_calibration_records
+%         transfer(i) = median(ratio);
+%     end
+% end
+% if ~all(isfinite(transfer(measured_band)))
+%     error('reprocess_SIGheave:InsufficientCalibration', ...
+%         'Too few valid SBG/Signature records to calibrate the measured band.')
+% end
+% calibrated_energy = raw_energy./transfer;
 
-tail_template = NaN(nrecord,nfreq);
-for i = 1:nrecord
-    use = tail_anchor & isfinite(calibrated_energy(i,:)) & ...
-        calibrated_energy(i,:) > 0;
-    if nnz(use) < 2; continue; end
-    constant = median(calibrated_energy(i,use).* ...
-        frequency(use).^opts.tail_exponent);
-    tail_template(i,tail_band) = constant.* ...
-        frequency(tail_band).^(-opts.tail_exponent);
-end
+% tail_template = NaN(nrecord,nfreq);
+% for i = 1:nrecord
+%     use = tail_anchor & isfinite(calibrated_energy(i,:)) & ...
+%         calibrated_energy(i,:) > 0;
+%     if nnz(use) < 2; continue; end
+%     constant = median(calibrated_energy(i,use).* ...
+%         frequency(use).^opts.tail_exponent);
+%     tail_template(i,tail_band) = constant.* ...
+%         frequency(tail_band).^(-opts.tail_exponent);
+% end
 bandwidth = median(diff(frequency));
-actual_tail_variance = sum(reference_energy(:,tail_band),2,'omitnan')*bandwidth;
-template_tail_variance = sum(tail_template(:,tail_band),2,'omitnan')*bandwidth;
-tail_ratio = actual_tail_variance(calibration_record)./ ...
-    template_tail_variance(calibration_record);
-tail_ratio = tail_ratio(isfinite(tail_ratio) & tail_ratio > 0);
-if length(tail_ratio) < opts.minimum_calibration_records
-    error('reprocess_SIGheave:InsufficientTailCalibration', ...
-        'Too few valid SBG/Signature records to calibrate the tail.')
-end
-tail_scale = median(tail_ratio);
+% actual_tail_variance = sum(reference_energy(:,tail_band),2,'omitnan')*bandwidth;
+% template_tail_variance = sum(tail_template(:,tail_band),2,'omitnan')*bandwidth;
+% tail_ratio = actual_tail_variance(calibration_record)./ ...
+%     template_tail_variance(calibration_record);
+% tail_ratio = tail_ratio(isfinite(tail_ratio) & tail_ratio > 0);
+% if length(tail_ratio) < opts.minimum_calibration_records
+%     error('reprocess_SIGheave:InsufficientTailCalibration', ...
+%         'Too few valid SBG/Signature records to calibrate the tail.')
+% end
+% tail_scale = median(tail_ratio);
 
 signature_energy = NaN(nrecord,nfreq);
-signature_energy(:,measured_band) = calibrated_energy(:,measured_band);
-signature_energy(:,tail_band) = tail_scale*tail_template(:,tail_band);
+signature_energy(:,measured_band) = raw_energy(:,measured_band);
+% signature_energy(:,tail_band) = tail_scale*tail_template(:,tail_band);
 signature_hs = NaN(nrecord,1);
 energy_period = NaN(nrecord,1);
 peak_period = NaN(nrecord,1);
@@ -249,15 +250,15 @@ params.fmax = opts.fmax;
 params.tail_fmax = opts.tail_fmax;
 params.tail_anchor = opts.tail_anchor;
 params.tail_exponent = opts.tail_exponent;
-params.tail_scale = tail_scale;
-params.tail_calibration_count = length(tail_ratio);
+% params.tail_scale = tail_scale;
+% params.tail_calibration_count = length(tail_ratio);
 params.window_seconds = opts.window_seconds;
 params.accel_counts_per_g = opts.accel_counts_per_g;
 params.max_reference_hs = opts.max_reference_hs;
 params.calibration_stride = opts.calibration_stride;
 params.minimum_calibration_records = opts.minimum_calibration_records;
-params.transfer = transfer;
-params.calibration_count = calibration_count;
+% params.transfer = transfer;
+% params.calibration_count = calibration_count;
 
 if isfield(sinfo,'postproc')
     ip = length(sinfo.postproc)+1;
@@ -271,24 +272,24 @@ sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).params = params;
 sinfo.postproc(ip).flags.status = status;
 sinfo.postproc(ip).flags.fill_candidate = fill_candidate;
-sinfo.postproc(ip).flags.calibration_record = calibration_record;
+% sinfo.postproc(ip).flags.calibration_record = calibration_record;
 sinfo.postproc(ip).flags.source_file = source_file;
 sinfo.postproc(ip).flags.window_count = window_count;
 sinfo.postproc(ip).flags.nominal_dof = nominal_dof;
 
 diagnostics.frequency = frequency;
 diagnostics.raw_energy = raw_energy;
-diagnostics.calibrated_energy = calibrated_energy;
+% diagnostics.calibrated_energy = calibrated_energy;
 diagnostics.signature_energy = signature_energy;
 diagnostics.reference_energy = reference_energy;
 diagnostics.reference_hs = reference_hs;
 diagnostics.reference_is_signature = reference_is_signature;
 diagnostics.reference_qc = reference_qc;
-diagnostics.calibration_record = calibration_record;
-diagnostics.transfer = transfer;
-diagnostics.calibration_count = calibration_count;
-diagnostics.tail_template = tail_template;
-diagnostics.tail_scale = tail_scale;
+% diagnostics.calibration_record = calibration_record;
+% diagnostics.transfer = transfer;
+% diagnostics.calibration_count = calibration_count;
+% diagnostics.tail_template = tail_template;
+% diagnostics.tail_scale = tail_scale;
 diagnostics.fill_candidate = fill_candidate;
 diagnostics.recovered = fill_candidate;
 diagnostics.signature_hs = signature_hs;
