@@ -43,6 +43,7 @@ end
 %% Length of raw burst data to process, from end of burst (must be > 1536/5 = 307.2 s)
 % tproc = 475;% seconds
 % Moved to input, changed to fixed start, K. Zeiden 05/22/2025
+% M. LeClair w/ claude, Oct 2026: native-grid spectra kept in sbgwaves
 
 %% Sampling Rate
 fs = 5; % should be 5 Hz for standard SBG settings
@@ -177,6 +178,14 @@ for iburst = 1:length(bfiles)
     %   (bug fix in 11/2017)
     f = SWIFT(sindex).wavespectra.freq;  % original frequency bands
     [newHs,newTp,newDp,newE,newf,newa1,newb1,newa2,newb2,newcheck] = SBGwaves(u,v,z,fs);
+
+    % Retain the native 0.05--2.5 Hz result separately from the interpolated
+    % telemetry grid. Signature-heave calibration uses this without changing
+    % the canonical wavespectra fields written below.
+    SWIFT(sindex).sbgwaves.sigwaveheight = newHs;
+    SWIFT(sindex).sbgwaves.peakwaveperiod = newTp;
+    SWIFT(sindex).sbgwaves.energy = newE;
+    SWIFT(sindex).sbgwaves.freq = newf;
 
     if ~any(~isnan(newE))
         warning('NaN Spectra from SBGwaves')
