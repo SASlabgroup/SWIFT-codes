@@ -1,4 +1,4 @@
-function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
+function [eps,qual,sfdata] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype,sfdata)
 % This function applies Taylor cascade theory to estimate dissipation from 
 % the second order velocity structure function computed from vertical profiles 
 % of turbulent velocity (see Wiles et al. 2006). SFdissipation was
@@ -29,6 +29,8 @@ function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 %           avgtype     either 'mean','logmean' or 'median', determines whether the
 %                           mean of squares, mean of the log of squares, or median of squares
 %                           is taken to determine the expected value of the squared velocity difference
+%           sfdata      optional preprocessing structure returned by an
+%                       earlier fit to the same velocity field and avgtype
 %
 %   out:    eps         1 x nbin profile of dissipation
 %           qual        structure with metrics for evaluating quality of eps including:
@@ -37,10 +39,14 @@ function [eps,qual] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype)
 %                       - ADCP error inferred from the SF intercept (N), 
 %                       - slope of the SF (slope), 
 %                       - wave term coefficient (B, if modified r^2 fit used).
+%           sfdata      reusable structure-function mean and standard error
+%                       for fitting the same velocity field a second time.
 
 % Changelog:
 %           K.Zeiden Summer/Fall 2022
-% M. LeClair w/ claude, Oct 2026: input validation
+% M. LeClair w/ claude, Oct 2026: faster (vectorized); input
+%   validation; optional sfdata output/input to reuse the structure function
+%   for a second fit
 
 arguments
     w
@@ -50,11 +56,19 @@ arguments
     nzfit
     fittype {mustBeMember(fittype,{'linear','cubic'})}
     avgtype {mustBeMember(avgtype,{'mean','logmean','median'})}
+    sfdata = []
 end
 
 % Return control to calling function/script if all NaN data
 nz = length(z);
-if ~any(~isnan(w(:)))
+if ~isempty(sfdata)
+    if ~all(isfield(sfdata,{'D','Derr','avgtype'})) || ...
+            ~strcmp(sfdata.avgtype,avgtype)
+        error('Invalid SFdissipation preprocessing structure.')
+    end
+    D = sfdata.D;
+    Derr = sfdata.Derr;
+elseif ~any(~isnan(w(:)))
     eps = NaN(1,nz);
     qual.mspe = NaN(1,nz);
     qual.slope = NaN(1,nz);
@@ -63,6 +77,49 @@ if ~any(~isnan(w(:)))
     qual.B = NaN(1,nz);
     qual.N = NaN(1,nz);
     return
+else
+
+    % Matrices of all possible data pair velocity differences for each ping.
+    %   Points greater than +/- 5 standard deviation are removed from each dist.
+    if ismatrix(w)
+        [nbin,~] = size(w);
+        if nbin ~= length(z)
+            w = w';
+            [nbin,~] = size(w);
+        end
+        % All pair differences per ping: wd is nbin x 1 x nping and its
+        % transpose 1 x nbin x nping, so subtracting them expands to
+        % dW(i,j,:) = wd(i,:) - wd(j,:), size nbin x nbin x nping.
+        wd = permute(w-mean(w,2,'omitnan'),[1 3 2]);
+        dW = wd - permute(wd,[2 1 3]);
+        dW(abs(dW) > 5*std(dW,[],3,'omitnan')) = NaN;
+    elseif ndims(w) == 3
+        dW = w;
+        [nbin,nbin2,~] = size(dW);
+        if nbin ~= nbin2 || nbin ~= length(z)
+            error('Check dimensions of ''dW''')
+        end
+    else
+        error('Check dimensions of ''w''')
+    end
+
+    % Take mean (or median, or mean-of-the-logs) squared velocity difference to get D(z,r)
+    dW2 = dW.^2;
+    if strcmp(avgtype,'mean')
+        D = mean(dW2,3,'omitnan');
+    elseif strcmp(avgtype,'logmean')
+        D = 10.^(mean(log10(dW2),3,'omitnan'));
+    elseif strcmp(avgtype,'median')
+        D = median(dW2,3,'omitnan');
+    else
+        error('Average estimator must be ''mean'', ''logmean'' or ''median''.')
+    end
+
+    % Standard Error on the mean
+    Derr = sqrt(var(dW2,[],3,'omitnan')./sum(~isnan(dW),3));
+    sfdata.D = D;
+    sfdata.Derr = Derr;
+    sfdata.avgtype = avgtype;
 end
 
 % Matrices of all possible data pair separation distances (R), and
@@ -73,41 +130,6 @@ R = z-z';
 R = round(R,2);
 [Z1,Z2] = meshgrid(z);
 Z0 = (Z1+Z2)/2;
-
-% Matrices of all possible data pair velocity differences for each ping.
-%   Points greater than +/- 5 standard deviation are removed from each dist.
-if ismatrix(w)
-    [nbin,~] = size(w);
-    if nbin ~= length(z)
-        w = w';
-        [nbin,~] = size(w);
-    end
-    dW = repmat(w-mean(w,2,'omitnan'),1,1,nbin);
-    dW = permute(dW,[1 3 2])-permute(dW,[3 1 2]);
-    dW(abs(dW) > 5*std(dW,[],3,'omitnan')) = NaN;
-    elseif ndims(w) == 3
-        dW = w;
-        [nbin,nbin2,~] = size(dW);
-        if nbin ~= nbin2 || nbin ~= length(z)
-            error('Check dimensions of ''dW''')
-        end
-    else
-        error('Check dimensions of ''w''')
-end
-
-% Take mean (or median, or mean-of-the-logs) squared velocity difference to get D(z,r)
-if strcmp(avgtype,'mean')
-    D = mean(dW.^2,3,'omitnan');
-    elseif strcmp(avgtype,'logmean')
-        D = 10.^(mean(log10(dW.^2),3,'omitnan'));
-    elseif strcmp(avgtype,'median')
-        D = median(dW.^2,3,'omitnan');
-    else
-        error('Average estimator must be ''mean'', ''logmean'' or ''median''.')
-end
-
-% Standard Error on the mean
-Derr = sqrt(var(dW.^2,[],3,'omitnan')./sum(~isnan(dW),3));
 
 % Fit structure function to theoretical curve
 Cv2 = 2.1;
