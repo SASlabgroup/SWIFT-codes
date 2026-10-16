@@ -4,14 +4,16 @@ arguments
     acceleration {mustBeNumeric} % Signature three-axis accelerometer counts
     time {mustBeNumeric,mustBeVector} % Sample times as MATLAB datenums
     target_frequency {mustBeNumeric,mustBeVector,mustBePositive} % Output frequency-bin centers, in Hz
-    opts.window_seconds (1,1) double {mustBePositive,mustBeFinite} = 256 % Welch window length, in seconds
     opts.accel_counts_per_g (1,1) double {mustBePositive,mustBeFinite} = 16384 % Accelerometer counts per g
 end
 
-% Estimate scalar elevation energy from the rotation-invariant magnitude of
-% the Signature accelerometer. The result contains orientation and
-% centripetal contamination at low frequency and must be band limited and
-% calibrated before use as a wave product.
+% Estimate heave energy from the Signature accelerometer. The magnitude of
+% the sensor-frame acceleration minus g is the vertical acceleration to first
+% order in tilt, so the unreliable Signature AHRS orientation is not needed.
+% It is RC-filtered and integrated twice to heave as in rawdisplacements.m
+% (RC path), then passed through SBGwaves exactly like SBG heave. The RC
+% filters and trapezoid integration attenuate the result, most strongly
+% toward the Nyquist frequency, so the output must be band limited.
 
 gravity = 9.80665;
 target_frequency = double(target_frequency(:)');
@@ -49,11 +51,13 @@ if length(use) < 2
     return
 end
 
-sample_rate = 1/(median(diff(time(use)),'omitnan')*86400);
-window_samples = round(opts.window_seconds*sample_rate);
-window_samples = window_samples-rem(window_samples,2);
-if ~isfinite(sample_rate) || sample_rate < 1 || ...
-        length(use) < window_samples || window_samples < 4
+% SBGwaves needs whole samples per second and one 256 s window after the
+% integration trims 50 s from each end.
+sample_rate = round(1/(median(diff(time(use)),'omitnan')*86400));
+window_samples = 256*sample_rate;
+trim_samples = 50*sample_rate;
+if ~isfinite(sample_rate) || sample_rate < 2 || ...
+        length(use) < window_samples+2*trim_samples
     info.status = "insufficient_data";
     info.samples = length(use);
     info.sample_rate = sample_rate;
@@ -62,43 +66,47 @@ end
 
 acceleration = acceleration(use,:)*(gravity/opts.accel_counts_per_g);
 vertical_acceleration = vecnorm(acceleration,2,2)-gravity;
-step = round(window_samples/4);
-window_start = 1:step:(length(vertical_acceleration)-window_samples+1);
-window_count = length(window_start);
-taper = 0.5-0.5*cos(2*pi*(0:window_samples-1)'/window_samples);
-taper_power = sum(taper.^2);
-acceleration_psd = zeros(window_samples/2+1,window_count);
+heave = integrateToHeave(vertical_acceleration,sample_rate,trim_samples);
 
-for i = 1:window_count
-    segment = vertical_acceleration( ...
-        window_start(i):window_start(i)+window_samples-1);
-    segment = detrend(segment,'linear').*taper;
-    spectrum = fft(segment,window_samples);
-    spectrum = abs(spectrum(1:window_samples/2+1)).^2/ ...
-        (sample_rate*taper_power);
-    spectrum(2:end-1) = 2*spectrum(2:end-1);
-    acceleration_psd(:,i) = spectrum;
-end
+% Only the heave spectrum is used; zero horizontal velocities leave the
+% directional outputs undefined.
+zero = zeros(size(heave));
+[~,~,~,heave_energy,frequency] = SBGwaves(zero,zero,heave,sample_rate);
 
-acceleration_psd = mean(acceleration_psd,2);
-frequency = (0:window_samples/2)'*sample_rate/window_samples;
-omega = 2*pi*frequency;
-elevation_psd = NaN(size(acceleration_psd));
-elevation_psd(2:end) = acceleration_psd(2:end)./omega(2:end).^4;
+% At 4 Hz the SBGwaves bands are the SBG bands below 2 Hz, so this keeps the
+% values and leaves target bands above the Signature Nyquist as NaN.
+energy = interp1(frequency,heave_energy,target_frequency);
 
-bandwidth = median(diff(target_frequency));
-for i = 1:length(target_frequency)
-    in_bin = frequency >= target_frequency(i)-bandwidth/2 & ...
-        frequency < target_frequency(i)+bandwidth/2;
-    if any(in_bin)
-        energy(i) = mean(elevation_psd(in_bin),'omitnan');
-    end
-end
-
+window_count = floor(4*(length(heave)/window_samples-1)+1);
 info.status = "processed";
-info.samples = length(use);
+info.samples = length(heave);
 info.sample_rate = sample_rate;
 info.window_count = window_count;
-info.nominal_dof = 2*window_count;
+info.nominal_dof = 2*window_count*3; % SBGwaves merges three bands
+
+end
+
+function heave = integrateToHeave(acceleration,sample_rate,trim_samples)
+
+% RC high-pass and trapezoid integration to velocity and then to heave, as in
+% the RC option of rawdisplacements.m. The first and last 50 s are dropped
+% because they carry the filter start-up transient.
+RC = 4;
+dt = 1/sample_rate;
+alpha = RC/(RC+dt);
+acceleration = acceleration-mean(acceleration);
+velocity = detrend(cumtrapz(rcHighPass(acceleration,alpha))*dt);
+heave = cumtrapz(rcHighPass(velocity,alpha))*dt;
+heave = heave-mean(heave);
+heave = heave(trim_samples+1:end-trim_samples);
+
+end
+
+function filtered = rcHighPass(signal,alpha)
+
+filtered = signal;
+for i = 2:length(signal)
+    filtered(i) = alpha*filtered(i-1)+alpha*(signal(i)-signal(i-1));
+end
 
 end

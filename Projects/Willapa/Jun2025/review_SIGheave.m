@@ -3,9 +3,8 @@ function [metrics,figures,diagnostics] = review_SIGheave(missiondir,opts)
 arguments
     missiondir {mustBeTextScalar} % SWIFT mission directory
     opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.05 % Canonical Hs lower frequency, in Hz
-    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 2.00 % Highest measured Signature frequency, in Hz
+    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 1.00 % Highest Signature frequency used, in Hz
     opts.tail_fmax (1,1) double {mustBePositive,mustBeFinite} = 2.50 % Upper frequency of extrapolated tail, in Hz
-    opts.window_seconds (1,1) double {mustBePositive,mustBeFinite} = 256 % Welch window length, in seconds
     opts.accel_counts_per_g (1,1) double {mustBePositive,mustBeFinite} = 16384 % Accelerometer counts per g
     opts.max_reference_hs (1,1) double {mustBePositive,mustBeFinite} = 0.5 % Maximum SBG Hs used for calibration, in m
     opts.calibration_stride (1,1) double {mustBeInteger,mustBePositive} = 5 % Record stride used for calibration
@@ -30,7 +29,6 @@ if opts.reprocess_sbg
         save_product=false,save_cache=false,report_file=report_file);
     [~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
         fmin=opts.fmin,fmax=opts.fmax,tail_fmax=opts.tail_fmax, ...
-        window_seconds=opts.window_seconds, ...
         accel_counts_per_g=opts.accel_counts_per_g, ...
         max_reference_hs=opts.max_reference_hs, ...
         calibration_stride=opts.calibration_stride, ...
@@ -40,7 +38,6 @@ if opts.reprocess_sbg
 else
     [~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
         fmin=opts.fmin,fmax=opts.fmax,tail_fmax=opts.tail_fmax, ...
-        window_seconds=opts.window_seconds, ...
         accel_counts_per_g=opts.accel_counts_per_g, ...
         max_reference_hs=opts.max_reference_hs, ...
         calibration_stride=opts.calibration_stride, ...
@@ -49,13 +46,18 @@ else
 end
 
 frequency = diagnostics.frequency;
-waveband = frequency > opts.fmin & frequency < opts.tail_fmax;
+waveband = frequency > opts.fmin & frequency < opts.fmax;
+
+% Compare with SBG Hs over the same band as the Signature estimate.
+bandwidth = median(diff(frequency));
+reference_band_hs = 4*sqrt(sum(diagnostics.reference_energy(:,waveband),2)*bandwidth);
+reference_band_hs(reference_band_hs <= 0) = NaN;
 
 holdout = diagnostics.reference_qc & ...
     ... % ~diagnostics.calibration_record (calibration disabled)
-    isfinite(diagnostics.reference_hs) & ...
+    isfinite(reference_band_hs) & ...
     isfinite(diagnostics.canonical_hs);
-reference = diagnostics.reference_hs(holdout);
+reference = reference_band_hs(holdout);
 estimate = diagnostics.canonical_hs(holdout);
 error = estimate-reference;
 
@@ -82,8 +84,8 @@ ax_series = nexttile;
 plot(time,diagnostics.canonical_hs,'.','MarkerSize',5)
 hold on
 plot(time(diagnostics.reference_qc), ...
-    diagnostics.reference_hs(diagnostics.reference_qc),'.','MarkerSize',5)
-ylabel('H_s (m)')
+    reference_band_hs(diagnostics.reference_qc),'.','MarkerSize',5)
+ylabel(sprintf('H_s %.2f-%.2f Hz (m)',opts.fmin,opts.fmax))
 legend('Signature','SBG','Location','best')
 title('Signature-heave validation')
 
@@ -147,7 +149,7 @@ view(2)
 axis tight
 clim(color_limits)
 ylabel('Frequency (Hz)')
-title('Signature energy: calibrated 0.05--2 Hz, extrapolated 2--2.5 Hz')
+title(sprintf('Signature energy: integrated heave, %.2f--%.2f Hz (uncalibrated)',opts.fmin,opts.fmax))
 colorbar
 
 ax_effect = nexttile;
@@ -223,17 +225,15 @@ title('SBG energy: full non-overlapping frequency grid')
 colorbar
 yline(opts.fmin,'w--')
 yline(opts.fmax,'w--')
-yline(opts.tail_fmax,'w--')
 
 ax_full_signature = nexttile;
 plotSpectralCells(ax_full_signature,time_number,frequency,signature_full_log)
 clim(full_color_limits)
 ylabel('Frequency (Hz)')
-title('Signature energy: measured through 2 Hz, extrapolated tail above')
+title(sprintf('Signature energy: integrated heave through %.2f Hz',opts.fmax))
 colorbar
 yline(opts.fmin,'w--')
 yline(opts.fmax,'w--')
-yline(opts.tail_fmax,'w--')
 
 ax_difference = nexttile;
 plotSpectralCells(ax_difference,time_number,frequency,spectral_difference_db)
@@ -244,7 +244,6 @@ title('Holdout spectral difference: Signature - SBG (dB)')
 colorbar
 yline(opts.fmin,'k--')
 yline(opts.fmax,'k--')
-yline(opts.tail_fmax,'k--')
 
 nexttile
 plot(frequency,median_difference,'k-','LineWidth',1.2)
@@ -254,7 +253,6 @@ plot(frequency,upper_difference,'r-')
 yline(0,'k:')
 xline(opts.fmin,'k--')
 xline(opts.fmax,'k--')
-xline(opts.tail_fmax,'k--')
 xlim([frequency(1) frequency(end)])
 xlabel('Frequency (Hz)')
 ylabel('Difference (dB)')

@@ -3,11 +3,10 @@ function [SWIFT,sinfo,diagnostics] = reprocess_SIGheave(missiondir,opts)
 arguments
     missiondir {mustBeTextScalar} % SWIFT mission directory
     opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.05 % Canonical Hs lower frequency, in Hz
-    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 2.00 % Highest measured Signature frequency, in Hz
+    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 1.00 % Highest Signature frequency used, in Hz (above the hull natural frequency)
     opts.tail_fmax (1,1) double {mustBePositive,mustBeFinite} = 2.50 % Upper frequency of extrapolated tail, in Hz
     opts.tail_anchor (1,2) double {mustBePositive,mustBeFinite} = [1.50 1.90] % Frequencies anchoring the tail, in Hz
     opts.tail_exponent (1,1) double {mustBePositive,mustBeFinite} = 4 % Exponent in E(f) proportional to f^-tail_exponent
-    opts.window_seconds (1,1) double {mustBePositive,mustBeFinite} = 256 % Welch window length, in seconds
     opts.accel_counts_per_g (1,1) double {mustBePositive,mustBeFinite} = 16384 % Accelerometer counts per g
     opts.max_reference_hs (1,1) double {mustBePositive,mustBeFinite} = 0.5 % Maximum SBG Hs used for calibration, in m
     opts.calibration_stride (1,1) double {mustBeInteger,mustBePositive} = 5 % Record stride used for calibration
@@ -22,9 +21,10 @@ end
 % are estimated from a calibration subset of native SBG spectra. A project
 % driver must explicitly promote signaturewaves into the canonical fields.
 
-if opts.fmax <= opts.fmin || opts.tail_fmax <= opts.fmax || ...
-        opts.tail_anchor(1) >= opts.tail_anchor(2) || ...
-        opts.tail_anchor(1) <= opts.fmin || opts.tail_anchor(2) >= opts.fmax
+% Tail limits are not checked while the tail is disabled.
+if opts.fmax <= opts.fmin % || opts.tail_fmax <= opts.fmax || ...
+        % opts.tail_anchor(1) >= opts.tail_anchor(2) || ...
+        % opts.tail_anchor(1) <= opts.fmin || opts.tail_anchor(2) >= opts.fmax
     error('reprocess_SIGheave:InvalidBand', ...
         'Frequency and tail limits must be strictly increasing.')
 end
@@ -133,7 +133,6 @@ for i = 1:nrecord
         end
         [raw_energy(i,:),info] = SignatureHeaveWaves( ...
             raw.burst.Accelerometer,raw.burst.time,frequency, ...
-            window_seconds=opts.window_seconds, ...
             accel_counts_per_g=opts.accel_counts_per_g);
         status(i) = info.status;
         sample_count(i) = info.samples;
@@ -252,7 +251,6 @@ params.tail_anchor = opts.tail_anchor;
 params.tail_exponent = opts.tail_exponent;
 % params.tail_scale = tail_scale;
 % params.tail_calibration_count = length(tail_ratio);
-params.window_seconds = opts.window_seconds;
 params.accel_counts_per_g = opts.accel_counts_per_g;
 params.max_reference_hs = opts.max_reference_hs;
 params.calibration_stride = opts.calibration_stride;
