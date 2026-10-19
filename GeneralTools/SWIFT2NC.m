@@ -88,6 +88,10 @@ if isfield(SWIFT,'windspdkurt')
     SWIFT=rmfield(SWIFT,'windspdkurt');
 end
 
+if isfield(SWIFT,'sbgwaves')
+    SWIFT=rmfield(SWIFT,'sbgwaves');
+end
+
 if isfield(SWIFT,'wavespectra')
     ref42 = [];
     ref85 = [];
