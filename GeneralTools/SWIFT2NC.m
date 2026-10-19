@@ -210,6 +210,22 @@ for i=1:length(full_names)
                         S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(size(S.signature.HRprofile.([zHR_names{iz} 'HR'])(1,:)));
                     end
                 end
+                if has_echo
+                    if isfield(SWIFT(t).signature,'echo') && ~isempty(SWIFT(t).signature.echo)
+                        S.signature.echo(t,:)  = SWIFT(t).signature.echo(:);
+                        S.signature.echoz(t,:) = SWIFT(t).signature.echoz(:);
+                    else
+                        S.signature.echo(t,:)  = NaN(1, length(SWIFT(echo_ref).signature.echo));
+                        S.signature.echoz(t,:) = NaN(1, length(SWIFT(echo_ref).signature.echo));
+                    end
+                end
+                if has_altimeter
+                    if isfield(SWIFT(t).signature,'altimeter') && ~isempty(SWIFT(t).signature.altimeter)
+                        S.signature.altimeter(t) = SWIFT(t).signature.altimeter;
+                    else
+                        S.signature.altimeter(t) = NaN;
+                    end
+                end
             end
         elseif strcmp(full_names{i},'time')
             S.time= [SWIFT.time]-datenum(1970,1,1,0,0,0);
