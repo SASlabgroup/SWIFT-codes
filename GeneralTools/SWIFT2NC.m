@@ -310,19 +310,31 @@ j=1;
 for i=1:length(full_names)
     %if ~strcmp(full_names{i},'ID')
         if strcmp(full_names{i},'signature')
+            if isempty(z_names); nz_ref = 0; else; nz_ref = length(SWIFT(1).signature.profile.z); end
+            if isempty(zHR_names); nHR_ref = 0; else; nHR_ref = length(SWIFT(1).signature.HRprofile.z); end
             for t=1:length(SWIFT)
                 for iz=1:length(z_names)
-                    if ~isempty(SWIFT(t).signature.profile.(z_names{iz}))
-                        S.signature.profile.(z_names{iz})(t,:) = SWIFT(t).signature.profile.(z_names{iz})(:);
+                    value = SWIFT(t).signature.profile.(z_names{iz});
+                    if ~isempty(value) && numel(value) == nz_ref
+                        S.signature.profile.(z_names{iz})(t,:) = value(:);
                     else
-                        S.signature.profile.(z_names{iz})(t,:) = NaN(size(S.signature.profile.(z_names{iz})(1,:)));
+                        if ~isempty(value)
+                            fprintf('SWIFT2NC: profile.%s burst %d length %d != ref %d, filling NaN\n', ...
+                                z_names{iz}, t, numel(value), nz_ref);
+                        end
+                        S.signature.profile.(z_names{iz})(t,:) = NaN(1,nz_ref);
                     end
                 end
                 for iz=1:length(zHR_names)
-                    if ~isempty(SWIFT(t).signature.HRprofile.(zHR_names{iz}))
-                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                    value = SWIFT(t).signature.HRprofile.(zHR_names{iz});
+                    if ~isempty(value) && numel(value) == nHR_ref
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = value(:);
                     else
-                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(size(S.signature.HRprofile.([zHR_names{iz} 'HR'])(1,:)));
+                        if ~isempty(value)
+                            fprintf('SWIFT2NC: HRprofile.%s burst %d length %d != ref %d, filling NaN\n', ...
+                                zHR_names{iz}, t, numel(value), nHR_ref);
+                        end
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(1,nHR_ref);
                     end
                 end
                 if has_echo
