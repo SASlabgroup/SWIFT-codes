@@ -232,7 +232,24 @@ for i=1:length(full_names)
         elseif strcmp(full_names{i},'ID')
             S.ID = ones(length(SWIFT),1) * swiftnum;
         else
-            S.(full_names{i}) = [SWIFT.(full_names{i})]; % errors here if check factor in some but not all
+            tmp = [SWIFT.(full_names{i})]; % errors here if check factor in some but not all
+            if isempty(tmp)
+                fprintf('SWIFT2NC: dropping empty field %s\n', full_names{i});
+                if isfield(S, full_names{i}), S = rmfield(S, full_names{i}); end
+                continue
+            end
+            if numel(tmp) ~= length(SWIFT)
+                fprintf('SWIFT2NC: filling field %s (%d of %d bursts present) with NaN elsewhere\n', ...
+                    full_names{i}, numel(tmp), length(SWIFT));
+                tmp = NaN(1, length(SWIFT));
+                for tt = 1:length(SWIFT)
+                    v = SWIFT(tt).(full_names{i});
+                    if isscalar(v) && isnumeric(v)
+                        tmp(tt) = v;
+                    end
+                end
+            end
+            S.(full_names{i}) = tmp;
         end
         names{j} = full_names{i};
         j = j+1;
