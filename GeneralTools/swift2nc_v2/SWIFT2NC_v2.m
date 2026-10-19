@@ -3,6 +3,7 @@ function SWIFT2NC_v2(SWIFT, filename, opts)
 %
 %   SWIFT2NC_v2(SWIFT, filename)
 %   SWIFT2NC_v2(SWIFT, filename, platform='micro', overrides=ov)
+%   SWIFT2NC_v2(SWIFT, filename, legacy=true)
 %
 % Only fields listed in SWIFT_nc_schema are written (others are listed in
 % a warning). Substructs become groups (e.g. /signature/profile) that share
@@ -11,6 +12,10 @@ function SWIFT2NC_v2(SWIFT, filename, opts)
 % same in every burst (e.g. ID) become global attributes.
 %
 % platform is v3, v4 or micro; by default it is detected from SWIFT(1).ID.
+%
+% legacy=true writes the layout of the old SWIFT2NC for existing readers:
+% no groups, the old variable and dimension names (schema legacy_name and
+% legacy_dim, default the SWIFT field name) and time in days since 1970.
 %
 % overrides changes the schema for this file, field by field. It has the
 % same parts as SWIFT_nc_schema's outputs, all optional:
@@ -29,11 +34,17 @@ arguments
     filename {mustBeTextScalar}
     opts.platform {mustBeMember(opts.platform, ["auto" "v3" "v4" "micro"])} = "auto"
     opts.overrides struct = struct()
+    opts.legacy (1,1) logical = false
 end
 
 % One struct with each field stacked over bursts (time along the last dimension)
 [flat, noData] = flattenSWIFT(SWIFT);
 [varSchema, platformInfo, globalAtts] = SWIFT_nc_schema();
+if opts.legacy
+    % Old SWIFT2NC names and time in days; overrides can still change them
+    varSchema = legacySchema(varSchema);
+    varSchema.time.encoding = 'days';
+end
 
 platform = opts.platform;
 if platform == "auto"
@@ -95,7 +106,7 @@ netcdf.putAtt(ncid, globalId, 'date_created', ...
     char(datetime('now', 'TimeZone', 'UTC', 'Format', 'yyyy-MM-dd''T''HH:mm:ss''Z''')));
 
 timeDim = netcdf.defDim(ncid, 'time', numel(flat.time));
-[notInSchema, notWritten] = defineGroup(ncid, ncid, '', varSchema, flat, timeDim, placeholders);
+[notInSchema, notWritten] = defineGroup(ncid, ncid, '', varSchema, flat, timeDim, placeholders, opts.legacy);
 
 if ~isempty(notInSchema)
     warnNoTrace('SWIFT2NC_v2:notInSchema', 'Not in SWIFT_nc_schema, not written: %s', ...
@@ -117,15 +128,17 @@ end
 end
 
 
-function [notInSchema, notWritten] = defineGroup(ncid, group, path, varSchema, data, timeDim, placeholders)
+function [notInSchema, notWritten] = defineGroup(ncid, group, path, varSchema, data, timeDim, placeholders, legacy)
 % Define and write the variables of one level of the schema in netCDF
 % group `group`, calling itself for each substruct (subgroup). NETCDF4
 % files allow writing data between definitions.
 %   ncid          the file (root group)
 %   path          e.g. 'signature.profile.', used in messages
 %   varSchema     schema for this level: one field per variable, holding its
-%                 attributes (and optionally .name, the netCDF name)
+%                 attributes (and optionally .name, the netCDF name, and
+%                 .dim, a coordinate's dimension name)
 %   data          the matching level of the flattened SWIFT struct
+%   legacy        true: substructs go in the same group (no subgroups)
 % Returns notInSchema, the paths of fields in data that the schema does not list,
 % and notWritten, the paths of schema fields that data does not have.
 
@@ -147,22 +160,26 @@ for i = 1:numel(names)
     end
     values = data.(name);
 
-    % Substruct -> netCDF subgroup
+    % Substruct -> netCDF subgroup (legacy: same group)
     if isstruct(values)
-        subgroup = netcdf.defGrp(group, name);
-        [subNotInSchema, subNotWritten] = defineGroup(ncid, subgroup, [path name '.'], spec, values, timeDim, placeholders);
+        subgroup = group;
+        if ~legacy
+            subgroup = netcdf.defGrp(group, name);
+        end
+        [subNotInSchema, subNotWritten] = defineGroup(ncid, subgroup, [path name '.'], spec, values, timeDim, placeholders, legacy);
         notInSchema = [notInSchema subNotInSchema];
         notWritten = [notWritten subNotWritten];
         continue
     end
 
     % netCDF name defaults to the SWIFT field name; everything else in
-    % spec is written as an attribute
+    % spec, except the settings below, is written as an attribute
     ncName = name;
     if isfield(spec, 'name')
         ncName = spec.name;
     end
-    attrs = rmfield(spec, intersect(fieldnames(spec), {'name', 'nbins', 'encoding'}));
+    attrs = rmfield(spec, intersect(fieldnames(spec), ...
+        {'name', 'dim', 'legacy_name', 'legacy_dim', 'nbins', 'encoding'}));
     nRows = size(values, 1); % values is [nRows x nTimes]
 
     if isstring(values) && all(values == values(1))
@@ -178,12 +195,16 @@ for i = 1:numel(names)
     elseif isCoord(name)
         % Coordinate: a dimension of its own. Normally each row (e.g. each
         % z bin) has the same value in every burst, ignoring NaN; if not,
-        % it is written per burst on a <name>_index dimension.
+        % it is written per burst on a <name>_index dimension. spec.dim
+        % overrides the dimension name.
         rowValue = max(values, [], 2, 'omitnan');
         isFixed = all(values == rowValue | isnan(values), 'all');
         dimName = ncName;
         if ~isFixed
             dimName = [ncName '_index'];
+        end
+        if isfield(spec, 'dim')
+            dimName = spec.dim;
         end
         dimid = netcdf.defDim(group, dimName, nRows);
         if isFixed
@@ -216,6 +237,34 @@ for i = 1:numel(names)
     putAtts(group, varid, attrs, placeholders);
     netcdf.putVar(group, varid, values);
 end
+end
+
+
+function varSchema = legacySchema(varSchema)
+% Schema for legacy=true: each variable's name becomes its legacy_name
+% (default the SWIFT field name, as old SWIFT2NC) and legacy_dim its dim
+for field = fieldnames(varSchema)'
+    f = field{1};
+    spec = varSchema.(f);
+    if isGroup(spec)
+        varSchema.(f) = legacySchema(spec);
+        continue
+    end
+    spec.name = f;
+    if isfield(spec, 'legacy_name')
+        spec.name = spec.legacy_name;
+    end
+    if isfield(spec, 'legacy_dim')
+        spec.dim = spec.legacy_dim;
+    end
+    varSchema.(f) = spec;
+end
+end
+
+
+function tf = isGroup(spec)
+% Schema substruct (e.g. signature) rather than one variable's attributes
+tf = all(structfun(@isstruct, spec));
 end
 
 
