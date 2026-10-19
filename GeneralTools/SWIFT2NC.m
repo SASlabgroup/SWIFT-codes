@@ -358,25 +358,47 @@ for i=1:length(full_names)
             S.time= [SWIFT.time]-datenum(1970,1,1,0,0,0);
         elseif strcmp(full_names{i},'ID')
             S.ID = ones(length(SWIFT),1) * swiftnum;
-        else
-            tmp = [SWIFT.(full_names{i})]; % errors here if check factor in some but not all
-            if isempty(tmp)
+        elseif any(strcmp(full_names{i},{'OBS_uncalibrated', ...
+                'OBS_ambient','OBS_calibratedNTU'}))
+            value = [SWIFT.(full_names{i})];
+            if isempty(value)
                 fprintf('SWIFT2NC: dropping empty field %s\n', full_names{i});
-                if isfield(S, full_names{i}), S = rmfield(S, full_names{i}); end
                 continue
             end
-            if numel(tmp) ~= length(SWIFT)
-                fprintf('SWIFT2NC: filling field %s (%d of %d bursts present) with NaN elsewhere\n', ...
-                    full_names{i}, numel(tmp), length(SWIFT));
-                tmp = NaN(1, length(SWIFT));
-                for tt = 1:length(SWIFT)
-                    v = SWIFT(tt).(full_names{i});
-                    if isscalar(v) && isnumeric(v)
-                        tmp(tt) = v;
-                    end
-                end
+            S.(full_names{i}) = value;
+        elseif isstruct(SWIFT(1).(full_names{i}))
+            value = [SWIFT.(full_names{i})];
+            if isempty(value)
+                fprintf('SWIFT2NC: dropping empty field %s\n', full_names{i});
+                continue
             end
-            S.(full_names{i}) = tmp;
+            S.(full_names{i}) = value;
+        else
+            % Preserve the time axis when a scalar field is empty in some
+            % records. Concatenation silently shortened these fields.
+            value = NaN(1,length(SWIFT));
+            npresent = 0;
+            for t = 1:length(SWIFT)
+                current = SWIFT(t).(full_names{i});
+                if isempty(current)
+                    continue
+                elseif ~(isnumeric(current) || islogical(current)) || ...
+                        ~isscalar(current)
+                    error('Unsupported value in %s at SWIFT index %d.', ...
+                        full_names{i},t)
+                end
+                value(t) = current;
+                npresent = npresent + 1;
+            end
+            if npresent == 0
+                fprintf('SWIFT2NC: dropping empty field %s\n', full_names{i});
+                continue
+            end
+            if npresent < length(SWIFT)
+                fprintf('SWIFT2NC: filling field %s (%d of %d bursts present) with NaN elsewhere\n', ...
+                    full_names{i}, npresent, length(SWIFT));
+            end
+            S.(full_names{i}) = value;
         end
         names{j} = full_names{i};
         j = j+1;
