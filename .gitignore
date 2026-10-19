@@ -1,4 +1,6 @@
 .DS_Store
+._*
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -14,3 +16,4 @@ ipython_config.py
 
 # Matlab
 *.asv
+*.m~
