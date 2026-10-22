@@ -96,8 +96,9 @@ for im = 1:length(missions)
     % accelerometer after all available SBG records have been reprocessed.
     % reprocess_SIGheave deliberately writes only separate signaturewaves
     % variables. Promotion into the canonical fields is Willapa-specific:
-    % measured energy spans 0.05--2.0 Hz, an empirically normalized f^-4
-    % tail spans 2.0--2.5 Hz, and directional moments remain unavailable.
+    % uncalibrated energy spans 0.05--1.0 Hz, above the hull's approximate
+    % natural frequency is discarded, and directional moments remain
+    % unavailable. See SIGNATURE_HEAVE_README.md for the validated limits.
     if strcmp(sname,'SWIFT25_16-27Jun2025')
         [SWIFTL3,sinfoL3,signature_diagnostics] = reprocess_SIGheave( ...
             missiondir,input_SWIFT=SWIFTL3,input_sinfo=sinfoL3, ...
@@ -153,8 +154,15 @@ sinfo.postproc(ip).type = 'WillapaSignatureHeaveFill';
 sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).flags.filled = fill;
-sinfo.postproc(ip).params.measured_band = [0.05 2.00];
-sinfo.postproc(ip).params.tail_band = [2.00 2.50];
+first = find(fill(:),1);
+if ~isempty(first)
+    sinfo.postproc(ip).params.measured_band = ...
+        SWIFT(first).signaturewaves.measured_band;
+else
+    sinfo.postproc(ip).params.measured_band = [NaN NaN];
+end
+sinfo.postproc(ip).params.calibrated = false;
+sinfo.postproc(ip).params.tail_extrapolated = false;
 
 end
 

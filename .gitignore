@@ -17,3 +17,6 @@ ipython_config.py
 
 # Matlab
 *.asv
+
+# Generated Willapa validation products (recreate with review_SIGheave).
+Projects/Willapa/Jun2025/signature_heave_review/

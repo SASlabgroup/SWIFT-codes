@@ -4,17 +4,13 @@ arguments
     missiondir {mustBeTextScalar} % SWIFT mission directory
     opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.05 % Canonical Hs lower frequency, in Hz
     opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 1.00 % Highest Signature frequency used, in Hz
-    opts.tail_fmax (1,1) double {mustBePositive,mustBeFinite} = 2.50 % Upper frequency of extrapolated tail, in Hz
     opts.accel_counts_per_g (1,1) double {mustBePositive,mustBeFinite} = 16384 % Accelerometer counts per g
-    opts.max_reference_hs (1,1) double {mustBePositive,mustBeFinite} = 0.5 % Maximum SBG Hs used for calibration, in m
-    opts.calibration_stride (1,1) double {mustBeInteger,mustBePositive} = 5 % Record stride used for calibration
-    opts.minimum_calibration_records (1,1) double {mustBeInteger,mustBePositive} = 20 % Required ratios per frequency bin
     opts.reprocess_sbg (1,1) logical = true % Run the non-writing SBG step before Signature recovery
     opts.plot_dir {mustBeTextScalar} = "" % Optional directory for validation and effect plots
 end
 
 % Run the complete recovery without writing a product, then validate its
-% band-limited Hs against SBG records excluded from calibration.
+% band-limited Hs against simultaneous, gross-error-free SBG records.
 
 if opts.reprocess_sbg
     if strlength(string(opts.plot_dir)) > 0
@@ -28,20 +24,14 @@ if opts.reprocess_sbg
         missiondir,false,false,false,true,90, ...
         save_product=false,save_cache=false,report_file=report_file);
     [~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
-        fmin=opts.fmin,fmax=opts.fmax,tail_fmax=opts.tail_fmax, ...
+        fmin=opts.fmin,fmax=opts.fmax, ...
         accel_counts_per_g=opts.accel_counts_per_g, ...
-        max_reference_hs=opts.max_reference_hs, ...
-        calibration_stride=opts.calibration_stride, ...
-        minimum_calibration_records=opts.minimum_calibration_records, ...
         input_SWIFT=input_SWIFT,input_sinfo=input_sinfo, ...
         save_product=false);
 else
     [~,~,diagnostics] = reprocess_SIGheave(missiondir, ...
-        fmin=opts.fmin,fmax=opts.fmax,tail_fmax=opts.tail_fmax, ...
+        fmin=opts.fmin,fmax=opts.fmax, ...
         accel_counts_per_g=opts.accel_counts_per_g, ...
-        max_reference_hs=opts.max_reference_hs, ...
-        calibration_stride=opts.calibration_stride, ...
-        minimum_calibration_records=opts.minimum_calibration_records, ...
         save_product=false);
 end
 
@@ -53,9 +43,7 @@ bandwidth = median(diff(frequency));
 reference_band_hs = 4*sqrt(sum(diagnostics.reference_energy(:,waveband),2)*bandwidth);
 reference_band_hs(reference_band_hs <= 0) = NaN;
 
-holdout = diagnostics.reference_qc & ...
-    ... % ~diagnostics.calibration_record (calibration disabled)
-    isfinite(reference_band_hs) & ...
+holdout = diagnostics.reference_qc & isfinite(reference_band_hs) & ...
     isfinite(diagnostics.canonical_hs);
 reference = reference_band_hs(holdout);
 estimate = diagnostics.canonical_hs(holdout);
@@ -115,7 +103,7 @@ diagnostics.holdout = holdout;
 % Show the spectral and bulk effect using a common time axis. Spectra are
 % plotted in log10 units with common color limits so the gap filling is
 % visually comparable without implying energy outside the recovered band.
-effect_hs = diagnostics.reference_hs;
+effect_hs = reference_band_hs;
 effect_hs(diagnostics.recovered) = ...
     diagnostics.canonical_hs(diagnostics.recovered);
 time_number = diagnostics.time;
@@ -153,12 +141,15 @@ title(sprintf('Signature energy: integrated heave, %.2f--%.2f Hz (uncalibrated)'
 colorbar
 
 ax_effect = nexttile;
-display_values = [diagnostics.reference_hs( ...
-    diagnostics.reference_hs <= opts.max_reference_hs); ...
-    effect_hs(isfinite(effect_hs))];
-display_ymax = 1.08*max(display_values,[],'omitnan');
-clipped_reference = diagnostics.reference_hs > display_ymax;
-reference_display = diagnostics.reference_hs;
+display_values = sort(effect_hs(isfinite(effect_hs)));
+if isempty(display_values)
+    display_ymax = 1;
+else
+    display_ymax = 1.08*display_values( ...
+        max(1,round(0.99*length(display_values))));
+end
+clipped_reference = reference_band_hs > display_ymax;
+reference_display = reference_band_hs;
 reference_display(clipped_reference) = display_ymax;
 plot(time_number,reference_display,'.','MarkerSize',5)
 hold on
@@ -169,11 +160,11 @@ plot(time_number(clipped_reference),reference_display(clipped_reference), ...
     'k^','MarkerFaceColor','k','MarkerSize',5)
 for i = find(clipped_reference)'
     text(time_number(i),0.97*display_ymax, ...
-        sprintf(' %.2f m',diagnostics.reference_hs(i)), ...
+        sprintf(' %.2f m',reference_band_hs(i)), ...
         'VerticalAlignment','top','HorizontalAlignment','center')
 end
 ylim([0 display_ymax])
-ylabel('Canonical H_s (m)')
+ylabel(sprintf('H_s %.2f--%.2f Hz (m)',opts.fmin,opts.fmax))
 xlabel('Time (UTC)')
 legend('Before','After','Signature recovery','Off-scale before', ...
     'Location','best')
@@ -186,8 +177,8 @@ set([ax_reference ax_signature ax_effect],'XTick',time_ticks)
 set([ax_reference ax_signature],'XTickLabel',[])
 set(ax_effect,'XTickLabel',time_labels)
 
-% Diagnose the calibrated and extrapolated Signature spectrum over the same
-% native 0.05--2.5 Hz grid used by SBGwaves.
+% Diagnose the band-limited Signature spectrum on the full native SBGwaves
+% grid; bins outside the recovered band remain NaN by design.
 full_signature_energy = diagnostics.signature_energy;
 spectral_difference_db = 10*log10(full_signature_energy./ ...
     diagnostics.reference_energy);

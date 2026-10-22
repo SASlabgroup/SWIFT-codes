@@ -77,7 +77,7 @@ worldyaw = 0;
 % no usable magnetometer anchor are not used. With every record anchored,
 % vertical-gyro yaw can be rotated (allowrelativeyaw).
 %
-% Checks (willapa_analysis data/moorings/SWIFT, MAGNETOMETER_HANDOFF.md;
+% Checks (Projects/Willapa/Jun2025/WILLAPA_L5_FINAL.md;
 % plotSBGmagCalibration3D for a mission's debug plots): after calibration
 % the field magnitude is constant to 2-5% and the inclination is 67.5 +/- 1-3 deg on
 % every SBG; the raw Signature magnetometer, calibrated the same way,

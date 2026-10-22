@@ -13,7 +13,11 @@ end
 % It is RC-filtered and integrated twice to heave as in rawdisplacements.m
 % (RC path), then passed through SBGwaves exactly like SBG heave. The RC
 % filters and trapezoid integration attenuate the result, most strongly
-% toward the Nyquist frequency, so the output must be band limited.
+% toward the Nyquist frequency, so the output must be band limited. The
+% magnitude proxy also contains the second-order horizontal-acceleration
+% term |a_h|^2/(2g), which can bias the low-frequency spectrum high. The
+% Willapa driver therefore treats this as a documented scalar fallback, not
+% an unbiased replacement for SBG heave.
 
 gravity = 9.80665;
 target_frequency = double(target_frequency(:)');
