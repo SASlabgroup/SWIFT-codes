@@ -86,6 +86,12 @@ for iburst = 1:nburst
         avg.CorrelationData(:,:,ibeam) = Data.(['Average_CorBeam' num2str(ibeam)]);
         avg.AmplitudeData(:,:,ibeam) = Data.(['Average_AmpBeam' num2str(ibeam)]);
         end
+        % Altimeter (leading edge)
+        if isfield(Data,'Average_AltimeterDistanceLE')
+            avg.AltimeterDistance = Data.Average_AltimeterDistanceLE;
+            avg.AltimeterQuality = Data.Average_AltimeterQualityLE;
+            avg.AltimeterStatus = Data.Average_AltimeterStatus;
+        end
     end
 
     % Burst data
@@ -172,13 +178,6 @@ for iburst = 1:nburst
         burst.EchoSounder = Data.([ename '_Echo']);
     end
 
-    % AST,Altimeter,AHRS
-    % if Config.Average_Altimeter
-    %     avg.AltimeterDistance = Data.Average_AltimeterDistanceLE;
-    %     avg.AltimeterQuality = Data.Average_AltimeterQualityLE; 
-    %     avg.Status = Data.Average_AltimeterStatus;
-    % end
-
     %%
     elseif formattype == 2
 
@@ -232,6 +231,13 @@ for iburst = 1:nburst
         avg.AHRS_M31 = R(:, 7);
         avg.AHRS_M32 = R(:, 8);
         avg.AHRS_M33 = R(:, 9);
+
+        % Altimeter (leading edge)
+        if isfield(Data,'Average_AltimeterLE')
+            avg.AltimeterDistance = Data.Average_AltimeterLE;
+            avg.AltimeterQuality = Data.Average_AltimeterQualityLE;
+            avg.AltimeterStatus = Data.Average_AltimeterStatus;
+        end
 
     end
 
