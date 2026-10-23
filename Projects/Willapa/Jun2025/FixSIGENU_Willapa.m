@@ -6,13 +6,15 @@
 % to them in each mission folder (outdir defaults to the archive). Each
 % burst is corrected by fixWillapaBurst; plots come from plotWillapaL5Review.
 %
-% Optional workspace overrides: outdir (e.g. a staging directory),
-% missionnames (a subset of the missions below), and
-% validorientationmissions (missions for which both the SBG attitude-valid
-% and heading-valid flags are required). Requires the Parallel Computing
-% Toolbox.
+% Optional workspace overrides: expdir (the archive read from), outdir
+% (e.g. a staging directory), missionnames (a subset of the missions
+% below), and validorientationmissions (missions for which both the SBG
+% attitude-valid and heading-valid flags are required). Requires the
+% Parallel Computing Toolbox.
 
-expdir = '/Volumes/PortableSSD/MooredSWIFTS';
+if ~exist('expdir','var')
+    expdir = '/Volumes/PortableSSD/MooredSWIFTS';
+end
 if ~exist('outdir','var')
     outdir = expdir;
 end
