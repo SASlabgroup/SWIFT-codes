@@ -22,6 +22,8 @@
 %             9/2025    save microSWIFT OpenOBS sensor sbds alongside wave sbds (still need to merge)
 %             10/2025   merge light sensor and OpenOBS data into main data structure
 %             4/2026   merge accelerometer
+% L. Crews    10/2026  Add in-ice flag based on wave spectra
+
 clear all
 
 % Recover plotflag forwarded via temp file (set by pullSWIFTtelemetry)
@@ -47,6 +49,12 @@ maxdriftspd = 10;  % m/s, this is applied to telemetry drift speed, but reported
 maxwindspd = 40; % m/s for malfunctioning Airmars
 
 minairtemp = -50; % min airtemp
+
+% Parameters used to identify spectra indicating buoy in sea ice with no waves
+minwaveheight_ice = 0.1; 
+maxwaveperiod = 20; % max wave period allowed during final screening, usually 20 s
+maxtailshapeexponent = -2.5;  % max value for f^q in the tail, theoretically -4
+min_spectral_energy_ratio = 0.35; % Value determined experimentally from PISCES 2026 microSWIFT deployments. Expect open water w/ no ice to have high ratio (higher energy in wave band, lower energy at low frequency)
 
 wd = pwd;
 wdi = find(wd == '/',1,'last');
@@ -177,6 +185,39 @@ for ai = 1:length(flist)
     %     else
     %     end
     
+     %% flag if suspected measurement in ice with no waves 
+    % mask wave stats but retain spetra
+
+    oneoneSWIFT.in_ice = false; %default flag value
+
+    % Extract info from spectrum
+    if isfield(oneSWIFT, 'wavespectra') & any(isfinite(oneSWIFT.wavespectra.energy))
+        f = oneSWIFT.wavespectra.freq;
+        E = oneSWIFT.wavespectra.energy;
+        fmin = 1 / oneSWIFT.peakwaveperiod;
+
+        % Fit tail shape above peak frequency
+        x = log(f(f>=fmin & f<=0.5));
+        y = log(E(f>=fmin & f<=0.5));
+        bt = polyfit(x, y, 1);
+        tailshape = bt(1);
+
+        % Also filter based on ratio of high:low frequency energy
+        spec_energy_ratio = mean(E(f>=fmin & f<=0.5)) / mean(E(f<=0.1));
+    else
+        tailshape = inf;
+        spec_energy_ratio = 0;
+    end
+
+    % Suspect buoy is in sea ice with no waves
+    if tailshape > maxtailshapeexponent | oneSWIFT.sigwaveheight < minwaveheight_ice | oneSWIFT.peakwaveperiod > maxwaveperiod | spec_energy_ratio < min_spectral_energy_ratio
+
+        oneSWIFT.sigwaveheight = nan;
+        oneSWIFT.peakwaveperiod = nan;
+        oneSWIFT.peakwavedirT = nan;
+        oneSWIFT.in_ice = true;
+    end
+    
     %% increment main structure
     
     time(ai) = oneSWIFT.time;
@@ -237,6 +278,7 @@ for ai = 1:length(flist)
         disp('file pruned, cause unknown')
     end
     
+
     %badburst( find(lengthofnames < length(allnames) ) ) = true;  % legacy
     
     %% screen the bad data (usually out of the water)
@@ -261,6 +303,7 @@ for ai = 1:length(flist)
             disp('waves too small, removing burst')
         end
     end
+
     % salinity limit
     if isfield(oneSWIFT,'salinity') %&& ~micro
         if all(oneSWIFT.salinity < minsalinity) % & all(~isnan(oneSWIFT.salinity)),

@@ -12,6 +12,7 @@ function SWIFT2NC(SWIFT_in,filename)
 %   Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
 %   Feb 2023 by J. Thomson for SASSIE and general use
 %   Nov 2024 by J. Thomson to include microSWIFTs
+%   Oct 2026 by L. Crews to write in-ice flag
 
 SWIFT = SWIFT_in;
 
@@ -295,6 +296,8 @@ for i=1:length(names)
         var_ids.(names{i}) = netcdf.defVar(ncid, 'mean_wave_period', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'sigwaveheight')
         var_ids.(names{i}) = netcdf.defVar(ncid, 'significant_wave_height', 'NC_DOUBLE', t_dim);
+    elseif strcmp(names{i},'in_ice')
+        var_ids.(names{i}) = netcdf.defVar(ncid, 'in_ice_flag', 'NC_BYTE', t_dim);
     elseif strcmp(names{i},'mss')
         var_ids.(names{i}) = netcdf.defVar(ncid, 'wave_mean_square_slope', 'NC_DOUBLE', t_dim);
     elseif strcmp(names{i},'ustar')
@@ -429,6 +432,9 @@ for i=1:length(names)
                 netcdf.putVar(ncid, spec_var_ids.(spec_names{j}), vertcat(temp_data{:}).');
             end
         end
+    elseif strcmp(names{i}, 'in_ice')
+        netcdf.putVar(ncid, var_ids.(names{i}), int8(S.in_ice));
+
     elseif strcmp(names{i},'uplooking')
         for j=1:length(z_names)
             if strcmp(z_names{j},'z')
@@ -801,6 +807,17 @@ for i=1:length(names)
                 ncwriteatt(filename,'mean_wave_period','instrument','GPSWaves / NEDwaves')
             end
         end
+
+        if strcmp(names{i}, 'in_ice')
+            ncwriteatt(filename, 'in_ice_flag', 'long_name', 'Flag indicating buoy in sea ice with no waves');
+            ncwriteatt(filename, 'in_ice_flag', 'flag_values', int8([0 1]));
+            ncwriteatt(filename, 'in_ice_flag', 'flag_meanings', 'not_in_ice in_ice');
+            ncwriteatt(filename, 'in_ice_flag', 'description', ...
+                ['1 (true): Suspected sea ice with no waves, identified by a shallow spectral tail slope, elevated low-frequency energy relative to wave-band energy,',...
+                'significant wave height < 0.1 m, or peak wave period > 20 s. ' ...
+                 '0 (false): None of these criteria are met.']);
+        end
+
 %         if strcmp(names(i),'mss')
 %             ncwriteatt(filename,'wave_mean_square_slope','units','s')
 %             ncwriteatt(filename,'wave_mean_square_slope','long_name','wave_mean_square_slope_normalized_by_frequency_width of 0.15 (0.25 to 0.4 1/s frequency range). Multiply by frequency width to get unnormalized value.')
