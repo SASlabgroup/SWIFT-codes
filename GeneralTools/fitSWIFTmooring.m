@@ -5,6 +5,10 @@
 % position table; print positions to the command window. The Kasa fit is not
 % robust: a few spikes hundreds of metres out turn a 30-80 m watch circle into
 % a km-scale circle (seen on the June 2025 Willapa moorings).
+%
+% mleclair (using claude), Oct 2026: drops GPS fixes farther than
+%   max_distance_m from the median before the fit; Kasa fit moved to
+%   fitCircleKasa
 
 % --- edit for each deployment | this should have multiple swift mat files in it ---
 data_dir = '/tmp/SWIFT_25_24_23_22_20261005T000000_now';

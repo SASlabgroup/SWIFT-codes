@@ -12,6 +12,8 @@ function records = loadSBGmagRecords(folder,nsample)
 %   records.yaw   record-mean EKF yaw, deg;
 %   records.file  source file.
 %   Uses a parallel pool if one is open.
+%
+% mleclair (using claude), Oct 2026
 
 if nargin < 2; nsample = 100; end
 files = dir(fullfile(folder,'**','*_SBG_*.mat'));

@@ -11,6 +11,8 @@ function plotWillapaL5Review(SWIFTL4,SWIFTL5,audit,watchheading,mountyaw, ...
 %
 %   audit is the L5 source-audit table, watchheading the anchor-to-buoy
 %   bearing per burst, and sentinel a struct with image, x and y.
+%
+% mleclair (using claude), Oct 2026
 
 swiftL4 = catSWIFT(SWIFTL4);
 swiftL5 = catSWIFT(SWIFTL5);

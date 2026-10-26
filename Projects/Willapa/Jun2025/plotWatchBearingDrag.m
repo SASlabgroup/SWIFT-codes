@@ -15,6 +15,8 @@ function [time,heading,anchor] = plotWatchBearingDrag(source,options)
 %   and radius, the positions against time with the circle spans shaded,
 %   the distance from each circle's anchor (flat at the radius in the lobes
 %   if the split is right), and the anchor-to-buoy bearing.
+%
+% mleclair (using claude), Oct 2026
 
 arguments
     source (1,1) string

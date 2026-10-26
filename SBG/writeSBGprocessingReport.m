@@ -9,6 +9,8 @@ end
 
 % Write a tab-delimited SBG processing report, including source availability
 % for records in L2 and for expected ten-minute slots that are absent from L2.
+%
+% mleclair (using claude), Oct 2026
 
 sbgfiles = dir(fullfile(missiondir,'*','Raw','*','*SBG*.*'));
 sigfiles = dir(fullfile(missiondir,'*','Raw','*','*SIG*.*'));

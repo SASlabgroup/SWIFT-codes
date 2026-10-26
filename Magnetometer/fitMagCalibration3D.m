@@ -29,6 +29,8 @@ function cal = fitMagCalibration3D(key,m,d,window,step,breaks,inclination)
 %   unconstrained ellipsoid wanders there. Fits outside plausible limits
 %   (see isPlausible) are rejected and left to neighbouring windows. A
 %   segment shorter than 24 h is fit as one window.
+%
+% mleclair (using claude), Oct 2026
 
 key = key(:);
 breaks = sort(breaks(:));

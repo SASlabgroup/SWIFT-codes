@@ -11,6 +11,8 @@ function [X,Y,Z] = levelMagField(m,d)
 %   along d x X (to the right, as in NED), Z = m.d (down). With hard and
 %   soft iron removed, the magnetic heading of the body x axis is
 %   atan2d(-Y,X) and the inclination is atan2d(Z,hypot(X,Y)).
+%
+% mleclair (using claude), Oct 2026
 x = repmat([1 0 0],size(m,1),1);
 xh = x - sum(x.*d,2).*d;
 xh = xh./vecnorm(xh,2,2);

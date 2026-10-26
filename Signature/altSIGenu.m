@@ -15,6 +15,8 @@ function [bavgvelENU_alt,bavgspdXY,shearXY] = altSIGenu(avg,hh)
 % [X;Y;Z] = inv(R)*[E;N;U];
 
 % K. Zeiden Apr 2025
+% mleclair (using claude), Oct 2026: vectorized over bins, T_AHRS inverted
+%   once, invalid AHRS matrices skipped
 
 % Beam to XYZ transformation matrix for Signature 1000. 
 %    Can double check by looking at Config.avg_beam2xyz from SD software.

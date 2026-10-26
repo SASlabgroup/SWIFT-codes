@@ -15,6 +15,8 @@ function [SWIFT,qc] = QC_mooredPositions(SWIFT,options)
 %      records kept.
 %
 % qc.dropped and qc.spike flag the input records.
+%
+% mleclair (using claude), Oct 2026
 
 arguments
     SWIFT struct

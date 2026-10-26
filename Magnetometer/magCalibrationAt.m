@@ -8,6 +8,8 @@ function [center,shape] = magCalibrationAt(cal,time)
 %   cal.breaks are used: the center is interpolated linearly in time (held
 %   constant beyond the first/last window) and the shape is that of the
 %   nearest window. NaN if that side has no window.
+%
+% mleclair (using claude), Oct 2026
 segment = discretize(time,[-Inf; cal.breaks; Inf]);
 in = find(cal.segment == segment);
 ndim = size(cal.center,2);

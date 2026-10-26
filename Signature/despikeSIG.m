@@ -9,6 +9,10 @@ function [wclean,ispike] = despikeSIG(wraw,nfilt,dspikemax,filltype)
 %                               'interp' which filles spikes with linear interpolation
 %               wclean      de-spiked data
 %               ispike      indices of spikes that were filled
+%
+% mleclair (using claude), Oct 2026: filltype option ('none' or 'interp');
+%   spike fill vectorized with fillmissing (same result as the per-ping
+%   interp1)
 
 arguments
     wraw

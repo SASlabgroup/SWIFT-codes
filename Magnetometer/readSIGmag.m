@@ -16,6 +16,8 @@ function [m,d,heading] = readSIGmag(avg)
 %            declination, DECL, is 0).
 %
 %   Samples are kept if the field and acceleration are finite.
+%
+% mleclair (using claude), Oct 2026
 
 m = zeros(0,3); d = zeros(0,3); heading = zeros(0,1);
 if ~all(isfield(avg,{'Magnetometer','Accelerometer','Heading'})); return; end

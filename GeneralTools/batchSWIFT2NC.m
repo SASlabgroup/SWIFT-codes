@@ -3,6 +3,7 @@ function batchSWIFT2NC(varargin)
 %
 % J. Thomson, May 2021
 % M. LeClair, Oct 2025
+% mleclair (using claude), Oct 2026: 'nfreq' option, passed to SWIFT2NC
 %
 % Usage:
 %   batchSWIFT2NC    % default: '*SWIFT*.mat' in current dir

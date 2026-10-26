@@ -5,6 +5,8 @@ function [inventory,summary,failures,lagsummary] = AuditWillapaHPR(expdir,outdir
 % union of L4 records and all raw/reformatted SIG and SBG files, then joins
 % the per-mission audits written by FixSIGENU_Willapa. The summary goes to
 % <outdir>/L5_review.
+%
+% mleclair (using claude), Oct 2026
 
 if nargin < 1 || isempty(expdir)
     expdir = '/Volumes/PortableSSD/MooredSWIFTS';

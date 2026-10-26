@@ -11,6 +11,8 @@ function test_SFdissipation_fast(missiondir,stagedir,nburst)
 % 3) reprocess_SIG L3 and SIG products, with timing: default vs
 %    FastDissipation within tolerance, and FastDissipation vs
 %    FastDissipation + ParallelBursts exactly equal
+%
+% mleclair (using claude), Oct 2026
 
 if nargin < 3
     nburst = 24;

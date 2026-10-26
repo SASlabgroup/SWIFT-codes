@@ -1,6 +1,8 @@
 function HRprofiles = processSIGfiles_parallel(bfiles,opt,slash)
 % Compute HR velocity profiles for independent Signature burst files on a
 % thread pool. Bursts left empty are processed serially by reprocess_SIG.
+%
+% mleclair (using claude), Oct 2026
 
 HRprofiles = cell(length(bfiles),1);
 if isempty(ver('parallel')) || ...

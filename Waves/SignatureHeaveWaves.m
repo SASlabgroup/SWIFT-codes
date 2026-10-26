@@ -18,6 +18,8 @@ end
 % term |a_h|^2/(2g), which can bias the low-frequency spectrum high. The
 % Willapa driver therefore treats this as a documented scalar fallback, not
 % an unbiased replacement for SBG heave.
+%
+% mleclair (using claude), Oct 2026
 
 gravity = 9.80665;
 target_frequency = double(target_frequency(:)');

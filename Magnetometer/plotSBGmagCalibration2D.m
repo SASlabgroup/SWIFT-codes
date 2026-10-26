@@ -11,6 +11,8 @@ function [cal,records] = plotSBGmagCalibration2D(source,options)
 %   name-value options (Declination, Breaks, Window, Step, SWIFTfile,
 %   OutputFile) it takes. The figure goes to
 %   <folder>/debug/<mission>_SBG_mag2d.png by default.
+%
+% mleclair (using claude), Oct 2026
 
 arguments
     source (1,1) string

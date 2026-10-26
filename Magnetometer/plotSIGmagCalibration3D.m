@@ -14,6 +14,8 @@ function [cal,records] = plotSIGmagCalibration3D(source,inclination,options)
 %   Window, Step, SWIFTfile, OutputFile) it takes. The accelerometer
 %   direction points up (readSIGmag), so the fit uses -inclination. The
 %   figure goes to <folder>/debug/<mission>_Signature_mag3d.png by default.
+%
+% mleclair (using claude), Oct 2026
 
 arguments
     source (1,1) string

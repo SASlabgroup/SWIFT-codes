@@ -6,6 +6,9 @@
 % 4. L3_postprocessSWIFT.m
 
 % K. Zeiden June 2025
+% mleclair (using claude), Oct 2026: paths with fullfile and the SSD as
+%   the Mac default; L0-L3 commented out (done); SBG wave recovery (SWIFT26
+%   tmin 76); SWIFT25 Signature-heave wave fill
 
 %% Experiment specific parameters
 

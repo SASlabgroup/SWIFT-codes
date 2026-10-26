@@ -19,6 +19,8 @@ function cal = plotMagCalibration3D(records,folder,inclination,options)
 %   reported heading and the watch-circle bearing; the heading minus the
 %   watch bearing by watch-circle lobe; and the inclination and field
 %   magnitude, which a correct calibration holds constant.
+%
+% mleclair (using claude), Oct 2026
 
 arguments
     records struct

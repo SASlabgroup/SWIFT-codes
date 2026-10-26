@@ -48,6 +48,8 @@ function [eps,qual,sfdata] = SFdissipation_fast(w,z,rmin,rmax,nzfit,fittype,avgt
 %           time from running sums over pings, using only the upper
 %           triangle (dW is antisymmetric). Equal to SFdissipation within
 %           floating-point tolerance.
+% mleclair (using claude), Oct 2026: faster version of SFdissipation,
+%   equal within floating-point tolerance
 
 arguments
     w

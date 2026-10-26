@@ -26,6 +26,8 @@ function [time,heading,anchor,axisbearing,dwells] = watchBearingDrag(SWIFT,optio
 %   Options (defaults): DwellRadius (15 m), MinDwell (1 h), MergeDistance
 %   (20 m), StepDistance (8 m), MaxDistance (200 m), At ([]), MaxGap
 %   (30 min).
+%
+% mleclair (using claude), Oct 2026
 arguments
     SWIFT struct
     options.DwellRadius (1,1) double = 15

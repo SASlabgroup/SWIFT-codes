@@ -3,6 +3,8 @@ function [HRprofile,fh] = processSIGburst_5BWW(burst,varargin)
 % averaged across all 5 beams sampling HR data on Sig1000 mounted on a
 % WireWalker.
 % K. Zeiden 10/2025
+% mleclair (using claude), Oct 2026: despikeSIG called with 'none' (spike
+%   mask only)
 
 %% Development
 

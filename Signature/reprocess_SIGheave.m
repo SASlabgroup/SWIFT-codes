@@ -16,6 +16,8 @@ end
 % approximate 1 Hz natural frequency is discarded, and no empirical SBG
 % transfer or extrapolated tail is applied. A project driver must explicitly
 % promote signaturewaves into the canonical fields.
+%
+% mleclair (using claude), Oct 2026
 
 if opts.fmax <= opts.fmin
     error('reprocess_SIGheave:InvalidBand', ...

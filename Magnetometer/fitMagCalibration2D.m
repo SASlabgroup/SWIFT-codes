@@ -31,6 +31,8 @@ function cal = fitMagCalibration2D(key,xy,window,step,breaks)
 %   This levels first and fits in 2D, so a large body-frame hard iron that
 %   projects differently as the tilt changes is not removed; see
 %   fitMagCalibration3D.
+%
+% mleclair (using claude), Oct 2026
 
 if nargin < 5; breaks = []; end
 nbin = 36;          % 10-deg heading bins

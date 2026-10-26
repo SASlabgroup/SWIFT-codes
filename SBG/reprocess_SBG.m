@@ -68,6 +68,10 @@ end
 %% Length of raw burst data to process, from end of burst (must be > 1536/5 = 307.2 s)
 % tproc = 475;% seconds
 % Moved to input, changed to fixed start, K. Zeiden 05/22/2025
+% mleclair (using claude), Oct 2026: tmin/minimum_windows crop options to
+%   recover short records; per-record processing report
+%   (writeSBGprocessingReport); save_product, save_cache and report_file
+%   options; native-grid spectra kept in sbgwaves
 
 %% Sampling Rate
 fs = 5; % should be 5 Hz for standard SBG settings

@@ -13,6 +13,10 @@ function SWIFT2NC(SWIFT_in,filename,varargin)
 %   Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
 %   Feb 2023 by J. Thomson for SASSIE and general use
 %   Nov 2024 by J. Thomson to include microSWIFTs
+% mleclair (using claude), Oct 2026: keeps the Signature echogram and
+%   altimeter; 'nfreq' option (42 or 85 bins); drops
+%   sbgwaves/signaturewaves; keeps the time axis when a scalar field is
+%   empty in some records
 
 SWIFT = SWIFT_in;
 

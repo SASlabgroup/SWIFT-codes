@@ -3,6 +3,10 @@ function [HRprofile,fh,wpeof] = processSIGburst(burst,varargin)
 %   - remove worst pings to get good EOFs, then interpolate back in time
 %   - alternatively, could use *only* despiked data. This does not
 %       work well when data are very noisy/poor quality
+%
+% mleclair (using claude), Oct 2026: bad-data fill vectorized with
+%   fillmissing; optional SFdissipation_fast (opt.fastdissipation);
+%   structure function reused between the linear and cubic fits
 
 if nargin < 2
     opt.xz = 0.2;

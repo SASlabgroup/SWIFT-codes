@@ -5,6 +5,8 @@ function [out,info] = mergeSBGdata(records,referencetime)
 % UTC packets therefore provide a clock anchor even when other packets in a
 % burst contain stale calendar fields. Each input record is anchored before
 % samples are combined because the hardware timestamp resets between files.
+%
+% mleclair (using claude), Oct 2026
 
 if ~iscell(records); records = {records}; end
 if nargin < 2 || isempty(referencetime); referencetime = now; end

@@ -33,6 +33,8 @@ function cal = plotMagCalibration2D(records,folder,options)
 %   bearing by watch-circle lobe; the calibrated minus the reported heading
 %   (for the SBG, the yaw anchor offset); and the horizontal field
 %   magnitude, which a correct calibration holds constant.
+%
+% mleclair (using claude), Oct 2026
 
 arguments
     records struct

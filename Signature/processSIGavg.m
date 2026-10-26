@@ -1,4 +1,6 @@
 function [profile,fh] = processSIGavg(avg,opt)
+% mleclair (using claude), Oct 2026: fish flag uses each beam's own
+%   amplitude (was beam 1 for every beam)
 
 %    Check to make sure dimensions correct
     if size(avg.VelocityData,3) ~= 4

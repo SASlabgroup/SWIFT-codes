@@ -13,6 +13,8 @@ function records = loadSIGmagRecords(folder,nsample)
 %   records.yaw   record-mean onboard heading, deg;
 %   records.file  source file.
 %   Uses a parallel pool if one is open.
+%
+% mleclair (using claude), Oct 2026
 
 if nargin < 2; nsample = 100; end
 files = dir(fullfile(folder,'**','*_SIG_*.mat'));

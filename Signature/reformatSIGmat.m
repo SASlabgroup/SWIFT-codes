@@ -3,6 +3,8 @@ function reformatSIGmat(missiondir)
 % software to match the convensions of the lab structures
 % K.Zeiden June 2024
 % M.LeClair April 2026 - parallel & fix
+% mleclair (using claude), Oct 2026: skips existing _reformat files; reads
+%   the echogram; average altimeter for both export formats
 
 bfiles = dir(fullfile(missiondir, '**', '*.mat'));
 bfiles = bfiles(~endsWith({bfiles.name},'_reformat.mat'));

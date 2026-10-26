@@ -8,6 +8,8 @@ function time = burstNameToDatenum(name)
 %         10-minute slot within the hour, SS = 01..06.
 %   time  datenum of the slot start (14:20 in the example), or NaN if the
 %         name has no slot.
+%
+% mleclair (using claude), Oct 2026
 
 % The date, hour and slot, each captured as a token:
 %   (\d{2}[A-Za-z]{3}\d{4})  date: 2 digits, a 3-letter month, 4 digits

@@ -6,6 +6,8 @@ function [HRprofile,fh] = processSIGburst_5B(burst,varargin)
 % with increasing severity towards the base of the profile.
 
 % K. Zeiden January 2026
+% mleclair (using claude), Oct 2026: despikeSIG called with 'none' (spike
+%   mask only)
 
 %% Development %%
 % missiondir = 'S:\RRF\HR5Beam\20260108\RRF_FieldTest_Jan2026\SWIFT23_08Jan2026';

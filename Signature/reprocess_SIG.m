@@ -92,6 +92,8 @@ function [SWIFT,sinfo] = reprocess_SIG(missiondir,readraw,plotburst,opts)
 %           Update QC to enable removal of bad bins first, prevents entire
 %           pings being tossed if e.g. the bottom 10% of data is bad but
 %           the rest of the profile is fine. Both in HR and BB processing.
+% mleclair (using claude), Oct 2026: FastDissipation and ParallelBursts
+%   options (processSIGfiles_parallel)
 
 % NOTE: Known issue -- sometimes the ADCP 'sputters' and for a few minutes
 % will record perfectly periodic ping-ping oscillations in correlation,

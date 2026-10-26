@@ -1,4 +1,5 @@
 function plotWatchResidual(key,heading,recordwatch,lobeA,timelimits)
+% mleclair (using claude), Oct 2026
 residual = mod(heading-recordwatch+180,360)-180;
 if ~any(isfinite(residual))
     title('heading minus watch bearing: no SWIFT position file'); return

@@ -1,5 +1,9 @@
 % Ad hoc QC Willapa Moored
 % K. Zeiden July 2025
+% mleclair (using claude), Oct 2026: expdir/missionnames overrides;
+%   SWIFT28 predeployment cut; Signature currents rotated from magnetic to
+%   true north (15.10 deg); SWIFT24 off-site cut; QC_mooredPositions and
+%   QC_isolatedWaveSpikes
 
 % Note: format to NaN out bad data
 % ibad = [SWIFT.variable] > varmax;

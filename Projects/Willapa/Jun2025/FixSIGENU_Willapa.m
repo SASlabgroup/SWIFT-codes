@@ -11,6 +11,8 @@
 % below), and validorientationmissions (missions for which both the SBG
 % attitude-valid and heading-valid flags are required). Requires the
 % Parallel Computing Toolbox.
+%
+% mleclair (using claude), Oct 2026
 
 if ~exist('expdir','var')
     expdir = '/Volumes/PortableSSD/MooredSWIFTS';

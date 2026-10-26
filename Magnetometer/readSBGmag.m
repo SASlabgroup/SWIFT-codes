@@ -13,6 +13,8 @@ function [m,d,yaw] = readSBGmag(sbgData)
 %   calibration OK; sbgECom 5.8 sbgEComLogMag.h) and the values are finite
 %   and plausible: some records contain corrupt finite Euler angles (e.g.
 %   1e21 rad) and mag values (e.g. 1e37) that pass the status flags.
+%
+% mleclair (using claude), Oct 2026
 
 m = zeros(0,3); d = zeros(0,3); yaw = zeros(0,1);
 if ~all(isfield(sbgData,{'Mag','EkfEuler'})); return; end

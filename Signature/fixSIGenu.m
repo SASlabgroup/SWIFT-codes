@@ -40,6 +40,12 @@ function [avgout, cparams, fh] = fixSIGenu(avg, burst, sbgData, mountyaw, worldy
 %
 % Based on fixSIGenu by K. Zeiden, Dec 2025
 % Extended to use SBG data with automatic lag correction
+% mleclair (using claude), Oct 2026: mount yaw as a body rotation and
+%   world yaw as an earth-frame rotation (R = Rz_world*R_SBG*Rz_mount),
+%   replacing the heading offset and auto offset; neighbouring SBG records
+%   combined on UTC; relative-time fallback; forced lag; bursts with
+%   vertical-gyro SBG yaw skipped unless allowrelativeyaw; optional
+%   valid-orientation mask
 
 % Matrix names use R_destination_T_source: v_destination =
 % R_destination_T_source * v_source. Adjacent frames therefore cancel:

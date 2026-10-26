@@ -1,5 +1,7 @@
 function model = fitCircleKasa(x,y)
 %FITCIRCLEKASA Algebraic least-squares circle [xCenter yCenter radius].
+%
+% mleclair (using claude), Oct 2026
 x = x(:);
 y = y(:);
 valid = isfinite(x) & isfinite(y);

@@ -11,6 +11,8 @@ end
 
 % Run the complete recovery without writing a product, then validate its
 % band-limited Hs against simultaneous, gross-error-free SBG records.
+%
+% mleclair (using claude), Oct 2026
 
 if opts.reprocess_sbg
     if strlength(string(opts.plot_dir)) > 0

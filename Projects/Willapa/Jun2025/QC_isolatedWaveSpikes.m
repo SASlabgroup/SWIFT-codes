@@ -17,6 +17,8 @@ function [SWIFT,qc] = QC_isolatedWaveSpikes(SWIFT,varargin)
 %
 % The complete wave bundle is rejected together so bulk values and spectra
 % cannot disagree after QC. Frequency coordinates are retained.
+%
+% mleclair (using claude), Oct 2026
 
 p = inputParser;
 addParameter(p,'NeighborHours',1,@(x) isnumeric(x) && isscalar(x) && x > 0);

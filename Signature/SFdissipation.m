@@ -43,6 +43,9 @@ function [eps,qual,sfdata] = SFdissipation(w,z,rmin,rmax,nzfit,fittype,avgtype,s
 %                       for fitting the same velocity field a second time.
 
 %           K.Zeiden Summer/Fall 2022
+% mleclair (using claude), Oct 2026: faster (vectorized); input
+%   validation; optional sfdata output/input to reuse the structure function
+%   for a second fit
 
 arguments
     w

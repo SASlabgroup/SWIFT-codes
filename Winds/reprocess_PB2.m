@@ -8,6 +8,8 @@ function [SWIFT,sinfo] = reprocess_PB2(missiondir,readraw,plotburst)
 % position for the matching burst. Existing primary positions are retained.
 
 % K. Zeiden 03/2025 based on reprocess_WXT
+% mleclair (using claude), Oct 2026: fills missing primary positions with
+%   the median valid PB2 GPS position (flags.pb2positionfallback)
 % plotburst = false;
 
 if ispc 

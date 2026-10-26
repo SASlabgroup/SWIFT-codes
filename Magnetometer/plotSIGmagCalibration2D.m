@@ -12,6 +12,8 @@ function [cal,records] = plotSIGmagCalibration2D(source,options)
 %   plotMagCalibration2D, whose name-value options (Declination, Breaks,
 %   Window, Step, SWIFTfile, OutputFile) it takes. The figure goes to
 %   <folder>/debug/<mission>_Signature_mag2d.png by default.
+%
+% mleclair (using claude), Oct 2026
 
 arguments
     source (1,1) string

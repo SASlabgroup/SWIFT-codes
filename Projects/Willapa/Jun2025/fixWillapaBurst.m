@@ -18,6 +18,8 @@ function [result,profile] = fixWillapaBurst(swiftburst,source,opts,forcedtimelag
 %
 %   result is one row of the L5 source audit; profile is the corrected
 %   Signature profile (empty unless result.status is "corrected").
+%
+% mleclair (using claude), Oct 2026
 
 result = emptyResult(source);
 profile = [];

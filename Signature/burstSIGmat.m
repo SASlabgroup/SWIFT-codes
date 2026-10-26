@@ -15,6 +15,8 @@ function burstSIGmat(missiondir, outdir, swiftname, burstMin)
 %   where BB is the burst index in the hour (01 = first burst of the hour).
 %
 % M.LeClair April 2026
+% mleclair (using claude), Oct 2026: echogram samples (echo.time) sliced
+%   into bursts with avg and burst
 
 if nargin<2 || isempty(outdir),   outdir = fullfile(missiondir,'bursts'); end
 if nargin<4 || isempty(burstMin), burstMin = 12; end

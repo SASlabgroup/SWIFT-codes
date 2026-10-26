@@ -1,6 +1,8 @@
 function [watchtime,watch,recordwatch,lobeA] = watchValidation(folder,swiftfile,key)
 % Drag-corrected watch-circle bearing (validation only) and lobe of each
 % record. Without a SWIFT file, all records count as lobe A.
+%
+% mleclair (using claude), Oct 2026
 watchtime = NaN; watch = NaN;
 recordwatch = NaN(size(key)); lobeA = true(size(key));
 if swiftfile == ""
