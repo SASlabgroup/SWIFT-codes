@@ -42,7 +42,8 @@ function [avgout, cparams, fh] = fixSIGenu(avg, burst, sbgData, mountyaw, worldy
 % Based on fixSIGenu by K. Zeiden, Dec 2025
 % Extended to use SBG data with automatic lag correction
 % M. LeClair w/ claude, Oct 2026: mount yaw as a body rotation and
-%   world yaw as an earth-frame rotation,
+%   world yaw as an earth-frame rotation (earth_R_sig = earth_R_sbg *
+%   sbg_R_sig, worldyaw in earth_R_sbg),
 %   replacing the heading offset and auto offset; neighbouring SBG records
 %   combined on UTC; relative-time fallback; forced lag; bursts with
 %   vertical-gyro SBG yaw skipped unless allowrelativeyaw; optional
@@ -50,10 +51,22 @@ function [avgout, cparams, fh] = fixSIGenu(avg, burst, sbgData, mountyaw, worldy
 % M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
 %   running between bursts is timed correctly
 
-% Matrix names use R_destination_T_source: v_destination =
-% R_destination_T_source * v_source. Adjacent frames therefore cancel:
-%   R_earth_T_sig = R_earth_T_sbg * R_sbg_T_sig
-% worldyaw is included in R_earth_T_sbg; mountyaw defines R_sbg_T_sig.
+% Names follow Craig (Introduction to Robotics): a_R_b is the rotation of
+% frame b relative to frame a, so v_in_a = a_R_b * v_in_b and adjacent
+% frames cancel:
+%   earth_R_sig = earth_R_sbg * sbg_R_sig
+% Vectors are named <quantity>_rt_<reference>_in_<frame>: vel_rt_sig_in_beam
+% is water velocity relative to the Signature, expressed in beam
+% coordinates. Frames: beam (along beams 1-4), sig (Signature x, y, z), sbg
+% (SBG body), earth (east, north, up).
+% The two 4 x 4 maps keep Nortek's names (Config.avg_beam2xyz); they are
+% linear maps, not rotations or homogeneous transforms:
+%   beam2xyz   beam velocities -> [X Y Z1 Z2], with two vertical components,
+%              one per beam pair (Z1: beams 1 & 3, Z2: beams 2 & 4); fixed by
+%              the beam geometry, not orthogonal.
+%   xyz2enu    earth_R_sig in 4-component form (expandToBeamPairs), acting on
+%              [X Y Z1 Z2] -> [E N U1 U2].
+% worldyaw is included in earth_R_sbg; mountyaw defines sbg_R_sig.
 % The mount is a body rotation, so it is not the same as adding mountyaw to
 % the SBG heading once the buoy tilts (see the ENU step below).
 %
@@ -307,50 +320,47 @@ heading = sbgheading + mountyaw;
 %% Recompute ENU velocities using SBG orientation
 
 % Signature 1000 beam coordinates -> Signature Cartesian coordinates.
-T_sig_T_beam = [1.1831         0   -1.1831         0;
-                     0   -1.1831         0    1.1831;
-                0.5518         0    0.5518         0;
-                     0    0.5518         0    0.5518];
+beam2xyz = [1.1831         0   -1.1831         0;
+                    0   -1.1831         0    1.1831;
+               0.5518         0    0.5518         0;
+                    0    0.5518         0    0.5518];
 
 % Onboard ENU velocities
-velENU = avg.VelocityData;
-[nping, nbin, ~] = size(velENU);
+vel_rt_sig_in_earth4_onboard = avg.VelocityData;
+[nping, nbin, ~] = size(vel_rt_sig_in_earth4_onboard);
 
 % Onboard AHRS rotation: Signature Cartesian coordinates -> earth ENU.
-R_earth_T_sig_onboard = NaN(nping, 3, 3);
-R_earth_T_sig_onboard(:,1,1) = avg.AHRS_M11;
-R_earth_T_sig_onboard(:,1,2) = avg.AHRS_M12;
-R_earth_T_sig_onboard(:,1,3) = avg.AHRS_M13;
-R_earth_T_sig_onboard(:,2,1) = avg.AHRS_M21;
-R_earth_T_sig_onboard(:,2,2) = avg.AHRS_M22;
-R_earth_T_sig_onboard(:,2,3) = avg.AHRS_M23;
-R_earth_T_sig_onboard(:,3,1) = avg.AHRS_M31;
-R_earth_T_sig_onboard(:,3,2) = avg.AHRS_M32;
-R_earth_T_sig_onboard(:,3,3) = avg.AHRS_M33;
+earth_R_sig_onboard = NaN(nping, 3, 3);
+earth_R_sig_onboard(:,1,1) = avg.AHRS_M11;
+earth_R_sig_onboard(:,1,2) = avg.AHRS_M12;
+earth_R_sig_onboard(:,1,3) = avg.AHRS_M13;
+earth_R_sig_onboard(:,2,1) = avg.AHRS_M21;
+earth_R_sig_onboard(:,2,2) = avg.AHRS_M22;
+earth_R_sig_onboard(:,2,3) = avg.AHRS_M23;
+earth_R_sig_onboard(:,3,1) = avg.AHRS_M31;
+earth_R_sig_onboard(:,3,2) = avg.AHRS_M32;
+earth_R_sig_onboard(:,3,3) = avg.AHRS_M33;
 
 % Step 1) Revert ENU velocities back to beam velocities
-velBEAM = NaN(size(velENU));
+vel_rt_sig_in_beam = NaN(size(vel_rt_sig_in_earth4_onboard));
 validmatrix = false(nping,1);
 for iping = 1:nping
-    R_earth_T_sig = squeeze(R_earth_T_sig_onboard(iping, :, :));
-    R_earth4_T_sig4 = [R_earth_T_sig(1,1) R_earth_T_sig(1,2) R_earth_T_sig(1,3)/2 R_earth_T_sig(1,3)/2;
-                       R_earth_T_sig(2,1) R_earth_T_sig(2,2) R_earth_T_sig(2,3)/2 R_earth_T_sig(2,3)/2;
-                       R_earth_T_sig(3,1) R_earth_T_sig(3,2) R_earth_T_sig(3,3)   0;
-                       R_earth_T_sig(3,1) R_earth_T_sig(3,2) 0                    R_earth_T_sig(3,3)];
+    earth_R_sig = squeeze(earth_R_sig_onboard(iping, :, :));
+    xyz2enu = expandToBeamPairs(earth_R_sig);
     
     % A few affected files contain isolated corrupted matrices. Do not let
     % an unstable inversion contaminate the burst-average profile.
-    if any(~isfinite(R_earth_T_sig),'all') || ...
-            rcond(R_earth4_T_sig4) < 1e-8 || ...
-            abs(det(R_earth_T_sig)-1) > 0.1 || ...
-            norm(R_earth_T_sig*R_earth_T_sig'-eye(3),'fro') > 0.1
+    if any(~isfinite(earth_R_sig),'all') || ...
+            rcond(xyz2enu) < 1e-8 || ...
+            abs(det(earth_R_sig)-1) > 0.1 || ...
+            norm(earth_R_sig*earth_R_sig'-eye(3),'fro') > 0.1
         continue
     end
 
-    enu_p  = squeeze(velENU(iping, :, :)).';   % 4 x nbin
-    sig_p  = R_earth4_T_sig4 \ enu_p;
-    beam_p = T_sig_T_beam \ sig_p;
-    velBEAM(iping, :, :) = beam_p.';
+    v_rt_sig_in_earth4  = squeeze(vel_rt_sig_in_earth4_onboard(iping, :, :)).';   % 4 x nbin
+    v_rt_sig_in_sig4  = xyz2enu \ v_rt_sig_in_earth4;
+    v_rt_sig_in_beam = beam2xyz \ v_rt_sig_in_sig4;
+    vel_rt_sig_in_beam(iping, :, :) = v_rt_sig_in_beam.';
     validmatrix(iping) = true;
 end
 
@@ -358,10 +368,10 @@ end
 % orientation is already represented by roll near 180 degrees. Reusing the
 % same beam transform makes this step a no-op when the replacement HPR is
 % identical to the onboard HPR.
-velENU_new = NaN(size(velENU));
+vel_rt_sig_in_earth4 = NaN(size(vel_rt_sig_in_earth4_onboard));
 
 % The Signature is rotated by mountyaw about its own z axis relative to the
-% SBG, so R_earth_T_sig = R_earth_T_sbg * R_sbg_T_sig. Adding mountyaw to the SBG
+% SBG, so earth_R_sig = earth_R_sbg * sbg_R_sig. Adding mountyaw to the SBG
 % Euler heading instead (an earth-frame yaw) is the same only for a level
 % buoy: it reuses the SBG pitch/roll as the Signature's, misplacing the tilt
 % by 2*sin(mountyaw/2)*tilt (~0.77*tilt at 45 deg). worldyaw is an
@@ -370,50 +380,31 @@ velENU_new = NaN(size(velENU));
 % healthy SBG and a healthy Signature AHRS. Against the Signature's own AHRS
 % matrix, the instrument z axis (gravity in the body frame) was 16 deg off at
 % 20-25 deg tilt with the Euler-heading form and ~3 deg at all tilts with
-% R_earth_T_sbg * R_sbg_T_sig.
-R_sbg_T_sig = [cosd(mountyaw) -sind(mountyaw) 0;
-               sind(mountyaw)  cosd(mountyaw) 0;
-               0               0              1];
+% earth_R_sbg * sbg_R_sig.
+sbg_R_sig = rotz(mountyaw);
 
 for iping = 1:nping
-    % Nortek's stored AHRS matrix uses heading clockwise from north and
-    % pitch with the opposite sign to a Cartesian y rotation. This identity
-    % reproduces the raw AHRS matrices to stored precision.
-    hh = 90 - sbgheading(iping);
-    pp = -pitch(iping);
-    rr = roll(iping);
+    % Z-Y-X Euler angles (Craig). Nortek's stored AHRS matrix uses heading
+    % clockwise from north and pitch with the opposite sign to a Cartesian
+    % y rotation. This identity reproduces the raw AHRS matrices to stored
+    % precision.
+    earth_R_sbg = rotz(90 - sbgheading(iping)) * roty(-pitch(iping)) * ...
+        rotx(roll(iping));
+    earth_R_sig = earth_R_sbg * sbg_R_sig;
+    xyz2enu = expandToBeamPairs(earth_R_sig);
     
-    R_earth_T_yawframe = [cosd(hh) -sind(hh) 0;
-                          sind(hh)  cosd(hh) 0;
-                          0         0        1];
-
-    R_yawframe_T_pitchframe = [cosd(pp)  0  sind(pp);
-                               0         1  0;
-                              -sind(pp)  0  cosd(pp)];
-    R_pitchframe_T_sbg = [1  0         0;
-                          0  cosd(rr) -sind(rr);
-                          0  sind(rr)  cosd(rr)];
-    
-    R_earth_T_sbg = R_earth_T_yawframe * ...
-        R_yawframe_T_pitchframe * R_pitchframe_T_sbg;
-    R_earth_T_sig = R_earth_T_sbg * R_sbg_T_sig;
-    R_earth4_T_sig4 = [R_earth_T_sig(1,1) R_earth_T_sig(1,2) R_earth_T_sig(1,3)/2 R_earth_T_sig(1,3)/2;
-                       R_earth_T_sig(2,1) R_earth_T_sig(2,2) R_earth_T_sig(2,3)/2 R_earth_T_sig(2,3)/2;
-                       R_earth_T_sig(3,1) R_earth_T_sig(3,2) R_earth_T_sig(3,3)   0;
-                       R_earth_T_sig(3,1) R_earth_T_sig(3,2) 0                    R_earth_T_sig(3,3)];
-    
-    beam_p = squeeze(velBEAM(iping, :, :)).';  % 4 x nbin
-    velENU_new(iping, :, :) = ...
-        (R_earth4_T_sig4 * T_sig_T_beam * beam_p).';
+    v_rt_sig_in_beam = squeeze(vel_rt_sig_in_beam(iping, :, :)).';  % 4 x nbin
+    vel_rt_sig_in_earth4(iping, :, :) = ...
+        (xyz2enu * beam2xyz * v_rt_sig_in_beam).';
 end
 
 % Swap signs in ENU
-% velENU_new(:, :, 2:4) = -velENU_new(:, :, 2:4);
+% vel_rt_sig_in_earth4(:, :, 2:4) = -vel_rt_sig_in_earth4(:, :, 2:4);
 
 %% Create output structure
 
 avgout = avg;
-avgout.VelocityData = velENU_new;
+avgout.VelocityData = vel_rt_sig_in_earth4;
 
 %% Create diagnostics structure
 cparams.toff = toff;
@@ -500,7 +491,7 @@ title(sprintf('Roll | ADCP: %.1f±%.1f° | SBG: %.1f±%.1f°', mean_adcp, std_ad
 
 % Subplot 6: East velocity (original)
 subplot(7,1,6)
-pcolor(adcp_time, 1:nbin, squeeze(velENU(:,:,1))');
+pcolor(adcp_time, 1:nbin, squeeze(vel_rt_sig_in_earth4_onboard(:,:,1))');
 shading flat;
 colorbar;
 colormap(cmocean('balance'));
@@ -510,7 +501,7 @@ clim([-1 1])
 
 % Subplot 7: East velocity (corrected)
 subplot(7,1,7)
-pcolor(adcp_time, 1:nbin, squeeze(velENU_new(:,:,1))');
+pcolor(adcp_time, 1:nbin, squeeze(vel_rt_sig_in_earth4(:,:,1))');
 shading flat;
 colorbar;
 colormap(cmocean('balance'));
@@ -681,4 +672,34 @@ a = a(isfinite(a));
 b = b(isfinite(b));
 tf = ~isempty(a) && ~isempty(b) && ...
     min(max(a),max(b)) > max(min(a),min(b));
+end
+
+function R = rotz(angle)
+% Rotation about z by angle (deg), Craig's R_Z.
+R = [cosd(angle) -sind(angle) 0;
+     sind(angle)  cosd(angle) 0;
+     0            0           1];
+end
+
+function R = roty(angle)
+% Rotation about y by angle (deg), Craig's R_Y.
+R = [ cosd(angle) 0 sind(angle);
+      0           1 0;
+     -sind(angle) 0 cosd(angle)];
+end
+
+function R = rotx(angle)
+% Rotation about x by angle (deg), Craig's R_X.
+R = [1 0            0;
+     0 cosd(angle) -sind(angle);
+     0 sind(angle)  cosd(angle)];
+end
+
+function xyz2enu = expandToBeamPairs(earth_R_sig)
+% earth_R_sig in 4-component form, acting on [X Y Z1 Z2] -> [E N U1 U2]: each
+% vertical component (one per beam pair) contributes half to E and N.
+xyz2enu = [earth_R_sig(1,1) earth_R_sig(1,2) earth_R_sig(1,3)/2 earth_R_sig(1,3)/2;
+           earth_R_sig(2,1) earth_R_sig(2,2) earth_R_sig(2,3)/2 earth_R_sig(2,3)/2;
+           earth_R_sig(3,1) earth_R_sig(3,2) earth_R_sig(3,3)   0;
+           earth_R_sig(3,1) earth_R_sig(3,2) 0                  earth_R_sig(3,3)];
 end

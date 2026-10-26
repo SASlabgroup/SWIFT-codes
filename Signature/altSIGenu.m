@@ -9,22 +9,29 @@ function [bavgvelENU_alt,bavgspdXY,shearXY] = altSIGenu(avg,hh)
 
 % NOTE: ENU alt doesn't work well. Profiles of scalar spd are reasonable. 
 
-% [E;N;U] = R*T*[B1;B2;B3;B4];
-% [B1;B2;B3;B4] = inv(T)*inv(R)*[E;N;U];
-% [E;N;U] = R*[X;Y;Z];
-% [X;Y;Z] = inv(R)*[E;N;U];
+% [E;N;U1;U2] = xyz2enu*beam2xyz*[B1;B2;B3;B4];
+% [X;Y;Z1;Z2] = xyz2enu\[E;N;U1;U2];
+% [B1;B2;B3;B4] = beam2xyz\[X;Y;Z1;Z2];
+%
+% Names follow Craig (Introduction to Robotics): a_R_b rotates frame b into
+% frame a (v_in_a = a_R_b*v_in_b); vectors are <quantity>_rt_<reference>
+% _in_<frame> (vel_rt_sig_in_beam: water velocity relative to the
+% Signature, in beam coordinates). The two 4 x 4 maps keep Nortek's names
+% (Config.avg_beam2xyz); they are linear maps, not rotations: beam2xyz (beam
+% -> [X Y Z1 Z2], fixed by the beam geometry) and xyz2enu (a rotation in
+% 4-component form, expandToBeamPairs).
 
 % Changelog:
 % K. Zeiden Apr 2025
 % M. LeClair w/ claude, Oct 2026: vectorized over bins, beam2xyz inverted
 %   once, invalid AHRS matrices skipped
 
-% Beam to XYZ transformation matrix for Signature 1000. 
+% Beam to XYZ4 matrix for Signature 1000. 
 %    Can double check by looking at Config.avg_beam2xyz from SD software.
-T_AHRS = [1.1831         0   -1.1831         0;
-               0   -1.1831         0    1.1831;
-          0.5518         0    0.5518         0;
-               0    0.5518         0    0.5518];
+beam2xyz = [1.1831         0   -1.1831         0;
+                    0   -1.1831         0    1.1831;
+               0.5518         0    0.5518         0;
+                    0    0.5518         0    0.5518];
 
 % Assume burst-averaged pitch = 0, roll = 180 if not provided
 if length(hh) == 3
@@ -40,90 +47,103 @@ else
 end
 
 % Onboard ENU velocities
-velENU = avg.VelocityData;
-[nping,nbin,~] = size(velENU);
+vel_rt_sig_in_earth4 = avg.VelocityData;
+[nping,nbin,~] = size(vel_rt_sig_in_earth4);
 
 % AHRS rotation matrix used in onboard ENU calculation
-R_AHRS = NaN(nping,3,3);
-R_AHRS(:,1,1) = avg.AHRS_M11;
-R_AHRS(:,1,2) = avg.AHRS_M12;
-R_AHRS(:,1,3) = avg.AHRS_M13;
-R_AHRS(:,2,1) = avg.AHRS_M21;
-R_AHRS(:,2,2) = avg.AHRS_M22;
-R_AHRS(:,2,3) = avg.AHRS_M23;
-R_AHRS(:,3,1) = avg.AHRS_M31;
-R_AHRS(:,3,2) = avg.AHRS_M32;
-R_AHRS(:,3,3) = avg.AHRS_M33;
+earth_R_sig_onboard = NaN(nping,3,3);
+earth_R_sig_onboard(:,1,1) = avg.AHRS_M11;
+earth_R_sig_onboard(:,1,2) = avg.AHRS_M12;
+earth_R_sig_onboard(:,1,3) = avg.AHRS_M13;
+earth_R_sig_onboard(:,2,1) = avg.AHRS_M21;
+earth_R_sig_onboard(:,2,2) = avg.AHRS_M22;
+earth_R_sig_onboard(:,2,3) = avg.AHRS_M23;
+earth_R_sig_onboard(:,3,1) = avg.AHRS_M31;
+earth_R_sig_onboard(:,3,2) = avg.AHRS_M32;
+earth_R_sig_onboard(:,3,3) = avg.AHRS_M33;
 
 % Step 1) Revert ENU velocities back to beam velocities -------------------
-velBEAM = NaN(size(velENU));
-velXYZ = NaN(size(velENU));
-invT_AHRS = inv(T_AHRS); % XYZ4 to beam; constant, so inverted once
+vel_rt_sig_in_beam = NaN(size(vel_rt_sig_in_earth4));
+vel_rt_sig_in_sig4 = NaN(size(vel_rt_sig_in_earth4));
+xyz2beam = inv(beam2xyz); % XYZ4 to beam; constant, so inverted once
 for iping = 1:nping
 
     % Expand the 3-D attitude rotation for [X Y Z1 Z2] velocities (XYZ4).
-    R_attitude = squeeze(R_AHRS(iping,:,:));
-    R_velocity4 = [R_attitude(1,1) R_attitude(1,2) R_attitude(1,3)/2 R_attitude(1,3)/2;
-                   R_attitude(2,1) R_attitude(2,2) R_attitude(2,3)/2 R_attitude(2,3)/2;
-                   R_attitude(3,1) R_attitude(3,2) R_attitude(3,3)                   0;
-                   R_attitude(3,1) R_attitude(3,2) 0                  R_attitude(3,3)];
+    earth_R_sig = squeeze(earth_R_sig_onboard(iping,:,:));
+    xyz2enu = expandToBeamPairs(earth_R_sig);
 
     % Validate the matrix first
-    if any(~isfinite(R_attitude),'all') || ... % finite
-            rcond(R_velocity4) < 1e-8 || ... % invertible
-            abs(det(R_attitude)-1) > 0.1 || ... % non-scaling transform
-            norm(R_attitude*R_attitude'-eye(3),'fro') > 0.1 % orthogonal
+    if any(~isfinite(earth_R_sig),'all') || ... % finite
+            rcond(xyz2enu) < 1e-8 || ... % invertible
+            abs(det(earth_R_sig)-1) > 0.1 || ... % non-scaling transform
+            norm(earth_R_sig*earth_R_sig'-eye(3),'fro') > 0.1 % orthogonal
         continue
     end
 
     % ENU4 to XYZ4, then XYZ4 to beam coordinates.
     %   ENU4 = [E N U1 U2] and XYZ4 = [X Y Z1 Z2] carry two vertical
     %   components, one per beam pair: Z1 from beams 1 & 3, Z2 from beams
-    %   2 & 4 (rows 3-4 of T_AHRS).
+    %   2 & 4 (rows 3-4 of beam2xyz).
     %   Here each ping is nbin x 4 with bins as rows, so the same transforms
     %   are right-multiplies by the transposed inverses, vectorized over bins
-    pingENU4 = reshape(velENU(iping,:,:),nbin,4); % nbin x [E N U1 U2]
-    pingXYZ4 = pingENU4*inv(R_velocity4)';         % nbin x [X Y Z1 Z2]
-    pingBEAM = pingXYZ4*invT_AHRS';                % nbin x [B1 B2 B3 B4]
-    velXYZ(iping,:,:) = reshape(pingXYZ4,1,nbin,4);
-    velBEAM(iping,:,:) = reshape(pingBEAM,1,nbin,4);
+    v_rt_sig_in_earth4 = reshape(vel_rt_sig_in_earth4(iping,:,:),nbin,4); % nbin x [E N U1 U2]
+    v_rt_sig_in_sig4 = v_rt_sig_in_earth4*inv(xyz2enu)';                  % nbin x [X Y Z1 Z2]
+    v_rt_sig_in_beam = v_rt_sig_in_sig4*xyz2beam';                        % nbin x [B1 B2 B3 B4]
+    vel_rt_sig_in_sig4(iping,:,:) = reshape(v_rt_sig_in_sig4,1,nbin,4);
+    vel_rt_sig_in_beam(iping,:,:) = reshape(v_rt_sig_in_beam,1,nbin,4);
 
 end
 
 % Step 2) Compute burst-average beam velocities --------------------------
-bavgvelBEAM = squeeze(mean(velBEAM,1,'omitnan'));
+bavgvel_rt_sig_in_beam = squeeze(mean(vel_rt_sig_in_beam,1,'omitnan'));
 
-% Step 3) Compute HPR rotation matrix  -----------------------------------
-
-% HPR rotation matrix in Nortek's convention: heading clockwise from north,
-% pitch with the opposite sign to a Cartesian y rotation (the identity
+% Step 3) Rotation from the given heading, pitch and roll ----------------
+% Z-Y-X Euler angles (Craig) in Nortek's convention: heading clockwise from
+% north, pitch with the opposite sign to a Cartesian y rotation (the identity
 % fixSIGenu uses, which reproduces the stored AHRS matrices).
-hh = 90 - hh;
-pp = -pp;
-Rz = [cosd(hh) -sind(hh) 0;
-      sind(hh) cosd(hh) 0;
-      0   0  1 ];
-Ry = [cosd(pp) 0 sind(pp);
-      0 1 0;
-      -sind(pp) 0 cosd(pp)];
-Rx = [1 0 0;
-      0 cosd(rr) -sind(rr);
-      0 sind(rr) cosd(rr)];
-R = Rz*Ry*Rx;
-R = [R(1,1) R(1,2) R(1,3)/2 R(1,3)/2;
-     R(2,1) R(2,2) R(2,3)/2 R(2,3)/2;
-     R(3,1) R(3,2) R(3,3)   0;
-     R(3,1) R(3,2) 0        R(3,3)];
+earth_R_sig_mean = rotz(90 - hh) * roty(-pp) * rotx(rr);
+xyz2enu_mean = expandToBeamPairs(earth_R_sig_mean);
 
 % Step 4) Rotate burst-averaged beam velocities to ENU ------------------
-%   For one bin as a column vector, enu4 = R*T_AHRS*beam. bavgvelBEAM is
-%   nbin x [B1 B2 B3 B4] with bins as rows, so right-multiply by (R*T_AHRS)'.
-bavgvelENU_alt = bavgvelBEAM*(R*T_AHRS)'; % nbin x [E N U1 U2]
+%   For one bin as a column vector, enu4 = xyz2enu_mean*beam2xyz*beam.
+%   bavgvel_rt_sig_in_beam is nbin x [B1 B2 B3 B4] with bins as rows, so
+%   right-multiply by the transpose.
+bavgvelENU_alt = bavgvel_rt_sig_in_beam*(xyz2enu_mean*beam2xyz)'; % nbin x [E N U1 U2]
 
 % Scalar speed in XY coordinates --------------------------
 dz = avg.CellSize;
-spdXY = squeeze(sqrt(velXYZ(:,:,1).^2 + velXYZ(:,:,2).^2));
+spdXY = squeeze(sqrt(vel_rt_sig_in_sig4(:,:,1).^2 + vel_rt_sig_in_sig4(:,:,2).^2));
 bavgspdXY = mean(spdXY,'omitnan')';
 shearXY = gradient(bavgspdXY)./dz;
 
+end
+
+function R = rotz(angle)
+% Rotation about z by angle (deg), Craig's R_Z.
+R = [cosd(angle) -sind(angle) 0;
+     sind(angle)  cosd(angle) 0;
+     0            0           1];
+end
+
+function R = roty(angle)
+% Rotation about y by angle (deg), Craig's R_Y.
+R = [ cosd(angle) 0 sind(angle);
+      0           1 0;
+     -sind(angle) 0 cosd(angle)];
+end
+
+function R = rotx(angle)
+% Rotation about x by angle (deg), Craig's R_X.
+R = [1 0            0;
+     0 cosd(angle) -sind(angle);
+     0 sind(angle)  cosd(angle)];
+end
+
+function xyz2enu = expandToBeamPairs(earth_R_sig)
+% earth_R_sig in 4-component form, acting on [X Y Z1 Z2] -> [E N U1 U2]: each
+% vertical component (one per beam pair) contributes half to E and N.
+xyz2enu = [earth_R_sig(1,1) earth_R_sig(1,2) earth_R_sig(1,3)/2 earth_R_sig(1,3)/2;
+           earth_R_sig(2,1) earth_R_sig(2,2) earth_R_sig(2,3)/2 earth_R_sig(2,3)/2;
+           earth_R_sig(3,1) earth_R_sig(3,2) earth_R_sig(3,3)   0;
+           earth_R_sig(3,1) earth_R_sig(3,2) 0                  earth_R_sig(3,3)];
 end
