@@ -3,17 +3,23 @@ function batchSWIFT2NC(varargin)
 %
 % J. Thomson, May 2021
 % M. LeClair, Oct 2025
+% M. LeClair (using claude), Oct 2026: load from the matched folder, add out_dir
 %
 % Usage:
 %   batchSWIFT2NC    % default: '*SWIFT*.mat' in current dir
 %   batchSWIFT2NC('glob_path', '*.mat')
+%   batchSWIFT2NC('glob_path', 'data/*/*.mat', 'out_dir', 'nc')
+%
+% Each .nc is written next to its .mat file, or in out_dir if given.
 
 % Parse inputs
 p = inputParser;
 addParameter(p, 'glob_path', '*SWIFT*.mat', @ischar);
+addParameter(p, 'out_dir', '', @ischar); % '' = folder of each .mat file
 parse(p, varargin{:});
 
 glob_path = p.Results.glob_path;
+out_dir = p.Results.out_dir;
 
 flist = dir(glob_path);
 
@@ -28,14 +34,18 @@ fprintf('Processing:\n');
 for fi = 1:length(flist)
     clear SWIFT
     
-    % Generate output filename in current directory
+    % Generate output filename in out_dir, default next to the .mat file
     [~, name, ~] = fileparts(flist(fi).name);
-    nc_filename = [name '.nc'];
+    nc_dir = out_dir;
+    if isempty(nc_dir)
+        nc_dir = flist(fi).folder;
+    end
+    nc_filename = fullfile(nc_dir, [name '.nc']);
     
     fprintf('  %d. %s -> %s\n', fi, flist(fi).name, nc_filename);
     
     % Load SWIFT or SIG structure
-    data = load(flist(fi).name);
+    data = load(fullfile(flist(fi).folder, flist(fi).name));
     
     if isfield(data, 'SWIFT')
         SWIFT = data.SWIFT;
