@@ -7,12 +7,15 @@ function records = loadSIGmagRecords(folder,nsample)
 %            *_SIG_ddMmmyyyy_HH_s.mat burst files).
 %   nsample  samples kept per record, evenly spaced (default 100).
 %
-%   records.key   nominal slot time of each record (burstNameToDatenum), sorted;
-%   records.m, records.d   cell arrays of raw body-frame field samples and
-%                 accelerometer directions (readSIGmag);
+%   records.time  nominal slot time of each record (burstNameToDatenum), sorted;
+%   records.m_in_body, records.level_in_body
+%                 cell arrays of raw field samples and up vectors
+%                 (accelerometer) in the Signature body frame (readSIGmag);
 %   records.yaw   record-mean onboard heading, deg;
 %   records.file  source file.
 %   Uses a parallel pool if one is open.
+%
+% M. LeClair w/ claude, Oct 2026
 
 if nargin < 2; nsample = 100; end
 files = dir(fullfile(folder,'**','*_SIG_*.mat'));
@@ -35,25 +38,25 @@ files = files(ibig);
 files = files(iu);
 
 nfile = numel(files);
-time = NaN(nfile,1); m = cell(nfile,1); d = cell(nfile,1); yaw = NaN(nfile,1);
+time = NaN(nfile,1); m_in_body = cell(nfile,1); level_in_body = cell(nfile,1); yaw = NaN(nfile,1);
 parfor ifile = 1:nfile
     loaded = load(fullfile(files(ifile).folder,files(ifile).name),'avg');
     if ~isfield(loaded,'avg'); continue; end
-    [mm,dd,hh] = readSIGmag(loaded.avg);
-    if size(mm,1) < 10; continue; end
-    keep = round(linspace(1,size(mm,1),min(nsample,size(mm,1))));
-    m{ifile} = mm(keep,:);
-    d{ifile} = dd(keep,:);
-    yaw(ifile) = meandir(hh(keep));
+    [m_in_sig,up_in_sig,onboardheading] = readSIGmag(loaded.avg);
+    if size(m_in_sig,1) < 10; continue; end
+    keep = round(linspace(1,size(m_in_sig,1),min(nsample,size(m_in_sig,1))));
+    m_in_body{ifile} = m_in_sig(keep,:);
+    level_in_body{ifile} = up_in_sig(keep,:);
+    yaw(ifile) = meandir(onboardheading(keep));
     time(ifile) = burstNameToDatenum(files(ifile).name);
 end
 valid = isfinite(time);
-[records.key,isort] = sort(time(valid));
-m = m(valid); d = d(valid); yaw = yaw(valid);
+[records.time,isort] = sort(time(valid));
+m_in_body = m_in_body(valid); level_in_body = level_in_body(valid); yaw = yaw(valid);
 files = string(fullfile({files.folder},{files.name}))';
 files = files(valid);
-records.m = m(isort);
-records.d = d(isort);
+records.m_in_body = m_in_body(isort);
+records.level_in_body = level_in_body(isort);
 records.yaw = yaw(isort);
 records.file = files(isort);
 end

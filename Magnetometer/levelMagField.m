@@ -1,21 +1,28 @@
-function [X,Y,Z] = levelMagField(m,d)
-%LEVELMAGFIELD Express magnetometer samples in the levelled body frame.
+function m_in_level = levelMagField(m_in_body,level_in_body)
+%LEVELMAGFIELD Express magnetometer samples in the levelled frame.
 %
-%   [X,Y,Z] = levelMagField(m,d)
+%   m_in_level = levelMagField(m_in_body,level_in_body)
 %
-%   m   body-frame field samples (n x 3).
-%   d   unit "down" vectors in the same body frame (n x 3), e.g. from an
-%       attitude solution or minus the normalized accelerometer.
+%   m_in_body      field samples in a sensor body frame (n x 3).
+%   level_in_body  unit vertical axis in the same body frame (n x 3): down
+%                  from an attitude solution (readSBGmag), or up from the
+%                  accelerometer (readSIGmag).
 %
-%   X is the field along the horizontal projection of the body x axis, Y
-%   along d x X (to the right, as in NED), Z = m.d (down). With hard and
-%   soft iron removed, the magnetic heading of the body x axis is
-%   atan2d(-Y,X) and the inclination is atan2d(Z,hypot(X,Y)).
-x = repmat([1 0 0],size(m,1),1);
-xh = x - sum(x.*d,2).*d;
-xh = xh./vecnorm(xh,2,2);
-h = m - sum(m.*d,2).*d;
-X = sum(h.*xh,2);
-Y = sum(h.*cross(d,xh,2),2);
-Z = sum(m.*d,2);
+%   The levelled frame turns with the sensor's heading but not its tilt:
+%   x is the horizontal projection of the body x axis, y = level x x (to
+%   the right, as in NED, when level is down) and z is along level.
+%   m_in_level = [X Y Z] (n x 3). With hard and soft iron removed, the
+%   magnetic heading of the body x axis is atan2d(-Y,X) and the inclination
+%   is atan2d(Z,hypot(X,Y)).
+%
+% M. LeClair w/ claude, Oct 2026
+
+% Body x axis and the field, each split into its horizontal part
+x_in_body = repmat([1 0 0],size(m_in_body,1),1);
+xh_in_body = x_in_body - sum(x_in_body.*level_in_body,2).*level_in_body;
+xh_in_body = xh_in_body./vecnorm(xh_in_body,2,2);
+mh_in_body = m_in_body - sum(m_in_body.*level_in_body,2).*level_in_body;
+m_in_level = [sum(mh_in_body.*xh_in_body,2) ...
+    sum(mh_in_body.*cross(level_in_body,xh_in_body,2),2) ...
+    sum(m_in_body.*level_in_body,2)];
 end
