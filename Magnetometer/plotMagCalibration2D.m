@@ -3,11 +3,11 @@ function cal = plotMagCalibration2D(records,folder,options)
 %
 %   cal = plotMagCalibration2D(records,folder,Name=Value)
 %
-%   records  magnetometer records of one mission: key (slot time,
-%            datenum), m and d (cell arrays of body-frame field samples and
-%            unit down vectors) and yaw (record-mean heading the sensor
-%            reports, deg), e.g. from loadSBGmagRecords or
-%            loadSIGmagRecords.
+%   records  magnetometer records of one mission: time (slot time,
+%            datenum), m_in_body and level_in_body (cell arrays of field
+%            samples and the unit vertical axis, in the sensor body frame)
+%            and yaw (record-mean heading the sensor reports, deg), e.g.
+%            from loadSBGmagRecords or loadSIGmagRecords.
 %   folder   the mission folder; its name labels the figure.
 %
 %   Name-value options:
@@ -25,7 +25,7 @@ function cal = plotMagCalibration2D(records,folder,options)
 %     OutputFile   figure file (default
 %                  <folder>/debug/<mission>_<Sensor>_mag2d.png).
 %
-%   Levels the field with the down vectors (levelMagField), fits
+%   Levels the field with the vertical axis (levelMagField), fits
 %   fitMagCalibration2D and plots: the levelled horizontal field with the
 %   fitted hard-iron centers; the corrected field on the unit circle; the
 %   centers per window; the record-mean heading against the reported
@@ -33,6 +33,8 @@ function cal = plotMagCalibration2D(records,folder,options)
 %   bearing by watch-circle lobe; the calibrated minus the reported heading
 %   (for the SBG, the yaw anchor offset); and the horizontal field
 %   magnitude, which a correct calibration holds constant.
+%
+% M. LeClair w/ claude, Oct 2026
 
 arguments
     records struct
@@ -49,42 +51,42 @@ end
 
 if isfile(folder); folder = fileparts(folder); end
 [~,mission] = fileparts(folder);
-levelled = cell(size(records.m));
-for irec = 1:numel(records.key)
-    [X,Y] = levelMagField(records.m{irec},records.d{irec});
-    levelled{irec} = [X Y];
+mh_in_level = cell(size(records.m_in_body));
+for irec = 1:numel(records.time)
+    m_in_level = levelMagField(records.m_in_body{irec},records.level_in_body{irec});
+    mh_in_level{irec} = m_in_level(:,1:2);
 end
-cal = fitMagCalibration2D(records.key,levelled,options.Window,options.Step, ...
+cal = fitMagCalibration2D(records.time,mh_in_level,options.Window,options.Step, ...
     options.Breaks);
 
 % Corrected field, heading and magnitude per record
-nrec = numel(records.key);
-corrected = cell(nrec,1);
+nrec = numel(records.time);
+mh_cal_in_level = cell(nrec,1);
 heading = NaN(nrec,1); magnitude = NaN(nrec,1);
 for irec = 1:nrec
-    [c,S] = magCalibrationAt(cal,records.key(irec));
-    p = (levelled{irec} - c)*S';      % S is symmetric
-    corrected{irec} = p;
-    heading(irec) = meandir(atan2d(-p(:,2),p(:,1))) + options.Declination;
-    magnitude(irec) = mean(vecnorm(p,2,2));
+    [c_in_level,S] = magCalibrationAt(cal,records.time(irec));
+    mh_cal = (mh_in_level{irec} - c_in_level)*S';      % S is symmetric
+    mh_cal_in_level{irec} = mh_cal;
+    heading(irec) = meandir(atan2d(-mh_cal(:,2),mh_cal(:,1))) + options.Declination;
+    magnitude(irec) = mean(vecnorm(mh_cal,2,2));
 end
 magnitude = magnitude/median(magnitude,'omitnan');
 anchoroffset = mod(heading-records.yaw+180,360)-180;
 
 [watchtime,watch,recordwatch,lobeA] = watchValidation(folder,options.SWIFTfile, ...
-    records.key);
+    records.time);
 
 %% Figure
 fh = figure('Color','w','Position',[30 30 1500 1000]);
 layout = tiledlayout(3,3,'TileSpacing','compact');
-timelimits = [min(records.key) max(records.key)];
-alll = vertcat(levelled{:});
-allp = vertcat(corrected{:});
+timelimits = [min(records.time) max(records.time)];
+alll = vertcat(mh_in_level{:});
+allp = vertcat(mh_cal_in_level{:});
 k = round(linspace(1,size(alll,1),min(20000,size(alll,1))));
 
 nexttile(1)
 plot(alll(k,1),alll(k,2),'.','Color',[0.6 0.6 0.6],'MarkerSize',1); hold on
-plot(cal.center(:,1),cal.center(:,2),'r.','MarkerSize',8)
+plot(cal.hardiron(:,1),cal.hardiron(:,2),'r.','MarkerSize',8)
 plot(0,0,'k+','MarkerSize',12,'LineWidth',2)
 axis equal; grid on; xlabel('X (levelled)'); ylabel('Y (levelled)')
 percentileLimits([alll; 0 0])
@@ -103,7 +105,7 @@ hold on
 for iseg = unique(cal.segment)'
     in = cal.segment == iseg;
     set(gca,'ColorOrderIndex',1)
-    plot(cal.time(in),cal.center(in,:),'.-','MarkerSize',8)
+    plot(cal.time(in),cal.hardiron(in,:),'.-','MarkerSize',8)
 end
 grid on
 xlim(timelimits); xticks(floor(timelimits(1)):ceil(timelimits(2)))
@@ -115,9 +117,9 @@ title('hard-iron center per window; breaks (:)')
 nexttile(2,[1 2])
 plot(watchtime,mod(watch,360),'k.','MarkerSize',4, ...
     'DisplayName','watch bearing (drag-corrected)'); hold on
-plot(records.key,mod(records.yaw,360),'r.','MarkerSize',5, ...
+plot(records.time,mod(records.yaw,360),'r.','MarkerSize',5, ...
     'DisplayName',options.Sensor + " " + options.Reference)
-plot(records.key,mod(heading,360),'.','Color',[0 0.6 0.2], ...
+plot(records.time,mod(heading,360),'.','Color',[0 0.6 0.2], ...
     'MarkerSize',5,'DisplayName','calibrated magnetometer')
 ylim([0 360]); yticks(0:90:360); grid on; ylabel('deg')
 xlim(timelimits); xticks(floor(timelimits(1)):ceil(timelimits(2)))
@@ -126,12 +128,12 @@ legend('Location','eastoutside')
 title("record-mean heading of the " + options.Sensor + " x axis")
 
 nexttile(5,[1 2])
-plotWatchResidual(records.key,heading,recordwatch,lobeA,timelimits)
+plotWatchResidual(records.time,heading,recordwatch,lobeA,timelimits)
 
 nexttile(8)
-plot(records.key(lobeA),anchoroffset(lobeA),'.', ...
+plot(records.time(lobeA),anchoroffset(lobeA),'.', ...
     'Color',[0 0.45 0.74],'MarkerSize',5); hold on
-plot(records.key(~lobeA),anchoroffset(~lobeA),'.', ...
+plot(records.time(~lobeA),anchoroffset(~lobeA),'.', ...
     'Color',[0.85 0.33 0.1],'MarkerSize',5)
 grid on
 xlim(timelimits); xticks(floor(timelimits(1)):ceil(timelimits(2)))
@@ -141,9 +143,9 @@ title(sprintf('calibrated heading minus %s: median %.1f',options.Reference, ...
     median(anchoroffset,'omitnan')))
 
 nexttile(9)
-plot(records.key(lobeA),magnitude(lobeA),'.', ...
+plot(records.time(lobeA),magnitude(lobeA),'.', ...
     'Color',[0 0.45 0.74],'MarkerSize',5); hold on
-plot(records.key(~lobeA),magnitude(~lobeA),'.', ...
+plot(records.time(~lobeA),magnitude(~lobeA),'.', ...
     'Color',[0.85 0.33 0.1],'MarkerSize',5)
 yline(1,'k--')
 ylim([0.7 1.3]); grid on

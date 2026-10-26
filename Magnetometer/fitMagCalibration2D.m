@@ -1,19 +1,21 @@
-function cal = fitMagCalibration2D(key,xy,window,step,breaks)
+function cal = fitMagCalibration2D(time,mh_in_level,window,step,breaks)
 %FITMAGCALIBRATION2D Windowed hard- and soft-iron fit of a levelled magnetometer.
 %
-%   cal = fitMagCalibration2D(key,xy,window,step,breaks)
+%   cal = fitMagCalibration2D(time,mh_in_level,window,step,breaks)
 %
-%   key     time (datenum) of each record.
-%   xy      cell array, per record, of levelled horizontal field samples
-%           [X Y] (n x 2, from levelMagField).
+%   time         time (datenum) of each record.
+%   mh_in_level  cell array, per record, of the horizontal field in the
+%                levelled frame, [X Y] (n x 2: the first two columns of
+%                levelMagField).
 %   window  fit window length, days (e.g. 24.84 h: two M2 cycles).
 %   step    spacing of the window centers, days.
-%   breaks  times at which the magnetic environment changes (e.g. battery
-%           changes); no window spans one. Optional.
+%   breaks       times at which the magnetic environment changes (e.g.
+%                battery changes); no window spans one. Optional.
 %
-%   The corrected field at time t is S*(p - c), with c and S from
-%   magCalibrationAt(cal,t): c is the hard iron, and S (symmetric, unit
-%   determinant) the soft iron. S stretches the ellipse into a circle
+%   The corrected field at time t is S*(mh_in_level - c_in_level), with
+%   [c_in_level,S] = magCalibrationAt(cal,t) (cal.hardiron, cal.softiron):
+%   c_in_level is the hard iron, and S (symmetric, unit determinant) the
+%   soft iron. S stretches the ellipse into a circle
 %   without rotating it, so it cannot absorb a mounting offset.
 %
 %   Method, per window (RANSAC):
@@ -34,6 +36,8 @@ function cal = fitMagCalibration2D(key,xy,window,step,breaks)
 %
 %   Levelling first means a large body-frame hard iron, which projects
 %   differently as the tilt changes, is not removed; see fitMagCalibration3D.
+%
+% M. LeClair w/ claude, Oct 2026
 
 if nargin < 5; breaks = []; end
 nbin = 36;          % 10-deg heading bins
@@ -41,19 +45,19 @@ niter = 1000;       % RANSAC candidates per window
 inliertol = 0.1;    % inlier distance, fraction of the field radius
 stream = RandStream('mt19937ar','Seed',1);   % reproducible RANSAC
 
-key = key(:);
+time = time(:);
 breaks = sort(breaks(:));
-segment = discretize(key,[-Inf; breaks; Inf]);
-recordmean = cell2mat(cellfun(@(p) mean(p,1),xy(:),'UniformOutput',false));
+segment = discretize(time,[-Inf; breaks; Inf]);
+recordmean = cell2mat(cellfun(@(p) mean(p,1),mh_in_level(:),'UniformOutput',false));
 cal.method = "ransac2d";
 cal.breaks = breaks;
-cal.time = zeros(0,1); cal.center = zeros(0,2); cal.shape = zeros(2,2,0);
+cal.time = zeros(0,1); cal.hardiron = zeros(0,2); cal.softiron = zeros(2,2,0);
 cal.segment = zeros(0,1);
 for iseg = unique(segment)'
     in = find(segment == iseg);
-    if max(key(in))-min(key(in)) < 1
+    if max(time(in))-min(time(in)) < 1
         cal.method = "mean";
-        cal = addWindow(cal,mean(key(in)),mean(recordmean(in,:),1,'omitnan'), ...
+        cal = addWindow(cal,mean(time(in)),mean(recordmean(in,:),1,'omitnan'), ...
             eye(2),iseg);
         continue
     end
@@ -61,27 +65,27 @@ for iseg = unique(segment)'
     % the plausible ellipse size.
     centered = cell(numel(in),1);
     for j = 1:numel(in)
-        near = in(abs(key(in)-key(in(j))) <= window/2);
-        centered{j} = xy{in(j)} - mean(recordmean(near,:),1,'omitnan');
+        near = in(abs(time(in)-time(in(j))) <= window/2);
+        centered{j} = mh_in_level{in(j)} - mean(recordmean(near,:),1,'omitnan');
     end
     centered = vertcat(centered{:});
     radius0 = median(hypot(centered(:,1),centered(:,2)));
-    for t = min(key(in)):step:max(key(in))
-        samples = vertcat(xy{in(abs(key(in)-t) <= window/2)});
+    for t = min(time(in)):step:max(time(in))
+        samples = vertcat(mh_in_level{in(abs(time(in)-t) <= window/2)});
         if size(samples,1) < 100; continue; end
-        [c,S,nbins] = ransacEllipse(samples,radius0,inliertol*radius0,nbin, ...
-            niter,stream);
+        [c_in_level,S,nbins] = ransacEllipse(samples,radius0,inliertol*radius0, ...
+            nbin,niter,stream);
         % Too few heading bins covered to constrain an ellipse
         if nbins < nbin/3; continue; end
-        cal = addWindow(cal,t,c,S/sqrt(det(S)),iseg);
+        cal = addWindow(cal,t,c_in_level,S/sqrt(det(S)),iseg);
     end
 end
 end
 
-function cal = addWindow(cal,t,c,S,iseg)
+function cal = addWindow(cal,t,c_in_level,S,iseg)
 cal.time(end+1,1) = t;
-cal.center(end+1,:) = c;
-cal.shape(:,:,end+1) = S;
+cal.hardiron(end+1,:) = c_in_level;
+cal.softiron(:,:,end+1) = S;
 cal.segment(end+1,1) = iseg;
 end
 

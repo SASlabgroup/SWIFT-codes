@@ -1,22 +1,26 @@
-function cal = fitMagCalibration3D(key,m,d,window,step,breaks,inclination)
+function cal = fitMagCalibration3D(time,m_in_body,level_in_body,window,step,breaks,inclination)
 %FITMAGCALIBRATION3D Windowed, inclination-constrained 3D magnetometer fit.
 %
-%   cal = fitMagCalibration3D(key,m,d,window,step,breaks,inclination)
+%   cal = fitMagCalibration3D(time,m_in_body,level_in_body,window,step,breaks,inclination)
 %
-%   key          time (datenum) of each record.
-%   m, d         cell arrays, per record, of body-frame field samples and
-%                unit down vectors in the same frame (n x 3 each).
+%   time         time (datenum) of each record.
+%   m_in_body, level_in_body
+%                cell arrays, per record, of field samples in the sensor
+%                body frame and the unit vertical axis in that frame
+%                (levelMagField; n x 3 each).
 %   window       fit window length, days (e.g. 24.84 h: two M2 cycles).
 %   step         spacing of the window centers, days.
 %   breaks       times at which the magnetic environment changes (e.g.
 %                battery changes); no window spans one. May be empty.
-%   inclination  magnetic inclination, deg (positive down), e.g. from WMM.
+%   inclination  magnetic inclination along level_in_body, deg (positive
+%                down for a down vector), e.g. from WMM.
 %
-%   The corrected field at time t is p = S*(m - c), with c and S from
-%   magCalibrationAt(cal,t): c is the hard iron, and S (symmetric) the soft
-%   iron and scale. The fit makes p a unit vector at the Earth's
-%   inclination: its component along d is sin(inclination) and its
-%   horizontal magnitude cos(inclination). The hard iron is removed in the
+%   The corrected field at time t is m_cal_in_body = S*(m_in_body -
+%   c_in_body), with [c_in_body,S] = magCalibrationAt(cal,t) (cal.hardiron,
+%   cal.softiron): c_in_body is the hard iron, and S (symmetric) the soft
+%   iron and scale. The fit makes m_cal_in_body a unit vector at the
+%   Earth's inclination: its component along level_in_body is
+%   sin(inclination) and its horizontal magnitude cos(inclination). The hard iron is removed in the
 %   body frame, before levelling, so it cannot leak into the horizontal
 %   field as the tilt changes (unlike fitMagCalibration2D).
 %
@@ -34,37 +38,39 @@ function cal = fitMagCalibration3D(key,m,d,window,step,breaks,inclination)
 %   unconstrained ellipsoid wanders there. Windows with no plausible fit
 %   are left to their neighbors. A segment shorter than 24 h is fit as one
 %   window.
+%
+% M. LeClair w/ claude, Oct 2026
 
-key = key(:);
+time = time(:);
 breaks = sort(breaks(:));
-segment = discretize(key,[-Inf; breaks; Inf]);
+segment = discretize(time,[-Inf; breaks; Inf]);
 stream = RandStream('mt19937ar','Seed',1);   % reproducible RANSAC
 cal.method = "ransac3d";
 cal.inclination = inclination;
 cal.breaks = breaks;
-cal.time = zeros(0,1); cal.center = zeros(0,3); cal.shape = zeros(3,3,0);
+cal.time = zeros(0,1); cal.hardiron = zeros(0,3); cal.softiron = zeros(3,3,0);
 cal.segment = zeros(0,1);
 for iseg = unique(segment)'
     in = find(segment == iseg);
-    span = max(key(in))-min(key(in));
+    span = max(time(in))-min(time(in));
     if span < 1
         % Short segment: one window spanning all of it (plus 1 h)
-        centers = mean(key(in));
+        centers = mean(time(in));
         halfwidth = span/2 + 1/24;
     else
-        centers = min(key(in)):step:max(key(in));
+        centers = min(time(in)):step:max(time(in));
         halfwidth = window/2;
     end
     for t = centers
-        w = in(abs(key(in)-t) <= halfwidth);
-        M = vertcat(m{w});
-        D = vertcat(d{w});
+        w = in(abs(time(in)-t) <= halfwidth);
+        M = vertcat(m_in_body{w});       % body-frame field samples
+        D = vertcat(level_in_body{w});   % vertical axis, same frame
         if size(M,1) < 200; continue; end
         [c,S] = ransacFit(M,D,inclination,stream);
         if ~isfinite(c(1)); continue; end
         cal.time(end+1,1) = t;
-        cal.center(end+1,:) = c;
-        cal.shape(:,:,end+1) = S;
+        cal.hardiron(end+1,:) = c;
+        cal.softiron(:,:,end+1) = S;
         cal.segment(end+1,1) = iseg;
     end
 end
@@ -181,6 +187,6 @@ end
 
 function bin = headingBin(p,D)
 % 10-deg bin of the horizontal direction of p (levelMagField).
-[X,Y] = levelMagField(p,D);
-bin = discretize(atan2d(Y,X),linspace(-180,180,37));
+m_in_level = levelMagField(p,D);
+bin = discretize(atan2d(m_in_level(:,2),m_in_level(:,1)),linspace(-180,180,37));
 end
