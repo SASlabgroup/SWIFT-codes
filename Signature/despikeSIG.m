@@ -10,19 +10,34 @@ function [wclean,ispike] = despikeSIG(wraw,nfilt,dspikemax,filltype)
 %               wclean      de-spiked data
 %               ispike      indices of spikes that were filled
 
-[nbin,nping] = size(wraw);
-wclean = NaN(size(wraw));
+arguments
+    wraw
+    nfilt
+    dspikemax
+    filltype {mustBeMember(filltype,{'none','interp'})} = 'interp'
+end
 
 % Identify Spikes
 wfilt = medfilt1(wraw,nfilt,'omitnan','truncate');
 ispike = abs(wraw - wfilt) > dspikemax;
 
-% Fill spikes with linear interpolation
-for iping = 1:nping    
-    igood = find(~ispike(:,iping));
-    if length(igood) > 3
-    wclean(:,iping) = interp1(igood,wraw(igood,iping),1:nbin,'linear','extrap'); 
-    end
+% Discard spikes
+if strcmp(filltype,'none')
+    wclean = wraw;
+    wclean(ispike) = NaN;
+    return
 end
+
+% Fill spikes with linear interpolation (pings need more than 3 good bins)
+wclean = wraw;
+wclean(ispike) = NaN;
+% Interpolate and extrapolate along dim 1 (bins), within each ping
+wclean = fillmissing(wclean,'linear',1,'EndValues','extrap');
+% NaN where interp1 would propagate a NaN sample: a filled value is NaN if
+% either good bin it comes from is NaN, so fill an indicator the same way
+nanw = double(isnan(wraw));
+nanw(ispike) = NaN;
+wclean(fillmissing(nanw,'linear',1,'EndValues','extrap') ~= 0) = NaN;
+wclean(:,sum(~ispike,1) <= 3) = NaN;
 
 end

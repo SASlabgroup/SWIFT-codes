@@ -50,7 +50,7 @@ F0 = 10^6; % Hz, pulse carrier frequency (1 MHz for Sig 1000)
 cs = mean(burst.SoundSpeed,'omitnan'); % m/s, sound speed
 Vr = cs.^2./(4*F0*L);% m/s
 nfilt = round(1/dz);% 1 m
-[~,ispike] = despikeSIG(wraw,nfilt,Vr/2);
+[~,ispike] = despikeSIG(wraw,nfilt,Vr/2,'none');
 
 % Identify poor quality (low correlation) data
 ipoor = hrcorr < opt.HR.mincorr;
@@ -58,14 +58,17 @@ ipoor = hrcorr < opt.HR.mincorr;
 % Bad Data
 ibad = ispike | ipoor;
 
-% Fill bad data with linear interpolation
-wclean = NaN(size(wraw));
-for iping = 1:nping    
-    igood = find(~ibad(:,iping));
-    if length(igood) > 3
-    wclean(:,iping) = interp1(igood,wraw(igood,iping),1:nbin,'linear','extrap'); 
-    end
-end
+% Fill bad data with linear interpolation (pings need more than 3 good bins)
+wclean = wraw;
+wclean(ibad) = NaN;
+% Interpolate and extrapolate along dim 1 (bins), within each ping
+wclean = fillmissing(wclean,'linear',1,'EndValues','extrap');
+% NaN where interp1 would propagate a NaN sample: a filled value is NaN if
+% either good bin it comes from is NaN, so fill an indicator the same way
+nanw = double(isnan(wraw));
+nanw(ibad) = NaN;
+wclean(fillmissing(nanw,'linear',1,'EndValues','extrap') ~= 0) = NaN;
+wclean(:,sum(~ibad,1) <= 3) = NaN;
 
 % NaN bad bins (percentage of bad data > opt.pbadmax_bin)
 pbad_bin = 100*(sum(ibad,2,'omitnan')./nping);
@@ -115,15 +118,22 @@ if opt.HR.NaNbad
     wphp(ibad) = NaN;
 end
 
+% Optionally use the faster, tolerance-equivalent estimator
+if isfield(opt,'fastdissipation') && opt.fastdissipation
+    sfdiss = @SFdissipation_fast;
+else
+    sfdiss = @SFdissipation;
+end
+
 warning('off','all')
 % No filter, no analytic wave fit (D ~ r^{-2/3})
-[epsNF,qualNF] = SFdissipation(wnf,z,rmin,2*rmax,nzfit,'linear','mean');
+[epsNF,qualNF,sfNF] = sfdiss(wnf,z,rmin,2*rmax,nzfit,'linear','mean');
 % Analytic wave fit  (D ~ Ar^{-2/3} + Br^2)
-[epsWV,qualWV] = SFdissipation(wnf,z,rmin,2*rmax,nzfit,'cubic','mean');
+[epsWV,qualWV] = sfdiss(wnf,z,rmin,2*rmax,nzfit,'cubic','mean',sfNF);
 % EOF filter (D ~ r^{-2/3})
-[epsEOF,qualEOF] = SFdissipation(wpeof,z,rmin,rmax,nzfit,'linear','mean');
+[epsEOF,qualEOF] = sfdiss(wpeof,z,rmin,rmax,nzfit,'linear','mean');
 % High-pass filter (D ~ r^{-2/3})
-[epsHP,qualHP] = SFdissipation(wphp,z,rmin,rmax,nzfit,'linear','mean');
+[epsHP,qualHP] = sfdiss(wphp,z,rmin,rmax,nzfit,'linear','mean');
 warning('on','all')
 
 % Save Dissipation Results
