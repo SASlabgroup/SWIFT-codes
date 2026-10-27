@@ -2,15 +2,19 @@ function [metrics,figures,diagnostics] = review_SIGheave(missiondir,opts)
 
 arguments
     missiondir {mustBeTextScalar} % SWIFT mission directory
-    opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.05 % Canonical Hs lower frequency, in Hz
-    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 1.00 % Highest Signature frequency used, in Hz
+    opts.fmin (1,1) double {mustBePositive,mustBeFinite} = 0.10 % Lowest band edge, in Hz (see Process_WillapaMoored)
+    opts.fmax (1,1) double {mustBePositive,mustBeFinite} = 1.25 % Highest Signature frequency used, in Hz
     opts.accel_counts_per_g (1,1) double {mustBePositive,mustBeFinite} = 16384 % Accelerometer counts per g
     opts.reprocess_sbg (1,1) logical = true % Run the non-writing SBG step before Signature recovery
     opts.plot_dir {mustBeTextScalar} = "" % Optional directory for validation and effect plots
 end
 
-% Run the complete recovery without writing a product, then validate its
-% band-limited Hs against simultaneous, gross-error-free SBG records.
+% Run the complete recovery without writing a product, then validate it
+% against simultaneous, gross-error-free SBG records: the band Hs against SBG
+% Hs over each record's band (metrics.*), and the full-band sigwaveheight
+% against the record's own Hs, SBGwaves heave over 0.05-2.5 Hz
+% (metrics.record_*), which is what a filled record replaces. The figures
+% show the full-band comparison.
 %
 % M. LeClair w/ claude, Oct 2026
 
@@ -40,15 +44,12 @@ end
 frequency = diagnostics.frequency;
 waveband = frequency > opts.fmin & frequency < opts.fmax;
 
-% Compare with SBG Hs over the same band as the Signature estimate.
-bandwidth = median(diff(frequency));
-reference_band_hs = 4*sqrt(sum(diagnostics.reference_energy(:,waveband),2)*bandwidth);
-reference_band_hs(reference_band_hs <= 0) = NaN;
-
+% Band Hs against SBG Hs over each record's band.
+reference_band_hs = diagnostics.reference_band_hs;
 holdout = diagnostics.reference_qc & isfinite(reference_band_hs) & ...
-    isfinite(diagnostics.canonical_hs);
+    isfinite(diagnostics.band_hs);
 reference = reference_band_hs(holdout);
-estimate = diagnostics.canonical_hs(holdout);
+estimate = diagnostics.band_hs(holdout);
 error = estimate-reference;
 
 metrics.records = nnz(holdout);
@@ -64,36 +65,49 @@ metrics.median_absolute_error = median(abs(error),'omitnan');
 metrics.rmse = sqrt(mean(error.^2,'omitnan'));
 metrics.median_hs_ratio = median(estimate./reference,'omitnan');
 metrics.mean_hs_ratio = mean(estimate./reference,'omitnan');
-metrics.recovered = nnz(diagnostics.recovered);
+metrics.recovered = nnz(diagnostics.fill_candidate);
+metrics.hs_band_factor = diagnostics.hs_band_factor;
+metrics.median_low_edge = median(diagnostics.low_edge,'omitnan');
+
+% Full-band sigwaveheight against the record's own Hs.
+record = diagnostics.reference_hs(holdout);
+record_estimate = diagnostics.signature_hs(holdout);
+record_error = record_estimate-record;
+correlation = corrcoef(record,record_estimate);
+metrics.record_correlation = correlation(1,2);
+metrics.record_median_hs_ratio = median(record_estimate./record,'omitnan');
+metrics.record_median_bias = median(record_error,'omitnan');
+metrics.record_rmse = sqrt(mean(record_error.^2,'omitnan'));
 
 time = datetime(diagnostics.time,'ConvertFrom','datenum');
 figures.validation = figure('Color','w');
 tiledlayout(3,1,'TileSpacing','compact','Padding','compact');
 
 ax_series = nexttile;
-plot(time,diagnostics.canonical_hs,'.','MarkerSize',5)
+plot(time,diagnostics.signature_hs,'.','MarkerSize',5)
 hold on
 plot(time(diagnostics.reference_qc), ...
-    reference_band_hs(diagnostics.reference_qc),'.','MarkerSize',5)
-ylabel(sprintf('H_s %.2f-%.2f Hz (m)',opts.fmin,opts.fmax))
+    diagnostics.reference_hs(diagnostics.reference_qc),'.','MarkerSize',5)
+ylabel('H_s (m)')
 legend('Signature','SBG','Location','best')
 title('Signature-heave validation')
 
 nexttile
-plot(reference,estimate,'.')
+plot(record,record_estimate,'.')
 hold on
-limit = max([reference; estimate],[],'omitnan');
+limit = max([record; record_estimate],[],'omitnan');
 plot([0 limit],[0 limit],'k-')
 xlabel('SBG H_s (m)')
-ylabel('Estimated H_s (m)')
+ylabel(sprintf('Signature band H_s x %.3f (m)',diagnostics.hs_band_factor))
 axis equal
 xlim([0 limit])
 ylim([0 limit])
-title(sprintf('Holdout n = %d, r = %.3f, MAE = %.4f m', ...
-    metrics.records,metrics.correlation,metrics.median_absolute_error))
+title(sprintf('Holdout n = %d, r = %.3f, RMSE = %.4f m, ratio %.3f', ...
+    metrics.records,metrics.record_correlation,metrics.record_rmse, ...
+    metrics.record_median_hs_ratio))
 
 ax_error = nexttile;
-plot(time(holdout),error,'.')
+plot(time(holdout),record_error,'.')
 yline(0,'k-')
 xlabel('Time')
 ylabel('Signature - SBG (m)')
@@ -105,9 +119,11 @@ diagnostics.holdout = holdout;
 % Show the spectral and bulk effect using a common time axis. Spectra are
 % plotted in log10 units with common color limits so the gap filling is
 % visually comparable without implying energy outside the recovered band.
-effect_hs = reference_band_hs;
-effect_hs(diagnostics.recovered) = ...
-    diagnostics.canonical_hs(diagnostics.recovered);
+before_hs = diagnostics.reference_hs;
+before_hs(~diagnostics.reference_qc) = NaN;
+effect_hs = before_hs;
+effect_hs(diagnostics.fill_candidate) = ...
+    diagnostics.signature_hs(diagnostics.fill_candidate);
 time_number = diagnostics.time;
 reference_energy = diagnostics.reference_energy(:,waveband);
 signature_energy = diagnostics.signature_energy(:,waveband);
@@ -139,7 +155,7 @@ view(2)
 axis tight
 clim(color_limits)
 ylabel('Frequency (Hz)')
-title(sprintf('Signature energy: integrated heave, %.2f--%.2f Hz (uncalibrated)',opts.fmin,opts.fmax))
+title(sprintf('Signature energy: |a|-g spectrum /ω^4, %.2f--%.2f Hz (uncalibrated)',opts.fmin,opts.fmax))
 colorbar
 
 ax_effect = nexttile;
@@ -150,23 +166,23 @@ else
     display_ymax = 1.08*display_values( ...
         max(1,round(0.99*length(display_values))));
 end
-clipped_reference = reference_band_hs > display_ymax;
-reference_display = reference_band_hs;
+clipped_reference = before_hs > display_ymax;
+reference_display = before_hs;
 reference_display(clipped_reference) = display_ymax;
 plot(time_number,reference_display,'.','MarkerSize',5)
 hold on
 plot(time_number,effect_hs,'.','MarkerSize',5)
-plot(time_number(diagnostics.recovered), ...
-    effect_hs(diagnostics.recovered),'r.','MarkerSize',7)
+plot(time_number(diagnostics.fill_candidate), ...
+    effect_hs(diagnostics.fill_candidate),'r.','MarkerSize',7)
 plot(time_number(clipped_reference),reference_display(clipped_reference), ...
     'k^','MarkerFaceColor','k','MarkerSize',5)
 for i = find(clipped_reference)'
     text(time_number(i),0.97*display_ymax, ...
-        sprintf(' %.2f m',reference_band_hs(i)), ...
+        sprintf(' %.2f m',before_hs(i)), ...
         'VerticalAlignment','top','HorizontalAlignment','center')
 end
 ylim([0 display_ymax])
-ylabel(sprintf('H_s %.2f--%.2f Hz (m)',opts.fmin,opts.fmax))
+ylabel('H_s (m)')
 xlabel('Time (UTC)')
 legend('Before','After','Signature recovery','Off-scale before', ...
     'Location','best')
@@ -223,7 +239,7 @@ ax_full_signature = nexttile;
 plotSpectralCells(ax_full_signature,time_number,frequency,signature_full_log)
 clim(full_color_limits)
 ylabel('Frequency (Hz)')
-title(sprintf('Signature energy: integrated heave through %.2f Hz',opts.fmax))
+title(sprintf('Signature energy: |a|-g spectrum /ω^4, %.2f--%.2f Hz',opts.fmin,opts.fmax))
 colorbar
 yline(opts.fmin,'w--')
 yline(opts.fmax,'w--')
