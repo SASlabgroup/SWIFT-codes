@@ -101,14 +101,24 @@ for im = 1:length(missions)
     % SWIFT25's SBG outage on 20--21 June is filled from the Signature
     % accelerometer after all available SBG records have been reprocessed.
     % reprocess_SIGheave deliberately writes only separate signaturewaves
-    % variables. Promotion into the canonical fields is Willapa-specific:
-    % uncalibrated energy spans 0.05--1.0 Hz, above the hull's approximate
-    % natural frequency is discarded, and directional moments remain
-    % unavailable. review_SIGheave checks the fill against simultaneous SBG
-    % records.
+    % variables. Promotion into the canonical fields is Willapa-specific and
+    % scalar only (directional moments stay NaN).
+    % - Spectrum: uncalibrated, from a per-burst low edge (where the
+    %   Signature acceleration spectrum rises above 3x its own 0.05--0.10 Hz
+    %   noise floor, never below 0.10 Hz) to 1.25 Hz; NaN elsewhere. SWIFT25
+    %   is a low-signal site (median SBG heave Hs 0.08 m) and Signature
+    %   accelerometer noise is additive and dominates below ~0.2 Hz; up to
+    %   1.25 Hz the Signature tracks SBG heave within ~8%.
+    % - Hs: band Hs times the SBG ratio of record Hs to Hs over the same band
+    %   (1.10 on SWIFT25); the band Hs is kept in signaturewaves.
+    % On SWIFT25's 1146 records with both sensors (review_SIGheave): band
+    % Hs/SBG over the same band 1.01 (RMSE 0.010 m, r 0.98), median low edge
+    % 0.24 Hz; full-band Hs/record Hs 0.99 (RMSE 0.015 m, r 0.97), reading
+    % ~0.88 for record Hs < 0.06 m and ~1.05 above 0.15 m.
+    % review_SIGheave checks the fill against simultaneous SBG records.
     if strcmp(sname,'SWIFT25_16-27Jun2025')
         [SWIFTL3,sinfoL3,signature_diagnostics] = reprocess_SIGheave( ...
-            missiondir,input_SWIFT=SWIFTL3,input_sinfo=sinfoL3, ...
+            missiondir,fmax=1.25,input_SWIFT=SWIFTL3,input_sinfo=sinfoL3, ...
             save_product=false);
         [SWIFTL3,sinfoL3] = fillWillapaSignatureWaves( ...
             SWIFTL3,sinfoL3,signature_diagnostics.fill_candidate);
@@ -161,12 +171,14 @@ sinfo.postproc(ip).type = 'WillapaSignatureHeaveFill';
 sinfo.postproc(ip).usr = getenv('username');
 sinfo.postproc(ip).time = string(datetime('now'));
 sinfo.postproc(ip).flags.filled = fill;
+% Each filled record's band is in signaturewaves.measured_band.
 first = find(fill(:),1);
 if ~isempty(first)
-    sinfo.postproc(ip).params.measured_band = ...
-        SWIFT(first).signaturewaves.measured_band;
+    sinfo.postproc(ip).params.fmax = SWIFT(first).signaturewaves.measured_band(2);
+    sinfo.postproc(ip).params.hs_band_factor = SWIFT(first).signaturewaves.hs_band_factor;
 else
-    sinfo.postproc(ip).params.measured_band = [NaN NaN];
+    sinfo.postproc(ip).params.fmax = NaN;
+    sinfo.postproc(ip).params.hs_band_factor = NaN;
 end
 sinfo.postproc(ip).params.calibrated = false;
 sinfo.postproc(ip).params.tail_extrapolated = false;
