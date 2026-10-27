@@ -11,30 +11,28 @@ function k = wavenumber(f,depth)
 % solved by Newton-Raphson iteration method
 %
 % J. Thomson, January 2002
-%
+% M. LeClair, Oct 2026 update guess_k, derivative, epsilon
 
 omega = 2*pi*f;   % convert to radian frequency
 g = 9.81;   % gravity in m/s/s
-depthR = round(depth);  % less precision in depth... speeds up convergence 
 
 % initial guess 
 if depth<20 % shallow 
-    guess_k = sqrt( omega / (g*depthR) );
-    eps  = 0.1 * guess_k;  % percision (function of wavenumber)
-    err = abs(omega^2 - g*guess_k*tanh(guess_k*depthR) );  % initial error
+    guess_k = omega / sqrt(g*depth); % extra sqrt on omega
+    eps  = 1e-10 * guess_k;  % percision (function of wavenumber)
 elseif depth>=20 % deep
     guess_k =  omega^2 / g ;
-    eps  = 0.1 * guess_k;  % percision (function of wavenumber)
-    err = abs(omega^2 - g*guess_k*tanh(guess_k*depthR) );  % initial error
+    eps  = 1e-10 * guess_k;  % percision (function of wavenumber)
 else 
 end
 
 % iterate to improve this guess
 % by moving according to derivative of dispersion equation
 k = guess_k;
+err = Inf;
 while err > eps
-   k = guess_k - (omega^2 - g*guess_k*tanh(guess_k*depthR)) / (-g*tanh(guess_k*depthR) - g*guess_k*depthR*(cosh(guess_k))^-2 );
-   err = abs(omega^2 - g*k*tanh(k*depthR));
+   k = guess_k - (omega^2 - g*guess_k*tanh(guess_k*depth)) / (-g*tanh(guess_k*depth) - g*guess_k*depth*(cosh(guess_k*depth))^-2 );
+   err = abs(k - guess_k);  % Newton step, in units of k
    guess_k = k;
 end
 
