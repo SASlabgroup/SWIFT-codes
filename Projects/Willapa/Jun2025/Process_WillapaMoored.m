@@ -9,7 +9,8 @@
 % K. Zeiden June 2025
 % M. LeClair w/ claude, Oct 2026: paths with fullfile and the SSD as
 %   the Mac default; L0-L3 commented out (done); SBG wave recovery (SWIFT26
-%   tmin 76); SWIFT25 Signature-heave wave fill
+%   tmin 76); Signature-heave wave fill (SWIFT22/25/26/28); expdir/
+%   missionnames overrides
 
 %% Experiment specific parameters
 
@@ -98,28 +99,39 @@ for im = 1:length(missions)
             missiondir,false,false,false,true,90);
     end
 
-    % SWIFT25's SBG outage on 20--21 June is filled from the Signature
+    % Records without usable SBG waves (SWIFT25's 20--21 June outage and
+    % gaps on SWIFT22, SWIFT26 and SWIFT28) are filled from the Signature
     % accelerometer after all available SBG records have been reprocessed.
     % reprocess_SIGheave deliberately writes only separate signaturewaves
     % variables. Promotion into the canonical fields is Willapa-specific and
     % scalar only (directional moments stay NaN).
     % - Spectrum: uncalibrated, from a per-burst low edge (where the
     %   Signature acceleration spectrum rises above 3x its own 0.05--0.10 Hz
-    %   noise floor, never below 0.10 Hz) to 1.25 Hz; NaN elsewhere. SWIFT25
-    %   is a low-signal site (median SBG heave Hs 0.08 m) and Signature
-    %   accelerometer noise is additive and dominates below ~0.2 Hz; up to
-    %   1.25 Hz the Signature tracks SBG heave within ~8%.
-    % - Hs: band Hs times the SBG ratio of record Hs to Hs over the same band
-    %   (1.10 on SWIFT25); the band Hs is kept in signaturewaves.
-    % On SWIFT25's 1146 records with both sensors (review_SIGheave): band
-    % Hs/SBG over the same band 1.01 (RMSE 0.010 m, r 0.98), median low edge
-    % 0.24 Hz; full-band Hs/record Hs 0.99 (RMSE 0.015 m, r 0.97), reading
-    % ~0.88 for record Hs < 0.06 m and ~1.05 above 0.15 m.
-    % review_SIGheave checks the fill against simultaneous SBG records.
-    if strcmp(sname,'SWIFT25_16-27Jun2025')
+    %   noise floor, never below 0.10 Hz) to 1.25 Hz; NaN elsewhere. The
+    %   Signature accelerometer noise is additive and dominates below
+    %   ~0.2 Hz at the low-signal sites; up to 1.25 Hz the Signature tracks
+    %   SBG heave within ~8%.
+    % - Hs: band Hs times the mission's SBG ratio of record Hs to Hs over
+    %   the same band; the band Hs is kept in signaturewaves.
+    % - SWIFT26's SIG/Raw was rebuilt from Nortek exports that store the
+    %   accelerometer in g (|a| ~ 1); the other missions store counts
+    %   (16384 per g).
+    % Validation on records with both sensors (band Hs/SBG over the same
+    % band; full-band Hs/record Hs; fills):
+    %   SWIFT22  1290 records  1.00  0.98            3 fills
+    %   SWIFT25  1146 records  1.01  0.99 (RMSE 0.015 m, r 0.97)  302 fills
+    %   SWIFT26   938 records  1.03  1.02 (RMSE 0.035 m, r 0.96)  432 fills
+    %   SWIFT28    73 records  1.07  1.04           35 fills
+    % review_SIGheave checks a fill against simultaneous SBG records.
+    if ismember(sname,["SWIFT22_17-26Jun2025","SWIFT25_16-27Jun2025", ...
+            "SWIFT26_16-27Jun2025","SWIFT28_20-21Jun2025"])
+        accel_counts_per_g = 16384;
+        if strcmp(sname,'SWIFT26_16-27Jun2025')
+            accel_counts_per_g = 1;
+        end
         [SWIFTL3,sinfoL3,signature_diagnostics] = reprocess_SIGheave( ...
-            missiondir,fmax=1.25,input_SWIFT=SWIFTL3,input_sinfo=sinfoL3, ...
-            save_product=false);
+            missiondir,fmax=1.25,accel_counts_per_g=accel_counts_per_g, ...
+            input_SWIFT=SWIFTL3,input_sinfo=sinfoL3,save_product=false);
         [SWIFTL3,sinfoL3] = fillWillapaSignatureWaves( ...
             SWIFTL3,sinfoL3,signature_diagnostics.fill_candidate);
         saveWillapaL3(missiondir,SWIFTL3,sinfoL3)
@@ -136,8 +148,9 @@ end
 function [SWIFT,sinfo] = fillWillapaSignatureWaves(SWIFT,sinfo,fill)
 % SBG waves stay in the standard fields wherever available; records without
 % usable SBG waves (fill) take the Signature fallback. Records in the SBG
-% outage have no telemetry spectrum, so their frequency grid is NaN and the
-% fallback goes on the standard grid of the SBG records.
+% outage have no telemetry spectrum, so their frequency grid is NaN (or all
+% zero on two SWIFT26 records) and the fallback goes on the standard grid of
+% the SBG records.
 % wavespectra is rebuilt with the standard fields of the SBG records; which
 % records were filled is in sinfo.postproc (flags.filled), the bands in
 % signaturewaves.
@@ -146,7 +159,7 @@ standard_frequency = standardWaveFrequency(SWIFT);
 for i = find(fill(:))'
     fallback = SWIFT(i).signaturewaves;
     output_frequency = SWIFT(i).wavespectra.freq;
-    if ~all(isfinite(output_frequency))
+    if ~isValidFrequency(output_frequency)
         output_frequency = standard_frequency;
     end
     output_size = size(output_frequency);
@@ -201,11 +214,17 @@ function frequency = standardWaveFrequency(SWIFT)
 
 for i = 1:length(SWIFT)
     frequency = SWIFT(i).wavespectra.freq;
-    if ~isempty(frequency) && all(isfinite(frequency))
+    if isValidFrequency(frequency)
         return
     end
 end
 error('Process_WillapaMoored:NoWaveFrequency', ...
     'No record has a finite wave frequency grid.')
+
+end
+
+function tf = isValidFrequency(frequency)
+
+tf = ~isempty(frequency) && all(isfinite(frequency)) && all(frequency > 0);
 
 end
