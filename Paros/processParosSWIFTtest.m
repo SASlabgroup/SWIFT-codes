@@ -4,14 +4,15 @@
 %
 % run this script in the test directory
 %
-% J. Thomson, 4/2026
+% J. Thomson, 4/2026 version 1
+% J. Thomson, 10/2026  update filenames and incorporate sonic timestamps
 
 %% AHRS data from SBG Ellipse sensor (GNSS-aided IMU with onboard EKF)
 
 plotahrs = true;
 tstart = 60; % seconds of warm-up time for the GPS
 
-ahrsfiles = dir('*ahrs.log');
+ahrsfiles = dir('*_dev0.log'); %dir('*ahrs.log');
 
 fs = 5; % Hz, ** should confirm based on timestamps**
 
@@ -24,6 +25,7 @@ for fi=1:length(ahrsfiles)
 
     % pull out essential variables, plot and process
     % following closely reprocess_SBG.m from SWIFT codes repo
+
 
     % IMU Motion
     z = sbgData.ShipMotion.heave(:)';
@@ -124,6 +126,12 @@ for fi=1:length(ahrsfiles)
     % Caculate waves
     [Hs, Tp, Dp, E, f, a1, b1, a2, b2, check] = SBGwaves(u,v,z,fs);
 
+    % remake z at high sampling rate (for later interpolate)
+    z = sbgData.ShipMotion.heave(:);
+    ahrstime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour, ... 
+            sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
+    ztime = interp1([1:length(ahrstime)],ahrstime,linspace(1,length(ahrstime),length(z)));
+
     % save output
     save([ahrsfiles(fi).name(1:(end-4)) '_processed.mat'])
 
@@ -131,23 +139,36 @@ for fi=1:length(ahrsfiles)
 end
 
 
-%% Paros pressure data (new code)
+%% Paros pressure data
 
-parosfiles = dir('*paros.log');
+parosfiles = dir('*dev1.log'); %dir('*paros.log');
 
 fs = 20; % Hz, ** should confirm based on timestamps**
+ptimeoffset = -2/(24*3600);  % Paros timestamps are 2 seconds into the future
 
 for fi=1:length(parosfiles)
-    parosData = importdata(parosfiles(fi).name);
-    p = parosData.data;
-    %ptime = datenum(parosData.textdata{:,2});  %  not worth it when all 1970
+    % read data
+    fid = fopen(parosfiles(fi).name,'r');
+    C = textscan(fid,'%s %s %f','HeaderLines',tstart*fs,'Delimiter',','); % skip the same warm up time as the ARHS
+    fclose(fid);
+    ptime = datenum(C{2}) + ptimeoffset;
+    p = C{3};
+
+    % QC pres
+    bad = isnan(p);
+    p(bad) = [];
+    ptime(bad) = [];
+
+    % check times
+    actualfs = 1./(median(diff(ptime))*24*3600);
+    disp(['Paros sampling rate: ' num2str(actualfs) ' Hz'])
 
     % plotting
     figure(2), clf
 
     subplot(1,2,1)
-    plot([1:length(p)]./fs,p)
-    ylabel('p [mb]'), xlabel('t [s]')
+    plot(ptime,p)
+    ylabel('p [mb]'), datetick
     title(parosfiles(fi).name(1:end-4),'interp','none')
 
     subplot(1,2,2)
@@ -163,19 +184,44 @@ end
 
 %% RM Young sonic anemometer data (from SWIFT codes repo)
 
-sonicfiles = dir('*sonic.log');
+sonicfiles = dir('*_dev2.log'); %dir('*sonic.log');
 
 fs = 10; % Hz, ** should confirm based on timestamps**
 
 for fi=1:length(sonicfiles)
+    % read data
+    fid = fopen(sonicfiles(fi).name,'r');
+    D = textscan(fid,'%s %s','HeaderLines',tstart*fs,'Delimiter',','); % skip the same warm up time as the ARHS
+    fclose(fid);
+    badline = false(length(D{1}),1);
+    for linei = 1:length(D{1})
+        thistime = D{1}{linei};
+        thisdata = str2num( D{2}{linei} );
+        if thistime([ 3 6]) == '//' & length(thisdata)==5
+            stime(linei) = datenum( thistime );
+            u(linei) = thisdata(1); % m/s
+            v(linei) = thisdata(2); % m/s
+            w(linei) = thisdata(3); % m/s
+            T(linei) = thisdata(4); % virtual temperature
+            err(linei) = thisdata(5);
+        else
+            badline(linei) = true;
+        end
+    end
 
-    sonicData = importdata(sonicfiles(fi).name,' ', 2);
-    t = sonicData.data(:,1);
-    u = sonicData.data(:,2);
-    v = sonicData.data(:,3);
-    w = sonicData.data(:,4);
-    T = sonicData.data(:,5);
-    errors = sonicData.data(:,6);
+    % remove bad timestamps
+    badtime = stime < datenum(2026,1,1);
+    stime(badtime) = [];
+    u(badtime) = [];
+    v(badtime) = [];
+    w(badtime) = [];
+    T(badtime) = [];
+    err(badtime) = [];
+
+    % check sampling rate
+    actualfs = 1./(median(diff(stime))*24*3600);
+    disp(['Sonic sampling rate: ' num2str(actualfs) ' Hz'])
+
 
     % simple QC
     bad = isnan(u+v+w);
@@ -185,8 +231,9 @@ for fi=1:length(sonicfiles)
     figure(3), clf
 
     subplot(1,2,1)
-    plot(t,u,t,v,t,w)
+    plot(stime,u,stime,v,stime,w)
     legend('u','v','w')
+    ylabel('m/s'), datetick
     title(sonicfiles(fi).name(1:end-4),'interp','none')
 
     subplot(1,2,2)
@@ -196,7 +243,7 @@ for fi=1:length(sonicfiles)
     print([(sonicfiles(fi).name(1:end-4)) '_raw_spectra.png'],'-dpng')
 
     % save
-    save([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'t','u','v','w','T')
+    save([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'stime','u','v','w','T')
 
 end
 
@@ -204,9 +251,9 @@ end
 
 clear all
 
-sonicfiles = dir('*sonic.log');
-parosfiles = dir('*paros.log');
-ahrsfiles = dir('*ahrs.log');
+sonicfiles = dir('*dev2.log');
+parosfiles = dir('*dev1.log');
+ahrsfiles = dir('*dev0.log');
 
 % initialize
 Preswork_DC = NaN(1,length(sonicfiles));
@@ -215,27 +262,27 @@ Hs_all = NaN(1,length(sonicfiles));
 U = NaN(1,length(sonicfiles));
 
 % indices of filelist
-validtests = [3:8 12];
-boatwakes = 5;
-stilwater = 12;
+pickfiles = 1;
 
-for fi = validtests
+for fi = 1
 
-    load([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'t','u','v','w','T');
-    load([(parosfiles(fi).name(1:end-4)) '_processed.mat'],'p');
-    load([(ahrsfiles(fi).name(1:end-4)) '_processed.mat'],'Hs','z','E','f'); f_wavespec = f; clear f;
+    load([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'stime','u','v','w','T');
+    load([(parosfiles(fi).name(1:end-4)) '_processed.mat'],'p','ptime');
+    load([(ahrsfiles(fi).name(1:end-4)) '_processed.mat'],'Hs','E','f','z','ztime'); f_wavespec = f; clear f;
 
     % interp the presure and the ahrs to match the sonic
-    fs = 10; % sonic sampling rate
-    toffset = 0;
+    fs = round( 1./(median(diff(stime))*24*3600) );
 
-    ptime = linspace(min(t), max(t), length(p)) + toffset;
+    % QC pres
+    bad = isnan(p);
+    p(bad) = [];
+    ptime(bad) = [];
+
     praw = p;
-    p = interp1(ptime,p,t);
+    p = interp1(ptime,p,stime);
 
-    ztime = linspace(min(t), max(t), length(z)) + toffset;
     zraw = z;
-    z = interp1(ztime,z,t);
+    z = interp1(ztime,z,stime);
 
     %     % or resample pressure (20 Hz) to match the sonic (10 Hz)... worst option
     %     %p = resample(p, length(w), length(p));  fs = 10; % Hz
@@ -250,30 +297,28 @@ for fi = validtests
 
     figure(4), clf % timeseries
     subplot(4,1,1)
-    plot(ztime,zraw,'k-',t,z,'k.','linewidth',2), hold on
+    plot(ztime,zraw,'k-',stime,z,'k.','linewidth',2), hold on
     set(gca,'YLim',[-0.5 0.5])
-    ylabel('\eta [m]')
+    ylabel('\eta [m]'), datetick
     set(gca,'fontsize',14,'fontweight','demi')
 
     subplot(4,1,2)
-    plot(ptime,praw,'r-',t,p,'.','linewidth',2), hold on
-    ylabel('pres [mb]')
+    plot(ptime,praw,'r-',stime,p,'.','linewidth',2), hold on
+    ylabel('pres [mb]'), datetick
     set(gca,'fontsize',14,'fontweight','demi')
 
 
     subplot(4,1,3)
-    plot(t,w,'b-','linewidth',2), hold on
-    ylabel('w [m/s]')
+    plot(stime,w,'b-','linewidth',2), hold on
+    ylabel('w [m/s]'), datetick
     set(gca,'fontsize',14,'fontweight','demi')
 
     subplot(4,1,4)
-    plot(t,u,'g',t,v,'m','linewidth',2), hold on
-    ylabel('u,v [m/s]')
+    plot(stime,u,'g',stime,v,'m','linewidth',2), hold on
+    ylabel('u,v [m/s]'), datetick
     set(gca,'fontsize',14,'fontweight','demi')
-    xlabel('time [s]')
 
     print([(sonicfiles(fi).name(1:15)) '_timeseries.png'],'-dpng')
-
 
     % cross-spectra
 
@@ -322,7 +367,7 @@ for fi = validtests
 
     print([(sonicfiles(fi).name(1:15)) '_crossspectra.png'],'-dpng')
 
-    % stats from this burst
+    % stats from this burstan
     Preswork_DC(fi) = mean(detrend(p).*detrend(w)) % direct covariance
     Preswork_spec(fi) = sum( real(PW) ) .* mean(diff(f)); % spectral variance
     Hs_all(fi) = Hs;
