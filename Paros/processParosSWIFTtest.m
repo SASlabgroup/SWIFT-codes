@@ -7,10 +7,12 @@
 % J. Thomson, 4/2026 version 1
 % J. Thomson, 10/2026  update filenames and incorporate sonic timestamps
 
+clear all, close all
+
 %% AHRS data from SBG Ellipse sensor (GNSS-aided IMU with onboard EKF)
 
 plotahrs = true;
-tstart = 60; % seconds of warm-up time for the GPS
+warmupseconds = 60; % seconds of warm-up time for the GPS
 
 ahrsfiles = dir('*_dev0.log'); %dir('*ahrs.log');
 
@@ -74,7 +76,7 @@ for fi=1:length(ahrsfiles)
         hold on;
         plot(gpstime,filloutliers(z,'linear'),'-r','LineWidth',2)
         ylabel('\eta [m]');ylim([-0.5 0.5])
-        plot(tstart*[1 1],ylim,':k','LineWidth',2)
+        plot(warmupseconds*[1 1],ylim,':k','LineWidth',2)
         legend('Raw','Despiked','Start')
         title(ahrsfiles(fi).name(1:end-4),'interpreter','none')
 
@@ -83,7 +85,7 @@ for fi=1:length(ahrsfiles)
         hold on;
         plot(gpstime,filloutliers(u,'linear'),'-r','LineWidth',2)
         ylabel('u [m/s]');ylim([-1 1])
-        plot(tstart*[1 1],ylim,':k','LineWidth',2)
+        plot(warmupseconds*[1 1],ylim,':k','LineWidth',2)
 
         subplot(3,1,3)
         plot(gpstime,v,'-k')
@@ -91,7 +93,7 @@ for fi=1:length(ahrsfiles)
         plot(gpstime,filloutliers(v,'linear'),'-r','LineWidth',2)
         xlabel('Time [s]');
         ylabel('v [m/s]');ylim([-1 1])
-        plot(tstart*[1 1],ylim,':k','LineWidth',2)
+        plot(warmupseconds*[1 1],ylim,':k','LineWidth',2)
 
         %             subplot(4,1,4)
         %             plot(gpstime,w,'-kx')
@@ -99,7 +101,7 @@ for fi=1:length(ahrsfiles)
         %             plot(gpstime,filloutliers(w,'linear'),'-rx')
         %             xlabel('Time [s]');
         %             ylabel('w [m/s]');ylim([-2 2])
-        %             plot(tstart*[1 1],ylim,':k','LineWidth',2)
+        %             plot(warmupseconds*[1 1],ylim,':k','LineWidth',2)
 
         h = findall(gcf,'Type','Axes');
         linkaxes(h,'x');
@@ -110,13 +112,13 @@ for fi=1:length(ahrsfiles)
     end
 
     % Crop and despike data
-    z = filloutliers(z(tstart*5:end),'linear');
-    x = filloutliers(x(tstart*5:end),'linear');
-    y = filloutliers(y(tstart*5:end),'linear');
-    lat = filloutliers(lat(tstart*5:end), 'linear');
-    lon = filloutliers(lon(tstart*5:end), 'linear');
-    u = filloutliers(u(tstart*5:end),'linear');
-    v = filloutliers(v(tstart*5:end),'linear');
+    z = filloutliers(z(warmupseconds*5:end),'linear');
+    x = filloutliers(x(warmupseconds*5:end),'linear');
+    y = filloutliers(y(warmupseconds*5:end),'linear');
+    lat = filloutliers(lat(warmupseconds*5:end), 'linear');
+    lon = filloutliers(lon(warmupseconds*5:end), 'linear');
+    u = filloutliers(u(warmupseconds*5:end),'linear');
+    v = filloutliers(v(warmupseconds*5:end),'linear');
 
     % Remove NaNs?
     ibad = isnan(z + x + y + u + v + lat + lon);
@@ -131,6 +133,10 @@ for fi=1:length(ahrsfiles)
     ahrstime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour, ... 
             sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
     ztime = interp1([1:length(ahrstime)],ahrstime,linspace(1,length(ahrstime),length(z)));
+    
+    % check times
+    actualfs = 1./(median(diff(ztime))*24*3600);
+    disp(['SBG (AHRS) sampling rate: ' num2str(actualfs) ' Hz'])
 
     % save output
     save([ahrsfiles(fi).name(1:(end-4)) '_processed.mat'])
@@ -149,7 +155,7 @@ ptimeoffset = -2/(24*3600);  % Paros timestamps are 2 seconds into the future
 for fi=1:length(parosfiles)
     % read data
     fid = fopen(parosfiles(fi).name,'r');
-    C = textscan(fid,'%s %s %f','HeaderLines',tstart*fs,'Delimiter',','); % skip the same warm up time as the ARHS
+    C = textscan(fid,'%s %s %f','HeaderLines',warmupseconds*fs,'Delimiter',','); % skip the same warm up time as the ARHS
     fclose(fid);
     ptime = datenum(C{2}) + ptimeoffset;
     p = C{3};
@@ -191,7 +197,7 @@ fs = 10; % Hz, ** should confirm based on timestamps**
 for fi=1:length(sonicfiles)
     % read data
     fid = fopen(sonicfiles(fi).name,'r');
-    D = textscan(fid,'%s %s','HeaderLines',tstart*fs,'Delimiter',','); % skip the same warm up time as the ARHS
+    D = textscan(fid,'%s %s','HeaderLines',warmupseconds*fs,'Delimiter',','); % skip the same warm up time as the ARHS
     fclose(fid);
     badline = false(length(D{1}),1);
     for linei = 1:length(D{1})
@@ -270,13 +276,21 @@ for fi = 1
     load([(parosfiles(fi).name(1:end-4)) '_processed.mat'],'p','ptime');
     load([(ahrsfiles(fi).name(1:end-4)) '_processed.mat'],'Hs','E','f','z','ztime'); f_wavespec = f; clear f;
 
-    % interp the presure and the ahrs to match the sonic
-    fs = round( 1./(median(diff(stime))*24*3600) );
-
     % QC pres
     bad = isnan(p);
     p(bad) = [];
     ptime(bad) = [];
+
+    % pick a start time and interp the presure and the ahrs to match the sonic
+    fs = round( 1./(median(diff(stime))*24*3600) );
+    commonstart = max( [ ztime(1) ptime(1) stime(1) ] );
+    commonend = min([ ztime(end) ptime(end) stime(end) ]);
+    commonindices = find(stime>commonstart & stime<commonend);
+    stime = stime(commonindices);
+    u = u(commonindices);
+    v = v(commonindices);
+    w = w(commonindices);
+    T = T(commonindices);
 
     praw = p;
     p = interp1(ptime,p,stime);
@@ -320,7 +334,7 @@ for fi = 1
 
     print([(sonicfiles(fi).name(1:15)) '_timeseries.png'],'-dpng')
 
-    % cross-spectra
+    % cross-spectra -----------------------------------------------------
 
     [ f, PP, PU, PV, PW, UU, VV, WW, UV , cohSIG ]  =  PWspectra( p, u, v, w , fs);
 
@@ -339,12 +353,16 @@ for fi = 1
     phPW  = 180/pi .* atan2( quPW , coPW );
     cohUV = sqrt((coUV.^2 + quUV.^2)./(UU .* VV));
     phUV  = 180/pi .* atan2( quUV , coUV );
+
+    % recalc heave spectra (to extent to higher freq than standard SBGwaves)
+    [ZZ fz] = pwelch(z,[],[],[],round(1./(median(diff(ztime))*24*3600)));
     % -----------------------------------------------------------------------------
 
     figure(5), clf
     subplot(2,1,1)
-    loglog(f_wavespec,E,'k',f,PP,'r', f, WW,'b','linewidth',2)
-    legend('\eta','p','w')
+    loglog(f_wavespec,E,'k',fz,ZZ,'k--',f,PP,'r', f, WW,'b','linewidth',2)
+    set(gca,'XLim',[1e-2 1e1])
+    legend('\eta','z','p','w','Location','Southwest')
     ylabel('Energy density')
     title([(sonicfiles(fi).name(1:15)) ', H_s = ' num2str(Hs,2) ' m'])
     set(gca,'fontsize',14,'fontweight','demi')
@@ -352,7 +370,7 @@ for fi = 1
     subplot(4,1,3)
     semilogx(f,cohPW,'r',f,cohPW,'b.','linewidth',2)
     ylabel('Coherence')
-    set(gca,'YLim',[0 1])
+    set(gca,'YLim',[0 1]),set(gca,'XLim',[1e-2 1e1])
     hold on,
     plot([min(f) max(f)],[cohSIG cohSIG],'k:')
     set(gca,'fontsize',14,'fontweight','demi')
@@ -360,7 +378,7 @@ for fi = 1
     subplot(4,1,4)
     semilogx(f,phPW,'r',f,phPW,'b.','linewidth',2)
     ylabel('Phase')
-    set(gca,'YLim',[-180 180])
+    set(gca,'YLim',[-180 180]), set(gca,'XLim',[1e-2 1e1])
     set(gca,'fontsize',14,'fontweight','demi')
 
     xlabel('f [Hz]')
