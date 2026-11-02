@@ -144,7 +144,7 @@ UV = mean( UV_window_merged.' ) / (windowpts/2 * fs  );
 % Cospectrum & Quadrature:
 coPU = real(PU);   quPU = imag(PU);
 coPV = real(PV);   quPV = imag(PV);
-coPW = real(PV);   quPW = imag(PV);
+coPW = real(PW);   quPW = imag(PW);
 coUV = real(UV);   quUV = imag(UV);
 % Coherence & Phase at each freq-band
 % *** note that it's important to calc this AFTER all merging and ensemble avg.

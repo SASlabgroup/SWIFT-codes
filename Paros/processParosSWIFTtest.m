@@ -355,7 +355,7 @@ for fi = 1
     phUV  = 180/pi .* atan2( quUV , coUV );
 
     % recalc heave spectra (to extent to higher freq than standard SBGwaves)
-    [ZZ fz] = pwelch(z,[],[],[],round(1./(median(diff(ztime))*24*3600)));
+    [ZZ fz] = pwelch(zraw,[],[],[],round(1./(median(diff(ztime))*24*3600)));
     % -----------------------------------------------------------------------------
 
     figure(5), clf
