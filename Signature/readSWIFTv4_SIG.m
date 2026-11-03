@@ -21,6 +21,7 @@ function [ burst,  avg,  battery,  echo] = readSWIFTv4_SIG(filename)
 %             additional output)
 %               3/2021 include microseconds in timestamps
 %             11/2026   skip records with a bad header or data checksum (M. LeClair, using Claude)
+%             11/2026   index avg.SoundSpeed by the avg ping counter (M. LeClair, using Claude)
 %
 
 BatteryVoltage = NaN;
@@ -281,7 +282,7 @@ while (~feof(fid))
                     microsecond = fread(fid,1,'uint16','ieee-le');
                     avg.time(ensemblecount_avg) = datenum( year, month, day, hour, minute, second + microsecond./1e4 );
                     
-                    avg.SoundSpeed(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le')./10;
+                    avg.SoundSpeed(ensemblecount_avg) = fread(fid,1,'uint16','ieee-le')./10;
                     avg.Temperature(ensemblecount_avg) = fread(fid,1,'int16','ieee-le')./100;
                     avg.Pressure(ensemblecount_avg) = fread(fid,1,'uint32','ieee-le')./1000;
                     avg.Heading(ensemblecount_avg) = fread(fid,1,'uint16','ieee-le')./100;
