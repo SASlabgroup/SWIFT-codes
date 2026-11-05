@@ -20,6 +20,8 @@ function [ burst,  avg,  battery,  echo] = readSWIFTv4_SIG(filename)
 %             11/2019   revised to read echosounder data format (with
 %             additional output)
 %               3/2021 include microseconds in timestamps
+%             11/2026   skip records with a bad header or data checksum (M. LeClair, using Claude)
+%             11/2026   index avg.SoundSpeed by the avg ping counter (M. LeClair, using Claude)
 %
 
 BatteryVoltage = NaN;
@@ -49,6 +51,13 @@ while (~feof(fid))
             
             ID = fread(fid,1,'uint8','ieee-le'); % ID byte ('15' for burst, '16' for avg, '1C' for echo)
             Family = fread(fid,1,'uint8','ieee-le');    % instrument family, should be '10' (hex = 16) for AD2CP
+            
+            % skip record if its header or data checksum is bad
+            if ~checksumsOK(fid)
+                disp('bad checksum, skipping record')
+                fseek(fid,-3,0); % from just after Family back to the byte after the sync byte
+                continue
+            end
             
             %% read burst data
             if  strcmp('15',dec2hex(ID)) &&  strcmp('10',dec2hex(Family))
@@ -273,7 +282,7 @@ while (~feof(fid))
                     microsecond = fread(fid,1,'uint16','ieee-le');
                     avg.time(ensemblecount_avg) = datenum( year, month, day, hour, minute, second + microsecond./1e4 );
                     
-                    avg.SoundSpeed(ensemblecount_burst) = fread(fid,1,'uint16','ieee-le')./10;
+                    avg.SoundSpeed(ensemblecount_avg) = fread(fid,1,'uint16','ieee-le')./10;
                     avg.Temperature(ensemblecount_avg) = fread(fid,1,'int16','ieee-le')./100;
                     avg.Pressure(ensemblecount_avg) = fread(fid,1,'uint32','ieee-le')./1000;
                     avg.Heading(ensemblecount_avg) = fread(fid,1,'uint16','ieee-le')./100;
@@ -598,3 +607,43 @@ if ~isempty(burst)
 end
 
 
+function ok = checksumsOK(fid)
+% Nortek header and data checksums (Integrator's Guide AD2CP, N3015-007, sec. 6.1).
+% A record starts at the sync byte: a 10-byte header (Sync, HeaderSize, ID, Family,
+% DataSize, DataChecksum, HeaderChecksum), then DataSize bytes of data.
+% Input: file position just after Family (sync byte + 4). Output: the same position.
+% A record cut off by the end of the file passes the data check (left to the DataSize checks).
+position = ftell(fid);                     % just after Family
+SyncPosition = position - 4;               % the sync byte, start of the header
+DataPosition = SyncPosition + 10;          % start of the data, after the header
+HeaderChecksumLength = 8
+fseek(fid,0,'eof');
+filelength = ftell(fid);
+
+fseek(fid,SyncPosition,'bof');             % read the header as 16-bit words
+header = fread(fid,5,'uint16','ieee-le');  % [Sync HeaderSize] [ID Family] DataSize DataChecksum HeaderChecksum
+ok = true;
+if numel(header) == 5
+    DataSize = header(3);
+    DataChecksum = header(4);
+    HeaderChecksum = header(5);
+    fseek(fid,SyncPosition,'bof');         % header checksum: the 8 header bytes before it
+    ok = calculateChecksum(fid,HeaderChecksumLength) == HeaderChecksum;
+    if ok && DataPosition + DataSize <= filelength
+        fseek(fid,DataPosition,'bof');     % data checksum: the DataSize data bytes
+        ok = calculateChecksum(fid,DataSize) == DataChecksum;
+    end
+end
+fseek(fid,position,'bof');                 % back to just after Family
+
+
+function checksum = calculateChecksum(fid,size)
+% calculateChecksum() of the Nortek Integrator's Guide (sec. 6.1.1) for the size bytes
+% from the current file position (pData); leaves the file just after them.
+checksum = hex2dec('B58C');                                             % unsigned short checksum = 0xB58C;
+nbshorts = bitshift(size,-1);                                           % unsigned short nbshorts = (size >> 1);
+checksum = checksum + sum(fread(fid,nbshorts,'uint16','ieee-le'));      % for (i < nbshorts) checksum += *pData;
+if size > 2*nbshorts                                                    % if (size > 0)
+    checksum = checksum + bitshift(fread(fid,1,'uint8'),8);             % checksum += ((unsigned short)(*pData)) << 8;
+end
+checksum = mod(checksum,2^16);                                          % unsigned short wraps at 2^16
