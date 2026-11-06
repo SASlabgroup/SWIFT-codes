@@ -177,13 +177,16 @@ for fi=1:length(parosfiles)
     figure(2), clf
 
     subplot(1,2,1)
-    plot(ptime,p)
-    ylabel('p [mb]'), datetick
+    plot(ptime,p,'r')
+    ylabel('p [mb]'), datetick, xlabel('time')
     title(parosfiles(fi).name(1:end-4),'interp','none')
 
     subplot(1,2,2)
-    pwelch(p,[],[],[],fs)
-    set(gca,'xscale','log')
+    windowlength = 2048; % data points
+    [PP fp] = pwelch(p,windowlength ,[],[],fs)
+    loglog(fp,PP,'r')
+    set(gca,'xscale','log'),
+    xlabel('freq [Hz]'), ylabel('energy density')
 
     print([(parosfiles(fi).name(1:end-4)) '_raw_spectra.png'],'-dpng')
 
@@ -247,7 +250,7 @@ for fi=1:length(sonicfiles)
     title(sonicfiles(fi).name(1:end-4),'interp','none')
 
     subplot(1,2,2)
-    pwelch([u v w],[],[],[],fs)
+    pwelch(w,[],[],[],fs)
     set(gca,'xscale','log')
 
     print([(sonicfiles(fi).name(1:end-4)) '_raw_spectra.png'],'-dpng')
