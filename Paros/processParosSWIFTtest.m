@@ -16,7 +16,8 @@ warmupseconds = 60; % seconds of warm-up time for the GPS
 
 ahrsfiles = dir('*_dev0.log'); %dir('*ahrs.log');
 
-fs = 5; % Hz, ** should confirm based on timestamps**
+fs = 50; % Hz, motion data
+fsgps = 5; % Hz, gps data
 
 for fi=1:length(ahrsfiles)
 
@@ -50,7 +51,7 @@ for fi=1:length(ahrsfiles)
     u = sbgData.GpsVel.vel_e(:)';
     v = sbgData.GpsVel.vel_n(:)';
     w = -sbgData.GpsVel.vel_d(:)';
-    gpstime = sbgData.GpsVel.time_stamp(:)'*10^(-6);
+    gpstime = sbgData.GpsVel.time_stamp(:)'*10^(-6); % seconds
     imin = min([length(u) length(v) length(w) length(gpstime)]);
     u = u(1:imin); v = v(1:imin); w = w(1:imin); gpstime = gpstime(1:imin);
     [~,iu] = unique(gpstime);
@@ -67,10 +68,9 @@ for fi=1:length(ahrsfiles)
 
     if plotahrs
 
-        figure(1), clf
+        figure(1)%,'color','w'), clf
         % [fh,sbgData] = plotSBG(sbgData,'qc')  % alternative
 
-        figure('color','w')
         subplot(3,1,1)
         plot(gpstime,z,'-k')
         hold on;
@@ -108,17 +108,17 @@ for fi=1:length(ahrsfiles)
         xlim([0 max([550 max(gpstime)])])
 
         print([ahrsfiles(fi).name(1:end-4) '_uvz.png'],'-dpng')
-        close gcf
+        %close gcf
     end
 
     % Crop and despike data
-    z = filloutliers(z(warmupseconds*5:end),'linear');
-    x = filloutliers(x(warmupseconds*5:end),'linear');
-    y = filloutliers(y(warmupseconds*5:end),'linear');
-    lat = filloutliers(lat(warmupseconds*5:end), 'linear');
-    lon = filloutliers(lon(warmupseconds*5:end), 'linear');
-    u = filloutliers(u(warmupseconds*5:end),'linear');
-    v = filloutliers(v(warmupseconds*5:end),'linear');
+    z = filloutliers(z(warmupseconds*fsgps:end),'linear');
+    x = filloutliers(x(warmupseconds*fsgps:end),'linear');
+    y = filloutliers(y(warmupseconds*fsgps:end),'linear');
+    lat = filloutliers(lat(warmupseconds*fsgps:end), 'linear');
+    lon = filloutliers(lon(warmupseconds*fsgps:end), 'linear');
+    u = filloutliers(u(warmupseconds*fsgps:end),'linear');
+    v = filloutliers(v(warmupseconds*fsgps:end),'linear');
 
     % Remove NaNs?
     ibad = isnan(z + x + y + u + v + lat + lon);
@@ -126,17 +126,19 @@ for fi=1:length(ahrsfiles)
     v(ibad)=[]; lat(ibad)=[]; lon(ibad)=[];
 
     % Caculate waves
-    [Hs, Tp, Dp, E, f, a1, b1, a2, b2, check] = SBGwaves(u,v,z,fs);
+    [Hs, Tp, Dp, E, f, a1, b1, a2, b2, check] = SBGwaves(u,v,z,fsgps);
 
     % remake z at high sampling rate (for later interpolate)
-    z = sbgData.ShipMotion.heave(:);
+    zraw = sbgData.ShipMotion.heave(:);
     ahrstime = datenum(sbgData.UtcTime.year, sbgData.UtcTime.month, sbgData.UtcTime.day, sbgData.UtcTime.hour, ... 
             sbgData.UtcTime.min, sbgData.UtcTime.sec + sbgData.UtcTime.nanosec./1e9);
-    ztime = interp1([1:length(ahrstime)],ahrstime,linspace(1,length(ahrstime),length(z)));
+    ztime = interp1([1:length(ahrstime)],ahrstime,linspace(1,length(ahrstime),length(zraw)));
     
     % check times
     actualfs = 1./(median(diff(ztime))*24*3600);
+    actualfsgps = 1./median(diff(gpstime));
     disp(['SBG (AHRS) sampling rate: ' num2str(actualfs) ' Hz'])
+    disp(['SBG (GPS) sampling rate: ' num2str(actualfsgps) ' Hz'])
 
     % save output
     save([ahrsfiles(fi).name(1:(end-4)) '_processed.mat'])
@@ -150,7 +152,9 @@ end
 parosfiles = dir('*dev1.log'); %dir('*paros.log');
 
 fs = 20; % Hz, ** should confirm based on timestamps**
-ptimeoffset = -2/(24*3600);  % Paros timestamps are 2 seconds into the future
+ptimeoffset = 0 % -2/(24*3600);  % Paros timestamps were 2 seconds ahead ... 
+% Paros timestamps corrected on 6 Nov 2026 (firmware v0.1.1) ...
+% and should be zero offset going forward
 
 for fi=1:length(parosfiles)
     % read data
@@ -192,7 +196,7 @@ end
 
 sonicfiles = dir('*_dev2.log'); %dir('*sonic.log');
 
-fs = 10; % Hz, ** should confirm based on timestamps**
+fs = 20; % Hz, ** should confirm based on timestamps**
 
 for fi=1:length(sonicfiles)
     % read data
@@ -274,7 +278,7 @@ for fi = 1
 
     load([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'stime','u','v','w','T');
     load([(parosfiles(fi).name(1:end-4)) '_processed.mat'],'p','ptime');
-    load([(ahrsfiles(fi).name(1:end-4)) '_processed.mat'],'Hs','E','f','z','ztime'); f_wavespec = f; clear f;
+    load([(ahrsfiles(fi).name(1:end-4)) '_processed.mat'],'Hs','E','f','zraw','ztime'); f_wavespec = f; clear f;
 
     % QC pres
     bad = isnan(p);
@@ -295,8 +299,7 @@ for fi = 1
     praw = p;
     p = interp1(ptime,p,stime);
 
-    zraw = z;
-    z = interp1(ztime,z,stime);
+    z = interp1(ztime,zraw,stime);
 
     %     % or resample pressure (20 Hz) to match the sonic (10 Hz)... worst option
     %     %p = resample(p, length(w), length(p));  fs = 10; % Hz
@@ -355,7 +358,7 @@ for fi = 1
     phUV  = 180/pi .* atan2( quUV , coUV );
 
     % recalc heave spectra (to extent to higher freq than standard SBGwaves)
-    [ZZ fz] = pwelch(zraw,[],[],[],round(1./(median(diff(ztime))*24*3600)));
+    [ZZ, fz] = pwelch(zraw,[],[],[],round(1./(median(diff(ztime))*24*3600)));
     % -----------------------------------------------------------------------------
 
     figure(5), clf
