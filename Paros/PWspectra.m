@@ -20,7 +20,8 @@ secs = pts / fs;        % record length in seconds
 window_length = 200;  % seconds
 merge = 5; 
 windowpts = fs * window_length;    % window length in data points
-windows = 4*floor(pts/windowpts -1)+1   % number of windows, the 4 comes from a 75% overlap
+windows = 4*floor(pts/windowpts -1)+1 ;  % number of windows, the 4 comes from a 75% overlap
+if windows<2, return, else, end
 % loop to create a matrix of time series, where COLUMN = WINDOW 
 for q=1:windows, 
 	p_window(:,q) = p(  (q-1)*(.25*windowpts)+1  :  (q-1)*(.25*windowpts)+windowpts  );  

@@ -168,6 +168,8 @@ for fi=1:length(parosfiles)
     bad = isnan(p);
     p(bad) = [];
     ptime(bad) = [];
+    imin = min([length(ptime) length(p) ]);
+    p = p(1:imin); ptime = ptime(1:imin);
 
     % check times
     actualfs = 1./(median(diff(ptime))*24*3600);
@@ -275,9 +277,9 @@ Hs_all = NaN(1,length(sonicfiles));
 U = NaN(1,length(sonicfiles));
 
 % indices of filelist
-pickfiles = 1;
+pickfiles = 1:(length(sonicfiles)-1);
 
-for fi = 1
+for fi = pickfiles
 
     load([(sonicfiles(fi).name(1:end-4)) '_processed.mat'],'stime','u','v','w','T');
     load([(parosfiles(fi).name(1:end-4)) '_processed.mat'],'p','ptime');
@@ -392,7 +394,7 @@ for fi = 1
     print([(sonicfiles(fi).name(1:15)) '_crossspectra.png'],'-dpng')
 
     % stats from this burstan
-    Preswork_DC(fi) = mean(detrend(p).*detrend(w)) % direct covariance
+    Preswork_DC(fi) = mean(detrend(p).*detrend(w)); % direct covariance
     Preswork_spec(fi) = sum( real(PW) ) .* mean(diff(f)); % spectral variance
     Hs_all(fi) = Hs;
     U(fi) = sqrt( mean(u).^2 + mean(v).^2 );
