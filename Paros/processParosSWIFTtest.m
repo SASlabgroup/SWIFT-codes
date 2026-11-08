@@ -183,7 +183,7 @@ for fi=1:length(parosfiles)
 
     subplot(1,2,2)
     windowlength = 2048; % data points
-    [PP fp] = pwelch(p,windowlength ,[],[],fs)
+    [PP fp] = pwelch(p,windowlength ,[],[],fs);
     loglog(fp,PP,'r')
     set(gca,'xscale','log'),
     xlabel('freq [Hz]'), ylabel('energy density')
