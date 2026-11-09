@@ -1,11 +1,14 @@
+function fitSWIFTmooring(data_dir)
 % Fit watch circle of each SWIFT mooring over its final deployment period.
 % Mask to t >= start of final deployment (set per buoy in header), project to
 % local ENU about the median, Kasa circle fit, plot points + circle + center
 % with a position table; print positions to the command window.
+%
+%   fitSWIFTmooring('/tmp/SWIFT_22_23_24_20261001T000001_now')
+%
+% data_dir holds SWIFTxx_telemetry.mat files (see pullfitSWIFTmooring.m)
 
-% --- edit for each deployment | this should have multiple swift mat files in it ---
-data_dir = '/tmp/SWIFT_25_24_23_22_20261005T000000_now';
-
+% --- edit for each deployment ---
 % first fix of final deployment (UTC)
 % Trim off anything before the actual deployment
 deploy_start = containers.Map( ...
@@ -16,6 +19,8 @@ deploy_start = containers.Map( ...
 % --------------------------------
 
 mat_files = dir(fullfile(data_dir, 'SWIFT*_telemetry.mat'));
+% only buoys with a deploy start above (e.g. drops SWIFT26, not moored)
+mat_files = mat_files(isKey(deploy_start, erase({mat_files.name}, '_telemetry.mat')));
 wgs84 = wgs84Ellipsoid('meter');
 
 figure('Color', 'w');
@@ -38,7 +43,7 @@ for i = 1:n_swift
 
     start_time(i) = deploy_start(char(swift_id(i)));
     in_deploy = valid & time >= start_time(i);
-    lat = lat(in_deploy); lon = lon(in_deploy);
+    lat = lat(in_deploy); lon = lon(in_deploy); time = time(in_deploy);
     n_used(i) = sum(in_deploy);
 
     ref_lat = median(lat); ref_lon = median(lon);
@@ -52,9 +57,18 @@ for i = 1:n_swift
     theta = linspace(0, 2*pi, 361);
     [circle_lat, circle_lon] = enu2geodetic(circle(1) + circle(3)*cos(theta), circle(2) + circle(3)*sin(theta), 0, ref_lat, ref_lon, 0, wgs84);
 
-    geoscatter(map_ax, lat, lon, 8, colors(i,:), 'filled', 'MarkerFaceAlpha', 0.5, 'DisplayName', swift_id(i));
+    geoscatter(map_ax, lat, lon, 8, colors(i,:), 'filled', 'MarkerFaceAlpha', 0.2, 'HandleVisibility', 'off');
     geoplot(map_ax, circle_lat, circle_lon, '-', 'Color', colors(i,:), 'LineWidth', 1.5, 'HandleVisibility', 'off');
-    geoscatter(map_ax, center_lat(i), center_lon(i), 120, colors(i,:), 'p', 'filled', 'MarkerEdgeColor', 'k', 'HandleVisibility', 'off');
+    geoscatter(map_ax, center_lat(i), center_lon(i), 80, colors(i,:), 'o', 'filled', 'MarkerEdgeColor', 'k', 'LineWidth', 1.5, 'HandleVisibility', 'off');
+    [~, last] = max(time);
+    last_str = "last fix " + string(datestr(time(last), 'yyyy-mm-dd HH:MM')) + " UTC";
+    if is_stale(time(last))
+        geoscatter(map_ax, lat(last), lon(last), 40, colors(i,:), 'o', 'filled', 'MarkerEdgeColor', 'w', ...
+            'DisplayName', swift_id(i) + "  \color{red}" + last_str);
+    else
+        geoscatter(map_ax, lat(last), lon(last), 400, colors(i,:), 'p', 'filled', 'MarkerEdgeColor', 'w', 'LineWidth', 1.5, ...
+            'DisplayName', swift_id(i) + "  " + last_str);
+    end
     text(map_ax, center_lat(i), center_lon(i), "  " + swift_id(i), 'Color', 'w', 'FontWeight', 'bold');
 end
 
@@ -71,10 +85,11 @@ for i = 1:n_swift
 end
 start_str = string(datestr(start_time, 'yyyy-mm-dd HH:MM'));
 
-table_text = sprintf('%-8s %-13s %-14s %5s  %s', 'SWIFT', 'lat', 'lon', 'r (m)', 'start (UTC)');
+table_text = sprintf('%-8s %-13s %-14s %5s', 'SWIFT', 'center lat', 'center lon', 'r (m)');
+table_text = ['Watch circle centers (o)' newline table_text];
 for i = 1:n_swift
     table_text = [table_text ...
-     newline sprintf('%-8s %-13s %-14s %5.1f  %s', swift_id(i), center_lat_dm(i), center_lon_dm(i), radius_m(i), start_str(i))]; 
+     newline sprintf('%-8s %-13s %-14s %5.1f', swift_id(i), center_lat_dm(i), center_lon_dm(i), radius_m(i))];
 end
 annotation('textbox', [0.14 0.12 0.4 0.12], 'String', table_text, 'FontName', 'Courier', 'FontSize', 9, 'BackgroundColor', 'w', 'FitBoxToText', 'on', 'Interpreter', 'none');
 % exportgraphics(gcf, fullfile(data_dir, 'mooring_centroids.png'), 'Resolution', 150);
@@ -82,6 +97,12 @@ annotation('textbox', [0.14 0.12 0.4 0.12], 'String', table_text, 'FontName', 'C
 fprintf('%-8s %11s %12s %8s %8s %-17s %6s %6s\n', 'SWIFT', 'lat', 'lon', 'r_m', 'rms_m', 'start_utc', 'used', 'total');
 for i = 1:n_swift
     fprintf('%-8s %11.6f %12.6f %8.1f %8.1f %-17s %6d %6d\n', swift_id(i), center_lat(i), center_lon(i), radius_m(i), rms_residual(i), start_str(i), n_used(i), n_total(i));
+end
+end
+
+function tf = is_stale(fix_time)
+% last fix more than 2 hr before now (telemetry times are UTC datenum)
+tf = datenum(datetime('now', 'TimeZone', 'UTC')) - fix_time > 2/24;
 end
 
 function m = fit_circle_kasa(x, y)
