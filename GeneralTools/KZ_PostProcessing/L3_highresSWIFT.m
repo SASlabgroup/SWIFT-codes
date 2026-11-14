@@ -14,6 +14,7 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 % missiondir = cd;
 % burstdt = floor(8.5*60/10)/(60*60*24); % datenum units (days)
 % sigopt.burstlength = 8.5; % burst length [min] (default 8.5)
+% sigopt.minpingfrac = 0.9; % NaN HR/echo if fewer pings in window (default 0)
 %%
 
 if ispc
@@ -70,6 +71,9 @@ SWIFThr(1).sigwaveheight = [];
 
 if ~isfield(sigopt,'burstlength')
     sigopt.burstlength = 8.5;
+end
+if ~isfield(sigopt,'minpingfrac')
+    sigopt.minpingfrac = 0;
 end
 
 % Fallback salinity for echo correction (as reprocess_SIG)
@@ -181,6 +185,16 @@ for iburst = 1:length(SWIFT)
             oneSWIFT(it).signature.HRprofile.enuvar = HRprofile.enuvar;
         end
 
+        % NaN HR if window is missing pings
+        if sum(burstint) < sigopt.minpingfrac*burstdt/median(diff(sig.burst.time))
+            hrfields = fieldnames(oneSWIFT(it).signature.HRprofile);
+            for ivar = 1:length(hrfields)
+                if ~strcmp(hrfields{ivar},'z')
+                    oneSWIFT(it).signature.HRprofile.(hrfields{ivar})(:) = NaN;
+                end
+            end
+        end
+
         % BB data
         avgint = sig.avg.time >= time(it) & sig.avg.time < time(it+1);
         avgfields = fieldnames(sig.avg);
@@ -230,6 +244,9 @@ for iburst = 1:length(SWIFT)
         [echogram,~] = processSIGecho(sighr.echo,S,sigopt);
         oneSWIFT(it).signature.echo = echogram.echoc;
         oneSWIFT(it).signature.echoz = echogram.r + sigopt.xz;
+        if sum(echoint) < sigopt.minpingfrac*burstdt/median(diff(sig.echo.time))
+            oneSWIFT(it).signature.echo(:) = NaN;
+        end
         end
 
     end
