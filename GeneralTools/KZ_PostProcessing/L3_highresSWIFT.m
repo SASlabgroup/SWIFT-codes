@@ -120,7 +120,11 @@ for iburst = 1:length(SWIFT)
     end
 
     % Adjust time vectors
-    sigtoff = sig.burst.time(1)-t0;
+    % Align earliest record start to t0 (avg can start before burst)
+    sigtoff = min([sig.burst.time(1) sig.avg.time(1)])-t0;
+    if isfield(sig,'echo') && ~isempty(sig.echo)
+        sigtoff = min(sigtoff,sig.echo.time(1)-t0);
+    end
     sig.burst.time = sig.burst.time - sigtoff;
     sig.avg.time = sig.avg.time - sigtoff;
     if isfield(sig,'echo') && ~isempty(sig.echo)
