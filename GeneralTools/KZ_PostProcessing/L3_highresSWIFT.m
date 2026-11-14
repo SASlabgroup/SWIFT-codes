@@ -13,6 +13,7 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 % missiondir = 'S:\SanJuanIslands\WaldronIsland_CoastalFronts2022\Main_Jun2022\SWIFTs\L0\SWIFT26_02Jul2022';
 % missiondir = cd;
 % burstdt = floor(8.5*60/10)/(60*60*24); % datenum units (days)
+% sigopt.burstlength = 8.5; % burst length [min] (default 8.5)
 %%
 
 if ispc
@@ -69,13 +70,17 @@ SWIFThr(1).sigwaveheight = [];
 
 oneSWIFT = struct();
 
+if ~isfield(sigopt,'burstlength')
+    sigopt.burstlength = 8.5;
+end
+
 %% Loop through burst files and recompute mean + std 
 
 for iburst = 1:length(SWIFT)
 
     burstID = SWIFT(iburst).burstID;
     t0 = SWIFT(iburst).time;
-    time = t0:burstdt:(t0+(8.5/(60*24)));
+    time = t0:burstdt:(t0+(sigopt.burstlength/(60*24)));
     for it = 1:length(time)-1
         oneSWIFT(it).time = time(it);
         oneSWIFT(it).burstID = [burstID '_' num2str(it)];
