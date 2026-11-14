@@ -228,7 +228,7 @@ for iburst = 1:length(SWIFT)
         end
         [echogram,~] = processSIGecho(sighr.echo,S,sigopt);
         oneSWIFT(it).signature.echo = echogram.echoc;
-        oneSWIFT(it).signature.echoz = echogram.r + sig.echo.Blanking + sigopt.xz;
+        oneSWIFT(it).signature.echoz = echogram.r + sigopt.xz;
         end
 
     end
