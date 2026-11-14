@@ -65,8 +65,6 @@ SWIFThr(1).relhumiditystddev = [];
 SWIFThr(1).wavespectra = [];
 SWIFThr(1).sigwaveheight = [];
 
-oneSWIFT = struct();
-
 if ~isfield(sigopt,'burstlength')
     sigopt.burstlength = 8.5;
 end
@@ -81,6 +79,7 @@ end
 
 for iburst = 1:length(SWIFT)
 
+    oneSWIFT = struct();
     burstID = SWIFT(iburst).burstID;
     t0 = SWIFT(iburst).time;
     time = t0:burstdt:(t0+(sigopt.burstlength/(60*24)));
