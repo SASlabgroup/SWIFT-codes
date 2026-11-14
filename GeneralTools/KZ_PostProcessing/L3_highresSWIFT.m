@@ -147,7 +147,7 @@ for iburst = 1:length(SWIFT)
 
          % Determine whether single or 5-beam data
         if ismatrix(sighr.burst.VelocityData)
-            [HRprofile,~] = processSIGburst(sighr.burst,opt);
+            [HRprofile,~] = processSIGburst(sighr.burst,sigopt);
         elseif ndims(sighr.burst.VelocityData) == 3
             [HRprofile,~] = processSIGburst_5B(sighr.burst);
         end
