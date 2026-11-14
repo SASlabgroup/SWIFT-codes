@@ -11,6 +11,7 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 % missiondir = cd;
 % burstdt = floor(8.5*60/10)/(60*60*24); % datenum units (days)
 % sigopt.burstlength = 8.5; % burst length [min] (default 8.5)
+% sigopt.altminquality = 8000; % min AltimeterQuality (default none); pings then despiked (movmedian 60, 10 MADs)
 % sigopt.minpingfrac = 0.9; % NaN HR/echo if fewer pings in window (default 0)
 %%
 
@@ -140,6 +141,15 @@ for iburst = 1:length(SWIFT)
         sig.echo.time = sig.echo.time - sigtoff;
     end
 
+    % Altimeter quality filter, then despike pings over the burst
+    if isfield(sig.avg,'AltimeterDistance')
+        igoodalt = true(size(sig.avg.AltimeterDistance));
+        if isfield(sigopt,'altminquality')
+            igoodalt = sig.avg.AltimeterQuality >= sigopt.altminquality;
+        end
+        igoodalt(igoodalt) = ~isoutlier(sig.avg.AltimeterDistance(igoodalt),'movmedian',60,'ThresholdFactor',10);
+    end
+
     % Loop through time intervals, select data and reprocess
     for it = 1:length(time)-1
 
@@ -216,6 +226,11 @@ for iburst = 1:length(SWIFT)
         oneSWIFT(it).signature.profile.wvar = profile.wvar;
         oneSWIFT(it).signature.profile.z = profile.z;
         oneSWIFT(it).signature.profile.spd_alt = profile.spd_alt;
+
+        % Altimeter
+        if isfield(sighr.avg,'AltimeterDistance')
+            oneSWIFT(it).signature.altimeter = median(sighr.avg.AltimeterDistance(igoodalt(avgint)),'omitnan');
+        end
 
         % Echogram data
         if isfield(sig,'echo') && ~isempty(sig.echo)
