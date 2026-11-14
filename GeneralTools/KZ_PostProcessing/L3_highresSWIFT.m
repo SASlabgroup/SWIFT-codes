@@ -71,6 +71,12 @@ if ~isfield(sigopt,'burstlength')
     sigopt.burstlength = 8.5;
 end
 
+% Fallback salinity for echo correction (as reprocess_SIG)
+Smean = mean([SWIFT.salinity],'omitnan');
+if isnan(Smean)
+    Smean = 25;
+end
+
 %% Loop through burst files and recompute mean + std 
 
 for iburst = 1:length(SWIFT)
@@ -214,6 +220,9 @@ for iburst = 1:length(SWIFT)
             end
         end
         S = SWIFT(iburst).salinity;
+        if isnan(S)
+            S = Smean;
+        end
         [echogram,~] = processSIGecho(sighr.echo,S,sigopt);
         oneSWIFT(it).signature.echo = echogram.echoc;
         oneSWIFT(it).signature.echoz = echogram.r + sig.echo.Blanking + sigopt.xz;
