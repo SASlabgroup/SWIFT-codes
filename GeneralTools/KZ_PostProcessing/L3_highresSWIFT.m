@@ -496,12 +496,31 @@ for iburst = 1:length(SWIFT)
         z = z(60*sbgfs:end);
         sbgtime = (sbgtime(60*sbgfs:end) + sbgtoff)./(24*60*60) + sig.burst.time(1);
     
+        % GPS position (as reprocess_SBG), drop zeros (no fix)
+        lat = sbg.GpsPos.lat(:)';
+        lon = sbg.GpsPos.long(:)';
+        ltime = sbg.GpsPos.time_stamp(:)'*10^(-6);
+        imin = min([length(lon) length(lat) length(ltime)]);
+        lat = lat(1:imin); lon = lon(1:imin); ltime = ltime(1:imin);
+        [~,iu] = unique(ltime);lon = lon(iu);lat = lat(iu);ltime = ltime(iu);
+        igood = ~isnan(lat) & ~isnan(lon) & ltime ~= 0 & lat ~= 0 & lon ~= 0;
+        lat = filloutliers(lat(igood),'linear');
+        lon = filloutliers(lon(igood),'linear');
+        ltime = (ltime(igood) + sbgtoff)./(24*60*60) + sig.burst.time(1);
+
         % Loop through intervals and compute wave spectrum
         nwinE = floor((256*sbgfs)/11);
         df = 1/(nwinE/sbgfs);
         f = 0:df:(sbgfs/2 - df);
         for it = 1:length(time)-1
         
+            % Position, if not from PB2
+            if isnan(oneSWIFT(it).lat)
+                lint = ltime >= time(it) & ltime < time(it+1);
+                oneSWIFT(it).lat = mean(lat(lint),'omitnan');
+                oneSWIFT(it).lon = mean(lon(lint),'omitnan');
+            end
+
             sbgint = sbgtime >= time(it) & sbgtime < time(it+1);
             if sum(sbgint) > nwinE*2
         
