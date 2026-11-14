@@ -149,6 +149,8 @@ for iburst = 1:length(SWIFT)
 
             if isscalar(sig.burst.(burstfields{ivar}))
                 sighr.burst.(burstfields{ivar}) = sig.burst.(burstfields{ivar});
+            elseif any(size(sig.burst.(burstfields{ivar})) == 1)
+                sighr.burst.(burstfields{ivar}) = sig.burst.(burstfields{ivar})(burstint);
             elseif ismatrix(sig.burst.(burstfields{ivar}))
                 sighr.burst.(burstfields{ivar}) = sig.burst.(burstfields{ivar})(burstint,:);
             elseif ndims(sig.burst.(burstfields{ivar})) == 3
