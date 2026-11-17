@@ -16,6 +16,10 @@
 %
 % The launcher in willapa_analysis supplies prodexp, stage, exportdir and
 % backup_root. They may also be set in the MATLAB workspace before run().
+% Changelog:
+% M. LeClair w/ claude, Nov 2026: path excludes .git, .claude and worktree
+%   folders (and removes them from a saved path) so stale worktree copies
+%   cannot shadow current functions
 if ~exist('install','var'), install = false; end
 
 missions = ["SWIFT22_17-26Jun2025","SWIFT23_17-26Jun2025","SWIFT24_16-20Jun2025", ...
@@ -40,7 +44,16 @@ end
 backup = fullfile(backup_root, ...
     "rerun_" + string(datetime('now','Format','yyyyMMdd_HHmm')));
 
-addpath(genpath(swiftcodes))
+% genpath recurses into .git, .claude/worktrees and other worktrees, whose
+% older copies of functions (e.g. reprocess_SBG) would shadow the current ones.
+% Such folders are also removed if a saved MATLAB path already holds them.
+stale = ["/.git", "/.claude", "/.worktrees", "/worktrees"];
+q = strsplit(path, pathsep);
+q = q(contains(q, stale));
+if ~isempty(q), rmpath(q{:}); end
+p = strsplit(genpath(swiftcodes), pathsep);
+p = p(~contains(p, stale) & p ~= "");
+addpath(strjoin(p, pathsep))
 
 %% 1. Staging: production L3 copy, links to the raw SIG and SBG bursts
 for mission = missions
