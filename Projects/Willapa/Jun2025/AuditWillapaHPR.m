@@ -6,7 +6,10 @@ function [inventory,summary,failures,lagsummary] = AuditWillapaHPR(expdir,outdir
 % the per-mission audits written by FixSIGENU_Willapa. The summary goes to
 % <outdir>/L5_review.
 %
+% Changelog:
 % M. LeClair w/ claude, Oct 2026
+% M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
+%   running between bursts is timed correctly
 
 if nargin < 1 || isempty(expdir)
     expdir = '/Volumes/PortableSSD/MooredSWIFTS';
@@ -556,7 +559,7 @@ try
         status = "empty";
         return
     end
-    sbg = data.sbgData;
+    sbg = unwrapSBGtime(data.sbgData); % SBG left running between bursts can wrap mid-burst
     if isfield(sbg,'EkfEuler') && isfield(sbg.EkfEuler,'time_stamp')
         neuler = length(sbg.EkfEuler.time_stamp);
     end

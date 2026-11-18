@@ -48,6 +48,8 @@ function [avgout, cparams, fh] = fixSIGenu(avg, burst, sbgData, mountyaw, worldy
 %   combined on UTC; relative-time fallback; forced lag; bursts with
 %   vertical-gyro SBG yaw skipped unless allowrelativeyaw; optional
 %   valid-orientation mask
+% M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
+%   running between bursts is timed correctly
 
 % Names follow Craig (Introduction to Robotics): a_R_b is the rotation of
 % frame b relative to frame a, so v_in_a = a_R_b * v_in_b and adjacent
@@ -624,6 +626,8 @@ if ~isfield(record,'ImuData') || ~isfield(record,'EkfEuler') || ...
         ~all(isfield(record.EkfEuler,ekfFields))
     return
 end
+% Unwrapped stamps: a mid-burst wrap would be reordered by unique() below
+record = unwrapSBGtime(record);
 nimu = numel(record.ImuData.time_stamp);
 nekf = numel(record.EkfEuler.time_stamp);
 if nimu == 0 || nekf == 0 || ...

@@ -6,7 +6,10 @@ function [out,info] = mergeSBGdata(records,referencetime)
 % burst contain stale calendar fields. Each input record is anchored before
 % samples are combined because the hardware timestamp resets between files.
 %
+% Changelog:
 % M. LeClair w/ claude, Oct 2026
+% M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
+%   running between bursts is timed correctly
 
 if ~iscell(records); records = {records}; end
 if nargin < 2 || isempty(referencetime); referencetime = now; end
@@ -19,6 +22,8 @@ anchorresidual = NaN(length(records),1);
 for ir = 1:length(records)
     record = records{ir};
     if ~validRecord(record); continue; end
+    % Unwrapped stamps: a mid-burst wrap would split the UTC anchor
+    record = unwrapSBGtime(record);
     [anchor,residual] = utcAnchor(record.UtcTime,referencetime);
     if ~isfinite(anchor); continue; end
 
