@@ -15,7 +15,8 @@ function SWIFT2NC(SWIFT_in,filename,varargin)
 %   Feb 2023 by J. Thomson for SASSIE and general use
 %   Nov 2024 by J. Thomson to include microSWIFTs
 % M. LeClair w/ claude, Oct 2026: keeps the Signature echogram and
-%   altimeter; 'nfreq' option (42 or 85 bins)
+%   altimeter; 'nfreq' option (42 or 85 bins); drops
+%   sbgwaves/signaturewaves
 
 SWIFT = SWIFT_in;
 
@@ -89,6 +90,15 @@ end
 
 if isfield(SWIFT,'windspdkurt')
     SWIFT=rmfield(SWIFT,'windspdkurt');
+end
+
+% Native-grid wave diagnostics; the standard wave fields carry the waves.
+if isfield(SWIFT,'sbgwaves')
+    SWIFT=rmfield(SWIFT,'sbgwaves');
+end
+
+if isfield(SWIFT,'signaturewaves')
+    SWIFT=rmfield(SWIFT,'signaturewaves');
 end
 
 if isfield(SWIFT,'wavespectra')
