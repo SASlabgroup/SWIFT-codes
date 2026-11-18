@@ -5,6 +5,7 @@ function reformatSIGmat(missiondir)
 % M.LeClair April 2026 - parallel & fix
 
 bfiles = dir(fullfile(missiondir, '**', '*.mat'));
+bfiles = bfiles(~endsWith({bfiles.name},'_reformat.mat'));
 
 if isempty(bfiles)
     disp('No burst mat files found.')
