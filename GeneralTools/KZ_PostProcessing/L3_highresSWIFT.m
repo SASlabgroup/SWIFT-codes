@@ -1,8 +1,10 @@
 function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 
 % Calculates higher res burst-averages using L1 SWIFT product. 
-% K. Zeiden Aug 2025
 % Changelog:
+% K. Zeiden Aug 2025
+% M. LeClair w/ claude, Nov 2026: altimeter drops no-detection pings;
+%   optional minimum ping distance; per-window ping counts
 % M. LeClair w/ claude, Nov 2026: SBG time stamps put on one continuous clock
 %   (unwrapSBGtime), so an SBG left running between bursts still aligns
 %
@@ -76,6 +78,9 @@ end
 if ~isfield(sigopt,'minpingfrac')
     sigopt.minpingfrac = 0;
 end
+if ~isfield(sigopt,'altmindist')
+    sigopt.altmindist = 0; % drop altimeter pings closer than this [m] (counts in signature.altngood/altnnear)
+end
 
 % Fallback salinity for echo correction (as reprocess_SIG)
 Smean = mean([SWIFT.salinity],'omitnan');
@@ -147,10 +152,13 @@ for iburst = 1:length(SWIFT)
 
     % Altimeter quality filter, then despike pings over the burst
     if isfield(sig.avg,'AltimeterDistance')
-        igoodalt = true(size(sig.avg.AltimeterDistance));
+        igoodalt = sig.avg.AltimeterDistance > 0; % 0 = no detection
         if isfield(sigopt,'altminquality')
-            igoodalt = sig.avg.AltimeterQuality >= sigopt.altminquality;
+            igoodalt = igoodalt & sig.avg.AltimeterQuality >= sigopt.altminquality;
         end
+        % Near-field pings (< altmindist) are counted, then dropped
+        inearalt = igoodalt & sig.avg.AltimeterDistance < sigopt.altmindist;
+        igoodalt = igoodalt & ~inearalt;
         igoodalt(igoodalt) = ~isoutlier(sig.avg.AltimeterDistance(igoodalt),'movmedian',60,'ThresholdFactor',10);
     end
 
@@ -234,6 +242,8 @@ for iburst = 1:length(SWIFT)
         % Altimeter
         if isfield(sighr.avg,'AltimeterDistance')
             oneSWIFT(it).signature.altimeter = median(sighr.avg.AltimeterDistance(igoodalt(avgint)),'omitnan');
+            oneSWIFT(it).signature.altngood = sum(igoodalt(avgint)); % pings used
+            oneSWIFT(it).signature.altnnear = sum(inearalt(avgint)); % pings < altmindist
         end
 
         % Echogram data
