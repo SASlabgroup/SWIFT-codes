@@ -5,6 +5,9 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 % K. Zeiden Aug 2025
 % M. LeClair w/ claude, Nov 2026: altimeter drops no-detection pings;
 %   optional minimum ping distance; per-window ping counts
+% M. LeClair w/ claude, Nov 2026: SBG time stamps put on one continuous
+%   clock, so an SBG left running between bursts still aligns with the
+%   Signature
 %
 % [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt)
 %
@@ -479,6 +482,38 @@ for iburst = 1:length(SWIFT)
 
     if ~isempty(sbg.UtcTime.time_stamp)
 
+        % Put all SBG time stamps on one clock that starts at 0.
+        % time_stamp is a uint32 microsecond counter since SBG power-up and
+        % wraps every 2^32 us (~71.6 min). An SBG powered per burst starts
+        % near 0, but one left running between bursts gives arbitrary stamps
+        % that can wrap within a burst, and the gyro cross-correlation below
+        % (which assumes SBG and SIG times both start near 0) then finds no
+        % overlap. So, for every field: unwrap (steps between valid stamps
+        % taken modulo 2^32, so a wrap is an ordinary step and a corrupt
+        % stamp offsets only itself), then shift so the first IMU
+        % stamp is 0; the xcorr lag absorbs any remaining offset.
+        % Zero stamps are invalid: they are skipped when detecting wraps, and
+        % the GPS zero mask is taken here, before the shift moves them off 0.
+        gpsraw0 = double(sbg.GpsPos.time_stamp(:)') == 0; % invalid GPS stamps (used to drop fixes below)
+        wrap = 2^32; % counter range [us]
+        i0 = find(sbg.ImuData.time_stamp ~= 0,1); % first valid IMU stamp = common time origin
+        if isempty(i0), t0imu = 0; else, t0imu = double(sbg.ImuData.time_stamp(i0)); end
+        fields = fieldnames(sbg);
+        for idf = 1:length(fields)
+            ts = double(sbg.(fields{idf}).time_stamp(:));
+            nz = ts ~= 0; % valid stamps
+            if ~any(nz), continue, end
+            tv = ts(nz);
+            step = mod(diff(tv) + wrap/2, wrap) - wrap/2; % a wrap is an ordinary step modulo 2^32
+            tc = tv(1) + [0; cumsum(step)]; % continuous (unwrapped) time
+            ia = find(abs(step) <= max(1e6, 10*median(abs(step))),1); % anchor on the first plausible step
+            if ~isempty(ia), tc = tc + (tv(ia) - tc(ia)); end
+            ts(nz) = tc;
+            i1 = find(nz,1);
+            ts = ts - wrap*round((ts(i1)-t0imu)/wrap) - t0imu; % same wrap cycle as the IMU, origin at first IMU stamp
+            sbg.(fields{idf}).time_stamp = reshape(ts,size(sbg.(fields{idf}).time_stamp));
+        end
+
         % Fill outliers in timestamps
         sbgfs = 1./(median(diff(sbg.UtcTime.time_stamp),'omitnan').*10^(-6));
         fields = fieldnames(sbg);
@@ -527,10 +562,11 @@ for iburst = 1:length(SWIFT)
         lat = sbg.GpsPos.lat(:)';
         lon = sbg.GpsPos.long(:)';
         ltime = sbg.GpsPos.time_stamp(:)'*10^(-6);
-        imin = min([length(lon) length(lat) length(ltime)]);
+        imin = min([length(lon) length(lat) length(ltime) length(gpsraw0)]);
         lat = lat(1:imin); lon = lon(1:imin); ltime = ltime(1:imin);
-        [~,iu] = unique(ltime);lon = lon(iu);lat = lat(iu);ltime = ltime(iu);
-        igood = ~isnan(lat) & ~isnan(lon) & ltime ~= 0 & lat ~= 0 & lon ~= 0;
+        g0 = gpsraw0(1:imin);
+        [~,iu] = unique(ltime);lon = lon(iu);lat = lat(iu);ltime = ltime(iu);g0 = g0(iu);
+        igood = ~isnan(lat) & ~isnan(lon) & ~g0 & lat ~= 0 & lon ~= 0;
         lat = filloutliers(lat(igood),'linear');
         lon = filloutliers(lon(igood),'linear');
         ltime = (ltime(igood) + sbgtoff)./(24*60*60) + sig.burst.time(1);
