@@ -297,6 +297,30 @@ for iburst = 1:nburst
         end
 
     end
+
+    % Echogram Data
+    if Config.echo_enable
+        datafields = fieldnames(Data);
+        itime = find(startsWith(datafields,'Echo1') & ...
+            endsWith(datafields,'_MatlabTimeStamp'),1);
+        if ~isempty(itime)
+            ename = extractBefore(datafields{itime},'_MatlabTimeStamp');
+            iamp = find(startsWith(datafields,[ename '_Amp']),1);
+
+            echo.time = Data.([ename '_MatlabTimeStamp']);
+            echo.SoundSpeed = Data.([ename '_SpeedOfSound']);
+            echo.Temperature = Data.([ename '_WaterTemperature']);
+            echo.Pressure = Data.([ename '_Pressure']);
+            echo.Heading = Data.([ename '_Heading']);
+            echo.Pitch = Data.([ename '_Pitch']);
+            echo.Roll = Data.([ename '_Roll']);
+            echo.CellSize = Config.echo_binSize;
+            echo.Blanking = Config.echo_blanking;
+            echo.Magnetometer = Data.([ename '_Magnetometer']);
+            echo.Accelerometer = Data.([ename '_Accelerometer']);
+            echo.EchoSounder = Data.(datafields{iamp});
+        end
+    end
     end
 
     %% Save
