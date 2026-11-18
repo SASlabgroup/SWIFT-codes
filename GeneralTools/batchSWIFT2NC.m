@@ -1,19 +1,24 @@
 function batchSWIFT2NC(varargin)
 % Matlab script to convert a batch of SWIFT matlab structures into NetCDF
 %
+% Changelog:
 % J. Thomson, May 2021
 % M. LeClair, Oct 2025
+% M. LeClair w/ claude, Oct 2026: 'nfreq' option, passed to SWIFT2NC
 %
 % Usage:
 %   batchSWIFT2NC    % default: '*SWIFT*.mat' in current dir
 %   batchSWIFT2NC('glob_path', '*.mat')
+%   batchSWIFT2NC('glob_path', '*L5.mat', 'nfreq', 85)
 
 % Parse inputs
 p = inputParser;
 addParameter(p, 'glob_path', '*SWIFT*.mat', @ischar);
+addParameter(p, 'nfreq', 42, @(x) ismember(x,[42 85]));
 parse(p, varargin{:});
 
 glob_path = p.Results.glob_path;
+nfreq = p.Results.nfreq;
 
 flist = dir(glob_path);
 
@@ -50,7 +55,7 @@ for fi = 1:length(flist)
     % If we found one, convert to NC
     if exist('SWIFT', 'var')
         try
-            SWIFT2NC(SWIFT, nc_filename);
+            SWIFT2NC(SWIFT, nc_filename, 'nfreq', nfreq);
             fprintf('       Successfully processed\n');
         catch ME
             fprintf('       Error: %s\n', ME.message);
