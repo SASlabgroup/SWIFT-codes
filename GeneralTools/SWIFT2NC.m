@@ -8,10 +8,13 @@ function SWIFT2NC(SWIFT_in,filename)
 % Use SIWFT ID to determine v3 or v4 (sensors at different depths) 
 % and skip substructures that are not supported yet
 %
+% Changelog:
 % original by L. Hosekova in 2020
 %   Edited on May 1, 2020 by Suneil Iyer for ATOMIC with compliant names
 %   Feb 2023 by J. Thomson for SASSIE and general use
 %   Nov 2024 by J. Thomson to include microSWIFTs
+% M. LeClair w/ claude, Oct 2026: keeps the Signature echogram and
+%   altimeter
 
 SWIFT = SWIFT_in;
 
@@ -167,6 +170,26 @@ if isfield(SWIFT,'signature')
     else 
         z_names = [];
     end
+
+    has_echo = false;
+    has_altimeter = false;
+    for t = 1:length(SWIFT)
+        if isfield(SWIFT(t).signature,'echo') && ...
+                isfield(SWIFT(t).signature,'echoz') && ...
+                ~isempty(SWIFT(t).signature.echo) && ...
+                numel(SWIFT(t).signature.echo) == numel(SWIFT(t).signature.echoz)
+            has_echo = true;
+            necho = numel(SWIFT(t).signature.echo);
+        end
+        if isfield(SWIFT(t).signature,'altimeter') && ...
+                ~isempty(SWIFT(t).signature.altimeter)
+            has_altimeter = true;
+        end
+        if has_echo && has_altimeter, break; end
+    end
+    if has_echo
+        zecho_dim = netcdf.defDim(ncid,'zecho',necho);
+    end
 end
 obs_dim = -1;
 obs_size = -1;
@@ -195,19 +218,43 @@ j=1;
 for i=1:length(full_names)
     %if ~strcmp(full_names{i},'ID')
         if strcmp(full_names{i},'signature')
+            if isempty(z_names); nz_ref = 0; else; nz_ref = length(SWIFT(1).signature.profile.z); end
+            if isempty(zHR_names); nHR_ref = 0; else; nHR_ref = length(SWIFT(1).signature.HRprofile.z); end
             for t=1:length(SWIFT)
                 for iz=1:length(z_names)
-                    if ~isempty(SWIFT(t).signature.profile.(z_names{iz}))
-                        S.signature.profile.(z_names{iz})(t,:) = SWIFT(t).signature.profile.(z_names{iz})(:);
+                    value = SWIFT(t).signature.profile.(z_names{iz});
+                    if ~isempty(value) && numel(value) == nz_ref
+                        S.signature.profile.(z_names{iz})(t,:) = value(:);
                     else
-                        S.signature.profile.(z_names{iz})(t,:) = NaN(size(S.signature.profile.(z_names{iz})(1,:)));
+                        S.signature.profile.(z_names{iz})(t,:) = NaN(1,nz_ref);
                     end
                 end
                 for iz=1:length(zHR_names)
-                    if ~isempty(SWIFT(t).signature.HRprofile.(zHR_names{iz}))
-                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = SWIFT(t).signature.HRprofile.(zHR_names{iz})(:);
+                    value = SWIFT(t).signature.HRprofile.(zHR_names{iz});
+                    if ~isempty(value) && numel(value) == nHR_ref
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = value(:);
                     else
-                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(size(S.signature.HRprofile.([zHR_names{iz} 'HR'])(1,:)));
+                        S.signature.HRprofile.([zHR_names{iz} 'HR'])(t,:) = NaN(1,nHR_ref);
+                    end
+                end
+                if has_echo
+                    if isfield(SWIFT(t).signature,'echo') && ...
+                            isfield(SWIFT(t).signature,'echoz') && ...
+                            numel(SWIFT(t).signature.echo) == necho && ...
+                            numel(SWIFT(t).signature.echoz) == necho
+                        S.signature.echo(t,:) = SWIFT(t).signature.echo(:).';
+                        S.signature.echoz(t,:) = SWIFT(t).signature.echoz(:).';
+                    else
+                        S.signature.echo(t,:) = NaN(1,necho);
+                        S.signature.echoz(t,:) = NaN(1,necho);
+                    end
+                end
+                if has_altimeter
+                    if isfield(SWIFT(t).signature,'altimeter') && ...
+                            isscalar(SWIFT(t).signature.altimeter)
+                        S.signature.altimeter(t,1) = SWIFT(t).signature.altimeter;
+                    else
+                        S.signature.altimeter(t,1) = NaN;
                     end
                 end
             end
@@ -266,6 +313,13 @@ for i=1:length(names)
             else
                 zHR_var_ids.([zHR_names{j} 'HR']) = netcdf.defVar(ncid, [zHR_names{j} 'HR'], 'NC_DOUBLE', [t_dim zHR_dim]);
             end
+        end
+        if has_echo
+            echo_var_ids.echo = netcdf.defVar(ncid,'echo','NC_DOUBLE',[t_dim zecho_dim]);
+            echo_var_ids.echoz = netcdf.defVar(ncid,'echoz','NC_DOUBLE',[t_dim zecho_dim]);
+        end
+        if has_altimeter
+            echo_var_ids.altimeter = netcdf.defVar(ncid,'altimeter','NC_DOUBLE',t_dim);
         end
         %edit variable names to CF convention names - do this for all vars
         %with different names than the SWIFT defaults
@@ -460,6 +514,13 @@ for i=1:length(names)
             else
                 netcdf.putVar(ncid, zHR_var_ids.([zHR_names{j} 'HR']), [S.signature.HRprofile.([zHR_names{j} 'HR'])]);
             end
+        end
+        if has_echo
+            netcdf.putVar(ncid,echo_var_ids.echo,S.signature.echo);
+            netcdf.putVar(ncid,echo_var_ids.echoz,S.signature.echoz);
+        end
+        if has_altimeter
+            netcdf.putVar(ncid,echo_var_ids.altimeter,S.signature.altimeter);
         end
     else
         netcdf.putVar(ncid, var_ids.(names{i}), S.(names{i}));
@@ -700,6 +761,20 @@ for i=1:length(names)
                 ncwriteatt(filename,'zHR','long_name','depth bins for turbulent dissipation rate')
                 ncwriteatt(filename,'zHR','standard_name','depth')
             end
+        end
+        if has_echo
+            ncwriteatt(filename,'echo','units','dB')
+            ncwriteatt(filename,'echo','long_name','acoustic echo intensity profile')
+            ncwriteatt(filename,'echo','instrument','Nortek Signature 1000 ADCP with AHRS')
+            ncwriteatt(filename,'echoz','units','m')
+            ncwriteatt(filename,'echoz','long_name','depth bins for echo intensity profile')
+            ncwriteatt(filename,'echoz','standard_name','depth')
+            ncwriteatt(filename,'echoz','instrument','Nortek Signature 1000 ADCP with AHRS')
+        end
+        if has_altimeter
+            ncwriteatt(filename,'altimeter','units','m')
+            ncwriteatt(filename,'altimeter','long_name','altimeter range to seabed or target')
+            ncwriteatt(filename,'altimeter','instrument','Nortek Signature 1000 ADCP with AHRS')
         end
     elseif ~strcmp(names{i},'ID')
         if strcmp(names(i),'time')
