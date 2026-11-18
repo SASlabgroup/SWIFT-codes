@@ -485,6 +485,8 @@ for iburst = 1:length(SWIFT)
         % running between bursts has a free-running counter that can wrap
         % mid-burst, and the gyro cross-correlation below assumes SBG and SIG
         % times both start near 0 (unwrapSBGtime explains the counter).
+        % Zero stamps are invalid; unwrapSBGtime leaves them at 0.
+        gpsraw0 = double(sbg.GpsPos.time_stamp(:)') == 0; % invalid GPS stamps (used to drop fixes below)
         sbg = unwrapSBGtime(sbg,true);
 
         % Fill outliers in timestamps
@@ -535,10 +537,11 @@ for iburst = 1:length(SWIFT)
         lat = sbg.GpsPos.lat(:)';
         lon = sbg.GpsPos.long(:)';
         ltime = sbg.GpsPos.time_stamp(:)'*10^(-6);
-        imin = min([length(lon) length(lat) length(ltime)]);
+        imin = min([length(lon) length(lat) length(ltime) length(gpsraw0)]);
         lat = lat(1:imin); lon = lon(1:imin); ltime = ltime(1:imin);
-        [~,iu] = unique(ltime);lon = lon(iu);lat = lat(iu);ltime = ltime(iu);
-        igood = ~isnan(lat) & ~isnan(lon) & ltime ~= 0 & lat ~= 0 & lon ~= 0;
+        g0 = gpsraw0(1:imin);
+        [~,iu] = unique(ltime);lon = lon(iu);lat = lat(iu);ltime = ltime(iu);g0 = g0(iu);
+        igood = ~isnan(lat) & ~isnan(lon) & ~g0 & lat ~= 0 & lon ~= 0;
         lat = filloutliers(lat(igood),'linear');
         lon = filloutliers(lon(igood),'linear');
         ltime = (ltime(igood) + sbgtoff)./(24*60*60) + sig.burst.time(1);
