@@ -16,7 +16,8 @@ function SWIFT2NC(SWIFT_in,filename,varargin)
 %   Nov 2024 by J. Thomson to include microSWIFTs
 % M. LeClair w/ claude, Oct 2026: keeps the Signature echogram and
 %   altimeter; 'nfreq' option (42 or 85 bins); drops
-%   sbgwaves/signaturewaves
+%   sbgwaves/signaturewaves; keeps the time axis when a scalar field is
+%   empty in some records
 
 SWIFT = SWIFT_in;
 
@@ -381,8 +382,40 @@ for i=1:length(full_names)
             S.time= [SWIFT.time]-datenum(1970,1,1,0,0,0);
         elseif strcmp(full_names{i},'ID')
             S.ID = ones(length(SWIFT),1) * swiftnum;
+        elseif any(strcmp(full_names{i},{'OBS_uncalibrated', ...
+                'OBS_ambient','OBS_calibratedNTU'}))
+            value = [SWIFT.(full_names{i})];
+            if isempty(value)
+                continue
+            end
+            S.(full_names{i}) = value;
+        elseif isstruct(SWIFT(1).(full_names{i}))
+            value = [SWIFT.(full_names{i})];
+            if isempty(value)
+                continue
+            end
+            S.(full_names{i}) = value;
         else
-            S.(full_names{i}) = [SWIFT.(full_names{i})]; % errors here if check factor in some but not all
+            % Preserve the time axis when a scalar field is empty in some
+            % records. Concatenation silently shortened these fields.
+            value = NaN(1,length(SWIFT));
+            hasvalue = false;
+            for t = 1:length(SWIFT)
+                current = SWIFT(t).(full_names{i});
+                if isempty(current)
+                    continue
+                elseif ~(isnumeric(current) || islogical(current)) || ...
+                        ~isscalar(current)
+                    error('Unsupported value in %s at SWIFT index %d.', ...
+                        full_names{i},t)
+                end
+                value(t) = current;
+                hasvalue = true;
+            end
+            if ~hasvalue
+                continue
+            end
+            S.(full_names{i}) = value;
         end
         names{j} = full_names{i};
         j = j+1;
