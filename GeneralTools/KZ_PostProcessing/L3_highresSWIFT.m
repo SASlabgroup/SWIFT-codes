@@ -8,6 +8,9 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 % M. LeClair w/ claude, Nov 2026: SBG time stamps put on one continuous
 %   clock, so an SBG left running between bursts still aligns with the
 %   Signature
+% M. LeClair w/ claude, Nov 2026: GPS keeps only fixes with a position
+%   solution; optional accuracy limit and minimum fixes per window;
+%   per-window fix counts
 %
 % [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt)
 %
@@ -58,6 +61,7 @@ SWIFThr(1).salinitystddev = [];
 SWIFThr(1).outofwater = [];
 SWIFThr(1).lon = [];
 SWIFThr(1).lat = [];
+SWIFThr(1).npos = [];
 SWIFThr(1).driftspd = [];
 SWIFThr(1).driftdirT = [];
 SWIFThr(1).windspd = [];
@@ -78,6 +82,12 @@ if ~isfield(sigopt,'burstlength')
 end
 if ~isfield(sigopt,'minpingfrac')
     sigopt.minpingfrac = 0;
+end
+if ~isfield(sigopt,'minposfixes')
+    sigopt.minposfixes = 1; % NaN SBG window position if fewer good 5 Hz GPS fixes (count in SWIFT.npos)
+end
+if ~isfield(sigopt,'maxposacc')
+    sigopt.maxposacc = Inf; % drop SBG GPS fixes with horizontal pos_acc above this [m]
 end
 if ~isfield(sigopt,'altmindist')
     sigopt.altmindist = 0; % drop altimeter pings closer than this [m] (counts in signature.altngood/altnnear)
@@ -100,6 +110,7 @@ for iburst = 1:length(SWIFT)
     for it = 1:length(time)-1
         oneSWIFT(it).time = time(it);
         oneSWIFT(it).burstID = [burstID '_' num2str(it)];
+        oneSWIFT(it).npos = NaN; % good SBG GPS fixes in window
     end
 
     sigfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SIG*' burstID '*.mat']);
@@ -558,15 +569,28 @@ for iburst = 1:length(SWIFT)
         z = z(60*sbgfs:end);
         sbgtime = (sbgtime(60*sbgfs:end) + sbgtoff)./(24*60*60) + sig.burst.time(1);
     
-        % GPS position (as reprocess_SBG), drop zeros (no fix)
+        % GPS position (as reprocess_SBG), drop zeros (no fix) and fixes
+        % without a solution (status bits 0-5 ~= 0 or type bits 6-11 < SINGLE)
         lat = sbg.GpsPos.lat(:)';
         lon = sbg.GpsPos.long(:)';
         ltime = sbg.GpsPos.time_stamp(:)'*10^(-6);
-        imin = min([length(lon) length(lat) length(ltime) length(gpsraw0)]);
-        lat = lat(1:imin); lon = lon(1:imin); ltime = ltime(1:imin);
+        if isfield(sbg.GpsPos,'gps_pos_status')
+            gstat = double(sbg.GpsPos.gps_pos_status(:)');
+        else
+            gstat = zeros(size(lat)) + 2*64; % unknown: treat as SINGLE
+        end
+        if isfield(sbg.GpsPos,'pos_acc_lat') && isfield(sbg.GpsPos,'pos_acc_long')
+            gacc = hypot(double(sbg.GpsPos.pos_acc_lat(:)'),double(sbg.GpsPos.pos_acc_long(:)'));
+        else
+            gacc = zeros(size(lat));
+        end
+        imin = min([length(lon) length(lat) length(ltime) length(gstat) length(gacc) length(gpsraw0)]);
+        lat = lat(1:imin); lon = lon(1:imin); ltime = ltime(1:imin); gstat = gstat(1:imin); gacc = gacc(1:imin);
         g0 = gpsraw0(1:imin);
-        [~,iu] = unique(ltime);lon = lon(iu);lat = lat(iu);ltime = ltime(iu);g0 = g0(iu);
-        igood = ~isnan(lat) & ~isnan(lon) & ~g0 & lat ~= 0 & lon ~= 0;
+        [~,iu] = unique(ltime);lon = lon(iu);lat = lat(iu);ltime = ltime(iu);gstat = gstat(iu);gacc = gacc(iu);g0 = g0(iu);
+        igood = ~isnan(lat) & ~isnan(lon) & ~g0 & lat ~= 0 & lon ~= 0 ...
+            & mod(gstat,64) == 0 & mod(floor(gstat/64),64) >= 2 ...
+            & gacc <= sigopt.maxposacc;
         lat = filloutliers(lat(igood),'linear');
         lon = filloutliers(lon(igood),'linear');
         ltime = (ltime(igood) + sbgtoff)./(24*60*60) + sig.burst.time(1);
@@ -580,8 +604,11 @@ for iburst = 1:length(SWIFT)
             % Position, if not from PB2
             if isnan(oneSWIFT(it).lat)
                 lint = ltime >= time(it) & ltime < time(it+1);
-                oneSWIFT(it).lat = mean(lat(lint),'omitnan');
-                oneSWIFT(it).lon = mean(lon(lint),'omitnan');
+                oneSWIFT(it).npos = sum(lint);
+                if sum(lint) >= sigopt.minposfixes
+                    oneSWIFT(it).lat = mean(lat(lint),'omitnan');
+                    oneSWIFT(it).lon = mean(lon(lint),'omitnan');
+                end
             end
 
             sbgint = sbgtime >= time(it) & sbgtime < time(it+1);
