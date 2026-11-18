@@ -97,6 +97,7 @@ for iburst = 1:length(SWIFT)
     end
 
     sigfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SIG*' burstID '*.mat']);
+    sigfile = sigfile(~contains({sigfile.name},'.ad2cp')); % skip Nortek exports
     acsfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*ACS*' burstID '*.mat']);
     pb2file = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*PB2*' burstID '*.mat']);
     sbgfile = dir([missiondir slash '*' slash 'Raw' slash '*' slash '*SBG*' burstID '*.mat']);
