@@ -60,7 +60,10 @@ function results = compareSignatureHeave(missiondir,depth_time,depth)
 %   low-signal EB. That sets the fill's per-burst low edge in
 %   reprocess_SIGheave (median 0.24 Hz on SWIFT25).
 %
+% Changelog:
 % M. LeClair w/ claude, Oct 2026
+% M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
+%   running between bursts is timed correctly
 
 gravity = 9.80665;
 nband = 170;          % SBGwaves bands up to 2 Hz at 4 and 5 Hz sampling
@@ -80,7 +83,7 @@ burst_time = NaN(nburst,1);
 parfor ib = 1:nburst
     loaded = load(fullfile(sbgfiles(ib).folder,sbgfiles(ib).name),'sbgData');
     if ~hasSBGfields(loaded); continue; end
-    sbg = loaded.sbgData;
+    sbg = unwrapSBGtime(loaded.sbgData); % SBG left running between bursts can wrap mid-burst
     E = NaN(nband,numel(names));
 
     % SBG series on the IMU timestamps (EKF and GPS share them; ShipMotion

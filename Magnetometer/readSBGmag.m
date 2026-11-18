@@ -14,10 +14,14 @@ function [m_in_sbg,down_in_sbg,yaw] = readSBGmag(sbgData)
 %   and plausible: some records contain corrupt finite Euler angles (e.g.
 %   1e21 rad) and mag values (e.g. 1e37) that pass the status flags.
 %
+% Changelog:
 % M. LeClair w/ claude, Oct 2026
+% M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
+%   running between bursts is timed correctly
 
 m_in_sbg = zeros(0,3); down_in_sbg = zeros(0,3); yaw = zeros(0,1);
 if ~all(isfield(sbgData,{'Mag','EkfEuler'})); return; end
+sbgData = unwrapSBGtime(sbgData); % a mid-burst wrap would be reordered by unique() below
 ekf = sbgData.EkfEuler;
 mag = sbgData.Mag;
 angle = double([ekf.roll(:) ekf.pitch(:) ekf.yaw(:)]);

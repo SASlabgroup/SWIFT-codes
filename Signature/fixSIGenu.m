@@ -626,6 +626,8 @@ if ~isfield(record,'ImuData') || ~isfield(record,'EkfEuler') || ...
         ~all(isfield(record.EkfEuler,ekfFields))
     return
 end
+% Unwrapped stamps: a mid-burst wrap would be reordered by unique() below
+record = unwrapSBGtime(record);
 nimu = numel(record.ImuData.time_stamp);
 nekf = numel(record.EkfEuler.time_stamp);
 if nimu == 0 || nekf == 0 || ...
