@@ -4,11 +4,16 @@ function sbgData = sbgBinaryToMatlab(filename, varargin)
 %       sbgData = sbgBinaryToMatlab(filename);
 %   where ouput is data structure with several fields
 %
+% Changelog:
 % M. Schwendeman, 01/2017
 %       10/2017, J. Thomson added fclose at end
 %       12/2017, J. Thomson added varargin to read only the last portion of a file
+% M. LeClair w/ claude, Nov 2026: a frame is read only if it is complete, ends
+%   with ETX and its CRC checks out (sbgECom); a damaged frame (bytes lost in
+%   logging) is skipped instead of being read into the next one; only class 0
+%   logs with a payload of at most 4086 bytes are read
 
-fid = fopen(filename,'rb'); % open file for reading
+fid = fopen(filename,'rb','ieee-le'); % open file for reading; sbgECom is little endian (Firmware Reference Manual 2.1.1)
 
 if nargin==2,%length(varargin{1})==1,
     lastbytes = varargin{1};
@@ -30,12 +35,31 @@ GpsVel = struct('time_stamp',[],'gps_vel_status',[],'gps_tow',[],'vel_n',[],'vel
 byte = 0;
 while ~isempty(byte)
     byte = fread(fid,1,'uint8');
-    if byte == 255
+    if byte == 255 % sync 1, 0xFF
         byte = fread(fid,1,'uint8');
-        if byte == 90
+        if byte == 255; fseek(fid,-1,'cof'); end % 0xFF 0xFF 0x5A: the second 0xFF may start the sync
+        if byte == 90 % sync 2, 0x5A
             msgID = fread(fid,1,'uint8');
             msgClass = fread(fid,1,'uint8');
             msgLen = fread(fid,1,'uint16');
+            if isempty(msgLen); break; end
+        
+            % Check the frame (sbgECom frame format: Firmware Reference Manual 2.1.1)
+            payloadStart = ftell(fid);
+            fseek(fid,payloadStart-4,'bof'); % back to the message ID
+            frame = fread(fid,msgLen+7,'uint8'); % ID, class, length (2), payload, CRC (2), ETX
+            if msgLen > 4086 || ...            % Check payload length: at most 4086 bytes (manual 2.1.1)
+               numel(frame) < msgLen+7 || ...  % Check length: fread returns fewer bytes if the file ends first
+               frame(end) ~= 51 || ...         % Check last byte: ETX 0x33
+               sbgCRC(frame(1:end-3)) ~= typecast(uint8(frame(end-2:end-1)),'uint16') % Check CRC over ID to payload, stored little endian
+                fseek(fid,payloadStart-4,'bof'); % resync just after these sync bytes
+                continue
+            end
+
+            % Unpack the payload of class 0 frames only (SBG_ECOM_CLASS_LOG_ECOM_0, the main sbgECom output logs: data and status); other classes reuse these message IDs
+            if msgClass ~= 0; fseek(fid,payloadStart+msgLen+3,'bof'); continue; end % skip to the end of the frame
+            fseek(fid,payloadStart,'bof');
+        
             if msgID == 1  % Status
                 Status.time_stamp = [Status.time_stamp, fread(fid,1,'uint32')];
                 Status.general_status = [Status.general_status, fread(fid,1,'uint16')];
@@ -155,8 +179,7 @@ while ~isempty(byte)
                 GpsPos.base_station_id = [GpsPos.base_station_id ,fread(fid,1,'uint16')];
                 GpsPos.diff_age = [GpsPos.diff_age ,fread(fid,1,'uint16')];  
             end
-            crc = fread(fid,1,'uint16');
-            byte = fread(fid,1,'uint8');
+            fseek(fid,payloadStart+msgLen+3,'bof'); % end of the frame
         end
     end
 end
@@ -170,6 +193,32 @@ sbgData.EkfQuat = EkfQuat;
 sbgData.EkfNav = EkfNav;
 sbgData.ShipMotion = ShipMotion;
 sbgData.GpsPos = GpsPos;    
-sbgData.GpsVel = GpsVel; 
+sbgData.GpsVel = GpsVel;
 
 fclose(fid);
+
+end
+
+function crc = sbgCRC(bytes)
+% 16 bit CRC of a frame's ID, class, length and payload bytes (sbgECom Firmware Reference Manual SBGFWM 2.4, 2.1.3 CRC definition).
+% The same CRC as the manual's calcCRC (sbgCalcCRC), computed a byte at a time with a lookup table as in the sbgECom library
+% (github.com/SBG-Systems/sbgECom, common/crc/sbgCrc.c): table(b+1) is sbgCalcCRC of the single byte b, and for each byte
+% index = (crc ^ byte) & 0xFF; crc = table[index] ^ (crc >> 8).
+% The XOR of two bytes is looked up too (XOR(a+1,b+1) = a ^ b): calling bitxor on single values costs a function call per byte, which is much slower in MATLAB than indexing an array.
+% table and XOR are persistent, so they are built on the first call only.
+persistent table XOR
+if isempty(table)
+    table = zeros(256,1);
+    for b = 0:255
+        table(b+1) = sbgCalcCRC(b);
+    end
+    XOR = bitxor((0:255)',0:255);
+end
+crc = 0;
+for j = 1:numel(bytes)
+    index = XOR(mod(crc,256)+1,bytes(j)+1); % (crc ^ byte) & 0xFF
+    t = table(index+1);
+    % table[index] ^ (crc >> 8): crc >> 8 is under 256, so only the low byte of table[index] changes
+    crc = t - mod(t,256) + XOR(mod(t,256)+1,floor(crc/256)+1);
+end
+end
