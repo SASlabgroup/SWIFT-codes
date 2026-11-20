@@ -15,6 +15,9 @@ function [avgout, cparams, fh] = fixSIGenu(avg, burst, sbgData, hoffgiven)
 %
 % Based on fixSIGenu by K. Zeiden, Dec 2025
 % Extended to use SBG data with automatic lag correction
+% Changelog:
+% M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
+%   running between bursts is timed correctly
 
 % Handle optional heading offset
 if nargin < 4 || isempty(hoffgiven)
@@ -40,6 +43,9 @@ sigtime = sigtime(iu);
 sigangv = sigangv(iu);
 
 %% SBG Euler + gyroscope data
+
+% Unwrapped stamps: a mid-burst wrap would be reordered by unique() below
+sbgData = unwrapSBGtime(sbgData);
 
 % Good timestamps
 [~,iuekf] = unique(sbgData.EkfEuler.time_stamp);
