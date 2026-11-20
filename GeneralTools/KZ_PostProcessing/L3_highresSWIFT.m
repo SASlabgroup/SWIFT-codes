@@ -10,6 +10,8 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 % M. LeClair w/ claude, Nov 2026: GPS keeps only fixes with a position
 %   solution; optional accuracy limit and minimum fixes per window;
 %   per-window fix counts
+% M. LeClair w/ claude, Nov 2026: per-burst windows concatenated once after
+%   the burst loop instead of appended to SWIFThr at every burst
 %
 % [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt)
 %
@@ -99,6 +101,10 @@ if isnan(Smean)
 end
 
 %% Loop through burst files and recompute mean + std 
+
+% each burst's windows are kept here and concatenated once after the loop:
+% appending to SWIFThr at every burst copied the whole array each time
+hrbursts = cell(1,length(SWIFT));
 
 for iburst = 1:length(SWIFT)
 
@@ -622,11 +628,12 @@ for iburst = 1:length(SWIFT)
         end
     end
 
-    %% Concatenate new burst averaged data to SWIFThr structure
-    SWIFThr = [SWIFThr oneSWIFT];
+    %% Keep this burst's averaged data, concatenated to SWIFThr after the loop
+    hrbursts{iburst} = oneSWIFT;
 
 end % End burst
 
+SWIFThr = [SWIFThr hrbursts{:}];
 SWIFThr = SWIFThr(2:end);
 SWIFT = SWIFThr;
 
