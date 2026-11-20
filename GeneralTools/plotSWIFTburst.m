@@ -2,7 +2,10 @@ function plotSWIFTburst(missiondir,savedir)
 
 % Plots burst data from ACS, PB2, and SIG
 % Use L1 product to get burstIDs
+% Changelog:
 % K. Zeiden 
+% M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
+%   running between bursts is timed correctly
 
 % ACS sample rate = 0.5 Hz
 % SIG sample rate = 4 Hz
@@ -130,6 +133,9 @@ for iburst = 1:length(SWIFT)
 
     % SBG Ellipse N(?)
     sbg = load([sbgfile.folder slash sbgfile.name],'sbgData');sbg = sbg.sbgData;
+    % One clock starting at 0 (the gyro xcorr below assumes it), also for an
+    % SBG left running between bursts
+    sbg = unwrapSBGtime(sbg,true);
     if isempty(sbg.UtcTime.time_stamp)
         sig.burst.SBG_AngularVelocity = NaN(1,length(sig.burst.time));
         sbg_toff = 0;
