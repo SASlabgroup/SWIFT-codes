@@ -55,10 +55,10 @@ while numel(sync) == 2
         end
 
         % Unpack the payload of class 0 frames only (SBG_ECOM_CLASS_LOG_ECOM_0, the main sbgECom output logs: data and status); other classes reuse these message IDs
-        if msgClass ~= 0; fseek(fid,payloadStart+msgLen+3,'bof'); continue; end % skip to the end of the frame
-        fseek(fid,payloadStart,'bof');
-        
-        if msgID == 1  % Status
+        fseek(fid,payloadStart,'bof'); % go to the start of the payload
+        if msgClass ~= 0
+            % Do nothing
+        elseif msgID == 1  % Status
             Status.time_stamp = [Status.time_stamp, fread(fid,1,'uint32')];
             Status.general_status = [Status.general_status, fread(fid,1,'uint16')];
             Status.reserved1 = [Status.reserved1, fread(fid,1,'uint16')];
