@@ -5,6 +5,7 @@ function [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,inter
 %   reprocessing is necessary to fix a bug in directional momements
 %   all data prior 11/2017 need this reprocessing
 %
+% Changelog:
 % M. Schwendeman, 01/2017
 % J. Thomson, 10/2017 add reprocessing to batch read of raw data,
 %                   and replace SWIFT data structure results.
@@ -12,7 +13,6 @@ function [SWIFT,sinfo] = reprocess_SBG(missiondir,plotburst,saveraw,useGPS,inter
 %   reformatting for use in master postprocessing script,
 %   'postprocess_SWIFT'. 
 %   Turned into function with mission directory as input
-% Changelog:
 % M. LeClair w/ claude, Nov 2026: SBG time stamps unwrapped, so an SBG left
 %   running between bursts is timed correctly
 
