@@ -64,7 +64,7 @@ for ibeam = 1:4
 end
 
 % true depth bins 
-[~, truez] = correctSIGdepths_BA(burst) ;
+[~, truez] = correctSIGdepths(burst);
 
 %% Quality Control 
  

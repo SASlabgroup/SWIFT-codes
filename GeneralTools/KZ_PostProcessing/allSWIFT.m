@@ -57,16 +57,19 @@ for im = 1:length(missions)
         stime = oneswift.time;
         slon = oneswift.lon;
         slat = oneswift.lat;
-        iacs = find(strcmp({sinfo.postproc.type},'ACS') | strcmp({sinfo.postproc.type},'ACShr'));
-        outflag = sinfo.postproc(iacs(end)).flags.outofwater;
-        if ~strcmp(datestr(min(stime),'mmdd'),datestr(max(stime),'mmdd'))
-        sdate = [datestr(min(stime),'mmdd') '_' datestr(max(stime),'mmdd')];
-        else
-            sdate = datestr(min(stime),'mmdd');
-        end
+        % if ~strcmp(datestr(min(stime),'mmdd'),datestr(max(stime),'mmdd'))
+        % sdate = [datestr(min(stime),'mmdd') '_' datestr(max(stime),'mmdd')];
+        % else
+            % sdate = datestr(max(stime),'mmdd');
+        % end
+        sdate = datestr(datenum(missions(im).name(end-8:end),'ddmmmyyyy'),'mmdd');
         sname = ['SN' ID '_' sdate];
         swift.(sname) = oneswift;
-        swift.(sname).outofwater = outflag;
+
+        % out of water flag
+        % iacs = find(strcmp({sinfo.postproc.type},'ACS') | strcmp({sinfo.postproc.type},'ACShr'));
+        % outflag = sinfo.postproc(iacs(end)).flags.outofwater;
+        % swift.(sname).outofwater = outflag;
 
             if min(stime) < mintime
                 mintime = min(stime);

@@ -59,6 +59,12 @@ sig.pitchvar = NaN(1,nt);
 sig.rollvar = NaN(1,nt);
 sig.headvar = NaN(1,nt);
 
+if isfield(SIG,'echogram')
+    sig.echoz = SIG(round(end/2)).echogram.z;
+    nze = length(sig.echoz);
+    sig.echo = NaN(nze,nt);
+end
+
 % Loop through bursts and structurize
 for it = 1:length(sig.time)
 
@@ -86,6 +92,11 @@ for it = 1:length(sig.time)
     % sig.wpeofmag(1:nzhr,it) = SIG(it).HRprofile.QC.wpeofmag(1:nzhr);
     % sig.eofs(1:nzhr,1:nzhr,it) = SIG(it).HRprofile.QC.eofs(1:nzhr,1:nzhr,:);
     % sig.eofvar(1:nzhr,it) = SIG(it).HRprofile.QC.eofvar(1:nzhr);
+
+    % Echo
+    if isfield(SIG,'echogram')
+        sig.echo(1:nze,it) = SIG(it).echogram.echoc(1:nze);
+    end
 
     % Motion
     sig.pitch(it) = SIG(it).motion.pitch;

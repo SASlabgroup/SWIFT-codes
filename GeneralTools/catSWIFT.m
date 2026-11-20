@@ -515,25 +515,25 @@ else
 end
 
 % Echograms
-if isfield(SWIFT,'signature')
-    if isfield(SWIFT(ceil(end/2)).signature,'echo')
-        it = 1; nz = 0;
-        while nz == 0
-            swift.echoz = SWIFT(it).signature.echoz';
-            nz = length(swift.echoz);
-            it = it + 1;
-        end
-        swift.echo = NaN(nz,nt);
-        for it = 1:nt
-            if isfield(SWIFT(it).signature,'echo')
-                echo = SWIFT(it).signature.echo;
-                swift.echo(1:length(echo),it) = echo;
-            else 
-                swift.echo(:,it) = NaN(nz,1);
-            end
-        end
-    end
-end
+% if isfield(SWIFT,'signature')
+%     if isfield(SWIFT(ceil(end/2)).signature,'echo')
+%         it = 1; nz = 0;
+%         while nz == 0
+%             swift.echoz = SWIFT(it).signature.echoz';
+%             nz = length(swift.echoz);
+%             it = it + 1;
+%         end
+%         swift.echo = NaN(nz,nt);
+%         for it = 1:nt
+%             if isfield(SWIFT(it).signature,'echo')
+%                 echo = SWIFT(it).signature.echo;
+%                 swift.echo(1:length(echo),it) = echo;
+%             else 
+%                 swift.echo(:,it) = NaN(nz,1);
+%             end
+%         end
+%     end
+% end
 
 % Altimeter
 if isfield(SWIFT,'signature')
@@ -544,3 +544,14 @@ if isfield(SWIFT,'signature')
         end
     end
 end
+
+% Hydrophone
+if isfield(SWIFT,'hydrophone')
+    swift.acousticfreq = SWIFT(ceil(end/2)).hydrophone.f_kHz;
+    nf = length(swift.acousticfreq);
+    swift.acousticpower = NaN(nf,nt);
+    for it = 1:nt
+        swift.acousticpower(:,it) = SWIFT(it).hydrophone.spectra;
+    end
+end
+
