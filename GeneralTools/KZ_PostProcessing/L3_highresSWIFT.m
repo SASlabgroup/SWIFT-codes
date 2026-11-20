@@ -2,6 +2,9 @@ function [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt,plotswift)
 
 % Calculates higher res burst-averages using L1 SWIFT product. 
 % K. Zeiden Aug 2025
+% Changelog:
+% M. LeClair w/ claude, Nov 2026: SBG time stamps put on one continuous clock
+%   (unwrapSBGtime), so an SBG left running between bursts still aligns
 %
 % [SWIFT,sinfo] = L3_highresSWIFT(missiondir,burstdt,sigopt)
 %
@@ -415,6 +418,12 @@ for iburst = 1:length(SWIFT)
     sbg = load([sbgfile.folder slash sbgfile.name],'sbgData');sbg = sbg.sbgData;
 
     if ~isempty(sbg.UtcTime.time_stamp)
+
+        % Put all SBG time stamps on one clock that starts at 0. An SBG left
+        % running between bursts has a free-running counter that can wrap
+        % mid-burst, and the gyro cross-correlation below assumes SBG and SIG
+        % times both start near 0 (unwrapSBGtime explains the counter).
+        sbg = unwrapSBGtime(sbg,true);
 
         % Fill outliers in timestamps
         sbgfs = 1./(median(diff(sbg.UtcTime.time_stamp),'omitnan').*10^(-6));
