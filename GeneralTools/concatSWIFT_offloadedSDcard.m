@@ -3,6 +3,7 @@
 % 
 % (this fills in the results not sent by Iridium when running more than 1 burst per hour) 
 %
+% Changelog:
 % J. Thomson, 4/2014
 %               9/2015  v3.3, use com names but currently only pulls one ACS file (out of three), because they are not uniquely named. 
 %               1/2016  v3.3, so up to 3 ACS files can be included
@@ -10,6 +11,8 @@
 %               1/2017  v4.0, include SBG, Nortek Signature and RM Young 8100 sonic, plus index on SBG, not AQ
 %               9/2017  add oxygen optode and sea owl fluorometer
 %               9/2019  changed time convention to use start of the burst,rather than end
+%
+% M. LeClair w/ claude, 11/2026: warn when a burst's minute reaches 60 (burstinterval too long for the onboard interval)
 %
 
 clear all, close all, clc
@@ -81,6 +84,10 @@ for ai = 1:length(refnames),
     
     
     minute = num2str( (str2num(burst(2))-1) * burstinterval );
+    if str2num(minute) >= 60
+        warning(['Burst ' hour '_' burst ' gets minute ' minute ' (>= 60), its time rolls into the next hour. ' ...
+            'Check burstinterval (' num2str(burstinterval) ' min) matches the onboard burst interval.'])
+    end
     if length(minute)==1, minute = ['0' minute]; else end
     outputfile = ['buoy-SWIFT_' ID(6:7) '-' date '_' hour  minute '000.sbd']; % name concat file same as if pulled from swiftserver
     
