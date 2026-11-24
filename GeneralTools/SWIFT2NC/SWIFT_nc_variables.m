@@ -38,7 +38,7 @@ function [S, platforms, globals, settingNames] = SWIFT_nc_variables()
 %   nbins       wavespectra.freq only: number of frequency bins written
 %   fmin, df    wavespectra.freq only: the frequency grid, centre of the
 %               first bin and bin width (Hz); bin k is fmin + (k-1)*df
-%               (SWIFT2NC passes these to normalizeWavespectra)
+%               (SWIFT2NC passes these to standardizeWavespectra)
 %   timeUnits   time only: 'days' (as old SWIFT2NC) or 'seconds' since
 %               1970-01-01 (more standard non-matlab)
 %
@@ -55,7 +55,7 @@ function [S, platforms, globals, settingNames] = SWIFT_nc_variables()
 %
 % Dimensions (fields are [n x time], one column per burst):
 %   time          one per burst
-%   freq          wavespectra.freq, on the nbins/fmin/df grid (normalizeWavespectra); energy, a1, ... use it
+%   freq          wavespectra.freq, on the nbins/fmin/df grid (standardizeWavespectra); energy, a1, ... use it
 %   z             signature.profile.z (v4), or uplooking.z / downlooking.z
 %                 (v3; both at once is an error, they would share the name)
 %   zHR           signature.HRprofile.z, named zHR as in old SWIFT2NC
@@ -387,11 +387,11 @@ S.in_ice = struct( ...
 % Bursts have 42 bins (to 0.4902 Hz, as reprocess_IMU's linspace(0.0098, 0.4902, 42)) or 85 (to
 % 0.9941 Hz, GPSwaves 8/2019: max f increased to 1 Hz); the first 42 of 85 are the same. nbins = 42
 % keeps the range of the old SWIFT2NC files. SWIFT2NC puts every burst on this grid with
-% normalizeWavespectra. Bursts without a check factor (L1/L2 telemetry) are kept, with check and
+% standardizeWavespectra. Bursts without a check factor (L1/L2 telemetry) are kept, with check and
 % moments NaN; old SWIFT2NC dropped every burst without 42 bins and a check factor, as [SWIFT.check]
 % fails if only some bursts have check.
 % Inconsistent: L3_highresSWIFT's oneSWIFT spectra use their own grid, f = 0:df:2.5-df with
-% df = 5/floor(256*5/11) (~0.043 Hz), so normalizeWavespectra interpolates them onto this one.
+% df = 5/floor(256*5/11) (~0.043 Hz), so standardizeWavespectra interpolates them onto this one.
 S.wavespectra.freq = struct( ...
     'coordinate', true, ...
     'units', 'Hz', ...

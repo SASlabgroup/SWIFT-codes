@@ -1,7 +1,7 @@
-function SWIFT = normalizeWavespectra(SWIFT, nFreq, minFreq, deltaFreq)
+function SWIFT = standardizeWavespectra(SWIFT, nFreq, minFreq, deltaFreq)
 % Put every burst's wavespectra on one frequency grid
 %
-%   SWIFT = normalizeWavespectra(SWIFT, nFreq, minFreq, deltaFreq)
+%   SWIFT = standardizeWavespectra(SWIFT, nFreq, minFreq, deltaFreq)
 %
 %   SWIFT      SWIFT struct array, one element per burst
 %   nFreq      number of frequency bins to keep
@@ -23,7 +23,7 @@ function SWIFT = normalizeWavespectra(SWIFT, nFreq, minFreq, deltaFreq)
 % Nov 2026 by M. LeClair (using claude)
 %
 % Changelog:
-%   2026-11-20 M. LeClair w/ claude: normalize wavespectra before saving to netcdf.
+%   2026-11-20 M. LeClair w/ claude: standardize wavespectra before saving to netcdf.
 
 arguments
     SWIFT struct
@@ -32,7 +32,7 @@ arguments
     deltaFreq (1,1) double {mustBePositive}
 end
 
-% Set up the fields to normalize and the target grid
+% Set up the fields to standardize and the target grid
 perFrequencyNames = ["energy" "energy_alt" "a1" "b1" "a2" "b2" "check"];
 freqGrid = minFreq + deltaFreq * (0:nFreq-1);
 freqTolerance = 1e-4; % Hz, well below the ~0.01 Hz bin spacing
@@ -73,7 +73,7 @@ for burstIndex = 1:nBursts
         if all(isnan(values))
             values = NaN(size(freq));
         elseif numel(values) < numel(freq)
-            error('normalizeWavespectra:fieldLength', ...
+            error('standardizeWavespectra:fieldLength', ...
                 'burst %d: wavespectra.%s has %d values, fewer than the %d of wavespectra.freq', ...
                 burstIndex, fieldName, numel(values), numel(freq));
         elseif numel(values) > numel(freq)
@@ -116,21 +116,21 @@ for burstIndex = 1:nBursts
 end
 
 % Report how many bursts needed each change, and the first of them
-warnBursts(isFilled, 'normalizeWavespectra:fill', 'had 9999 in wavespectra, written as NaN');
-warnBursts(isLengthClipped, 'normalizeWavespectra:fieldLength', ...
+warnBursts(isFilled, 'standardizeWavespectra:fill', 'had 9999 in wavespectra, written as NaN');
+warnBursts(isLengthClipped, 'standardizeWavespectra:fieldLength', ...
     'had wavespectra fields longer than freq, clipped to freq');
-warnBursts(isPlaceholder, 'normalizeWavespectra:placeholder', ...
+warnBursts(isPlaceholder, 'standardizeWavespectra:placeholder', ...
     'had placeholder wavespectra (all-zero freq, or fewer than 2 frequencies), written as NaN');
-warnBursts(isInterpolated, 'normalizeWavespectra:interpolated', ...
+warnBursts(isInterpolated, 'standardizeWavespectra:interpolated', ...
     sprintf('had wavespectra.freq off the grid (fmin %g Hz, df %g Hz), linearly interpolated onto it', ...
     minFreq, deltaFreq));
-warnBursts(isClipped, 'normalizeWavespectra:clipped', ...
+warnBursts(isClipped, 'standardizeWavespectra:clipped', ...
     sprintf('had wave frequencies outside %.4f-%.4f Hz (nFreq = %d), dropped', freqGrid(1), freqGrid(end), nFreq));
 
 % Remove wavespectra if no burst has spectra left, so it is not written
 if ~any(hasSpectra)
     SWIFT = rmfield(SWIFT, 'wavespectra');
-    warnNoTrace('normalizeWavespectra:noSpectra', 'No burst has wave spectra (all NaN), wavespectra removed');
+    warnNoTrace('standardizeWavespectra:noSpectra', 'No burst has wave spectra (all NaN), wavespectra removed');
 end
 end
 

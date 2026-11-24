@@ -6,7 +6,7 @@ function SWIFT2NC(SWIFT, filename, opts)
 %
 % Write the old SWIFT2NC's layout for existing readers (no groups, its variable names, time in days since 1970),
 % in the CF-1.8 dimension order. Write only fields defined in SWIFT_nc_variables; its header describes the
-% definitions, dims and {key} placeholders. Put wave spectra on one frequency grid first (normalizeWavespectra),
+% definitions, dims and {key} placeholders. Put wave spectra on one frequency grid first (standardizeWavespectra),
 % then stack each field over bursts (flattenSWIFT).
 %
 % platform   v3, v4 or micro; by default detected from SWIFT(1).ID
@@ -39,7 +39,7 @@ end
 % Put the wave spectra on the freq grid
 if isfield(SWIFT, 'wavespectra')
     freqDefinition = variableDefinitions.wavespectra.freq;
-    SWIFT = normalizeWavespectra(SWIFT, freqDefinition.nbins, freqDefinition.fmin, freqDefinition.df);
+    SWIFT = standardizeWavespectra(SWIFT, freqDefinition.nbins, freqDefinition.fmin, freqDefinition.df);
 end
 
 % Flatten the SWIFT struct array to one [n x nTimes] array per field, check it, convert time
