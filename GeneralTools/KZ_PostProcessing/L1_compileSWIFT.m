@@ -49,7 +49,7 @@ end
 %% Compile list of sbd burst files %%%
 
 if exist([missiondir slash SBDfold],'dir')
-    sbdlist = dir([missiondir slash SBDfold slash '*.sbd']);
+    sbdlist = dir([missiondir slash SBDfold slash 'buoy*.sbd']);
 else
     disp('Processed files have not been concatenated...')
     sbdlist = [];
@@ -315,7 +315,7 @@ end
 
 %% Re-load L2 SWIFT
 
-L1file = dir([missiondir slash '*L1.mat']);
+L1file = dir([missiondir slash 'SWIFT*L1.mat']);
 load([L1file.folder slash L1file.name],'SWIFT','sinfo')
 
 %% Plot

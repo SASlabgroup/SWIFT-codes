@@ -138,7 +138,7 @@ disp(['Post-processing ' sname])
 
 %% Locate L2 product, skip if does not exist. 
 
-L2file = dir([missiondir slash '*L2.mat']);
+L2file = dir([missiondir slash 'SWIFT*L2.mat']);
 
 if isempty(L2file)
     disp(['No L2 product found for ' sname '. Skipping...'])
@@ -267,7 +267,7 @@ end
 
 %% Re-load L3 SWIFT
 
-L3file = dir([missiondir slash '*L3.mat']);
+L3file = dir([missiondir slash 'SWIFT*L3.mat']);
 load([L3file.folder slash L3file.name],'SWIFT','sinfo')
 
 %% Plot

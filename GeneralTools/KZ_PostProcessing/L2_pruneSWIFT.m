@@ -40,7 +40,7 @@ end
 
 %% Load L1 file
 
-L1file = dir([missiondir slash '*SWIFT*L1.mat']);
+L1file = dir([missiondir slash 'SWIFT*L1.mat']);
 
 if ~isempty(L1file) 
     load([L1file.folder slash L1file.name],'SWIFT','sinfo');
@@ -98,7 +98,7 @@ save([missiondir slash sname '_L2.mat'],'SWIFT','sinfo')
 
 %% Re-load L2 SWIFT
 
-L2file = dir([missiondir slash '*L2.mat']);
+L2file = dir([missiondir slash 'SWIFT*L2.mat']);
 load([L2file.folder slash L2file.name],'SWIFT','sinfo')
 
 %% Plot

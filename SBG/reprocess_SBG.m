@@ -26,8 +26,8 @@ end
 
 %% Load existing L3 product, or L2 product if does not exist. If no L3 product, return to function
 
-l2file = dir([missiondir slash '*SWIFT*L2.mat']);
-l3file = dir([missiondir slash '*SWIFT*L3.mat']);
+l2file = dir([missiondir slash 'SWIFT*L2.mat']);
+l3file = dir([missiondir slash 'SWIFT*L3.mat']);
 
 if ~isempty(l3file) % First check to see if there is an existing L3 file to load
     sfile = l3file;
